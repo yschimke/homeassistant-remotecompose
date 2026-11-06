@@ -113,7 +113,7 @@ class QuestActivity : AppSystemActivity() {
         Panel(R.id.room_panel),
         Transform(panelPose(place.position, place.facing)),
         Grabbable(),
-      )
+      ),
     )
     if (supportsRoomMapping) {
       anchors = QuestRoomAnchors(scene, mruk)
@@ -125,7 +125,7 @@ class QuestActivity : AppSystemActivity() {
         val distances = anchors?.distances().orEmpty()
         model.nearestPin =
           nearestPinnedEntity(
-            model.pins.mapNotNull { pin -> distances[pin.anchorId]?.let { pin.entityId to it } }
+            model.pins.mapNotNull { pin -> distances[pin.anchorId]?.let { pin.entityId to it } },
           )
         delay(NEAREST_PIN_INTERVAL_MS)
       }
@@ -173,7 +173,7 @@ class QuestActivity : AppSystemActivity() {
         QuestRoomPanel(
           content =
             roomContent(
-              onPin = anchors?.takeIf { sceneLoaded }?.let { { entityId -> pin(entityId) } }
+              onPin = anchors?.takeIf { sceneLoaded }?.let { { entityId -> pin(entityId) } },
             ),
           lostPins = model.pins.filter { anchors != null && it.anchorId in anchors.lost },
           onRemoveLost = ::unpin,

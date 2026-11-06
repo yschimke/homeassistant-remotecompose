@@ -78,7 +78,7 @@ class LauncherDesignsTest {
     val document =
       CoreDocument().apply {
         initFromBuffer(
-          RemoteComposeBuffer.fromInputStream(platformWidgetDocument(baked.bytes).inputStream())
+          RemoteComposeBuffer.fromInputStream(platformWidgetDocument(baked.bytes).inputStream()),
         )
       }
     assertTrue(document.canBeDisplayed(1, 0, 0L))
@@ -181,7 +181,7 @@ class LauncherDesignsTest {
         CardConfig(
           type,
           kotlinx.serialization.json.Json.parseToJsonElement(
-            """{"type":"$type","entities":[{"entity":"light.kitchen","name":"Kitchen"},"sensor.hall"]}"""
+            """{"type":"$type","entities":[{"entity":"light.kitchen","name":"Kitchen"},"sensor.hall"]}""",
           ) as JsonObject,
         )
       val compact = bake(card, snapshot, 72, 84)
@@ -235,7 +235,7 @@ class LauncherDesignsTest {
       CardConfig(
         "entities",
         kotlinx.serialization.json.Json.parseToJsonElement(
-          """{"type":"entities","entities":["light.kitchen","sensor.hall"]}"""
+          """{"type":"entities","entities":["light.kitchen","sensor.hall"]}""",
         ) as JsonObject,
       ),
       snapshotOf(entity("light.kitchen", "off"), entity("sensor.hall", "23.5")),
@@ -369,7 +369,7 @@ class LauncherDesignsTest {
           "current_temperature" to "19",
           "temperature" to "22",
           "friendly_name" to "Studio",
-        )
+        ),
       )
     for ((width, height) in listOf(180 to 80, 360 to 290)) {
       val baked = bake(card, snapshot, width, height, LauncherLook(HaUberTheme.Console))
@@ -413,7 +413,7 @@ class LauncherDesignsTest {
         systemTheme = false,
         registry = registry,
         look = look,
-      )
+      ),
     )
   }
 
@@ -424,7 +424,7 @@ class LauncherDesignsTest {
       CardConfig(
         "glance",
         kotlinx.serialization.json.Json.parseToJsonElement(
-          """{"type":"glance","entities":[${entities.joinToString { "\"${it.entityId}\"" }}]}"""
+          """{"type":"glance","entities":[${entities.joinToString { "\"${it.entityId}\"" }}]}""",
         ) as JsonObject,
       )
     val baked = bake(card, snapshotOf(*entities.toTypedArray()), 288, 336)
@@ -465,7 +465,7 @@ class LauncherDesignsTest {
           "friendly_name" to "Living room",
           "device_class" to "temperature",
           "unit_of_measurement" to "°C",
-        )
+        ),
       ),
     )
 
@@ -483,8 +483,8 @@ class LauncherDesignsTest {
       "1",
       ee.schimke.ha.design.DesignProperties.parse(
           assertNotNull(
-            registry.converterFor("tile")?.framedDesignProperties(card, snapshot)?.shape
-          )
+            registry.converterFor("tile")?.framedDesignProperties(card, snapshot)?.shape,
+          ),
         )[UNAVAILABLE_DESIGN_PROPERTY],
       "the design key marks the entity unavailable",
     )
@@ -543,13 +543,13 @@ class LauncherDesignsTest {
         CardConfig(
           "glance",
           kotlinx.serialization.json.Json.parseToJsonElement(
-            """{"type":"glance","entities":[$list]}"""
+            """{"type":"glance","entities":[$list]}""",
           ) as JsonObject,
         ),
         CardConfig(
           "entities",
           kotlinx.serialization.json.Json.parseToJsonElement(
-            """{"type":"entities","entities":[$list]}"""
+            """{"type":"entities","entities":[$list]}""",
           ) as JsonObject,
         ),
       )
@@ -600,7 +600,7 @@ class LauncherDesignsTest {
           },
       ),
       snapshotOf(
-        entity("sensor.cpu", "86", "friendly_name" to "CPU", "unit_of_measurement" to "%")
+        entity("sensor.cpu", "86", "friendly_name" to "CPU", "unit_of_measurement" to "%"),
       ),
     )
 
@@ -634,7 +634,7 @@ class LauncherDesignsTest {
     val card = card("picture-entity", "camera.driveway")
     val snapshot =
       snapshotOf(
-        entity("camera.driveway", "idle", "friendly_name" to "Driveway", "entity_picture" to url)
+        entity("camera.driveway", "idle", "friendly_name" to "Driveway", "entity_picture" to url),
       )
     val png =
       Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888).let { bitmap ->
@@ -662,7 +662,7 @@ class LauncherDesignsTest {
             fetched += it
             if (it == url) png else null
           },
-        )
+        ),
       )
     // Only the card's own picture was fetched, and the widget no longer names any URL.
     assertEquals(listOf(url), fetched)
@@ -699,7 +699,7 @@ class LauncherDesignsTest {
         "entities",
         kotlinx.serialization.json.Json.parseToJsonElement(
           """{"type":"entities","title":"Living Room","entities":
-            ["sensor.temp","light.lamp","switch.coffee","binary_sensor.door"]}"""
+            ["sensor.temp","light.lamp","switch.coffee","binary_sensor.door"]}""",
         ) as JsonObject,
       ),
       snapshotOf(
@@ -788,7 +788,7 @@ class LauncherDesignsTest {
           "media_artist" to "Good Charlotte",
           "media_position" to "100",
           "media_duration" to "200",
-        )
+        ),
       )
     val baked = bakeRegression(card("media-control", "media_player.office"), snapshot, 320, 180)
     val pixels = renderRegression("media-seek-track", baked, 320, 180)
@@ -827,7 +827,7 @@ class LauncherDesignsTest {
         dark = false,
         systemTheme = false,
         registry = registry,
-      )
+      ),
     )
 
   private fun renderRegression(

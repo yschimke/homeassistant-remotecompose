@@ -97,7 +97,7 @@ internal fun presenceArea(snapshot: HaSnapshot): HaArea? =
     }
     .sortedWith(
       compareBy<Triple<HaArea, Int, kotlin.time.Instant?>> { it.second }
-        .thenByDescending { it.third }
+        .thenByDescending { it.third },
     )
     .firstOrNull()
     ?.first

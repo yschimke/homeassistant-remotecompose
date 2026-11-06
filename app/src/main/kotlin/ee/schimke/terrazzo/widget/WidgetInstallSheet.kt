@@ -76,7 +76,7 @@ fun WidgetInstallSheet(
       if (name.isBlank() || name == (chosen.raw["name"]?.jsonPrimitive?.content ?: "")) chosen
       else
         chosen.copy(
-          raw = kotlinx.serialization.json.JsonObject(chosen.raw + ("name" to JsonPrimitive(name)))
+          raw = kotlinx.serialization.json.JsonObject(chosen.raw + ("name" to JsonPrimitive(name))),
         )
     }
   var renderedPreview by
@@ -159,7 +159,7 @@ fun WidgetInstallSheet(
               onDone = {
                 focusManager.clearFocus()
                 keyboard?.hide()
-              }
+              },
             ),
           modifier = Modifier.fillMaxWidth(),
         )

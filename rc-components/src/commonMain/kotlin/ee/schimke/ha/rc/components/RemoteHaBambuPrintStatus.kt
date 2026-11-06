@@ -88,7 +88,7 @@ fun RemoteHaBambuPrintStatus(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = 12.rdp),
   ) {
     if (data.phase == HaBambuPrintPhase.Printing) {
       PrintingLayout(data, wide, theme)
@@ -120,7 +120,7 @@ fun RemoteHaBambuPrintStatusWear(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = (if (large) 8 else 3).rdp)
+        .padding(horizontal = 12.rdp, vertical = (if (large) 8 else 3).rdp),
   ) {
     RemoteColumn(
       modifier = RemoteModifier.fillMaxWidth(),

@@ -86,8 +86,8 @@ class UserDesignsTest {
       )
     return RcDocumentCodec.encode(
       document.copy(
-        operations = document.operations.take(at) + named + document.operations.drop(at)
-      )
+        operations = document.operations.take(at) + named + document.operations.drop(at),
+      ),
     )
   }
 
@@ -203,7 +203,7 @@ class UserDesignsTest {
            "door": {"mediaType": "image/png", "contentDigest": "sha256:2",
              "source": {"type": "uploaded", "storageKey": "sha256:2"}}
          }}
-        """
+        """,
       )
       .jsonObject
 
@@ -243,12 +243,12 @@ class UserDesignsTest {
     val modifiers =
       Json.parseToJsonElement(
         """[{"type":"size","widthDp":280,"heightDp":160},
-      {"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"expr","op":"select","args":[{"type":"state","variable":"light.s0.is_on"},{"type":"float","value":85},{"type":"float","value":0}]}}}]"""
+      {"type":"remoteCall","name":"graphicsLayer","args":{"rotationX":{"type":"expr","op":"select","args":[{"type":"state","variable":"light.s0.is_on"},{"type":"float","value":85},{"type":"float","value":0}]}}}]""",
       )
     JsonObject(
       handmade +
         ("id" to JsonPrimitive("fitted-garage")) +
-        ("nodes" to JsonObject(nodes + ("door" to JsonObject(door + ("modifiers" to modifiers)))))
+        ("nodes" to JsonObject(nodes + ("door" to JsonObject(door + ("modifiers" to modifiers))))),
     )
   }
   private val peeking = dimmedBy("HA:lock.front_door.numeric_state")
@@ -329,7 +329,7 @@ class UserDesignsTest {
               return@post call.respondText(
                 """{"response":{"type":"catalogs","catalogs":[{"benchmark":""" +
                   """{"catalogSystemId":"ha-cards","catalogRevision":"sha256:published",""" +
-                  """"nativeRuntimeId":"published-runtime"}}]}}"""
+                  """"nativeRuntimeId":"published-runtime"}}]}}""",
               )
             }
             assertEquals("getDesignAccess", request["type"]!!.jsonPrimitive.content)
@@ -592,7 +592,7 @@ class UserDesignsTest {
         .parseToJsonElement(
           f.client
             .post("/api/my/device-token") { header(HttpHeaders.Cookie, f.cookie) }
-            .bodyAsText()
+            .bodyAsText(),
         )
         .jsonObject["token"]!!
         .jsonPrimitive
@@ -772,7 +772,7 @@ class UserDesignsTest {
     val signIn = browser.get("${AppSignIn.AUTHORIZE_PATH}?$query")
     assertEquals(HttpStatusCode.Found, signIn.status)
     assertTrue(
-      signIn.headers[HttpHeaders.Location]!!.startsWith("/auth/github/start?return=%2Fmy%2Foauth")
+      signIn.headers[HttpHeaders.Location]!!.startsWith("/auth/github/start?return=%2Fmy%2Foauth"),
     )
     // A redirect elsewhere, or no PKCE, is refused outright.
     val elsewhere = query.replace("rcha%3A%2F%2Fauth-callback", "https%3A%2F%2Fevil.example")
@@ -849,7 +849,7 @@ class UserDesignsTest {
     assertEquals(
       "rw-------",
       java.nio.file.attribute.PosixFilePermissions.toString(
-        Files.getPosixFilePermissions(File(dir, "device-token-key").toPath())
+        Files.getPosixFilePermissions(File(dir, "device-token-key").toPath()),
       ),
     )
   }
@@ -885,7 +885,7 @@ class UserDesignsTest {
       UserDesignStore(f.storeDir).designs("octocat").single { it.entry.key.container == null }
     assertNull(card.readsAmbient, "a card design isn't a Wear widget")
     assertFalse(
-      "ambient-note" in f.client.get("/my") { header(HttpHeaders.Cookie, f.cookie) }.bodyAsText()
+      "ambient-note" in f.client.get("/my") { header(HttpHeaders.Cookie, f.cookie) }.bodyAsText(),
     )
 
     // One that doesn't still publishes, and the page says what it means on the watch.
@@ -904,7 +904,7 @@ class UserDesignsTest {
     val f = fixture()
     assertEquals(HttpStatusCode.Created, f.publish("foreign").status)
     assertTrue(
-      UserDesignStore(f.storeDir).designs("octocat").none { it.entry.key.container != null }
+      UserDesignStore(f.storeDir).designs("octocat").none { it.entry.key.container != null },
     )
   }
 
@@ -953,7 +953,7 @@ class UserDesignsTest {
     // A republish whose Wear widgets no longer export drops the stale one.
     f.publish("good")
     assertTrue(
-      UserDesignStore(f.storeDir).designs("octocat").none { it.entry.key.container != null }
+      UserDesignStore(f.storeDir).designs("octocat").none { it.entry.key.container != null },
     )
   }
 
@@ -1207,12 +1207,12 @@ class UserDesignsTest {
         base =
           ee.schimke.ha.rc.CardDesignTemplates.capture(
               ee.schimke.ha.rc.CommonCaptureHost(
-                ee.schimke.ha.designs.LibraryCaptureProfile.OPERATIONS
+                ee.schimke.ha.designs.LibraryCaptureProfile.OPERATIONS,
               ),
               key,
             )
-            .bytes
-      )
+            .bytes,
+      ),
     )
 
   @Test
@@ -1281,7 +1281,7 @@ class UserDesignsTest {
       )
     val snapshot =
       ee.schimke.ha.model.HaSnapshot(
-        states = mapOf("light.kitchen" to ee.schimke.ha.model.EntityState("light.kitchen", "on"))
+        states = mapOf("light.kitchen" to ee.schimke.ha.model.EntityState("light.kitchen", "on")),
       )
     // The app may rename its draft; the card type comes from the seed.
     val draft = JsonObject(studio.seed(card, snapshot) + ("title" to JsonPrimitive("Mine")))

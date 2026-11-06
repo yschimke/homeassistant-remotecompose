@@ -167,7 +167,7 @@ private fun CoverFrame(
 ) {
   RemoteBox(
     modifier =
-      RemoteModifier.width(widthDp.rdp).height(heightDp.rdp).clip(RemoteRoundedCornerShape(4.rdp))
+      RemoteModifier.width(widthDp.rdp).height(heightDp.rdp).clip(RemoteRoundedCornerShape(4.rdp)),
   ) {
     RemoteCanvas(RemoteModifier.width(widthDp.rdp).height(heightDp.rdp)) { draw() }
     if (openingHeightDp >= 20f) {

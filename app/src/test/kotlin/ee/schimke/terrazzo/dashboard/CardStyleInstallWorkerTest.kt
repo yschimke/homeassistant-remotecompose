@@ -37,7 +37,7 @@ class CardStyleInstallWorkerTest {
         install = { false },
         select = { error("A failed install must not be selected") },
         refresh = { error("A failed install must not refresh widgets") },
-      )
+      ),
     )
   }
 }

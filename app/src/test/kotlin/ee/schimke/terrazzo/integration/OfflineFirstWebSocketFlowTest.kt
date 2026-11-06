@@ -91,7 +91,10 @@ class OfflineFirstWebSocketFlowTest {
                     msg["url_path"]?.jsonPrimitive?.content == handler.disconnectOnConfigPath
                 ) {
                   close(
-                    CloseReason(CloseReason.Codes.GOING_AWAY, "connection lost during config probe")
+                    CloseReason(
+                      CloseReason.Codes.GOING_AWAY,
+                      "connection lost during config probe",
+                    ),
                   )
                   break
                 }
@@ -255,7 +258,7 @@ class OfflineFirstWebSocketFlowTest {
         buildJsonObject {
           put("url_path", "office")
           put("title", "Office")
-        }
+        },
       )
     }
 
@@ -273,11 +276,11 @@ class OfflineFirstWebSocketFlowTest {
                     buildJsonObject {
                       put("type", "tile")
                       put("entity", "sensor.living_room")
-                    }
+                    },
                   )
                 },
               )
-            }
+            },
           )
         },
       )
@@ -295,14 +298,14 @@ class OfflineFirstWebSocketFlowTest {
               put("unit_of_measurement", "°C")
             },
           )
-        }
+        },
       )
       add(
         buildJsonObject {
           put("entity_id", "light.kitchen")
           put("state", "on")
           put("attributes", buildJsonObject { put("friendly_name", "Kitchen") })
-        }
+        },
       )
     }
 

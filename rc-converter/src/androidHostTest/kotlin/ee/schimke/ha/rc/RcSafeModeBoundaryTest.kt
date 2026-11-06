@@ -34,7 +34,7 @@ class RcSafeModeBoundaryTest {
       RcDocument(
         RcHeader(RcVersion(1, 0, 0)),
         listOf(RcNamedVariable(42, RcNamedVariable.STRING_TYPE, "USER:light.s0.state")),
-      )
+      ),
     )
 
   @BeforeTest fun safeMode() = run { RcSafeMode.active = true }

@@ -27,7 +27,7 @@ class HostThemeTest {
   fun readsThePanelsTheme() {
     val theme =
       HostTheme.parse(
-        """{"dark":true,"primary":"#ff9800","background":"#111111","card":"","text":"#e1e1e1"}"""
+        """{"dark":true,"primary":"#ff9800","background":"#111111","card":"","text":"#e1e1e1"}""",
       )
     assertEquals(true, theme?.dark)
     assertEquals(Color(0xFFFF9800), theme?.primary)

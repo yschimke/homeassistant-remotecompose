@@ -47,7 +47,7 @@ internal fun MacrobenchmarkScope.startDemoDashboard(
     // New task, clearing any old one: the flags `startActivityAndWait` launches with.
     device.executeShellCommand(
       "am start -W -f 0x10008000 -n $TARGET_PACKAGE/$MAIN_ACTIVITY " +
-        "--ez $EXTRA_TEST_DEMO_MODE true --ez $EXTRA_TEST_EXPAND_SECTIONS $expandSections"
+        "--ez $EXTRA_TEST_DEMO_MODE true --ez $EXTRA_TEST_EXPAND_SECTIONS $expandSections",
     )
   }
   awaitDashboard(DEFAULT_BOARD)

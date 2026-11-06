@@ -79,7 +79,7 @@ class TerrazzoWearApplication : Application() {
           override fun onStop(owner: LifecycleOwner) {
             apply()
           }
-        }
+        },
       )
   }
 }

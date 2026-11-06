@@ -69,9 +69,9 @@ class DemoDataSourceTest {
     val snapshot =
       decodeDemoStates(
         Json.parseToJsonElement(
-            """[{"entity_id":"sensor.demo_temperature","state":"21.5","attributes":{"unit_of_measurement":"°C"},"last_changed":"2026-10-17T12:00:00Z","last_updated":"2026-10-17T12:01:00Z","context":{"user_id":null}}]"""
+            """[{"entity_id":"sensor.demo_temperature","state":"21.5","attributes":{"unit_of_measurement":"°C"},"last_changed":"2026-10-17T12:00:00Z","last_updated":"2026-10-17T12:01:00Z","context":{"user_id":null}}]""",
           )
-          .jsonArray
+          .jsonArray,
       )
     val entity = snapshot.states.getValue("sensor.demo_temperature")
     assertEquals("21.5", entity.state)

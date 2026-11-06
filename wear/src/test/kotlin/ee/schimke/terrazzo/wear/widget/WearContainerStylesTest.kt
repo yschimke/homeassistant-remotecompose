@@ -102,8 +102,8 @@ class WearContainerStylesTest {
                 put("device_class", "battery")
                 put("unit_of_measurement", "%")
               },
-            )
-        )
+            ),
+        ),
     )
 
   private fun params(type: Int, height: Float, corner: Float) =
@@ -130,7 +130,7 @@ class WearContainerStylesTest {
     val template = runBlocking {
       WearWidgetTemplate.capture(context) {
         RemoteBox(
-          RemoteModifier.offset((-8).rdp, (-8).rdp).size(400.rdp, 400.rdp).background(Color.Red.rc)
+          RemoteModifier.offset((-8).rdp, (-8).rdp).size(400.rdp, 400.rdp).background(Color.Red.rc),
         ) {}
       }
     }
@@ -182,7 +182,7 @@ class WearContainerStylesTest {
     val direct =
       androidx.glance.wear.WearWidgetDocument(androidx.glance.wear.WearWidgetBrush.Companion) {
         RemoteBox(
-          RemoteModifier.offset((-8).rdp, (-8).rdp).size(400.rdp, 400.rdp).background(Color.Red.rc)
+          RemoteModifier.offset((-8).rdp, (-8).rdp).size(400.rdp, 400.rdp).background(Color.Red.rc),
         ) {}
       }
     val raw = runBlocking { direct.captureRawContent(context, params, false) }

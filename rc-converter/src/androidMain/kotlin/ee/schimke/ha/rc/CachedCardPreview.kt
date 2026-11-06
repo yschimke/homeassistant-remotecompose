@@ -456,7 +456,7 @@ fun CachedCardPreview(
                           kotlinx.serialization.json.JsonPrimitive(value),
                         )
                       },
-                    )
+                    ),
                   )
                 }
               }
@@ -706,7 +706,7 @@ internal class SlotResolvingImageLoader(
 
   override fun loadBitmap(name: String): java.io.InputStream =
     delegate.loadBitmap(
-      resolve(name) ?: throw java.io.IOException("template image not resolvable: $name")
+      resolve(name) ?: throw java.io.IOException("template image not resolvable: $name"),
     )
 
   override suspend fun load(bitmap: RcBitmapData): ImageBitmap? =

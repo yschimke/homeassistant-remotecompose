@@ -46,10 +46,10 @@ class HistoryEmptyStateCaptureTest {
                   "friendly_name" to JsonPrimitive("Living room"),
                   "unit_of_measurement" to JsonPrimitive("°C"),
                   "device_class" to JsonPrimitive("temperature"),
-                )
+                ),
               ),
-            )
-        )
+            ),
+        ),
     )
 
   private fun documentText(card: CardConfig): String = runBlocking {
@@ -140,7 +140,7 @@ class HistoryEmptyStateCaptureTest {
               put("type", "sensor")
               put("entity", "sensor.temp")
             },
-        )
+        ),
       )
     assertTrue("21.5" in text, "the sensor's current value is in the document")
     assertFalse("No history" in text, "a sensor card never shows the history empty state")
@@ -158,7 +158,7 @@ class HistoryEmptyStateCaptureTest {
               put("hours_to_show", 48)
               putJsonArray("entities") { add("sensor.temp") }
             },
-        )
+        ),
       )
     assertTrue("No history in the last 2 days" in text)
   }

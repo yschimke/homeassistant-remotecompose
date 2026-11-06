@@ -19,13 +19,13 @@ class VerticalStackFitTest {
     val stack =
       card(
         """{"type":"vertical-stack","cards":[{"type":"entity","entity":"sensor.a"},
-            {"type":"entity","entity":"sensor.b"}]}"""
+            {"type":"entity","entity":"sensor.b"}]}""",
       )
     assertEquals(one * 2 + 8, stackChildHeightDp(stack, HaSnapshot(), registry))
     val row =
       card(
         """{"type":"horizontal-stack","cards":[{"type":"entity","entity":"sensor.a"},
-            {"type":"entity","entity":"sensor.b"}]}"""
+            {"type":"entity","entity":"sensor.b"}]}""",
       )
     assertEquals(one, stackChildHeightDp(row, HaSnapshot(), registry))
   }
@@ -40,7 +40,7 @@ class VerticalStackFitTest {
         """{"type":"vertical-stack","cards":[
             {"type":"conditional","conditions":[{"entity":"sensor.gone","state":"on"}],
              "card":{"type":"entity","entity":"sensor.a"}},
-            {"type":"entity","entity":"sensor.b"}]}"""
+            {"type":"entity","entity":"sensor.b"}]}""",
       )
     assertEquals(one, stackChildHeightDp(stack, HaSnapshot(), registry))
   }

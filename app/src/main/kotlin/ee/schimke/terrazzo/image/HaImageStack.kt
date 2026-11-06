@@ -149,7 +149,7 @@ class HaImageStack(
             savedAtMs = { key ->
               diskCache.openSnapshot(key)?.use { it.data.toFile().lastModified() }
             },
-          )
+          ),
         )
         // Demo mode's pictures are on a host nothing serves; draw stand-ins for them. Answers only
         // for `DemoData.BASE_URL` URLs, so real sessions' fetches are untouched.
@@ -195,7 +195,7 @@ class HaImageStack(
           .memoryCachePolicy(CachePolicy.DISABLED)
           .size(1, 1)
           .allowHardware(false)
-          .build()
+          .build(),
       )
     }
   }

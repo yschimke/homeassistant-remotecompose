@@ -66,7 +66,7 @@ fun ReportFeedbackButton(
     onClick = {
       reviewing = true
       failed = false
-    }
+    },
   ) {
     Text("Report a bug")
   }
@@ -88,10 +88,10 @@ fun ReportFeedbackButton(
           }
           Text(PUBLIC_FEEDBACK_WARNING)
           Text(
-            "Included: app version $version; platform $platform. No Home Assistant data or attachments are included."
+            "Included: app version $version; platform $platform. No Home Assistant data or attachments are included.",
           )
           Text(
-            "Continue to GitHub to edit the draft, optionally add reproduction steps and expected/actual behavior, and explicitly submit it. A GitHub account is required."
+            "Continue to GitHub to edit the draft, optionally add reproduction steps and expected/actual behavior, and explicitly submit it. A GitHub account is required.",
           )
         }
       },
@@ -100,7 +100,7 @@ fun ReportFeedbackButton(
           onClick = {
             failed = !openFeedbackUrl(feedbackIssueUrl(version, platform), uriHandler)
             if (!failed) reviewing = false
-          }
+          },
         ) {
           Text(if (failed) "Try GitHub again" else "Review on GitHub")
         }

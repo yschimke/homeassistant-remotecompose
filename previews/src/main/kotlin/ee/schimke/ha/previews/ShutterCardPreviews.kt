@@ -73,7 +73,7 @@ private const val GARAGE_HEIGHT_DP = 212
 )
 @Composable
 fun Shutter_GarageDemo_States(
-  @PreviewParameter(GarageDoorControlStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(GarageDoorControlStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) = ShutterHost(HaTheme.Light) { RenderChild(garageDemoCard(), param.second) }
 
 /**
@@ -88,7 +88,7 @@ fun Shutter_GarageDemo_States(
 )
 @Composable
 fun Shutter_GarageControls_Light(
-  @PreviewParameter(GarageDoorControlStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(GarageDoorControlStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) = ShutterHost(HaTheme.Light) { RenderChild(garagePlainCard(), param.second) }
 
 @Preview(
@@ -99,7 +99,7 @@ fun Shutter_GarageControls_Light(
 )
 @Composable
 fun Shutter_GarageControls_Dark(
-  @PreviewParameter(GarageDoorControlStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(GarageDoorControlStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) = ShutterHost(HaTheme.Dark) { RenderChild(garagePlainCard(), param.second) }
 
 private fun garageDemoCard() =
@@ -112,7 +112,7 @@ private fun garageDemoCard() =
             "button_stop_hide_states":["open","closed","partial_open"],
             "button_down_hide_states":["closed","opening","closing"]
         }]
-    }"""
+    }""",
   )
 
 private fun garagePlainCard() =
@@ -120,7 +120,7 @@ private fun garagePlainCard() =
     """{
         "type":"custom:enhanced-shutter-card",
         "entities":[{"entity":"cover.garage","name":"Garage Door"}]
-    }"""
+    }""",
   )
 
 private fun shutterCard() =
@@ -132,7 +132,7 @@ private fun shutterCard() =
             {"entity":"cover.bedroom","name":"Bedroom"},
             {"entity":"cover.kitchen","name":"Kitchen"}
         ]
-    }"""
+    }""",
   )
 
 private fun shutterSnapshot(): HaSnapshot =

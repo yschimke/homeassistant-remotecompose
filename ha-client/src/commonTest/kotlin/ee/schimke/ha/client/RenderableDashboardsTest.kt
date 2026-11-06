@@ -47,7 +47,7 @@ class RenderableDashboardsTest {
       resolveRenderableDashboards(emptyList()) {
           throw HaCommandException("lovelace/config", "config_not_found", "missing")
         }
-        .isEmpty()
+        .isEmpty(),
     )
   }
 

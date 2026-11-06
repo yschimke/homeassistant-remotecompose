@@ -55,7 +55,7 @@ internal class PlaceholderCardStore(private val root: File) {
         ?: synchronized(this) {
           instance
             ?: PlaceholderCardStore(
-                File(context.applicationContext.filesDir, "terrazzo/card-briefs")
+                File(context.applicationContext.filesDir, "terrazzo/card-briefs"),
               )
               .also { instance = it }
         }

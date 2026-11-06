@@ -226,7 +226,7 @@ internal fun StateTimeline(
       if (style.cells || style.segmentGap > 0.dp) Modifier
       else Modifier.clip(RoundedCornerShape(barHeight * style.cornerFraction))
     Canvas(
-      modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).height(barHeight).then(clip)
+      modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).height(barHeight).then(clip),
     ) {
       fun colorOf(state: String) =
         when {
@@ -299,7 +299,7 @@ internal fun StateTimeline(
                     0 -> Alignment.CenterStart
                     1 -> Alignment.Center
                     else -> Alignment.CenterEnd
-                  }
+                  },
                 ),
             )
           }

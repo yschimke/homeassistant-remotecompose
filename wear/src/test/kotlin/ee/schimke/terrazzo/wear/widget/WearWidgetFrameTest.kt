@@ -45,7 +45,7 @@ class WearWidgetFrameTest {
     HaSnapshot(
       states =
         listOf("sensor.living_room" to "21.5", "light.kitchen" to "on", "switch.pump" to "off")
-          .associate { (id, state) -> id to EntityState(id, state) }
+          .associate { (id, state) -> id to EntityState(id, state) },
     )
 
   @After
@@ -59,7 +59,7 @@ class WearWidgetFrameTest {
     assertEquals(DesignKey.WEAR_SMALL, wearAppContainer(tile, snapshot, registry))
     val entities =
       card(
-        """{"type":"entities","entities":["sensor.living_room","light.kitchen","switch.pump"]}"""
+        """{"type":"entities","entities":["sensor.living_room","light.kitchen","switch.pump"]}""",
       )
     assertEquals(DesignKey.WEAR_LARGE, wearAppContainer(entities, snapshot, registry))
     // A card whose data fills only the small container never takes the large one.
@@ -81,7 +81,7 @@ class WearWidgetFrameTest {
         tile.wearDesignProperties(
           lamp,
           HaSnapshot(states = mapOf("light.kitchen" to EntityState("light.kitchen", state))),
-        )
+        ),
       )
     assertEquals("1", properties("on")[WEAR_ON_PROPERTY])
     assertEquals(null, properties("off")[WEAR_ON_PROPERTY])

@@ -37,7 +37,7 @@ object ValueDesignParts {
             mapOf(
               "type" to JsonPrimitive(type),
               "entity" to JsonPrimitive("sensor.temperature"),
-            )
+            ),
           ),
         ),
         HaSnapshot(),

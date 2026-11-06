@@ -37,7 +37,7 @@ class CoverControlsTest {
             if (position != null) put("current_position", JsonPrimitive(position))
             if (features != null) put("supported_features", JsonPrimitive(features))
             putAll(extra)
-          }
+          },
         ),
     )
 
@@ -115,9 +115,9 @@ class CoverControlsTest {
             """{"entity":"cover.garage",
               "button_up_hide_states":["open","opening","closing"],
               "button_stop_hide_states":["open","closed","partial_open"],
-              "button_down_hide_states":["closed","opening","closing"]}"""
+              "button_down_hide_states":["closed","opening","closing"]}""",
           )
-          .jsonObject
+          .jsonObject,
       )
     assertEquals(controls(Enabled, Hidden, Hidden), coverControls(cover("closed", 0), hide))
     assertEquals(controls(Hidden, Hidden, Enabled), coverControls(cover("open", 100), hide))
@@ -165,8 +165,8 @@ class CoverControlsTest {
           "cover.bedroom",
           "closed",
           JsonObject(mapOf("device_class" to JsonPrimitive("shutter"))),
-        )
-      )
+        ),
+      ),
     )
     assertFalse(isGarageLike(EntityState("cover.bedroom", "closed")))
   }
@@ -177,7 +177,7 @@ class CoverControlsTest {
       CardConfig(
         "custom:enhanced-shutter-card",
         Json.parseToJsonElement(
-            """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage"}]}"""
+            """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage"}]}""",
           )
           .jsonObject,
       )
@@ -195,7 +195,7 @@ class CoverControlsTest {
       val shape = assertNotNull(converter.designProperties(card, closed), card.type).shape
       assertEquals(shape, converter.designProperties(card, opening)?.shape, "one design per door")
       assertNotNull(
-        converter.designTemplate(assertNotNull(converter.designProperties(card, closed)))
+        converter.designTemplate(assertNotNull(converter.designProperties(card, closed))),
       )
 
       // The template's position and features come from its recipe, keyed by slot.

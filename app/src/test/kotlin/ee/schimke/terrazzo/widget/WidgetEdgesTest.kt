@@ -23,14 +23,14 @@ class WidgetEdgesTest {
   @Test
   fun aStateFlippingIsVisible() {
     assertTrue(
-      WidgetEdges.isVisible("light.porch", state("light.porch", "off"), state("light.porch", "on"))
+      WidgetEdges.isVisible("light.porch", state("light.porch", "off"), state("light.porch", "on")),
     )
     assertTrue(
       WidgetEdges.isVisible(
         "sensor.power",
         state("sensor.power", "120"),
         state("sensor.power", "unavailable"),
-      )
+      ),
     )
   }
 
@@ -43,7 +43,7 @@ class WidgetEdgesTest {
         "sensor.power",
         state("sensor.power", "120.5"),
         state("sensor.power", "121"),
-      )
+      ),
     )
     // Only some domains move: a sensor reading "opening" is just a state.
     assertFalse(WidgetEdges.isMoving(state("sensor.door", "opening")))

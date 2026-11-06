@@ -41,8 +41,8 @@ class PublishedInstrumentTemplateTest {
                 id,
                 if (type == "gauge") "1100" else "heat",
                 Json.parseToJsonElement(attributes).jsonObject,
-              )
-          )
+              ),
+          ),
         )
       assertTrue(canPlayWithCmp(bytes), "$type needs supported CMP operations")
       assertTrue(
@@ -81,8 +81,8 @@ class PublishedInstrumentTemplateTest {
               "light.demo_lamp",
               "off",
               Json.parseToJsonElement("""{"friendly_name":"Demo lamp"}""").jsonObject,
-            )
-        )
+            ),
+        ),
       )
     for (style in listOf("classic", "console")) {
       val bytes = File(root, "scripts/fixtures/demo/tile-$style.rc").readBytes()

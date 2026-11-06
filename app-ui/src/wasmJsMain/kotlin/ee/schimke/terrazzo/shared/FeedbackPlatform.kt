@@ -20,7 +20,7 @@ internal actual val feedbackPlatform: String = "Web (Wasm)"
     tab.document.body.appendChild(link);
     link.click();
     return true;
-  }"""
+  }""",
 )
 private external fun openFeedbackTab(url: String): Boolean
 

@@ -16,7 +16,7 @@ class DashboardDraftTest {
             ]},
             {"type":"grid","cards":[]}
           ]}]}
-        """
+        """,
       )
       .jsonObject
 
@@ -196,7 +196,7 @@ class DashboardDraftTest {
     val tile =
       Json.parseToJsonElement(
           """{"type":"tile","entity":"light.a","name":"Desk","grid_options":{"columns":6},
-            "features":[{"type":"light-brightness"}],"tap_action":{"action":"toggle"}}"""
+            "features":[{"type":"light-brightness"}],"tap_action":{"action":"toggle"}}""",
         )
         .jsonObject
     val changed = DashboardDraft.withEntity(tile, "light.b")
@@ -204,7 +204,7 @@ class DashboardDraftTest {
 
     val list =
       Json.parseToJsonElement(
-          """{"type":"entities","title":"T","entities":[{"entity":"a.x","name":"X"},"a.y"]}"""
+          """{"type":"entities","title":"T","entities":[{"entity":"a.x","name":"X"},"a.y"]}""",
         )
         .jsonObject
     val listChanged = DashboardDraft.withEntity(list, "a.z")
@@ -220,7 +220,7 @@ class DashboardDraftTest {
     val tile =
       Json.parseToJsonElement(
           """{"type":"tile","entity":"sensor.t","name":"Hall","grid_options":{"columns":6},
-            "tap_action":{"action":"more-info"},"features":[{"type":"trend-graph"}],"color":"red"}"""
+            "tap_action":{"action":"more-info"},"features":[{"type":"trend-graph"}],"color":"red"}""",
         )
         .jsonObject
     val choices = DashboardDraft.templateChoices(tile)
@@ -268,7 +268,7 @@ class DashboardDraftTest {
   fun aLegacySizeMovesToGridOptionsOnASwap() {
     val tile =
       Json.parseToJsonElement(
-          """{"type":"tile","entity":"sensor.t","layout_options":{"grid_columns":2,"grid_rows":3}}"""
+          """{"type":"tile","entity":"sensor.t","layout_options":{"grid_columns":2,"grid_rows":3}}""",
         )
         .jsonObject
     val swapped = DashboardDraft.withType(tile, "sensor")

@@ -294,13 +294,13 @@ private fun ValueReadout(reading: HaReading, size: RemoteTextUnit) {
         modifier =
           RemoteModifier.clip(RemoteRoundedCornerShape((HaShape.Chip * 2).rdp))
             .background(theme.placeholderBackground)
-            .padding(horizontal = HaSpace.L.rdp, vertical = HaSpace.XXS.rdp)
+            .padding(horizontal = HaSpace.L.rdp, vertical = HaSpace.XXS.rdp),
       ) {
         value()
       }
     HaReadoutStyle.Screen ->
       RemoteBox(
-        modifier = lcdScreen().padding(horizontal = HaSpace.S.rdp, vertical = HaSpace.Hairline.rdp)
+        modifier = lcdScreen().padding(horizontal = HaSpace.S.rdp, vertical = HaSpace.Hairline.rdp),
       ) {
         value()
       }
@@ -326,7 +326,7 @@ private fun NameLabel(reading: HaReading, size: RemoteTextUnit, ruled: Boolean =
           RemoteModifier.padding(top = HaSpace.XXS.rdp)
             .fillMaxWidth()
             .height(HaSpace.Hairline.rdp)
-            .background(theme.divider)
+            .background(theme.divider),
       )
     }
   }

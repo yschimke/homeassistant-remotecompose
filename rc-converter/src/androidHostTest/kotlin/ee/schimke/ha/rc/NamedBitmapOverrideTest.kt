@@ -83,8 +83,8 @@ class NamedBitmapOverrideTest {
             RemoteDocument(
               CoreDocument().apply {
                 initFromBuffer(RemoteComposeBuffer.fromInputStream(bytes.inputStream()))
-              }
-            )
+              },
+            ),
           )
         }
       assertEquals(red, draw(player), "the document's own bitmap draws")

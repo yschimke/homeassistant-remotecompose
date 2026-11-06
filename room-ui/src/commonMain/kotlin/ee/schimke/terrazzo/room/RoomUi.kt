@@ -84,7 +84,7 @@ fun FlatRoomControls(
           actions()
         },
       )
-    }
+    },
   ) { padding ->
     val state = content.state
     if (state == null) {

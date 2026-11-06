@@ -159,15 +159,15 @@ class CardDesignChoiceTest {
     val theme = DesignKey.bakedTheme("Material3", dark = false)
     // Any variant or author of the installed skin, though neither is in the choice.
     assertTrue(
-      choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:printer"))
+      choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:printer")),
     )
     assertFalse(choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:x")))
     // Only in the themes the dashboard draws.
     assertFalse(
       choice.wants(
         entry(DesignKey.styledTheme("lcd", dark = false), "printer", "github:octocat")
-          .copy(designId = "user:printer")
-      )
+          .copy(designId = "user:printer"),
+      ),
     )
     assertEquals(setOf("user:printer"), choice.designIds)
   }
@@ -190,7 +190,7 @@ class CardDesignChoiceTest {
       )
     val theme = DesignKey.bakedTheme("Material3", dark = false)
     assertFalse(
-      choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:printer"))
+      choice.wants(entry(theme, "printer", "github:octocat").copy(designId = "user:printer")),
     )
     assertEquals(emptySet(), choice.designIds)
   }
@@ -228,7 +228,7 @@ class CardDesignChoiceTest {
       byKey = mapOf(key to generic),
       deviceByKey =
         mapOf(
-          key to listOf(ee.schimke.ha.design.DeviceMatch(integration = "bambu_lab") to forPrinter)
+          key to listOf(ee.schimke.ha.design.DeviceMatch(integration = "bambu_lab") to forPrinter),
         ),
       byDesign =
         ee.schimke.ha.client.design.DesignsById(
@@ -241,8 +241,8 @@ class CardDesignChoiceTest {
                   ee.schimke.ha.design.DeviceMatch(model = "X1*"),
                   forkForPrinter,
                 ),
-              )
-          )
+              ),
+          ),
         ),
     )
 

@@ -258,7 +258,7 @@ class DesignRepository(
             etag = result.etag,
             fetchedAtEpochMs = now,
             highestSerial = maxOf(highest, manifest.serial),
-          )
+          ),
         )
         recordSuccess()
         RefreshResult.Updated
@@ -386,7 +386,7 @@ class DesignRepository(
    * picks among a key's candidates per card with [ee.schimke.ha.design.DeviceMatch.pick].
    */
   suspend fun resolveDeviceDesigns(
-    prefer: List<DesignQuery> = emptyList()
+    prefer: List<DesignQuery> = emptyList(),
   ): Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>> =
     store.readManifest()?.let { resolveDeviceDesigns(it, prefer) } ?: emptyMap()
 
@@ -469,8 +469,8 @@ class DesignRepository(
         if (response.status.isSuccess()) response.bodyAsBytes() else null
       }
         .getOrNull()
-        // Content addressing: a blob that doesn't hash to its name is never stored.
-        ?.takeIf { Sha256.hex(it) == design.sha256 } ?: return false
+      // Content addressing: a blob that doesn't hash to its name is never stored.
+      ?.takeIf { Sha256.hex(it) == design.sha256 } ?: return false
     val entry = DesignEntry(key, design.sha256, bytes.size, design.slots)
     // The index first, then the blob: a reader that finds the entry before its blob skips it, and
     // the blob's arrival is what tells a cache snapshot to read again.
@@ -478,7 +478,7 @@ class DesignRepository(
       GeneratedDesigns(
         stored.manifest.serial,
         generated?.designs.orEmpty().filter { it.key != key } + entry,
-      )
+      ),
     )
     store.writeBlob(design.sha256, bytes)
     return true

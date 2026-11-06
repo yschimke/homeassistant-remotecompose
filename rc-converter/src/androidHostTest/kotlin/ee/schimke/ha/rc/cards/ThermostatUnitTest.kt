@@ -39,7 +39,7 @@ class ThermostatUnitTest {
           "temperature" to JsonPrimitive(70),
           "min_temp" to JsonPrimitive(45),
           "max_temp" to JsonPrimitive(95),
-        ) + extra
+        ) + extra,
       ),
     )
 

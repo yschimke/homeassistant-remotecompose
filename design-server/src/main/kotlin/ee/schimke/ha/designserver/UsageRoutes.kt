@@ -117,7 +117,7 @@ object StatsPage {
     append("<h1>Template usage</h1>")
     append(
       "<p>${esc(from)} to ${esc(to)} (UTC). Only counts with ${UsageStats.K_ANONYMITY} or more " +
-        "requests or reports behind them are shown.</p>"
+        "requests or reports behind them are shown.</p>",
     )
     if (rows.isEmpty()) {
       append("<p>Nothing to show yet.</p></body></html>")

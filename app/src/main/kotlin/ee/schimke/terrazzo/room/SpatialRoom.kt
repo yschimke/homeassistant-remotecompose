@@ -110,7 +110,7 @@ internal fun SpatialRoomControls(
       horizontalArrangement = SpatialArrangement.spacedBy(PANEL_GAP),
     ) {
       SpatialPanel(
-        SubspaceModifier.width(ROOM_PANEL_WIDTH).height(PANEL_HEIGHT).movable().resizable()
+        SubspaceModifier.width(ROOM_PANEL_WIDTH).height(PANEL_HEIGHT).movable().resizable(),
       ) {
         RoomPanel(content, lost, onRemoveLost = unpin)
         Orbiter(position = OrbiterPosition.BottomCenter()) {

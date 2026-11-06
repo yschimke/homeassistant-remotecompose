@@ -91,13 +91,13 @@ internal fun CardConverter.wearDesignTemplate(properties: DesignProperties): Des
       entity.copy(
         attributes =
           JsonObject(
-            entity.attributes + classification.associate { (k, v) -> k to JsonPrimitive(v) }
-          )
+            entity.attributes + classification.associate { (k, v) -> k to JsonPrimitive(v) },
+          ),
       )
   }
   if (entity == input.snapshot.states[entityId]) return input
   return input.copy(
-    snapshot = input.snapshot.copy(states = input.snapshot.states + (entityId to entity))
+    snapshot = input.snapshot.copy(states = input.snapshot.states + (entityId to entity)),
   )
 }
 

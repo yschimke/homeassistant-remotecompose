@@ -110,7 +110,7 @@ object CardDesignSlots {
           buildMap {
             put("friendly_name", JsonPrimitive(NAME_PLACEHOLDER))
             for ((k, v) in attributes) put(k, JsonPrimitive(v))
-          }
+          },
         ),
     )
 

@@ -86,8 +86,8 @@ class WearWidgetTemplateTest {
               "light.kitchen",
               "on",
               JsonObject(mapOf("friendly_name" to JsonPrimitive("Kitchen"))),
-            )
-        )
+            ),
+        ),
     )
 
   private fun params(type: Int, height: Float, horizontal: Float, vertical: Float, corner: Float) =
@@ -147,7 +147,7 @@ class WearWidgetTemplateTest {
     val (_, params) = containers.first()
     val widget =
       assertNotNull(
-        runBlocking { WearWidgetTemplate.instantiate(context, template, params, false, tint) }
+        runBlocking { WearWidgetTemplate.instantiate(context, template, params, false, tint) },
       )
     val untinted =
       assertNotNull(runBlocking { WearWidgetTemplate.instantiate(context, template, params) })

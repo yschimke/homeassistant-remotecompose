@@ -11,7 +11,7 @@ class LovelaceTemplateTest {
     "cards":[{"type":"tile","entity":"climate.s0"},
       {"type":"entities","entities":["sensor.s0",{"entity":"sensor.s0","name":"Temperature"}]},
       {"type":"button","tap_action":{"action":"perform-action","target":{"entity_id":["climate.s0"]}}}]
-  }"""
+  }""",
       )
       .jsonObject
   private val template =

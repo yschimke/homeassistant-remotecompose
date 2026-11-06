@@ -140,8 +140,8 @@ private fun stepperActions(
         kotlinx.serialization.json.JsonObject(
           mapOf(
             "humidity" to
-              kotlinx.serialization.json.JsonPrimitive((target + step).coerceAtMost(100f))
-          )
+              kotlinx.serialization.json.JsonPrimitive((target + step).coerceAtMost(100f)),
+          ),
         ),
     )
   val down =
@@ -153,8 +153,8 @@ private fun stepperActions(
         kotlinx.serialization.json.JsonObject(
           mapOf(
             "humidity" to
-              kotlinx.serialization.json.JsonPrimitive((target - step).coerceAtLeast(0f))
-          )
+              kotlinx.serialization.json.JsonPrimitive((target - step).coerceAtLeast(0f)),
+          ),
         ),
     )
   return up to down

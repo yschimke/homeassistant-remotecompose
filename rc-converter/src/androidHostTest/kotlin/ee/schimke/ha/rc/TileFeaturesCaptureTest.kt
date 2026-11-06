@@ -75,7 +75,7 @@ class TileFeaturesCaptureTest {
           "temperature" to JsonPrimitive(target),
           "hvac_action" to JsonPrimitive(action),
           "supported_features" to JsonPrimitive(401),
-        )
+        ),
       ),
     )
 
@@ -226,7 +226,7 @@ class TileFeaturesCaptureTest {
     fun textLayouts(width: Int, height: Int): Int {
       val operations = arrayListOf<androidx.compose.remote.core.Operation>()
       androidx.compose.remote.core.RemoteComposeBuffer.fromInputStream(
-          directWidget(card, width, height).inputStream()
+          directWidget(card, width, height).inputStream(),
         )
         .inflateFromBuffer(operations)
       return operations.count {

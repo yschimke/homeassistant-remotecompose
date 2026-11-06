@@ -38,7 +38,7 @@ fun messageInputs(card: CardConfig, snapshot: HaSnapshot): List<MessageInput> {
             .orEmpty()
         require(type != "choice" || options.isNotEmpty()) { "Choice input needs options" }
         require(
-          options.all { it.isNotEmpty() && '\n' !in it } && options.distinct().size == options.size
+          options.all { it.isNotEmpty() && '\n' !in it } && options.distinct().size == options.size,
         )
         val chrome = field["chrome"]?.jsonPrimitive?.content ?: "default"
         require(chrome in setOf("default", "none")) { "Unsupported input chrome: $chrome" }

@@ -19,7 +19,7 @@ class HaPushNotificationTest {
         """{"message":"Door open","title":"Front","hass_confirm_id":"c1",
           "data":{"tag":"door","group":"security","clickAction":"/lovelace/security",
           "entity_id":"binary_sensor.front_door",
-          "actions":[{"action":"CLOSE","title":"Close it"},{"action":"URI","title":"Camera","uri":"/cam"}]}}"""
+          "actions":[{"action":"CLOSE","title":"Close it"},{"action":"URI","title":"Camera","uri":"/cam"}]}}""",
       )!!
     assertEquals("Door open", n.message)
     assertEquals("Front", n.title)

@@ -73,13 +73,13 @@ class AgentCardDesigner(engine: HttpClientEngine? = null) {
             buildJsonObject {
               put("role", "system")
               put("content", system)
-            }
+            },
           )
         add(
           buildJsonObject {
             put("role", "user")
             put("content", user)
-          }
+          },
         )
       }
     }
@@ -187,7 +187,7 @@ fun validateCardDraft(original: JsonObject, candidate: JsonObject) {
         variable["type"] == JsonPrimitive("value") &&
         valid &&
         variable["nullable"] in setOf(null, JsonPrimitive(false)) &&
-        variable["persistence"] in setOf(null, JsonPrimitive("preview"), JsonPrimitive("design"))
+        variable["persistence"] in setOf(null, JsonPrimitive("preview"), JsonPrimitive("design")),
     ) {
       "Invalid shared binding."
     }
@@ -214,7 +214,7 @@ fun validateCardDraft(original: JsonObject, candidate: JsonObject) {
         (binding["mediaType"] as? JsonPrimitive)?.contentOrNull in
           setOf("image/png", "image/jpeg", "image/webp") &&
         source?.get("type") == JsonPrimitive("uploaded") &&
-        source["storageKey"] == JsonPrimitive(digest)
+        source["storageKey"] == JsonPrimitive(digest),
     ) {
       "Invalid image binding."
     }
@@ -227,7 +227,7 @@ fun validateCardDraft(original: JsonObject, candidate: JsonObject) {
         if (value["type"] == JsonPrimitive("state"))
           require(value["variable"]?.jsonPrimitive?.content in state) { "Unknown binding." }
         require(
-          value["type"]?.jsonPrimitive?.contentOrNull !in setOf("hostAction", "url", "javascript")
+          value["type"]?.jsonPrimitive?.contentOrNull !in setOf("hostAction", "url", "javascript"),
         ) {
           "Agent actions are not allowed."
         }
@@ -267,7 +267,7 @@ fun validateCardDraft(original: JsonObject, candidate: JsonObject) {
       val key = ((node["properties"] as? JsonObject)?.get("assetKey") as? JsonObject)
       require(
         key?.get("type") == JsonPrimitive("string") &&
-          (key["value"] as? JsonPrimitive)?.contentOrNull in assets
+          (key["value"] as? JsonPrimitive)?.contentOrNull in assets,
       ) {
         "Image is not attached."
       }
@@ -289,7 +289,8 @@ fun validateCardDraft(original: JsonObject, candidate: JsonObject) {
   require(visited == nodes.keys) { "Card has unreachable nodes." }
   roots.forEach {
     require(
-      nodes[it]?.jsonObject?.get("componentId") == originalNodes[it]?.jsonObject?.get("componentId")
+      nodes[it]?.jsonObject?.get("componentId") ==
+        originalNodes[it]?.jsonObject?.get("componentId"),
     )
   }
 }

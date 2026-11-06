@@ -74,7 +74,7 @@ internal fun EntityEditor(
                 },
               )
               editing = false
-            }
+            },
           ) {
             Text("Save")
           }

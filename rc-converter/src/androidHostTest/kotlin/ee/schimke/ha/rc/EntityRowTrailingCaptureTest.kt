@@ -59,7 +59,7 @@ class EntityRowTrailingCaptureTest {
         buildMap {
           put("friendly_name", JsonPrimitive(name))
           deviceClass?.let { put("device_class", JsonPrimitive(it)) }
-        }
+        },
       ),
     )
 
@@ -72,7 +72,7 @@ class EntityRowTrailingCaptureTest {
             entity("light.porch", "unavailable", "Porch light"),
             entity("light.hall", "on", "Hall light"),
           )
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private val card =

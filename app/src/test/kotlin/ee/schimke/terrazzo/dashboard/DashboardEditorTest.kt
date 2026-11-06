@@ -50,13 +50,13 @@ class DashboardEditorTest {
           {"type":"tile","entity":"sensor.upstairs_temperature","grid_options":{"columns":9}}
         ]}
       ]}]}
-      """
+      """,
     ) as JsonObject
 
   private val second = CardAddress(0, 0, 1)
 
   private fun setUp(
-    onAskAgent: (() -> Unit)? = null
+    onAskAgent: (() -> Unit)? = null,
   ): Pair<DashboardEditSession, MutableList<Pair<JsonObject, JsonObject>>> {
     val writes = mutableListOf<Pair<JsonObject, JsonObject>>()
     val session = DemoHaSession(clock = { 0L })

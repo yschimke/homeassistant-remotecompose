@@ -55,7 +55,7 @@ internal object WearWidgetIrSidecar {
     } catch (t: Throwable) {
       System.err.println(
         "WearWidgetIrSidecar: failed to offer the widget's RemoteCompose document; this render " +
-          "will emit no .rc sidecar. Cause: $t"
+          "will emit no .rc sidecar. Cause: $t",
       )
     }
   }

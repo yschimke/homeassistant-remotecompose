@@ -34,7 +34,7 @@ class CardEntitiesTest {
   fun entitiesArrayOfStrings() {
     val ids =
       cardEntityIds(
-        card("""{"entities":["sensor.temp","sensor.humidity"]}""", type = "history-graph")
+        card("""{"entities":["sensor.temp","sensor.humidity"]}""", type = "history-graph"),
       )
     assertEquals(setOf("sensor.temp", "sensor.humidity"), ids)
   }
@@ -47,7 +47,7 @@ class CardEntitiesTest {
           """{"entities":[{"entity":"light.bed","name":"Bed"},
                             {"entity":"switch.fan"}]}""",
           type = "entities",
-        )
+        ),
       )
     assertEquals(setOf("light.bed", "switch.fan"), ids)
   }
@@ -70,7 +70,7 @@ class CardEntitiesTest {
               }
             }""",
           type = "conditional",
-        )
+        ),
       )
     assertEquals(setOf("binary_sensor.door", "light.kitchen", "sensor.temp"), ids)
   }
@@ -83,7 +83,7 @@ class CardEntitiesTest {
           mapOf(
             "light.kitchen" to EntityState("light.kitchen", "on"),
             "sensor.temp" to EntityState("sensor.temp", "21.4"),
-          )
+          ),
       )
     val bindings = cardSnapshotBindings(setOf("light.kitchen", "sensor.temp"), snapshot)
     // `.state` carries the formatted display string (matches the converters'
@@ -128,7 +128,9 @@ class CardEntitiesTest {
     val snapshot =
       HaSnapshot(
         states =
-          mapOf("alarm_control_panel.home" to EntityState("alarm_control_panel.home", "armed_away"))
+          mapOf(
+            "alarm_control_panel.home" to EntityState("alarm_control_panel.home", "armed_away"),
+          ),
       )
     val bindings = cardSnapshotBindings(setOf("alarm_control_panel.home"), snapshot)
     // Alarm panels carry a domain-keyed int so the armed/disarmed chrome
@@ -148,7 +150,8 @@ class CardEntitiesTest {
     val changed = kotlin.time.Instant.parse("2026-10-29T10:15:20.732Z")
     val snapshot =
       HaSnapshot(
-        states = mapOf("light.kitchen" to EntityState("light.kitchen", "on", lastChanged = changed))
+        states =
+          mapOf("light.kitchen" to EntityState("light.kitchen", "on", lastChanged = changed)),
       )
     val bindings = cardSnapshotBindings(setOf("light.kitchen"), snapshot)
     assertEquals(changed.epochSeconds.toInt(), bindings.ints["light.kitchen.last_changed"])
@@ -169,8 +172,8 @@ class CardEntitiesTest {
                     "light.kitchen",
                     "on",
                     lastChanged = kotlin.time.Instant.parse(changed),
-                  )
-              )
+                  ),
+              ),
           ),
           zone,
         )
@@ -210,7 +213,7 @@ class CardEntitiesTest {
             "binary_sensor.driveway" to EntityState("binary_sensor.driveway", "unavailable"),
             "light.hall" to EntityState("light.hall", "unknown"),
             "binary_sensor.contact" to EntityState("binary_sensor.contact", "stale"),
-          )
+          ),
       )
     val bindings = cardSnapshotBindings(snapshot.states.keys, snapshot)
     assertEquals(false, bindings.booleans["binary_sensor.driveway.is_available"])
@@ -232,7 +235,7 @@ class CardEntitiesTest {
   fun pictureEntityIdsTopLevel() {
     val ids =
       cardPictureEntityIds(
-        card("""{"type":"picture-entity","entity":"camera.front"}""", type = "picture-entity")
+        card("""{"type":"picture-entity","entity":"camera.front"}""", type = "picture-entity"),
       )
     assertEquals(setOf("camera.front"), ids)
   }
@@ -261,7 +264,7 @@ class CardEntitiesTest {
               ]
             }""",
           type = "vertical-stack",
-        )
+        ),
       )
     assertEquals(setOf("camera.front", "camera.back"), ids)
   }
@@ -271,7 +274,7 @@ class CardEntitiesTest {
     // `entity:"front"` (no domain.id dot) — HA-illegal, skip.
     val ids =
       cardPictureEntityIds(
-        card("""{"type":"picture-entity","entity":"front"}""", type = "picture-entity")
+        card("""{"type":"picture-entity","entity":"front"}""", type = "picture-entity"),
       )
     assertTrue(ids.isEmpty())
   }
@@ -305,11 +308,11 @@ class CardEntitiesTest {
                     append("""{"motion":"$motion"""")
                     if (picture != null) append(""","entity_picture":"$picture"""")
                     append('}')
-                  }
+                  },
                 ),
               ),
             "light.kitchen" to EntityState("light.kitchen", "on"),
-          )
+          ),
       )
     val frame1 = cardPictureSignature(grid, snapshot("/api/camera_proxy/camera.driveway?token=a"))
     val frame2 = cardPictureSignature(grid, snapshot("/api/camera_proxy/camera.driveway?token=b"))

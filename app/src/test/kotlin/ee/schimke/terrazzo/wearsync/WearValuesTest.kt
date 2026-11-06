@@ -47,7 +47,7 @@ class WearValuesTest {
             "sensor.a1_mini_print_status",
             "sensor.outside_temp",
           )
-          .associateWith { entity(it) }
+          .associateWith { entity(it) },
     )
 
   @Test
@@ -108,7 +108,7 @@ class WearValuesTest {
             "elevation" to JsonPrimitive(-12.5),
             "next_rising" to JsonPrimitive("2026-11-01T07:00:00Z"),
             "private_extra" to JsonPrimitive("not sent"),
-          )
+          ),
         ),
       )
     val snapshot =

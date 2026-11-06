@@ -157,7 +157,7 @@ class WidgetConfigureActivity : ComponentActivity() {
       context.sendBroadcast(
         Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
           .setComponent(LauncherWidgetSpec.componentName(context))
-          .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(widgetId))
+          .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(widgetId)),
       )
     }
   }
@@ -185,7 +185,7 @@ internal fun WidgetConfigureScreen(
           IconButton(onClick = onClose) { Icon(Icons.Filled.Close, contentDescription = "Close") }
         },
       )
-    }
+    },
   ) { padding ->
     Column(
       Modifier.fillMaxSize()
@@ -244,7 +244,7 @@ internal fun LiveUpdatesRow(checked: Boolean, onCheckedChange: (Boolean) -> Unit
     supportingContent = {
       Text(
         "Off, it updates while the app is running and about every 30 minutes. On, Home " +
-          "Assistant wakes the app as soon as it visibly changes, which uses some battery."
+          "Assistant wakes the app as soon as it visibly changes, which uses some battery.",
       )
     },
     trailingContent = { Switch(checked = checked, onCheckedChange = null) },
@@ -261,7 +261,7 @@ internal fun CardConfig.withLabel(label: String): CardConfig {
   if (trimmed == raw.string("name").orEmpty()) return this
   val rest = raw - "name"
   return copy(
-    raw = JsonObject(if (trimmed.isEmpty()) rest else rest + ("name" to JsonPrimitive(trimmed)))
+    raw = JsonObject(if (trimmed.isEmpty()) rest else rest + ("name" to JsonPrimitive(trimmed))),
   )
 }
 

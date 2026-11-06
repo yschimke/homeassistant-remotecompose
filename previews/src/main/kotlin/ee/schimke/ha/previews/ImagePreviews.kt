@@ -224,7 +224,7 @@ private fun ProbeUrlHost(theme: HaTheme, url: String) {
         previewCoilBitmapLoader(
           context,
           mappings = mapOf(SAMPLE_URL_FRAME_0 to frame0, SAMPLE_URL_FRAME_1 to frame1),
-        )
+        ),
       )
     }
   Box(modifier = Modifier.uiFillMaxWidth().uiHeight(IMAGE_BOX_HEIGHT_DP.dp)) {

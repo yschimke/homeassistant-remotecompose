@@ -67,11 +67,11 @@ fun main(args: Array<String>) {
     if (store == null) "library store: none, serving ${dir.absolutePath} read-only"
     else
       "library store: ${store.absolutePath}, channels ${channels.list().map { it.channel }}" +
-        if (publishToken == null) " (publishing off: no LIBRARY_PUBLISH_TOKEN)" else ""
+        if (publishToken == null) " (publishing off: no LIBRARY_PUBLISH_TOKEN)" else "",
   )
   println(
     "card design server: ${library.designs.size} designs (serial ${library.manifest.serial}) " +
-      "from ${holder.dir.absolutePath} on http://$host:$port - app URL: <host>$API_BASE"
+      "from ${holder.dir.absolutePath} on http://$host:$port - app URL: <host>$API_BASE",
   )
   // Redirects are answers here (UI Builder's share route, GitHub's), never something to follow.
   val http = HttpClient(io.ktor.client.engine.cio.CIO) { followRedirects = false }
@@ -91,7 +91,7 @@ fun main(args: Array<String>) {
           if (github != null) " - editing: ${github.signInDescription}"
           else
             " - edit link (keep it private, it unlocks editing): " +
-              "http://localhost:$port/edit?token=${config.token.encodeURLParameter()}"
+              "http://localhost:$port/edit?token=${config.token.encodeURLParameter()}",
       )
       UiBuilderIntegration(config, UiBuilderClient(config, http))
     }
@@ -101,7 +101,7 @@ fun main(args: Array<String>) {
       System.getenv("USAGE_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
         ?: System.getenv("UI_BUILDER_STATE_DIR")
           ?.takeIf { it.isNotBlank() }
-          ?.let { File(it, "usage") }
+          ?.let { File(it, "usage") },
     )
   val statsUsers =
     System.getenv("STATS_USERS")

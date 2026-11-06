@@ -71,7 +71,7 @@ fun GlassesThroughTheLensPreview() {
       Modifier.align(Alignment.Center).size(480.dp).graphicsLayer {
         compositingStrategy = CompositingStrategy.Offscreen
         blendMode = BlendMode.Screen
-      }
+      },
     ) {
       GlassesRoomScreen(state(DemoHouse.livingRoom.id), Snapshot, onToggle = {}, onPick = {})
     }

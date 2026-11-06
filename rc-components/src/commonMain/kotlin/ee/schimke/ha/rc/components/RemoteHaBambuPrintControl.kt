@@ -42,7 +42,7 @@ fun RemoteHaBambuPrintControl(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = 12.rdp),
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
@@ -95,7 +95,7 @@ private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
           .clip(haControlShape(24, round = true))
           .then(
             if (console) RemoteModifier
-            else RemoteModifier.background(accent.copy(alpha = accent.alpha * 0.18f.rf))
+            else RemoteModifier.background(accent.copy(alpha = accent.alpha * 0.18f.rf)),
           ),
       contentAlignment = RemoteAlignment.Center,
     ) {

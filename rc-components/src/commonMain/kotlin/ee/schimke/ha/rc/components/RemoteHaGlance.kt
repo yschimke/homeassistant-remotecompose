@@ -64,7 +64,7 @@ fun RemoteHaGlance(
         .fillMaxWidth()
         .then(if (fillHeight) RemoteModifier.fillMaxHeight() else RemoteModifier)
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = (if (compactCells) 2 else 10).rdp)
+        .padding(horizontal = 12.rdp, vertical = (if (compactCells) 2 else 10).rdp),
   ) {
     // When the host pins extra height (fillHeight) the title and grid centre together in it, so a
     // short grid isn't left under a title on the top edge (Principle 8). Centring lives in this
@@ -176,7 +176,7 @@ fun RemoteHaGlanceCell(
     RemoteBox(
       modifier =
         RemoteModifier.padding(vertical = (if (compact) 0 else 4).rdp)
-          .then(if (data.tapAction != HaAction.None) haKeyChrome(accent) else RemoteModifier)
+          .then(if (data.tapAction != HaAction.None) haKeyChrome(accent) else RemoteModifier),
     ) {
       HaStateIcon(
         icon = data.icon,

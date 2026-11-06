@@ -73,7 +73,7 @@ class StatisticCardConverter : DesignedCardConverter() {
     val withUnit =
       entity.copy(
         attributes =
-          JsonObject(entity.attributes + ("unit_of_measurement" to JsonPrimitive("unit")))
+          JsonObject(entity.attributes + ("unit_of_measurement" to JsonPrimitive("unit"))),
       )
     return input.copy(snapshot = HaSnapshot(states = mapOf(entity.entityId to withUnit)))
   }

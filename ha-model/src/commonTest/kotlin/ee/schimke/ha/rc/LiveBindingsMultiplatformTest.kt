@@ -128,8 +128,8 @@ class LiveBindingsMultiplatformTest {
                 "sensor.temp",
                 value,
                 buildJsonObject { put("unit_of_measurement", "°C") },
-              )
-          )
+              ),
+          ),
       )
     val before = cardSnapshotBindings(setOf("sensor.temp"), snapshot("21.500"))
     val after = cardSnapshotBindings(setOf("sensor.temp"), snapshot("23.125"))

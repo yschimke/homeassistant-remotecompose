@@ -37,7 +37,7 @@ class WatchWidgetCardsTest {
         listOf(
           PinnedCard(card = forecast, cardKey = "pin-forecast", orderIndex = 0),
           PinnedCard(card = kitchen, cardKey = "pin-kitchen", orderIndex = 1),
-        )
+        ),
       ),
       PinnedSectionSet(listOf(heating)),
     )

@@ -72,7 +72,7 @@ class DesignQueryTest {
           entry(),
           entry(cardType = "gauge"),
           entry(theme = DesignKey.styledTheme("console", true), author = "github:a"),
-        )
+        ),
       )
     assertEquals(mapOf("gauge" to 1, "tile" to 2), tags.cardType)
     assertEquals(mapOf("classic" to 2, "console" to 1), tags.style)

@@ -45,8 +45,8 @@ class TemplateBindingsTest {
     assertFalse(TemplateBindings.needsTemplateRender("Temp: {{ states('sensor.t') }}"))
     assertFalse(
       TemplateBindings.needsTemplateRender(
-        "A {{ states('sensor.a') }} / B {{ states('sensor.b') }}"
-      )
+        "A {{ states('sensor.a') }} / B {{ states('sensor.b') }}",
+      ),
     )
   }
 
@@ -62,7 +62,7 @@ class TemplateBindingsTest {
   fun templateKey_differsForDifferentTemplates() {
     assertTrue(
       TemplateBindings.templateKey("{% if a %}1{% endif %}") !=
-        TemplateBindings.templateKey("{% if b %}2{% endif %}")
+        TemplateBindings.templateKey("{% if b %}2{% endif %}"),
     )
   }
 

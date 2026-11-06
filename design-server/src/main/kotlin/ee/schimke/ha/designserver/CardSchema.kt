@@ -139,18 +139,18 @@ data class CardSchema(
               matching.isEmpty() ->
                 add(
                   "No library template of `$type` has these slots: only the slot bindings are " +
-                    "listed. Values its converter adds (ranges, history, content) are missing."
+                    "listed. Values its converter adds (ranges, history, content) are missing.",
                 )
               shapes.size > 1 ->
                 add(
                   "${shapes.size} library shapes of `$type` have these slots, and the card's " +
                     "shape can't be told from here: only the ${added.size} card-specific " +
-                    "bindings all of them push are listed. A shape's own are left out."
+                    "bindings all of them push are listed. A shape's own are left out.",
                 )
               template != null && added.isNotEmpty() ->
                 add(
                   "${added.size} card-specific bindings come from library design " +
-                    "${template.id}, with its example's values."
+                    "${template.id}, with its example's values.",
                 )
             }
           },

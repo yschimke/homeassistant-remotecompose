@@ -26,7 +26,7 @@ fun Entities_Responsive_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(
       card(
-        """{"type":"entities","title":"Living Room and Kitchen Devices with Very Long Heading","entities":["sensor.living_room","light.kitchen","switch.coffee_maker"]}"""
+        """{"type":"entities","title":"Living Room and Kitchen Devices with Very Long Heading","entities":["sensor.living_room","light.kitchen","switch.coffee_maker"]}""",
       ),
       Fixtures.mixed,
       RemoteModifier.fillMaxWidth(),
@@ -41,7 +41,7 @@ fun Glance_Responsive_Dark() =
   CardHost(HaTheme.Dark) {
     RenderChild(
       card(
-        """{"type":"glance","title":"Overview and Alerting Summary for Main Floor","entities":["sensor.living_room","light.kitchen","lock.front_door"]}"""
+        """{"type":"glance","title":"Overview and Alerting Summary for Main Floor","entities":["sensor.living_room","light.kitchen","lock.front_door"]}""",
       ),
       Fixtures.mixed,
       RemoteModifier.fillMaxWidth(),
@@ -60,7 +60,7 @@ fun Markdown_Responsive_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(
       card(
-        """{"type":"markdown","title":"Notes for This Evening and Tomorrow","content":"Welcome home.\n- Dishwasher running\n- Back door locked"}"""
+        """{"type":"markdown","title":"Notes for This Evening and Tomorrow","content":"Welcome home.\n- Dishwasher running\n- Back door locked"}""",
       ),
       Fixtures.mixed,
       RemoteModifier.fillMaxWidth(),

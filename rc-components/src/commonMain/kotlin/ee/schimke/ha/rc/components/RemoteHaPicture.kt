@@ -101,9 +101,9 @@ fun RemoteHaPicture(
                   RemoteModifier.padding(8.rdp)
                     .clip(RemoteRoundedCornerShape(4.rdp))
                     .background(
-                      theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.7f.rf)
+                      theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.7f.rf),
                     )
-                    .padding(horizontal = 6.rdp, vertical = 2.rdp)
+                    .padding(horizontal = 6.rdp, vertical = 2.rdp),
               ) {
                 RemoteText(
                   text = cardText("image", data.captionUrl),
@@ -122,9 +122,9 @@ fun RemoteHaPicture(
             modifier =
               RemoteModifier.fillMaxWidth()
                 .background(
-                  theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.85f.rf)
+                  theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.85f.rf),
                 )
-                .padding(horizontal = 12.rdp, vertical = 6.rdp)
+                .padding(horizontal = 12.rdp, vertical = 6.rdp),
           ) {
             RemoteText(
               text = cardText("name", data.name),
@@ -160,8 +160,8 @@ fun RemoteHaPictureGlance(
   RemoteBox(
     modifier =
       (if (fillHeight) modifier.fillMaxSize() else modifier.fillMaxWidth()).then(
-        cardChrome(theme.divider, theme.divider)
-      )
+        cardChrome(theme.divider, theme.divider),
+      ),
   ) {
     RemoteColumn(modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier) {
       // The image area: in a fixed cell ([fillHeight]) whatever the strip leaves, so the card
@@ -445,7 +445,7 @@ private fun Element(
             .clip(haControlShape(6))
             .border(1.rdp, accent, haControlShape(6))
             .then(haKeyChrome(accent))
-            .padding(horizontal = 10.rdp, vertical = 6.rdp)
+            .padding(horizontal = 10.rdp, vertical = 6.rdp),
       ) {
         RemoteText(
           text = cardText("el.$index.label", element.label),

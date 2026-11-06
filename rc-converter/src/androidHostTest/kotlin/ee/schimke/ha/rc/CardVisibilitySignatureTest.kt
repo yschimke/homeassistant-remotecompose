@@ -26,7 +26,7 @@ class CardVisibilitySignatureTest {
     HaSnapshot(
       states =
         listOf(EntityState("binary_sensor.door", door), EntityState("light.hall", light))
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private val grid =
@@ -34,7 +34,7 @@ class CardVisibilitySignatureTest {
       """{"type":"grid","cards":[
         {"type":"tile","entity":"light.hall"},
         {"type":"conditional","conditions":[{"entity":"binary_sensor.door","state":"on"}],
-         "card":{"type":"tile","entity":"binary_sensor.door"}}]}"""
+         "card":{"type":"tile","entity":"binary_sensor.door"}}]}""",
     )
 
   @Test
@@ -57,7 +57,7 @@ class CardVisibilitySignatureTest {
   @Test
   fun aCardWithoutConditionalsHasNone() {
     assertNull(
-      cardVisibilitySignature(card("""{"type":"tile","entity":"light.hall"}"""), snapshot("off"))
+      cardVisibilitySignature(card("""{"type":"tile","entity":"light.hall"}"""), snapshot("off")),
     )
   }
 }

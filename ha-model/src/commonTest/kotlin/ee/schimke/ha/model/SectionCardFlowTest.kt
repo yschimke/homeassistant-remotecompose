@@ -83,7 +83,7 @@ class SectionCardFlowTest {
     // included (HA's default for a map, and what dashboards often author on every card).
     assertFalse(SectionCardFlow.ownRow(card("""{"type":"map"}""")))
     assertFalse(
-      SectionCardFlow.ownRow(card("""{"type":"tile","grid_options":{"columns":"full"}}"""))
+      SectionCardFlow.ownRow(card("""{"type":"tile","grid_options":{"columns":"full"}}""")),
     )
     assertFalse(SectionCardFlow.ownRow(card("""{"type":"tile","grid_options":{"columns":12}}""")))
   }

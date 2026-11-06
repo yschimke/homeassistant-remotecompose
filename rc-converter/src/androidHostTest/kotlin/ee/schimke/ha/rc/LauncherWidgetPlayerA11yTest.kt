@@ -59,10 +59,10 @@ class LauncherWidgetPlayerA11yTest {
                 mapOf(
                   "friendly_name" to JsonPrimitive("Outside"),
                   "unit_of_measurement" to JsonPrimitive("°C"),
-                )
+                ),
               ),
-            )
-        )
+            ),
+        ),
     )
 
   private val card =
@@ -109,7 +109,7 @@ class LauncherWidgetPlayerA11yTest {
     val hierarchy = AccessibilityHierarchyAndroid.newBuilder(root).build()
     val errors =
       AccessibilityCheckPreset.getAccessibilityHierarchyChecksForPreset(
-          AccessibilityCheckPreset.LATEST
+          AccessibilityCheckPreset.LATEST,
         )
         .flatMap { it.runCheckOnHierarchy(hierarchy) }
         .filter { it.type == AccessibilityCheckResultType.ERROR }

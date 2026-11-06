@@ -56,7 +56,7 @@ class AlarmPanelLiveStateTest {
 
   private fun snapshot(state: String, vararg attrs: Pair<String, JsonElement>) =
     HaSnapshot(
-      states = mapOf(id to EntityState(id, state, JsonObject(mapOf(*attrs) + friendlyName)))
+      states = mapOf(id to EntityState(id, state, JsonObject(mapOf(*attrs) + friendlyName))),
     )
 
   private val friendlyName = "friendly_name" to JsonPrimitive("Home alarm")

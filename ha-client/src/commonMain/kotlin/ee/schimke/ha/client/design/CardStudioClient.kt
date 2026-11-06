@@ -146,7 +146,7 @@ private constructor(
             put("key", Json.encodeToJsonElement(DesignKey.serializer(), key))
             put("revision", revision)
           }
-            .toString()
+            .toString(),
         )
       }
     if (response.status == HttpStatusCode.NotFound) throw CardStudioException(410)
@@ -222,7 +222,7 @@ private constructor(
                 assets.forEach { (key, bytes) -> put(key, Base64.encode(bytes)) }
               }
             }
-              .toString()
+              .toString(),
         )
       }
     if (!response.status.isSuccess()) {
@@ -284,7 +284,7 @@ private constructor(
             put("key", Json.encodeToJsonElement(DesignKey.serializer(), key))
             put("variant", variant)
           }
-            .toString()
+            .toString(),
         )
       }
     if (!response.status.isSuccess()) {
@@ -361,7 +361,7 @@ class CardPublishException(val status: Int, reason: String? = null) :
       422 -> reason ?: "That design can't be used for this card."
       503 -> "UI Builder is not configured on this design server."
       else -> "Publishing failed ($status). Check the design server and try again."
-    }
+    },
   )
 
 /** Safe, actionable errors; server response bodies may contain private preview text. */
@@ -379,7 +379,7 @@ class CardStudioException(val status: Int, reason: String? = null) :
       503 -> "UI Builder is not configured on this design server."
       400 -> "The card draft was rejected. Reset the draft and try again."
       else -> "Design server request failed ($status). Check server access and try again."
-    }
+    },
   )
 
 /** Replace preview values and the expiring id while preserving all design/layout edits. */
@@ -389,12 +389,12 @@ fun refreshCardDraft(document: JsonObject, freshSeed: JsonObject): JsonObject {
   require(
     freshState.all { (name, value) ->
       oldState[name]?.jsonObject?.minus("initialValue") == value.jsonObject - "initialValue"
-    }
+    },
   ) {
     "The card's bindings changed. Reset the draft to use its new contract."
   }
   require(
-    document["schema"] == freshSeed["schema"] && document["catalogPin"] == freshSeed["catalogPin"]
+    document["schema"] == freshSeed["schema"] && document["catalogPin"] == freshSeed["catalogPin"],
   ) {
     "The card's catalog changed. Reset the draft to use the new catalog."
   }
@@ -404,14 +404,14 @@ fun refreshCardDraft(document: JsonObject, freshSeed: JsonObject): JsonObject {
         mapOf(
           "id" to freshSeed["id"]!!,
           "stateVariables" to JsonObject(freshState + (oldState - freshState.keys)),
-        )
+        ),
     )
   validateCardDraft(freshSeed, refreshed)
   return refreshed
 }
 
 private fun io.ktor.client.HttpClientConfig<*>.configure(
-  homeAssistantToken: (suspend () -> String)?
+  homeAssistantToken: (suspend () -> String)?,
 ) {
   followRedirects = false
   install(HttpTimeout) { requestTimeoutMillis = 30_000 }
@@ -424,7 +424,7 @@ private fun io.ktor.client.HttpClientConfig<*>.configure(
             request.header(HttpHeaders.Authorization, "Bearer ${homeAssistantToken()}")
           }
         }
-      }
+      },
     )
   }
 }
@@ -447,7 +447,7 @@ fun studioServerUrl(value: String): String {
       url.user == null &&
       url.password == null &&
       url.fragment.isEmpty() &&
-      url.encodedQuery.isEmpty()
+      url.encodedQuery.isEmpty(),
   ) {
     "Use an HTTPS design server URL without credentials or query parameters."
   }
@@ -475,10 +475,10 @@ fun cardPreviewData(card: CardConfig, snapshot: HaSnapshot): JsonObject {
                   v.map { row ->
                     if (row is JsonPrimitive) JsonPrimitive(slots[row.content] ?: row.content)
                     else clean(row)
-                  }
+                  },
                 )
               else clean(v)
-            }
+            },
         )
       is JsonArray -> JsonArray(value.map(::clean))
       else -> value

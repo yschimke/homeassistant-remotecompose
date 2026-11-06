@@ -78,11 +78,11 @@ class LogbookLiveDocumentTest {
                 mapOf(
                   "friendly_name" to JsonPrimitive(name),
                   "device_class" to JsonPrimitive("door"),
-                )
+                ),
               ),
               lastChanged = changed,
-            )
-        )
+            ),
+        ),
     )
 
   private var snapshot by mutableStateOf(door("off", null))

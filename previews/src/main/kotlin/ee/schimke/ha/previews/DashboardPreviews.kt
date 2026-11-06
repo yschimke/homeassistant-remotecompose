@@ -345,9 +345,9 @@ internal fun liftGridCards(view: View): View =
                   listOf(card)
                 }
               children.map { it.copy(raw = JsonObject(it.raw - "grid_options")) }
-            }
+            },
         )
-      }
+      },
   )
 
 @Composable
@@ -551,7 +551,7 @@ private fun CardSlot(
     modifier =
       Modifier.uiFillMaxWidth()
         .heightIn(max = MAX_CARD_SLOT_HEIGHT_DP.dp)
-        .padding(horizontal = horizontalPadding)
+        .padding(horizontal = horizontalPadding),
   ) {
     CachedCardPreview(
       cacheKey = card,

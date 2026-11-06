@@ -120,9 +120,9 @@ object WearWidgetDesigns {
           "modifiers" to JsonArray(emptyList()),
           "slots" to
             JsonObject(
-              mapOf("content" to JsonArray(unwrapped(children(root)).map(::JsonPrimitive)))
+              mapOf("content" to JsonArray(unwrapped(children(root)).map(::JsonPrimitive))),
             ),
-        )
+        ),
       )
     for ((id, node) in nodes) {
       if (id == rootId || isSurface(id)) continue
@@ -136,10 +136,11 @@ object WearWidgetDesigns {
                 JsonObject(
                   slots.mapValues { (_, ids) ->
                     JsonArray(
-                      unwrapped(ids.jsonArray.map { it.jsonPrimitive.content }).map(::JsonPrimitive)
+                      unwrapped(ids.jsonArray.map { it.jsonPrimitive.content })
+                        .map(::JsonPrimitive),
                     )
-                  }
-                ))
+                  },
+                )),
           )
     }
     val environment = (card["environment"] as? JsonObject).orEmpty()
@@ -155,10 +156,10 @@ object WearWidgetDesigns {
                   "widthDp" to JsonPrimitive(target.widthDp),
                   "heightDp" to JsonPrimitive(target.heightDp),
                   "theme" to JsonPrimitive("dark"),
-                )
+                ),
             ),
           "nodes" to JsonObject(out),
-        )
+        ),
     )
   }
 
@@ -254,12 +255,12 @@ object WearWidgetDesigns {
                       JsonObject(
                         camera +
                           ("type" to JsonPrimitive("float")) +
-                          ("value" to JsonPrimitive(distance * scale))
-                      ))
+                          ("value" to JsonPrimitive(distance * scale)),
+                      )),
                 )
               } else if (key !in fields) value
               else JsonPrimitive(((value as? JsonPrimitive)?.floatOrNull ?: return null) * scale)
-            }
+            },
           )
         }
       scaled[id] = JsonObject(node + ("modifiers" to JsonArray(modifiers)))
@@ -296,9 +297,9 @@ object WearWidgetDesigns {
                   "widthDp" to JsonPrimitive(target.widthDp),
                   "heightDp" to JsonPrimitive(target.heightDp),
                   "theme" to JsonPrimitive("dark"),
-                )
+                ),
             ),
-        )
+        ),
     )
   }
 }

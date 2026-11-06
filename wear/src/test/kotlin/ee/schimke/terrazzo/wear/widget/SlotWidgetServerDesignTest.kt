@@ -102,8 +102,8 @@ class SlotWidgetServerDesignTest {
               "light.kitchen",
               "on",
               JsonObject(mapOf("friendly_name" to JsonPrimitive("Kitchen"))),
-            )
-        )
+            ),
+        ),
     )
 
   /**
@@ -116,8 +116,8 @@ class SlotWidgetServerDesignTest {
     val input =
       requireNotNull(
         converter.framedDesignTemplate(
-          requireNotNull(converter.framedDesignProperties(design, snapshot))
-        )
+          requireNotNull(converter.framedDesignProperties(design, snapshot)),
+        ),
       )
     return runBlocking {
       slotDocument(
@@ -218,8 +218,8 @@ class SlotWidgetServerDesignTest {
     val input =
       requireNotNull(
         converter.framedDesignTemplate(
-          requireNotNull(converter.framedDesignProperties(design, snapshot))
-        )
+          requireNotNull(converter.framedDesignProperties(design, snapshot)),
+        ),
       )
     return runBlocking {
       HostFramedWearWidgetDocument(WearWidgetBrush) {

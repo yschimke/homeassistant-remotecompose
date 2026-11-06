@@ -80,7 +80,7 @@ fun RoomScenePreview(
                   IntOffset(
                     (centre.x - placeable.width / 2f).roundToInt(),
                     (centre.y - placeable.height / 2f).roundToInt(),
-                  )
+                  ),
                 )
               }
             }

@@ -80,10 +80,10 @@ class LongPressHistoryTest {
     assertTrue(
       device.wait(
         Until.hasObject(
-          By.text(java.util.regex.Pattern.compile("Starting a session…|New session|Stop"))
+          By.text(java.util.regex.Pattern.compile("Starting a session…|New session|Stop")),
         ),
         10_000,
-      )
+      ),
     )
     assertTrue(device.wait(Until.hasObject(By.descContains("Current card preview")), 15_000))
     assertTrue(

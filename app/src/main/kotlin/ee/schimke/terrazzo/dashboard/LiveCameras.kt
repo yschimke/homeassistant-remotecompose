@@ -186,8 +186,8 @@ internal fun HaSnapshot.withLiveFrames(frames: Map<String, String>): HaSnapshot 
     entity.copy(
       attributes =
         kotlinx.serialization.json.JsonObject(
-          entity.attributes + ("entity_picture" to JsonPrimitive(withFrame(url, frame)))
-        )
+          entity.attributes + ("entity_picture" to JsonPrimitive(withFrame(url, frame))),
+        ),
     )
   }
   return if (changed) copy(states = updated) else this

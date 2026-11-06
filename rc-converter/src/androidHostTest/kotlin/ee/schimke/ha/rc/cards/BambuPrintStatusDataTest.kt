@@ -117,7 +117,7 @@ class BambuPrintStatusDataTest {
           "sensor.p2s_sn2_print_progress",
           "0",
           "friendly_name" to "Garage printer Print progress",
-        )
+        ),
       ),
     )
     assertEquals(
@@ -129,7 +129,7 @@ class BambuPrintStatusDataTest {
             "sensor.p1s_01p00a123456789_print_status",
             "idle",
             "friendly_name" to "P1S_01P00A123456789 Print status",
-          )
+          ),
         ),
       ),
     )

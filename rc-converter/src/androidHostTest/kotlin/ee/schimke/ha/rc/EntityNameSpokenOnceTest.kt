@@ -54,7 +54,7 @@ class EntityNameSpokenOnceTest {
     HaSnapshot(
       states =
         listOf(entity("light.hall", "on", "Hall light"), entity("sensor.status", "Idle", "Status"))
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private fun render(card: CardConfig) {
@@ -98,7 +98,7 @@ class EntityNameSpokenOnceTest {
             add(JsonPrimitive("sensor.status"))
           }
         },
-      )
+      ),
     )
     assertNamedOnce("Hall light")
     assertNamedOnce("Status")
@@ -128,7 +128,7 @@ class EntityNameSpokenOnceTest {
           put("type", "tile")
           put("entity", "light.hall")
         },
-      )
+      ),
     )
     assertNamedOnce("Hall light")
   }

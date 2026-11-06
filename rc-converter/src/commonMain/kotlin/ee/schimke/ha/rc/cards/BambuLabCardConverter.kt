@@ -128,7 +128,7 @@ open class BambuLabCardConverter(
         modifier
           .fillMaxWidth()
           .then(cardChrome(theme.cardBackground, theme.divider))
-          .padding(horizontal = 12.rdp, vertical = 10.rdp)
+          .padding(horizontal = 12.rdp, vertical = 10.rdp),
     ) {
       RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
         RemoteText(
@@ -679,7 +679,7 @@ private fun resolveBambuDevices(raw: JsonObject, snapshot: HaSnapshot): JsonObje
   (out["cards"] as? JsonArray)?.let { cards ->
     val resolved =
       JsonArray(
-        cards.map { (it as? JsonObject)?.let { c -> resolveBambuDevices(c, snapshot) } ?: it }
+        cards.map { (it as? JsonObject)?.let { c -> resolveBambuDevices(c, snapshot) } ?: it },
       )
     if (resolved != cards) out = JsonObject(out + ("cards" to resolved))
   }
@@ -1298,7 +1298,7 @@ internal object BambuDesign {
 
   /** Each tray's bindings, renamed onto its template tray. */
   fun slotBindings(
-    trays: Map<ee.schimke.ha.rc.components.HaBambuSpoolSlot, String>
+    trays: Map<ee.schimke.ha.rc.components.HaBambuSpoolSlot, String>,
   ): CardSnapshotBindings {
     val strings = LinkedHashMap<String, String>()
     val floats = LinkedHashMap<String, Float>()

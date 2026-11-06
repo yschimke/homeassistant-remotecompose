@@ -138,7 +138,7 @@ class AlarmKeypadCoordinator(
         service = "alarm_${intent.service}",
         entityId = intent.entityId,
         serviceData = data,
-      )
+      ),
     )
   }
 

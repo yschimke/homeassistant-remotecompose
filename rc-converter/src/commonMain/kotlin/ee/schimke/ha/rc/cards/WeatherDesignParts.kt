@@ -36,7 +36,7 @@ object WeatherDesignParts {
             mapOf(
               "type" to JsonPrimitive("weather-forecast"),
               "entity" to JsonPrimitive("weather.home"),
-            )
+            ),
           ),
         ),
         HaSnapshot(),

@@ -37,5 +37,5 @@ fun <T> StateFlow<T>.heldWhileAmbient(manager: AmbientModeManager): Flow<T> = sn
         }
       }
   }
-  // Entering or leaving ambient with nothing new isn't a change.
-  .distinctUntilChanged()
+// Entering or leaving ambient with nothing new isn't a change.
+.distinctUntilChanged()

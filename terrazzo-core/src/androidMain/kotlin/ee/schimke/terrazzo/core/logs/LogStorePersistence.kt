@@ -23,7 +23,7 @@ import kotlinx.serialization.serializer
  */
 @Serializable
 internal data class PersistedLogBuffer(
-  @ProtoNumber(1) val entries: List<PersistedLogEntry> = emptyList()
+  @ProtoNumber(1) val entries: List<PersistedLogEntry> = emptyList(),
 )
 
 @Serializable
@@ -143,5 +143,5 @@ internal class ProtoBufStoreSerializer<T : Any>(
 
 @OptIn(ExperimentalSerializationApi::class)
 internal inline fun <reified T : Any> protoBufStoreSerializer(
-  default: T
+  default: T,
 ): ProtoBufStoreSerializer<T> = ProtoBufStoreSerializer(serializer(), default)

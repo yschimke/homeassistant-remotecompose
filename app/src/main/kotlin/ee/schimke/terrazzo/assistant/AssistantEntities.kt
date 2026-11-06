@@ -67,7 +67,7 @@ internal object AssistantEntities {
             },
             { name(it).lowercase() },
           )
-          .thenBy { it.entityId }
+          .thenBy { it.entityId },
       )
       .take(limit)
       .toList()

@@ -13,8 +13,8 @@ class CardServiceActionTest {
     val request =
       assertNotNull(
         action(
-          """{"type":"button","tap_action":{"action":"perform-action","perform_action":"meshcore.send_ui_message","data":{"entry_id":"radio-one"}}}"""
-        )
+          """{"type":"button","tap_action":{"action":"perform-action","perform_action":"meshcore.send_ui_message","data":{"entry_id":"radio-one"}}}""",
+        ),
       )
     assertEquals("meshcore", request.domain)
     assertEquals("send_ui_message", request.service)
@@ -29,13 +29,13 @@ class CardServiceActionTest {
     assertNull(action("""{"type":"button","entity":"script.x","tap_action":{"action":"none"}}"""))
     assertNull(
       action(
-        """{"type":"button","tap_action":{"action":"call-service","service":"javascript:alert(1)"}}"""
-      )
+        """{"type":"button","tap_action":{"action":"call-service","service":"javascript:alert(1)"}}""",
+      ),
     )
     assertNull(
       action(
-        """{"type":"button","tap_action":{"action":"call-service","service":"light.turn_on","target":{"area_id":"room"}}}"""
-      )
+        """{"type":"button","tap_action":{"action":"call-service","service":"light.turn_on","target":{"area_id":"room"}}}""",
+      ),
     )
   }
 

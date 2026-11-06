@@ -82,9 +82,9 @@ class PictureEntityCardConverter : DesignedCardConverter() {
               base.attributes +
                 ("entity_picture" to
                   kotlinx.serialization.json.JsonPrimitive(
-                    CardDesignSlots.pictureUrl(base.entityId)
-                  ))
-            )
+                    CardDesignSlots.pictureUrl(base.entityId),
+                  )),
+            ),
         )
       } else base
     val card =

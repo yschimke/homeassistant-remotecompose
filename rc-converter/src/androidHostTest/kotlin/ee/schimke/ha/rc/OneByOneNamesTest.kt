@@ -50,7 +50,7 @@ class OneByOneNamesTest {
       state,
       JsonObject(
         mapOf("friendly_name" to JsonPrimitive(name)) +
-          attrs.associate { (key, value) -> key to JsonPrimitive(value) }
+          attrs.associate { (key, value) -> key to JsonPrimitive(value) },
       ),
     )
 
@@ -76,7 +76,7 @@ class OneByOneNamesTest {
               "temperature" to "22",
             ),
           )
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private fun card(type: String, entity: String, icon: String? = null) =

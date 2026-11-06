@@ -74,8 +74,8 @@ fun Routing.streamRoute(bridge: HaSupervisorBridge) {
                   put("type", "lovelace_updated")
                   if (event.urlPath != null) put("url_path", event.urlPath)
                 }
-                  .toString()
-              )
+                  .toString(),
+              ),
             )
           }
         }

@@ -63,7 +63,7 @@ fun cardChrome(
     else if (style.material == HaSurfaceMaterial.BirchFrame) filled.then(ikeaFrameChrome(border))
     else if (style.material == HaSurfaceMaterial.MeshPlate)
       filled.background(
-        meshPlateBrush(LocalHaUberTheme.current.let { it.theme.palette(it.darkTheme).isDark })
+        meshPlateBrush(LocalHaUberTheme.current.let { it.theme.palette(it.darkTheme).isDark }),
       )
     else if (haLayouts().cardFrame)
       filled.then(communityFrame(LocalHaUberTheme.current.theme.visuals, border))
@@ -80,5 +80,5 @@ private fun panelSheen(): RemoteBrush =
       Color.White.copy(alpha = 0.02f).rc,
       Color.Black.copy(alpha = 0.08f).rc,
       Color.Black.copy(alpha = 0.24f).rc,
-    )
+    ),
   )

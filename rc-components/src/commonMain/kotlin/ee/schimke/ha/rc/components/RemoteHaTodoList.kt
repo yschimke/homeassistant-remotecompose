@@ -55,7 +55,7 @@ fun RemoteHaTodoList(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+        .padding(horizontal = 14.rdp, vertical = 12.rdp),
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
@@ -208,7 +208,7 @@ private fun CompactTodoList(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 14.rdp, vertical = 6.rdp)
+        .padding(horizontal = 14.rdp, vertical = 6.rdp),
   ) {
     RemoteColumn {
       RemoteText(

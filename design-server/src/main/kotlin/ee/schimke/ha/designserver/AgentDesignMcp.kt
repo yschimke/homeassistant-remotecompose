@@ -39,7 +39,7 @@ object AgentDesignMcp {
               "instructions",
               "Read the card request, then submit a complete draft. A person reviews and publishes it.",
             )
-          }
+          },
         )
       "ping" -> return result(JsonObject(emptyMap()))
       "tools/list" ->
@@ -54,7 +54,7 @@ object AgentDesignMcp {
                     put("type", "object")
                     putJsonObject("properties") {}
                   }
-                }
+                },
               )
               add(
                 buildJsonObject {
@@ -74,7 +74,7 @@ object AgentDesignMcp {
                       add("imageBase64")
                     }
                   }
-                }
+                },
               )
               add(
                 buildJsonObject {
@@ -95,10 +95,10 @@ object AgentDesignMcp {
                       add("document")
                     }
                   }
-                }
+                },
               )
             }
-          }
+          },
         )
       "tools/call" -> {
         val params = message["params"] as? JsonObject ?: return error(-32602, "Missing parameters")
@@ -174,7 +174,7 @@ object AgentDesignMcp {
                           put("nullable", false)
                           put("persistence", "design")
                         }
-                      }
+                      },
                     )
                   }
                 }
@@ -198,7 +198,7 @@ object AgentDesignMcp {
                       )
                     },
                     true,
-                  )
+                  ),
                 )
               }
               buildJsonObject {
@@ -220,7 +220,7 @@ object AgentDesignMcp {
         buildJsonObject {
           put("type", "text")
           put("text", data.toString())
-        }
+        },
       )
     }
     put("structuredContent", data)

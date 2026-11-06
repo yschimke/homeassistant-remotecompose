@@ -38,7 +38,7 @@ object DashboardAgentMcp {
               "instructions",
               "Read the dashboard request and submit a complete draft. The person reviews and applies it in Home Assistant.",
             )
-          }
+          },
         )
       "ping" -> result(JsonObject(emptyMap()))
       "tools/list" ->
@@ -53,7 +53,7 @@ object DashboardAgentMcp {
                     put("type", "object")
                     putJsonObject("properties") {}
                   }
-                }
+                },
               )
               add(
                 buildJsonObject {
@@ -71,10 +71,10 @@ object DashboardAgentMcp {
                       add("dashboard")
                     }
                   }
-                }
+                },
               )
             }
-          }
+          },
         )
       "tools/call" -> {
         val params = message["params"] as? JsonObject ?: return error(-32602, "Missing parameters")
@@ -105,7 +105,7 @@ object DashboardAgentMcp {
                       put("error", "Invalid or stale draft; read the current revision.")
                     },
                     true,
-                  )
+                  ),
                 )
               }
               buildJsonObject {
@@ -127,7 +127,7 @@ object DashboardAgentMcp {
         buildJsonObject {
           put("type", "text")
           put("text", data.toString())
-        }
+        },
       )
     }
     put("structuredContent", data)

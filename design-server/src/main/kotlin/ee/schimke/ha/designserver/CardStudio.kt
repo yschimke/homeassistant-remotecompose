@@ -378,7 +378,7 @@ fun Route.cardStudioRoutes(
             "card-preview",
             schema.cardType,
             HaCardsSeed.card("app-card"),
-          ) - "template"
+          ) - "template",
         )
       } catch (e: Exception) {
         if (e is CancellationException) throw e
@@ -487,7 +487,7 @@ fun Route.cardStudioRoutes(
             "UI Builder on this server can't open card drafts right now: it isn't serving the " +
               "<code>${studioEscape(document.catalogSystem())}</code> catalog. Your draft is kept " +
               "for ten minutes, so reload this page to try again. If it keeps happening, the " +
-              "design server's operator needs to publish that catalog."
+              "design server's operator needs to publish that catalog.",
           )
         editor.authorized -> OPEN_FORM
         editor.signInPath != null ->
@@ -591,7 +591,7 @@ private suspend fun ApplicationCall.receiveDraft(
     val encoded = (body["assetData"] as? JsonObject).orEmpty()
     val bindings = (document["assets"] as? JsonObject).orEmpty()
     require(
-      (encoded.isEmpty() && bindings.isEmpty()) || (allowAssets && encoded.keys == bindings.keys)
+      (encoded.isEmpty() && bindings.isEmpty()) || (allowAssets && encoded.keys == bindings.keys),
     )
     val assets = encoded.mapValues { (key, value) ->
       val data = value.jsonPrimitive.content
@@ -602,7 +602,7 @@ private suspend fun ApplicationCall.receiveDraft(
       val binding = bindings.getValue(key).jsonObject
       require(
         binding["mediaType"]?.jsonPrimitive?.content == type &&
-          binding["contentDigest"]?.jsonPrimitive?.content == "sha256:${Sha256.hex(bytes)}"
+          binding["contentDigest"]?.jsonPrimitive?.content == "sha256:${Sha256.hex(bytes)}",
       )
       bytes
     }
@@ -654,7 +654,7 @@ private suspend fun UiBuilderIntegration.openInBuilder(
       JsonObject(
         document +
           ("id" to JsonPrimitive("card-${UiBuilderConfig.randomToken()}")) +
-          ("assets" to JsonObject(bindings)) - "template"
+          ("assets" to JsonObject(bindings)) - "template",
       )
     val id = client.create(draft, resolveCatalog = true)
     created = id

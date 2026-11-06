@@ -32,7 +32,7 @@ class HighRiskActionsTest {
           cover("cover.gate", "gate"),
           cover("cover.blinds", "blind"),
           cover("cover.unknown", null),
-        )
+        ),
     )
 
   private fun risky(action: HaAction) = HighRiskActions.isHighRisk(action, snapshot)
@@ -63,16 +63,20 @@ class HighRiskActionsTest {
       put(
         "entity_id",
         kotlinx.serialization.json.JsonArray(
-          listOf(JsonPrimitive("light.hall"), JsonPrimitive("lock.front_door"))
+          listOf(JsonPrimitive("light.hall"), JsonPrimitive("lock.front_door")),
         ),
       )
     }
     assertTrue(risky(call("homeassistant", several)))
     assertTrue(
-      risky(call("homeassistant", buildJsonObject { put("entity_id", "light.hall, cover.garage") }))
+      risky(
+        call("homeassistant", buildJsonObject { put("entity_id", "light.hall, cover.garage") }),
+      ),
     )
     assertFalse(
-      risky(call("homeassistant", buildJsonObject { put("entity_id", "light.hall, cover.blinds") }))
+      risky(
+        call("homeassistant", buildJsonObject { put("entity_id", "light.hall, cover.blinds") }),
+      ),
     )
     // An area could hold a lock: a generic service aimed at one asks, a light service doesn't.
     assertTrue(risky(call("homeassistant", buildJsonObject { put("area_id", "garage") })))
@@ -94,14 +98,14 @@ class HighRiskActionsTest {
     assertEquals(
       HaAction.Toggle("light.kitchen"),
       CardDesignTemplates.primaryAction(
-        CardConfig("tile", buildJsonObject { put("entity", "light.kitchen") })
+        CardConfig("tile", buildJsonObject { put("entity", "light.kitchen") }),
       ),
     )
     // A lock defaults to more-info, never to actuating it.
     assertEquals(
       HaAction.MoreInfo("lock.front_door"),
       CardDesignTemplates.primaryAction(
-        CardConfig("tile", buildJsonObject { put("entity", "lock.front_door") })
+        CardConfig("tile", buildJsonObject { put("entity", "lock.front_door") }),
       ),
     )
     assertEquals(
@@ -113,7 +117,7 @@ class HighRiskActionsTest {
             put("entity", "light.kitchen")
             put("tap_action", buildJsonObject { put("action", "none") })
           },
-        )
+        ),
       ),
     )
   }

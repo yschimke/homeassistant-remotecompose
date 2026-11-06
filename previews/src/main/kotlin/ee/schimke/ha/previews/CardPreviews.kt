@@ -103,14 +103,14 @@ internal fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
 @Preview(name = "button (light)", showBackground = false, widthDp = 187, heightDp = 91)
 @Composable
 fun Button_Light(
-  @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) =
   CardHost(HaTheme.Light) { RenderChild(buttonCard(), param.second, RemoteModifier.fillMaxWidth()) }
 
 @Preview(name = "button (dark)", showBackground = false, widthDp = 187, heightDp = 91)
 @Composable
 fun Button_Dark(
-  @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) =
   CardHost(HaTheme.Dark) { RenderChild(buttonCard(), param.second, RemoteModifier.fillMaxWidth()) }
 
@@ -173,7 +173,7 @@ private fun entitiesCard() =
         "sensor.living_room",
         "light.kitchen",
         "switch.coffee_maker"
-    ]}"""
+    ]}""",
   )
 
 // ——— glance ———
@@ -193,7 +193,7 @@ private fun glanceCard() =
         "sensor.living_room",
         "light.kitchen",
         "lock.front_door"
-    ]}"""
+    ]}""",
   )
 
 // ——— availability ———
@@ -263,7 +263,7 @@ private fun availabilityTilesCard() =
   card(
     "{\"type\":\"grid\",\"columns\":2,\"square\":false,\"cards\":[" +
       availabilityEntities.joinToString(",") { "{\"type\":\"tile\",\"entity\":\"$it\"}" } +
-      "]}"
+      "]}",
   )
 
 // ——— heading ———
@@ -309,7 +309,7 @@ fun Markdown_Emphasis_Dark() =
 
 private fun markdownEmphasisCard() =
   card(
-    """{"type":"markdown","content":"## meshcore-mobile\n\n_Mobile companion for MeshCore_\n\nThis is *italic*, this is **bold**, this is ***both***.\n\n- Run `gradlew check` on snake_case_name\n- __Bold bullet__"}"""
+    """{"type":"markdown","content":"## meshcore-mobile\n\n_Mobile companion for MeshCore_\n\nThis is *italic*, this is **bold**, this is ***both***.\n\n- Run `gradlew check` on snake_case_name\n- __Bold bullet__"}""",
   )
 
 // ——— vertical-stack ———
@@ -329,7 +329,7 @@ private fun verticalStackCard() =
     """{"type":"vertical-stack","cards":[
         {"type":"tile","entity":"sensor.living_room"},
         {"type":"tile","entity":"light.kitchen"}
-    ]}"""
+    ]}""",
   )
 
 // ——— horizontal-stack ———
@@ -350,7 +350,7 @@ private fun horizontalStackCard() =
     """{"type":"horizontal-stack","cards":[
         {"type":"button","entity":"light.kitchen","name":"Kitchen"},
         {"type":"button","entity":"sensor.living_room","name":"Temp","icon":"mdi:thermometer"}
-    ]}"""
+    ]}""",
   )
 
 // ——— grid ———
@@ -374,7 +374,7 @@ private fun gridCard() =
         {"type":"button","entity":"light.kitchen","name":"Office"},
         {"type":"button","entity":"sensor.living_room","name":"Temp","icon":"mdi:thermometer"},
         {"type":"button","entity":"sensor.living_room","name":"RH","icon":"mdi:water-percent"}
-    ]}"""
+    ]}""",
   )
 
 // Four columns of buttons: four 80 dp cells need 344 dp, so a 360 dp phone keeps all four in a row
@@ -391,7 +391,7 @@ private fun gridButtons4Card() =
         {"type":"button","entity":"light.kitchen","name":"Office"},
         {"type":"button","entity":"sensor.living_room","name":"Temp","icon":"mdi:thermometer"},
         {"type":"button","entity":"sensor.living_room","name":"RH","icon":"mdi:water-percent"}
-    ]}"""
+    ]}""",
   )
 
 // The 3D Printing dashboard's camera grid: two `aspect_ratio: 1:1` picture-entity cards in two
@@ -422,7 +422,7 @@ private fun gridPicturesCard() =
     """{"type":"grid","columns":2,"cards":[
         {"type":"picture-entity","entity":"camera.driveway","name":"Chamber","aspect_ratio":"1:1"},
         {"type":"picture-entity","entity":"camera.driveway","name":"Nozzle","aspect_ratio":"1:1"}
-    ]}"""
+    ]}""",
   )
 
 // A tile grid: tiles keep their own height (they are rows, not squares). Three 140 dp tiles need
@@ -444,7 +444,7 @@ private fun gridTilesCard() =
         {"type":"tile","entity":"sensor.living_room","name":"Bedroom"},
         {"type":"tile","entity":"light.kitchen","name":"Hall"},
         {"type":"tile","entity":"sensor.living_room","name":"Study"}
-    ]}"""
+    ]}""",
   )
 
 // ——— dashboard (mixed-card demo) ———
@@ -500,7 +500,7 @@ private fun DashboardHost(theme: HaTheme) {
         card(
           """{"type":"entities","title":"Living Room","entities":[
                         "light.kitchen","switch.coffee_maker"
-                    ]}"""
+                    ]}""",
         ),
         Fixtures.mixed,
         RemoteModifier.fillMaxWidth(),
@@ -511,7 +511,7 @@ private fun DashboardHost(theme: HaTheme) {
         card(
           """{"type":"glance","title":"Overview","entities":[
                         "sensor.living_room","light.kitchen","lock.front_door"
-                    ]}"""
+                    ]}""",
         ),
         Fixtures.mixed,
         RemoteModifier.fillMaxWidth(),
@@ -575,7 +575,7 @@ private fun gaugeCard() =
   card(
     """{"type":"gauge","entity":"sensor.repeater_battery","name":"Battery %",
         "min":0,"max":100,"needle":true,
-        "severity":{"green":60,"yellow":30,"red":0}}"""
+        "severity":{"green":60,"yellow":30,"red":0}}""",
   )
 
 // ——— picture-entity ———
@@ -597,7 +597,7 @@ fun PictureEntity_Dark() =
 
 private fun pictureEntityCard() =
   card(
-    """{"type":"picture-entity","entity":"camera.driveway","name":"Driveway","show_name":true}"""
+    """{"type":"picture-entity","entity":"camera.driveway","name":"Driveway","show_name":true}""",
   )
 
 // ——— weather-forecast ———
@@ -625,7 +625,7 @@ fun WeatherForecast_Dark() =
 private fun weatherForecastCard() =
   card(
     """{"type":"weather-forecast","entity":"weather.forecast_home",
-        "show_current":true,"show_forecast":true}"""
+        "show_current":true,"show_forecast":true}""",
   )
 
 // ——— logbook ———
@@ -647,7 +647,7 @@ fun Logbook_Dark() =
 private fun logbookCard() =
   card(
     """{"type":"logbook","title":"Recent activity","hours_to_show":24,
-        "entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}"""
+        "entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}""",
   )
 
 // ——— history-graph ———
@@ -669,7 +669,7 @@ fun HistoryGraph_Dark() =
 private fun historyGraphCard() =
   card(
     """{"type":"history-graph","title":"Temperature","hours_to_show":24,
-        "entities":["sensor.outside_temp","sensor.upstairs_temp"]}"""
+        "entities":["sensor.outside_temp","sensor.upstairs_temp"]}""",
   )
 
 // Every series empty (recorder exclusions, a fresh install): one card-level
@@ -734,14 +734,14 @@ private fun meterGraphCard() =
   card(
     """{"type":"history-graph","title":"Electricity","hours_to_show":168,
         "entities":[{"entity":"sensor.meter_import_rate","name":"Import"},
-        {"entity":"sensor.meter_export_rate","name":"Export"},"sensor.solaredge_power"]}"""
+        {"entity":"sensor.meter_export_rate","name":"Export"},"sensor.solaredge_power"]}""",
   )
 
 private fun issuesGraphCard() =
   card(
     """{"type":"history-graph","title":"Open issues per repo","hours_to_show":336,
         "entities":["sensor.gh_meshcore_mobile_issues","sensor.gh_compose_ai_tools_issues",
-        "sensor.gh_remotecompose_issues","sensor.gh_cadence_issues"]}"""
+        "sensor.gh_remotecompose_issues","sensor.gh_cadence_issues"]}""",
   )
 
 // ——— bambu print-status ———
@@ -849,7 +849,7 @@ fun BambuPrintStatusFinished_Dark() =
 private fun bambuPrintStatusCard() =
   card(
     """{"type":"custom:ha-bambulab-print_status-card",
-        "printer":"<device-id-placeholder>","style":"full"}"""
+        "printer":"<device-id-placeholder>","style":"full"}""",
   )
 
 // ——— bambu print-control ———
@@ -980,7 +980,7 @@ private val bambuIdleWithButtons =
         listOf("pause", "resume", "stop").associate { action ->
           val id = "button.a1mini_sn1_${action}_printing"
           id to EntityState(id, "unavailable")
-        }
+        },
   )
 
 // ——— bambu ams ———
@@ -1112,7 +1112,7 @@ fun Clock_Zone() =
   CardHost(HaTheme.Light) {
     RenderChild(
       card(
-        """{"type":"clock","clock_size":"medium","time_format":"24","time_zone":"America/Los_Angeles"}"""
+        """{"type":"clock","clock_size":"medium","time_format":"24","time_zone":"America/Los_Angeles"}""",
       ),
       Fixtures.mixed,
       RemoteModifier.fillMaxWidth(),
@@ -1140,7 +1140,7 @@ fun StatisticsGraph_Dark() =
 private fun statsGraphCard() =
   card(
     """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],
-        "entities":["sensor.house_power","sensor.solar_power"]}"""
+        "entities":["sensor.house_power","sensor.solar_power"]}""",
   )
 
 // ——— alarm-panel ———
@@ -1162,7 +1162,7 @@ fun AlarmPanel_Dark() =
 private fun alarmPanelCard() =
   card(
     """{"type":"alarm-panel","entity":"alarm_control_panel.house",
-        "states":["arm_away","arm_home"]}"""
+        "states":["arm_away","arm_home"]}""",
   )
 
 // ——— media-control ———
@@ -1224,7 +1224,7 @@ fun Calendar_Dark() =
 private fun calendarCard() =
   card(
     """{"type":"calendar","title":"Family calendar","initial_view":"listWeek",
-        "entities":["calendar.family"]}"""
+        "entities":["calendar.family"]}""",
   )
 
 // ——— area ———
@@ -1248,7 +1248,7 @@ private fun areaCard() =
     """{"type":"area","name":"Living room",
         "entities":["sensor.living_room_temp","sensor.living_room_humidity",
                     "light.living_room_lamp","switch.living_room_speaker",
-                    "cover.living_room_blinds"]}"""
+                    "cover.living_room_blinds"]}""",
   )
 
 // ——— picture ———
@@ -1291,7 +1291,7 @@ private fun pictureGlanceCardConfig() =
   card(
     """{"type":"picture-glance","title":"Living room","image":"/local/lr.png",
         "entities":["light.living_room_lamp","light.kitchen_lights",
-                    "cover.living_room_blinds","switch.fan"]}"""
+                    "cover.living_room_blinds","switch.fan"]}""",
   )
 
 // ——— picture-elements ———
@@ -1330,7 +1330,7 @@ private fun pictureElementsCardConfig() =
            "style":{"left":"30%","top":"55%"}},
           {"type":"service-button","title":"All off",
            "tap_action":{"action":"call-service","service":"light.turn_off","target":{"entity_id":"light.living_room_lamp"}}}
-        ]}"""
+        ]}""",
   )
 
 // ——— statistic ———
@@ -1391,7 +1391,7 @@ private fun entityFilterCardConfig() =
   card(
     """{"type":"entity-filter","state_filter":["on"],
         "entities":["light.kitchen","light.office_lamp","switch.coffee_maker","lock.front_door"],
-        "card":{"type":"glance","title":"On now"}}"""
+        "card":{"type":"glance","title":"On now"}}""",
   )
 
 // ——— tile, state variants via PreviewParameter ———
@@ -1399,7 +1399,7 @@ private fun entityFilterCardConfig() =
 @Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Light_States(
-  @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) =
   CardHost(HaTheme.Light) {
     RenderChild(card("""{"type":"tile","entity":"light.kitchen"}"""), param.second)
@@ -1408,7 +1408,7 @@ fun Tile_Light_States(
 @Preview(name = "tile cover (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Cover_States(
-  @PreviewParameter(GarageCoverStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(GarageCoverStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) =
   CardHost(HaTheme.Light) {
     RenderChild(card("""{"type":"tile","entity":"cover.garage"}"""), param.second)
@@ -1417,7 +1417,7 @@ fun Tile_Cover_States(
 @Preview(name = "tile lock (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Lock_States(
-  @PreviewParameter(FrontDoorLockStatesProvider::class) param: Pair<String, HaSnapshot>
+  @PreviewParameter(FrontDoorLockStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) =
   CardHost(HaTheme.Light) {
     RenderChild(card("""{"type":"tile","entity":"lock.front_door"}"""), param.second)

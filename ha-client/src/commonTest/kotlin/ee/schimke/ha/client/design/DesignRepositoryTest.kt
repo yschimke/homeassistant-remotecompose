@@ -45,7 +45,7 @@ class DesignRepositoryTest {
           hits[path] = (hits[path] ?: 0) + 1
           val body = files[path] ?: return@MockEngine respondError(HttpStatusCode.NotFound)
           respond(body, HttpStatusCode.OK, headersOf("ETag", "\"${body.size}\""))
-        }
+        },
       )
   }
 
@@ -95,7 +95,7 @@ class DesignRepositoryTest {
             files[request.url.encodedPath.removePrefix("/v1/")]
               ?: return@MockEngine respondError(HttpStatusCode.NotFound)
           respond(body, HttpStatusCode.OK)
-        }
+        },
       )
     var minted = 0
     val repository =
@@ -173,13 +173,13 @@ class DesignRepositoryTest {
       )
     val revoked =
       next.manifest.copy(
-        designs = next.manifest.designs.map { if (it.key == key) it.copy(revoked = true) else it }
+        designs = next.manifest.designs.map { if (it.key == key) it.copy(revoked = true) else it },
       )
     host.files =
       mapOf(
         "manifest.json" to
           kotlinx.serialization.json.Json.encodeToString(DesignManifest.serializer(), revoked)
-            .encodeToByteArray()
+            .encodeToByteArray(),
       )
     assertEquals(RefreshResult.Failed, repo(host, store).refresh(force = true))
     assertNull(repo(host, store).resolve(key))
@@ -195,8 +195,8 @@ class DesignRepositoryTest {
     store.writeManifest(
       stored.copy(
         manifest =
-          stored.manifest.copy(designs = stored.manifest.designs.map { it.copy(revoked = true) })
-      )
+          stored.manifest.copy(designs = stored.manifest.designs.map { it.copy(revoked = true) }),
+      ),
     )
     assertEquals(emptyMap(), repo(null, store).resolveAll())
   }
@@ -254,7 +254,7 @@ class DesignRepositoryTest {
 
   private fun twoStyles() =
     published(
-      designs = listOf(design(), BuiltDesign(consoleKey, slots = 1, bytes = consoleTemplate))
+      designs = listOf(design(), BuiltDesign(consoleKey, slots = 1, bytes = consoleTemplate)),
     )
 
   @Test
@@ -315,7 +315,7 @@ class DesignRepositoryTest {
           designs = entries,
         ),
         fetchedAtEpochMs = now,
-      )
+      ),
     )
     val repository = repo(null, store)
     assertContentEquals(template, repository.resolveAll()[key])
@@ -323,7 +323,7 @@ class DesignRepositoryTest {
       theirs,
       repository
         .resolveAll(
-          prefer = listOf(DesignQuery(author = "github:someone"), DesignQuery(author = "terrazzo"))
+          prefer = listOf(DesignQuery(author = "github:someone"), DesignQuery(author = "terrazzo")),
         )[key],
     )
     // An author outside the choice never resolves, though its blob is still cached.
@@ -358,7 +358,7 @@ class DesignRepositoryTest {
           val path = request.url.encodedPath.removePrefix("/v1/")
           if (path == "manifest.json") respond(ByteArray(0), HttpStatusCode.NotModified)
           else respond(host.files.getValue(path), HttpStatusCode.OK)
-        }
+        },
       )
     val classic =
       DesignRepository(
@@ -392,7 +392,7 @@ class DesignRepositoryTest {
             ),
         ),
         fetchedAtEpochMs = now,
-      )
+      ),
     )
     val repository = repo(null, store)
     // The generic design keeps its key; the device design never displaces it.
@@ -454,7 +454,7 @@ class DesignRepositoryTest {
           designs = entries.map { it.first },
         ),
         fetchedAtEpochMs = now,
-      )
+      ),
     )
     return store
   }
@@ -643,7 +643,7 @@ class DesignRepositoryTest {
     val store = storeWith(entry(light, "user:fork", author = "github:x"))
     store.readManifest()?.let { stored ->
       store.writeManifest(
-        stored.copy(manifest = stored.manifest.copy(designs = stored.manifest.designs + darkEntry))
+        stored.copy(manifest = stored.manifest.copy(designs = stored.manifest.designs + darkEntry)),
       )
     }
     // The dark theme's blob is missing: only part of the design is on disk.
@@ -794,7 +794,7 @@ class DesignRepositoryTest {
       )
     store.readManifest()?.let { stored ->
       store.writeManifest(
-        stored.copy(manifest = stored.manifest.copy(designs = stored.manifest.designs + forDevice))
+        stored.copy(manifest = stored.manifest.copy(designs = stored.manifest.designs + forDevice)),
       )
     }
     assertEquals(true, repository.generate(unlisted))

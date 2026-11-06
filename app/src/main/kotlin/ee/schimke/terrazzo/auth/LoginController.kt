@@ -172,7 +172,7 @@ fun rememberLoginController(
  */
 @Composable
 internal fun rememberKeyedLauncher(
-  onResult: (key: String, result: ActivityResult) -> Unit
+  onResult: (key: String, result: ActivityResult) -> Unit,
 ): (key: String, intent: Intent) -> Unit {
   val pendingKey = rememberSaveable { mutableStateOf<String?>(null) }
   val launcher =

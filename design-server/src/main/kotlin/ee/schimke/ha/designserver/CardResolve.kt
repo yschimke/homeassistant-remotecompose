@@ -240,7 +240,7 @@ object CardResolve {
           if (shapes.size > 1)
             add(
               "${shapes.size} shapes of `${schema.cardType}` have these slots, and the card's " +
-                "shape can't be told without its converter: this is the first of them."
+                "shape can't be told without its converter: this is the first of them.",
             )
           addAll(schema.notes)
         },

@@ -79,7 +79,7 @@ class HaStateFormatCasesTest {
         entity("button.restart", ago(2.hours)) to "2 h ago",
         entity("input_button.ring", ago(2.minutes)) to "2 min ago",
         entity("scene.evening", ago(3.days)) to "3 days ago",
-      )
+      ),
     )
   }
 
@@ -102,8 +102,8 @@ class HaStateFormatCasesTest {
     assertTrue(isRelativeTimeState(entity("event.motion", "2026-04-20T12:22:53.298+00:00")))
     assertTrue(
       isRelativeTimeState(
-        entity("sensor.last_boot", "2026-04-20T12:22:53+00:00", "device_class" to "timestamp")
-      )
+        entity("sensor.last_boot", "2026-04-20T12:22:53+00:00", "device_class" to "timestamp"),
+      ),
     )
     assertFalse(isRelativeTimeState(entity("event.motion", "unknown")))
     assertFalse(isRelativeTimeState(entity("sensor.temp", "21.5")))
@@ -202,7 +202,7 @@ class HaStateFormatCasesTest {
         entity("sensor.song", "bohemian rhapsody") to "bohemian rhapsody",
         entity("sensor.code", "ABC_123") to "ABC_123",
         entity("sensor.nan", "NaN") to "NaN",
-      )
+      ),
     )
   }
 
@@ -215,7 +215,7 @@ class HaStateFormatCasesTest {
         entity("weather.home", "snowy-rainy") to "Snowy, rainy",
         entity("weather.home", "windy-variant") to "Windy",
         entity("weather.home", "sunny") to "Sunny",
-      )
+      ),
     )
   }
 
@@ -271,7 +271,7 @@ class HaStateFormatCasesTest {
           "unit_of_measurement" to "°C",
           "suggested_display_precision" to 0,
         ) to "21 °C",
-      )
+      ),
     )
   }
 
@@ -320,7 +320,7 @@ class HaStateFormatCasesTest {
         ) to "XYZ 3.84",
         // Not a known currency and not monetary: a plain unit.
         entity("sensor.aqi", "42", "unit_of_measurement" to "AQI") to "42 AQI",
-      )
+      ),
     )
   }
 
@@ -377,7 +377,7 @@ class HaStateFormatCasesTest {
           "unit_of_measurement" to "°",
           "friendly_name" to "Sun elevation",
         ) to "12.5°",
-      )
+      ),
     )
   }
 
@@ -418,7 +418,7 @@ class HaStateFormatCasesTest {
         entity("sensor.d", "0", "unit_of_measurement" to "min", d) to "0 s",
         entity("sensor.d", "90", d) to "1 min 30 s",
         entity("sensor.d", "-5", "unit_of_measurement" to "min", d) to NO_VALUE,
-      )
+      ),
     )
   }
 
@@ -431,7 +431,7 @@ class HaStateFormatCasesTest {
         entity("sensor.cost", "0.xx", "unit_of_measurement" to "GBP") to NO_VALUE,
         entity("sensor.speed", "551.XXXXXXXX", "unit_of_measurement" to "Mbit/s") to NO_VALUE,
         entity("sensor.t", "-3.xx", "unit_of_measurement" to "°C") to NO_VALUE,
-      )
+      ),
     )
     assertEquals(NO_VALUE, formatValueWithUnit("21.xx", "°C"))
   }
@@ -453,7 +453,7 @@ class HaStateFormatCasesTest {
         // Not a count unit: untouched.
         entity("sensor.x", "1", "unit_of_measurement" to "kWh") to "1 kWh",
         entity("sensor.x", "1", "unit_of_measurement" to "Stars") to "1 Stars",
-      )
+      ),
     )
   }
 

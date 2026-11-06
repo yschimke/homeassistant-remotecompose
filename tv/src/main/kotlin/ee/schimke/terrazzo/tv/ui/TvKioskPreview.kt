@@ -92,7 +92,7 @@ fun TvKioskPreview(
             modifier =
               Modifier.clip(RoundedCornerShape(8.dp))
                 .background(cs.tertiary.copy(alpha = 0.18f))
-                .padding(horizontal = 10.dp, vertical = 4.dp)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
           ) {
             Text(text = "DEMO", style = MaterialTheme.typography.labelMedium, color = cs.tertiary)
           }
@@ -119,7 +119,7 @@ fun TvKioskPreview(
             modifier =
               Modifier.clip(RoundedCornerShape(chipCorner))
                 .background(cs.surfaceContainerHigh)
-                .padding(horizontal = 14.dp, vertical = 10.dp)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
           ) {
             Column {
               Text(

@@ -35,8 +35,8 @@ object ClockDesignParts {
             enum("has_title", 1)
             enum("h24", 1)
             enum("date", 1)
-          }
-        )
+          },
+        ),
       )
 
   /** `ha-cards/clock-card-face`: the time, its title and date line; [compact] is the time alone. */

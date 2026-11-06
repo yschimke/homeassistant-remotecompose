@@ -616,7 +616,7 @@ private fun gaugeFixture() =
           friendlyName = "Battery",
           unit = "%",
           deviceClass = "battery",
-        )
+        ),
       ),
   )
 
@@ -670,7 +670,7 @@ private fun thermostatFixture() =
               "max_temp" to JsonPrimitive(30),
               "hvac_action" to JsonPrimitive("heating"),
             ),
-        )
+        ),
       ),
   )
 
@@ -690,7 +690,7 @@ private fun humidifierFixture() =
               "min_humidity" to JsonPrimitive(30),
               "max_humidity" to JsonPrimitive(70),
             ),
-        )
+        ),
       ),
   )
 
@@ -700,7 +700,7 @@ private fun alarmPanelFixture() =
       """{"type":"alarm-panel","entity":"alarm_control_panel.house","states":["arm_away","arm_home"]}""",
     snapshot =
       snapshotOf(
-        entityState(id = "alarm_control_panel.house", state = "disarmed", friendlyName = "House")
+        entityState(id = "alarm_control_panel.house", state = "disarmed", friendlyName = "House"),
       ),
   )
 
@@ -713,7 +713,7 @@ private fun mediaControlFixture() =
           id = "media_player.office_speaker",
           state = "playing",
           friendlyName = "Office speaker",
-        )
+        ),
       ),
   )
 
@@ -764,7 +764,7 @@ private fun weatherForecastFixture() =
               "temperature" to JsonPrimitive(18.4),
               "temperature_unit" to JsonPrimitive("°C"),
             ),
-        )
+        ),
       ),
   )
 
@@ -774,7 +774,7 @@ private fun logbookFixture() =
       """{"type":"logbook","title":"Recent","hours_to_show":24,"entities":["binary_sensor.front_door"]}""",
     snapshot =
       snapshotOf(
-        entityState(id = "binary_sensor.front_door", state = "off", friendlyName = "Front door")
+        entityState(id = "binary_sensor.front_door", state = "off", friendlyName = "Front door"),
       ),
   )
 

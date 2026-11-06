@@ -43,7 +43,7 @@ class WearNavigationTest {
         urlPath = "qa",
         title = "QA Home",
         cards = listOf(CardSummary(title = "QA Lamp")),
-      )
+      ),
     )
     ActivityScenario.launch(WearMainActivity::class.java).use { activity ->
       click("Browse dashboards")
@@ -56,7 +56,7 @@ class WearNavigationTest {
       click("Settings")
       compose
         .onNodeWithText(
-          "What your watch shows, its theme and card designs are all chosen on your phone."
+          "What your watch shows, its theme and card designs are all chosen on your phone.",
         )
         .assertExists()
       compose.onNodeWithText("Theme").assertDoesNotExist()
@@ -65,7 +65,7 @@ class WearNavigationTest {
       activity.onActivity { it.onBackPressedDispatcher.onBackPressed() }
       compose
         .onNodeWithText(
-          "What your watch shows, its theme and card designs are all chosen on your phone."
+          "What your watch shows, its theme and card designs are all chosen on your phone.",
         )
         .assertExists()
       compose.onNodeWithText("Theme").assertDoesNotExist()
@@ -87,9 +87,9 @@ class WearNavigationTest {
                 sectionKey = "qa-room",
                 title = "QA Room",
                 cards = listOf(CardSummary(title = "QA Temperature")),
-              )
-            )
-        )
+              ),
+            ),
+        ),
       )
     }
     ActivityScenario.launch(WearMainActivity::class.java).use {

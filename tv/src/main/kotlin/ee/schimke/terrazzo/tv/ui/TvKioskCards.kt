@@ -92,6 +92,6 @@ private val KioskCards =
     card("""{"type":"tile","entity":"${TvDemoData.LIGHT}"}"""),
     card("""{"type":"thermostat","entity":"${TvDemoData.CLIMATE}"}"""),
     card(
-      """{"type":"gauge","entity":"${TvDemoData.HUMIDITY}","name":"Humidity","min":0,"max":100}"""
+      """{"type":"gauge","entity":"${TvDemoData.HUMIDITY}","name":"Humidity","min":0,"max":100}""",
     ),
   )

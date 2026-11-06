@@ -116,7 +116,7 @@ class AppSignIn(
             parameters.append("code", code)
             parameters.append("state", request.state)
           }
-          .buildString()
+          .buildString(),
       )
     }
 

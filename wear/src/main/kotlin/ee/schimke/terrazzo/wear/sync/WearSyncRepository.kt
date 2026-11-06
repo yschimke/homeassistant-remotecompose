@@ -141,7 +141,7 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
     check(
       _settings.value.inputEditingEnabled &&
         !_settings.value.demoMode &&
-        _settings.value.baseUrl.isNotEmpty()
+        _settings.value.baseUrl.isNotEmpty(),
     ) {
       "Sign in on the phone"
     }
@@ -158,7 +158,7 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
             put(
               "values",
               kotlinx.serialization.json.JsonObject(
-                values.mapValues { kotlinx.serialization.json.JsonPrimitive(it.value) }
+                values.mapValues { kotlinx.serialization.json.JsonPrimitive(it.value) },
               ),
             )
           }
@@ -168,7 +168,7 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
       messageClient.sendMessage(node.id, "/wear/input/v1", request).await()
       val result =
         kotlinx.serialization.json.Json.parseToJsonElement(
-            kotlinx.coroutines.withTimeout(15000) { response.await() }.decodeToString()
+            kotlinx.coroutines.withTimeout(15000) { response.await() }.decodeToString(),
           )
           .jsonObject
       check(result["ok"]?.jsonPrimitive?.content == "true") {

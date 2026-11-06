@@ -61,7 +61,7 @@ class UsageStats(
         appVersion = agent.version,
         platform = agent.platform,
         surface = agent.surface,
-      )
+      ),
     )
   }
 
@@ -84,7 +84,7 @@ class UsageStats(
         style = key.cardStyle,
         designSurface = key.surface.name,
         rcApiLevel = key.rcApiLevel,
-      )
+      ),
     )
   }
 
@@ -228,7 +228,7 @@ data class ClientAgent(
 
     private val PATTERN =
       Regex(
-        """(Terrazzo)/([0-9A-Za-z.+\-]{1,32}) \(([a-z0-9]{1,16}); surface=([a-z0-9\-]{1,16})\)"""
+        """(Terrazzo)/([0-9A-Za-z.+\-]{1,32}) \(([a-z0-9]{1,16}); surface=([a-z0-9\-]{1,16})\)""",
       )
 
     /**

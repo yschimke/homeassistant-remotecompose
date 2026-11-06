@@ -191,8 +191,8 @@ fun SkinPanel(
       HaSurfaceMaterial.PaintedMetal ->
         m.background(
           Brush.verticalGradient(
-            listOf(lerp(color, Color.White, 0.10f), color, lerp(color, Color.Black, 0.12f))
-          )
+            listOf(lerp(color, Color.White, 0.10f), color, lerp(color, Color.Black, 0.12f)),
+          ),
         )
       else -> m.background(color)
     }

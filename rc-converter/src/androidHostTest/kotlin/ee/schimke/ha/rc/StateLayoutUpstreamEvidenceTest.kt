@@ -70,7 +70,7 @@ class StateLayoutUpstreamEvidenceTest {
       contentAlignment = if (wide) RemoteAlignment.BottomStart else RemoteAlignment.TopStart,
     ) {
       RemoteBox(
-        RemoteModifier.fillMaxWidth().height(25.rdp).background((if (wide) blue else red).rc)
+        RemoteModifier.fillMaxWidth().height(25.rdp).background((if (wide) blue else red).rc),
       )
     }
   }
@@ -109,8 +109,8 @@ class StateLayoutUpstreamEvidenceTest {
               RemoteDocument(
                 CoreDocument().apply {
                   initFromBuffer(RemoteComposeBuffer.fromInputStream(bytes.inputStream()))
-                }
-              )
+                },
+              ),
             )
           }
         for (frame in 1..4) {

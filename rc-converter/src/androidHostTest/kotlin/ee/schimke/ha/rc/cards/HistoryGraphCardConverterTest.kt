@@ -140,7 +140,7 @@ class HistoryGraphCardConverterTest {
             "sensor.meter_import" to series(1, 2),
             "sensor.solar_power" to series(1, 2),
             "sensor.no_name" to series(1, 2),
-          )
+          ),
       )
     val h = { s: HaSnapshot -> converter.naturalHeightDp(card(), s) }
     assertTrue(h(allEmpty) < h(partly), "all-empty ${h(allEmpty)} < partly ${h(partly)}")

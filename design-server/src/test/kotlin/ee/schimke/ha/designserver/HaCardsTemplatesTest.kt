@@ -79,7 +79,7 @@ class HaCardsTemplatesTest {
     CardSchema.fromCard(
       card(
         """{"type": "entities", "title": "Living room",
-           "entities": ["light.living_room", "switch.fan", "sensor.living_room_temperature"]}"""
+           "entities": ["light.living_room", "switch.fan", "sensor.living_room_temperature"]}""",
       ),
       mapOf(
         state("light.living_room", "on", "friendly_name" to "Ceiling light"),
@@ -104,7 +104,7 @@ class HaCardsTemplatesTest {
           "friendly_name" to "Humidity",
           "unit_of_measurement" to "%",
           "device_class" to "humidity",
-        )
+        ),
       ),
     )
 
@@ -273,7 +273,7 @@ class HaCardsTemplatesTest {
       fail(
         "ha-cards templates are out of date with HaCardsSeed: $stale. Regenerate with " +
           "./gradlew :design-server:test --tests '*HaCardsTemplatesTest*' " +
-          "-PhaCardsTemplates.update=true"
+          "-PhaCardsTemplates.update=true",
       )
     }
   }

@@ -45,7 +45,7 @@ class CardSettingsDialogTest {
     assertEquals(
       card(
         """{"type":"tile","entity":"switch.pump","grid_options":{"columns":6},"name":"Soil",
-          "vertical":true,"tap_action":{"action":"toggle"}}"""
+          "vertical":true,"tap_action":{"action":"toggle"}}""",
       ),
       saved.single(),
     )
@@ -84,7 +84,7 @@ class CardSettingsDialogTest {
     onNodeWithText("JSON").performClick()
     val json = onNode(hasSetTextAction() and hasText("Greenhouse", substring = true))
     json.performTextReplacement(
-      """{"type":"heading","heading":"Shed","heading_style":"subtitle"}"""
+      """{"type":"heading","heading":"Shed","heading_style":"subtitle"}""",
     )
     onNodeWithText("Form").performClick()
     onNode(hasSetTextAction() and hasText("Shed")).assertExists()

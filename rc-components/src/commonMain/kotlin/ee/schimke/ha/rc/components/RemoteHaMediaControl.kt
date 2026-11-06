@@ -58,14 +58,14 @@ fun RemoteHaMediaControl(
       modifier
         .then(if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth())
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = 12.rdp)
+        .padding(horizontal = 12.rdp, vertical = 12.rdp),
   ) {
     // Box→Column→Row, never Box→Row: a fillMaxSize Row directly under a
     // wrap-content Box (this card's root, or the breakpoint's
     // immediateSwap wrapper in Fixed mode) captures blank in alpha010;
     // the Column buffer fixes it (see § Known gaps #9).
     RemoteColumn(
-      modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth()
+      modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
     ) {
       RemoteRow(
         modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
@@ -80,7 +80,7 @@ fun RemoteHaMediaControl(
         RemoteColumn(
           modifier =
             if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight().padding(end = 12.rdp)
-            else RemoteModifier.weight(1f).padding(end = 12.rdp)
+            else RemoteModifier.weight(1f).padding(end = 12.rdp),
         ) {
           TitleBlock(data, theme)
           if (fillHeight) RemoteBox(modifier = RemoteModifier.weight(1f))
@@ -95,7 +95,7 @@ fun RemoteHaMediaControl(
               .clip(haControlShape(8))
               .background(
                 if (haLayouts().artwork == HaArtwork.TapedSlot) ConsoleSlot.rc
-                else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)
+                else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf),
               ),
           contentAlignment = RemoteAlignment.Center,
         ) {
@@ -222,7 +222,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
           .clip(haControlShape(6))
           .background(
             if (haLayouts().artwork == HaArtwork.TapedSlot) ConsoleSlot.rc
-            else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf)
+            else haInk(data.accent).copy(alpha = haInk(data.accent).alpha * 0.15f.rf),
           ),
       contentAlignment = RemoteAlignment.Center,
     ) {
@@ -305,7 +305,7 @@ private fun ProgressBar(
         .padding(top = 4.rdp)
         .height(3.rdp)
         .clip(RemoteRoundedCornerShape(1.rdp))
-        .background(theme.divider)
+        .background(theme.divider),
   ) {
     RemoteBox(modifier = RemoteModifier.fillMaxWidth(f).height(3.rdp).background(haInk(accent)))
   }
@@ -337,7 +337,7 @@ private fun CommunityMediaPanel(
     modifier
       .then(if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth())
       .then(cardChrome(theme.cardBackground, theme.divider))
-      .padding(14.rdp)
+      .padding(14.rdp),
   ) {
     when (layout) {
       HaMediaLayout.ControlCentre -> {

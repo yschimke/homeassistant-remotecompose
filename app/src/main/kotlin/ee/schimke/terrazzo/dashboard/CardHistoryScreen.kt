@@ -135,7 +135,7 @@ fun CardHistoryScreen(
             }
           },
         )
-      }
+      },
     ) { innerPadding ->
       Column(
         modifier =
@@ -218,7 +218,7 @@ internal fun LauncherGrid(
     Box(
       modifier =
         Modifier.padding(end = HANDLE_TOUCH_SIZE_DP.dp / 2, bottom = HANDLE_TOUCH_SIZE_DP.dp / 2)
-          .size(gridWidthDp, gridHeightDp)
+          .size(gridWidthDp, gridHeightDp),
     ) {
       // Backdrop: cell grid + smallest/largest size outlines.
       Canvas(modifier = Modifier.matchParentSize()) {
@@ -252,7 +252,7 @@ internal fun LauncherGrid(
         modifier =
           Modifier.align(Alignment.TopStart)
             .size(currentWidthDp, currentHeightDp)
-            .border(2.dp, currentColor)
+            .border(2.dp, currentColor),
       ) {
         content()
       }
@@ -278,28 +278,28 @@ internal fun LauncherGrid(
                     CustomAccessibilityAction("Make wider") {
                       onResize(cellsW + 1, cellsH)
                       true
-                    }
+                    },
                   )
                 if (cellsW > bounds.minCellsW)
                   add(
                     CustomAccessibilityAction("Make narrower") {
                       onResize(cellsW - 1, cellsH)
                       true
-                    }
+                    },
                   )
                 if (cellsH < bounds.maxCellsH)
                   add(
                     CustomAccessibilityAction("Make taller") {
                       onResize(cellsW, cellsH + 1)
                       true
-                    }
+                    },
                   )
                 if (cellsH > bounds.minCellsH)
                   add(
                     CustomAccessibilityAction("Make shorter") {
                       onResize(cellsW, cellsH - 1)
                       true
-                    }
+                    },
                   )
               }
             }
@@ -522,7 +522,7 @@ private fun OpenInHomeAssistant(session: HaSession, entityIds: List<String>) {
       val url = "${session.baseUrl.trimEnd('/')}/history?entity_id=${entityIds.first()}"
       runCatching {
         context.startActivity(
-          Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+          Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
       }
     },

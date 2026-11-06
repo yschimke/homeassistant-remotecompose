@@ -81,7 +81,7 @@ class LanConnectionPolicy(context: Context) {
         override fun onLost(network: Network) {
           transport.set(Transport.None)
         }
-      }
+      },
     )
   }
 
@@ -102,7 +102,7 @@ class LanConnectionPolicy(context: Context) {
     if (!isLanHost(host)) {
       return Verdict.Deny(
         "Plaintext HTTP is only permitted to a local-network address. " +
-          "Use HTTPS, or enter a LAN hostname / private IP."
+          "Use HTTPS, or enter a LAN hostname / private IP.",
       )
     }
 
@@ -111,7 +111,7 @@ class LanConnectionPolicy(context: Context) {
       Transport.Cellular ->
         Verdict.Deny(
           "Refusing plaintext HTTP to a local-network address over cellular. " +
-            "Connect to the home Wi-Fi network and try again."
+            "Connect to the home Wi-Fi network and try again.",
         )
       Transport.None -> Verdict.Deny("No network available")
     }

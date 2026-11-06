@@ -114,7 +114,7 @@ import org.jetbrains.skia.SamplingMode
  * Anything else is refused by [problems], naming the node, rather than drawn approximately.
  */
 class UiBuilderDesignCompiler(
-  private val host: CommonCaptureHost = CommonCaptureHost(LibraryCaptureProfile.OPERATIONS)
+  private val host: CommonCaptureHost = CommonCaptureHost(LibraryCaptureProfile.OPERATIONS),
 ) {
   /** Every reason [document] can't be compiled here, by node; empty when it can. */
   fun problems(document: JsonObject, assets: Set<String>): List<String> =
@@ -327,7 +327,7 @@ class UiBuilderDesignCompiler(
         RemoteBox(
           modifier =
             RemoteModifier.fillMaxWidth()
-              .height((widthPx * (scene.height / scene.width)).toRemoteDp())
+              .height((widthPx * (scene.height / scene.width)).toRemoteDp()),
         ) {
           Node(scene.root, RemoteModifier, scale)
         }

@@ -171,7 +171,7 @@ class HaControlSlotsTest {
           it === GrammarRenderers.Bar ||
           it === GrammarRenderers.Thermometer ||
           it === GrammarRenderers.Battery
-      }
+      },
     )
     assertEquals(HaDialRingKind.Family, nixie.dialRing)
   }

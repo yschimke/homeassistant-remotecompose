@@ -26,14 +26,14 @@ class DashboardRenderingTest {
   fun conditionsFollowLiveStateAndPackHiddenWrappers() {
     val conditional =
       card(
-        """{"type":"conditional","conditions":[{"entity":"sensor.progress","state_not":["0","100"]}],"card":{"type":"tile","entity":"sensor.progress"}}"""
+        """{"type":"conditional","conditions":[{"entity":"sensor.progress","state_not":["0","100"]}],"card":{"type":"tile","entity":"sensor.progress"}}""",
       )
     assertEquals("tile", visibleDashboardCard(conditional, snapshot)?.type)
     assertNull(
       visibleDashboardCard(
         conditional,
         snapshot.copy(states = mapOf("sensor.progress" to EntityState("sensor.progress", "100"))),
-      )
+      ),
     )
     assertNull(visibleDashboardCard(conditional, HaSnapshot()))
     val nested = card("""{"type":"conditional","conditions":[],"card":${conditional.raw}}""")
@@ -46,7 +46,7 @@ class DashboardRenderingTest {
     assertEquals(
       true,
       result(
-        """[{"condition":"numeric_state","entity_id":"sensor.progress","above":49,"below":51}]"""
+        """[{"condition":"numeric_state","entity_id":"sensor.progress","above":49,"below":51}]""",
       ),
     )
     assertEquals(false, result("""[{"entity":"sensor.progress","above":50}]"""))
@@ -54,12 +54,14 @@ class DashboardRenderingTest {
     assertEquals(
       true,
       result(
-        """[{"condition":"or","conditions":[{"entity":"sensor.progress","state":"50"},{"condition":"user","users":[]}]}]"""
+        """[{"condition":"or","conditions":[{"entity":"sensor.progress","state":"50"},{"condition":"user","users":[]}]}]""",
       ),
     )
     assertNull(result("""[{"condition":"user","users":[]}]"""))
     assertNull(
-      result("""[{"condition":"state","entity":"sensor.progress","state":"50","for":"00:01:00"}]""")
+      result(
+        """[{"condition":"state","entity":"sensor.progress","state":"50","for":"00:01:00"}]""",
+      ),
     )
     assertEquals(
       false,
@@ -71,8 +73,8 @@ class DashboardRenderingTest {
   fun ambiguousOrLegacyResolverResponsesAreNotExactDesigns() {
     assertFalse(
       exactLibraryDesign(
-        obj("""{"exact":false,"key":{"shape":"device_class=temperature;domain=sensor"}}""")
-      )
+        obj("""{"exact":false,"key":{"shape":"device_class=temperature;domain=sensor"}}"""),
+      ),
     )
     assertFalse(exactLibraryDesign(obj("""{"sha256":"legacy"}""")))
     assertTrue(exactLibraryDesign(obj("""{"exact":true}""")))
@@ -121,8 +123,8 @@ class DashboardRenderingTest {
       key,
       entityPictureKey(
         image.copy(
-          attributes = obj("""{"entity_picture":"/api/image_proxy/cover?token=rotated"}""")
-        )
+          attributes = obj("""{"entity_picture":"/api/image_proxy/cover?token=rotated"}"""),
+        ),
       ),
     )
     assertNull(entityPictureKey(image.copy(state = "unavailable")))

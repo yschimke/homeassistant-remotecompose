@@ -115,7 +115,7 @@ fun RemoteHaClock(
           } else {
             RemoteTimeDefaults.defaultTimeString(
               is24HourFormat =
-                if (data.use24Hour) RemoteBoolean(true) else RemoteTimeDefaults.is24HourFormat()
+                if (data.use24Hour) RemoteBoolean(true) else RemoteTimeDefaults.is24HourFormat(),
             )
           }
       if (console) {
@@ -144,7 +144,7 @@ fun RemoteHaClock(
             RemoteModifier.padding(top = 4.rdp)
               .clip(RemoteRoundedCornerShape(6.rdp))
               .background(theme.dashboardBackground)
-              .padding(horizontal = 12.rdp, vertical = 3.rdp)
+              .padding(horizontal = 12.rdp, vertical = 3.rdp),
         ) {
           RemoteText(
             text = cardText("date", data.secondaryLabel),
@@ -174,7 +174,7 @@ fun RemoteHaClock(
         RemoteCanvas(
           RemoteModifier.padding(top = 4.rdp).width(200.rdp).height(48.rdp).semantics {
             contentDescription = LcdWindowWordmark.rs
-          }
+          },
         ) {
           // The player draws a bitmap with the paint the last draw left set, translucent from the
           // window's ghosts and shadow: an opaque, empty rect resets it so the logo draws solid.
@@ -199,7 +199,7 @@ fun RemoteHaClock(
               RemoteTextStyle(
                 fontFamily = RemoteFontFamily.SansSerif,
                 letterSpacing = 3.sp.asRemoteTextUnit(),
-              )
+              ),
             ),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,

@@ -210,8 +210,8 @@ internal class FamilyWearContainer private constructor(private val family: HaVis
                   Color.White.copy(alpha = 0.02f),
                   Color.Black.copy(alpha = 0.08f),
                   Color.Black.copy(alpha = 0.24f),
-                )
-              )
+                ),
+              ),
             ),
             HaWearEdge(listOf(Color.White.copy(alpha = 0.14f), Color.Black.copy(alpha = 0.4f)), 1f),
           )
@@ -247,8 +247,8 @@ internal class FamilyWearContainer private constructor(private val family: HaVis
             base,
             listOf(
               HaWearDiagonal(
-                listOf(accent.copy(alpha = 0.16f), CLEAR, CATPPUCCIN_SKY.copy(alpha = 0.10f))
-              )
+                listOf(accent.copy(alpha = 0.16f), CLEAR, CATPPUCCIN_SKY.copy(alpha = 0.10f)),
+              ),
             ),
             HaWearEdge(listOf(accent, CATPPUCCIN_SKY, CATPPUCCIN_PINK, accent), 1.5f),
           )
@@ -379,8 +379,8 @@ internal object GrammarWearContainer : HaWearContainerRenderer {
                 gradient.first().copy(alpha = 0.16f),
                 CLEAR,
                 gradient.last().copy(alpha = 0.12f),
-              )
-            )
+              ),
+            ),
           )
         g.glow -> add(HaWearGlow(listOf(accent.copy(alpha = 0.22f), CLEAR), 0.5f, 1.1f, 0.75f))
       }

@@ -33,7 +33,7 @@ class SelectedCustomCardTest {
   fun missingSelectedCustomDesignDoesNotRenderGenericAnchor() {
     val raw =
       Json.parseToJsonElement(
-          """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+          """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}""",
         )
         .jsonObject
     val card = CardConfig("custom:enhanced-shutter-card", raw)
@@ -54,7 +54,7 @@ class SelectedCustomCardTest {
         recordUsage = false,
         designId = "user:missing",
         selectedCard = card,
-      )
+      ),
     )
   }
 
@@ -62,7 +62,7 @@ class SelectedCustomCardTest {
   fun phoneUsesSelectedAnchorAndOriginalCustomCardBindings() {
     val raw =
       Json.parseToJsonElement(
-          """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}"""
+          """{"type":"custom:enhanced-shutter-card","entities":[{"entity":"cover.garage","top_offset_pct":13}]}""",
         )
         .jsonObject
     val card = CardConfig("custom:enhanced-shutter-card", raw)
@@ -73,7 +73,7 @@ class SelectedCustomCardTest {
     val bytes = RcDocumentCodec.encode(RcDocument(RcHeader(RcVersion(1, 0, 0)), emptyList()))
     val designs =
       CardDesigns(
-        byDesign = DesignsById(mapOf("user:door" to listOf(DesignedBlob(key, null, bytes))))
+        byDesign = DesignsById(mapOf("user:door" to listOf(DesignedBlob(key, null, bytes)))),
       )
     val playback =
       assertNotNull(
@@ -89,7 +89,7 @@ class SelectedCustomCardTest {
           recordUsage = false,
           designId = "user:door",
           selectedCard = card,
-        )
+        ),
       )
     assertTrue("cover.s0.is_on" in playback.bindings(snapshot, SystemHaClock).booleans)
   }

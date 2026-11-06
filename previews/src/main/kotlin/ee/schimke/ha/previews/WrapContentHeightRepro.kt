@@ -207,7 +207,7 @@ private fun FixedPlayer(modifier: Modifier) {
           RemoteBox(
             modifier =
               RemoteModifier.rcFillMaxWidth()
-                .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp))
+                .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp)),
           ) {
             RemoteColumn(modifier = RemoteModifier.rcFillMaxWidth().rcPadding(4.rdp)) {
               RemoteText(text = "Hello".rs, modifier = RemoteModifier.rcFillMaxWidth())
@@ -230,7 +230,7 @@ private fun ReproPlayer(modifier: Modifier) {
           RemoteBox(
             modifier =
               RemoteModifier.rcFillMaxWidth()
-                .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp))
+                .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp)),
           ) {
             RemoteColumn(modifier = RemoteModifier.rcFillMaxWidth().rcPadding(4.rdp)) {
               RemoteText(text = "Hello".rs, modifier = RemoteModifier.rcFillMaxWidth())
@@ -309,7 +309,7 @@ private fun CmpPlayer(modifier: Modifier) {
           RemoteBox(
             modifier =
               RemoteModifier.rcFillMaxWidth()
-                .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp))
+                .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp)),
           ) {
             RemoteColumn(modifier = RemoteModifier.rcFillMaxWidth().rcPadding(4.rdp)) {
               RemoteText(text = "Hello".rs, modifier = RemoteModifier.rcFillMaxWidth())

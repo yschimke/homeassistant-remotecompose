@@ -68,7 +68,7 @@ object AgentRelayMcp {
               put("version", "1")
             }
             put("instructions", INSTRUCTIONS)
-          }
+          },
         )
       "ping" -> result(JsonObject(emptyMap()))
       "tools/list" -> result(buildJsonObject { put("tools", TOOLS) })
@@ -89,7 +89,7 @@ object AgentRelayMcp {
             val joined =
               relay.join(code, arg("agentName"))
                 ?: return failed(
-                  "Unknown or expired code. Ask the person for the code in their app."
+                  "Unknown or expired code. Ask the person for the code in their app.",
                 )
             tool(joined.json("Call get_session next."))
           }
@@ -98,7 +98,7 @@ object AgentRelayMcp {
             val inbox =
               relay.links.awaitRequests(arg("link").orEmpty(), since)
                 ?: return failed(
-                  "This link was disconnected or expired. Ask the person to connect you again."
+                  "This link was disconnected or expired. Ask the person to connect you again.",
                 )
             tool(
               buildJsonObject {
@@ -110,7 +110,7 @@ object AgentRelayMcp {
                         put("session", r.session)
                         put("kind", r.kind)
                         put("title", r.title)
-                      }
+                      },
                     )
                   }
                 }
@@ -121,7 +121,7 @@ object AgentRelayMcp {
                     "Work each request in its session (get_session first), then call " +
                       "await_request again with cursor.",
                 )
-              }
+              },
             )
           }
           "request_access" -> {
@@ -142,7 +142,7 @@ object AgentRelayMcp {
                     "${pending.code} under Have a code from your agent (or enter it on the card " +
                     "or dashboard they are asking about). Then call poll_access with requestToken.",
                 )
-              }
+              },
             )
           }
           "poll_access" -> {
@@ -158,7 +158,7 @@ object AgentRelayMcp {
                 buildJsonObject {
                   put("status", "pending")
                   put("next", "The person hasn't entered the code yet; call poll_access again.")
-                }
+                },
               )
             else tool(joined.json("Approved. Call get_session next."))
           }
@@ -188,7 +188,7 @@ object AgentRelayMcp {
                     "submit_draft with revision and the complete edited document"
                   else "submit_draft with revision, the complete dashboard and a summary",
                 )
-              }
+              },
             )
           }
           "set_status" -> {
@@ -232,7 +232,7 @@ object AgentRelayMcp {
                   "next",
                   "The person sees the draft now. Call await_feedback to hear what they think.",
                 )
-              }
+              },
             )
           }
           "put_card_asset" -> {
@@ -254,7 +254,7 @@ object AgentRelayMcp {
                       "next",
                       "The person's app hasn't drawn a draft yet; try after submit_draft.",
                     )
-                  }
+                  },
                 )
             result(
               buildJsonObject {
@@ -264,7 +264,7 @@ object AgentRelayMcp {
                       put("type", "image")
                       put("data", java.util.Base64.getEncoder().encodeToString(png))
                       put("mimeType", "image/png")
-                    }
+                    },
                   )
                   add(
                     buildJsonObject {
@@ -274,11 +274,11 @@ object AgentRelayMcp {
                         "Revision $revision as the person's app draws it, with their own cards " +
                           "and live states.",
                       )
-                    }
+                    },
                   )
                 }
                 putJsonObject("structuredContent") { put("revision", revision) }
-              }
+              },
             )
           }
           "await_feedback" -> {
@@ -301,7 +301,7 @@ object AgentRelayMcp {
                     else -> "Act on the feedback, submit_draft, then await_feedback with cursor."
                   },
                 )
-              }
+              },
             )
           }
           else -> error(-32602, "Unknown tool")
@@ -373,7 +373,7 @@ object AgentRelayMcp {
           put("kind", m.kind)
           put("text", m.text)
           m.target?.let { put("target", it) }
-        }
+        },
       )
     }
   }
@@ -384,7 +384,7 @@ object AgentRelayMcp {
         buildJsonObject {
           put("type", "text")
           put("text", data.toString())
-        }
+        },
       )
     }
     put("structuredContent", data)
@@ -412,56 +412,56 @@ object AgentRelayMcp {
         "connect",
         "Connect with the code the person gives you (like K7QM-4MD2). A setup code returns a lasting link for await_request; a code from one card or dashboard returns that session.",
         schema("code" to "string", "agentName" to "string", required = listOf("code")),
-      )
+      ),
     )
     add(
       toolDef(
         "await_request",
         "Listen for the person's requests on your link: waits up to 25 s, returns new requests after cursor (0 at first), each with its session. Call it again with the returned cursor.",
         schema("link" to "string", "since" to "integer", required = listOf("link")),
-      )
+      ),
     )
     add(
       toolDef(
         "join_session",
         "The same as connect, kept for agents that learned this name first.",
         schema("code" to "string", "agentName" to "string", required = listOf("code")),
-      )
+      ),
     )
     add(
       toolDef(
         "request_access",
         "Ask to join when the person has no code: show them the returned code to enter in Terrazzo, then call poll_access.",
         schema("agentName" to "string"),
-      )
+      ),
     )
     add(
       toolDef(
         "poll_access",
         "Wait (up to 25 s) for the person to enter the request_access code. Returns a link (entered in Settings) or a session (entered on one card or dashboard).",
         schema("requestToken" to "string", required = listOf("requestToken")),
-      )
+      ),
     )
     add(
       toolDef(
         "get_session",
         "Read the request, the current card document or dashboard, its revision and the conversation so far.",
         schema("session" to "string", required = listOf("session")),
-      )
+      ),
     )
     add(
       toolDef(
         "set_status",
         "Show the person what you are doing, in a few words (for example: Drafting a compact layout).",
         schema("session" to "string", "status" to "string", required = listOf("session", "status")),
-      )
+      ),
     )
     add(
       toolDef(
         "send_message",
         "Say something to the person, such as a question or what you changed. They see it in the app.",
         schema("session" to "string", "text" to "string", required = listOf("session", "text")),
-      )
+      ),
     )
     add(
       toolDef(
@@ -481,7 +481,7 @@ object AgentRelayMcp {
             add("revision")
           }
         },
-      )
+      ),
     )
     add(
       toolDef(
@@ -493,21 +493,21 @@ object AgentRelayMcp {
           "imageBase64" to "string",
           required = listOf("session", "key", "imageBase64"),
         ),
-      )
+      ),
     )
     add(
       toolDef(
         "get_render",
         "See your latest dashboard draft exactly as the person's app draws it (a PNG, with their own cards and live states), once they have opened it.",
         schema("session" to "string", required = listOf("session")),
-      )
+      ),
     )
     add(
       toolDef(
         "await_feedback",
         "Wait up to 25 s for the person's comments or decision after cursor (0 at first). Call it again with the returned cursor until a decision arrives.",
         schema("session" to "string", "since" to "integer", required = listOf("session")),
-      )
+      ),
     )
   }
 }

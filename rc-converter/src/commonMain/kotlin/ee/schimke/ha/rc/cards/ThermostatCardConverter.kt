@@ -264,7 +264,7 @@ private fun stepperActions(
       entityId = id,
       serviceData =
         kotlinx.serialization.json.JsonObject(
-          mapOf("temperature" to kotlinx.serialization.json.JsonPrimitive(current + step))
+          mapOf("temperature" to kotlinx.serialization.json.JsonPrimitive(current + step)),
         ),
     )
   val down =
@@ -274,7 +274,7 @@ private fun stepperActions(
       entityId = id,
       serviceData =
         kotlinx.serialization.json.JsonObject(
-          mapOf("temperature" to kotlinx.serialization.json.JsonPrimitive(current - step))
+          mapOf("temperature" to kotlinx.serialization.json.JsonPrimitive(current - step)),
         ),
     )
   return up to down

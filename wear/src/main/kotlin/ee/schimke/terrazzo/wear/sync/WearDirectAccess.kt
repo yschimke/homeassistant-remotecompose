@@ -55,7 +55,7 @@ class WearDirectAccess(
     },
   private val fetchHistory:
     suspend (baseUrl: String, token: String, entityId: String, start: Instant) -> List<
-        HistoryPoint
+        HistoryPoint,
       > =
     { baseUrl, token, entityId, start ->
       HaEntityStates(baseUrl, token).use { it.history(entityId, start) }
@@ -121,7 +121,7 @@ class WearDirectAccess(
     val stored = offline.readValues()
     val shared =
       sharedDesignDependencies(
-        offline.readSlotDesigns()?.designs.orEmpty().mapNotNull { offline.readDesign(it.sha256) }
+        offline.readSlotDesigns()?.designs.orEmpty().mapNotNull { offline.readDesign(it.sha256) },
       )
     val ids = watchEntityIds(cardsRawJson, stored?.values?.keys.orEmpty()) + shared.keys
     if (!needsDirectValues(stored, ids, now(), lastDirectAt(), retained)) return null

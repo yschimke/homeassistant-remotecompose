@@ -60,9 +60,9 @@ fun CardConverter.framedDesignTemplate(properties: DesignProperties): DesignTemp
   val entityId = unavailableFrameEntity(input.card) ?: return input
   val unavailable =
     (input.snapshot.states[entityId] ?: EntityState(entityId, HaLiveBindings.UNAVAILABLE)).copy(
-      state = HaLiveBindings.UNAVAILABLE
+      state = HaLiveBindings.UNAVAILABLE,
     )
   return input.copy(
-    snapshot = input.snapshot.copy(states = input.snapshot.states + (entityId to unavailable))
+    snapshot = input.snapshot.copy(states = input.snapshot.states + (entityId to unavailable)),
   )
 }

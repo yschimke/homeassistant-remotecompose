@@ -115,7 +115,7 @@ class CardDesignTemplatesEndToEndTest {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     val key =
       assertNotNull(
-        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false)
+        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false),
       )
 
     // Pipeline: capture the template and publish the host's files.
@@ -143,7 +143,7 @@ class CardDesignTemplatesEndToEndTest {
             output.files[request.url.encodedPath.removePrefix("/designs/")]
               ?: return@MockEngine respondError(HttpStatusCode.NotFound)
           respond(body, HttpStatusCode.OK)
-        }
+        },
       )
     val repository =
       DesignRepository(
@@ -188,10 +188,10 @@ class CardDesignTemplatesEndToEndTest {
                   mapOf(
                     "device_class" to kotlinx.serialization.json.JsonPrimitive("temperature"),
                     "unit_of_measurement" to kotlinx.serialization.json.JsonPrimitive("°F"),
-                  )
+                  ),
                 ),
-              )
-          )
+              ),
+          ),
       )
     val key =
       assertNotNull(
@@ -201,7 +201,7 @@ class CardDesignTemplatesEndToEndTest {
           ThemeStyle.Material3,
           dark = true,
           cardStyle = HaUberTheme.Lcd,
-        )
+        ),
       )
     assertEquals("device_class=temperature;domain=sensor;unit=°F", key.shape)
 
@@ -241,14 +241,14 @@ class CardDesignTemplatesEndToEndTest {
                 "binary_sensor.front_door",
                 "on",
                 kotlinx.serialization.json.JsonObject(
-                  mapOf("device_class" to kotlinx.serialization.json.JsonPrimitive("door"))
+                  mapOf("device_class" to kotlinx.serialization.json.JsonPrimitive("door")),
                 ),
-              )
-          )
+              ),
+          ),
       )
     val key =
       assertNotNull(
-        CardDesignTemplates.keyFor(doorCard, doorSnapshot, ThemeStyle.Material3, dark = true)
+        CardDesignTemplates.keyFor(doorCard, doorSnapshot, ThemeStyle.Material3, dark = true),
       )
     assertEquals("device_class=door;domain=binary_sensor", key.shape)
     assertFalse(key in CardDesignTemplates.spikeKeys(), "a shape the server spike doesn't publish")
@@ -268,7 +268,7 @@ class CardDesignTemplatesEndToEndTest {
     assertEquals(RefreshResult.Disabled, repository.refresh(force = true))
     val key =
       assertNotNull(
-        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false)
+        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false),
       )
     assertEquals(null, repository.resolve(key))
   }
@@ -328,7 +328,7 @@ class CardDesignTemplatesEndToEndTest {
                   buildJsonObject {
                     put("entity", "sensor.temp")
                     put("tap_action", buildJsonObject { put("action", "none") })
-                  }
+                  },
                 )
               },
             )
@@ -378,10 +378,10 @@ class CardDesignTemplatesEndToEndTest {
                 "alarm_control_panel.home",
                 "disarmed",
                 kotlinx.serialization.json.JsonObject(
-                  mapOf("code_arm_required" to kotlinx.serialization.json.JsonPrimitive(false))
+                  mapOf("code_arm_required" to kotlinx.serialization.json.JsonPrimitive(false)),
                 ),
-              )
-          )
+              ),
+          ),
       )
     val playback = CardDesignTemplates.playback(alarm, ByteArray(0))
     val slot = "alarm_control_panel.s0"
@@ -412,7 +412,7 @@ class CardDesignTemplatesEndToEndTest {
           type = "alarm-panel",
           raw =
             kotlinx.serialization.json.JsonObject(
-              alarm.raw + ("show_keypad" to kotlinx.serialization.json.JsonPrimitive(false))
+              alarm.raw + ("show_keypad" to kotlinx.serialization.json.JsonPrimitive(false)),
             ),
         ),
         ByteArray(0),
@@ -443,10 +443,10 @@ class CardDesignTemplatesEndToEndTest {
                 "camera.driveway",
                 "idle",
                 kotlinx.serialization.json.JsonObject(
-                  mapOf("entity_picture" to kotlinx.serialization.json.JsonPrimitive("/cam?t=1"))
+                  mapOf("entity_picture" to kotlinx.serialization.json.JsonPrimitive("/cam?t=1")),
                 ),
-              )
-          )
+              ),
+          ),
       )
     val playback = CardDesignTemplates.playback(camera, ByteArray(0))
     assertEquals("/cam?t=1", playback.bitmapUrl(CardDesignSlots.pictureUrl("camera.s0"), snapshot))
@@ -484,10 +484,10 @@ class CardDesignTemplatesEndToEndTest {
                   mapOf(
                     "temperature" to kotlinx.serialization.json.JsonPrimitive("21"),
                     "target_temp_step" to kotlinx.serialization.json.JsonPrimitive("1"),
-                  )
+                  ),
                 ),
-              )
-          )
+              ),
+          ),
       )
     val registry = CardDesignTemplates.defaultTemplateRegistry
     val converter = registry.get("thermostat")!!
@@ -511,7 +511,7 @@ class CardDesignTemplatesEndToEndTest {
         "set_temperature",
         "climate.s0",
         kotlinx.serialization.json.JsonObject(
-          mapOf("temperature" to kotlinx.serialization.json.JsonPrimitive(35))
+          mapOf("temperature" to kotlinx.serialization.json.JsonPrimitive(35)),
         ),
       )
     assertEquals(playback.slotTapActions[0], playback.resolveTap(forged, snapshot))
@@ -529,7 +529,7 @@ class CardDesignTemplatesEndToEndTest {
             buildJsonObject {
               put("entity", "sensor.temp")
               put("tap_action", buildJsonObject { put("action", "none") })
-            }
+            },
           )
         },
       )
@@ -596,12 +596,12 @@ class CardDesignTemplatesEndToEndTest {
                   mapOf(
                     "items" to
                       kotlinx.serialization.json.JsonArray(
-                        listOf(item("Milk", "needs_action"), item("Eggs", "completed"))
-                      )
-                  )
+                        listOf(item("Milk", "needs_action"), item("Eggs", "completed")),
+                      ),
+                  ),
                 ),
-              )
-          )
+              ),
+          ),
       )
     val playback = CardDesignTemplates.playback(todo, ByteArray(0))
     fun update(entity: String, summary: String, status: String) =
@@ -652,7 +652,7 @@ class CardDesignTemplatesEndToEndTest {
                         put("navigation_path", "/lovelace/1")
                       },
                     )
-                  }
+                  },
                 )
               },
             )
@@ -687,7 +687,7 @@ class CardDesignTemplatesEndToEndTest {
           mapOf(
             "button.x1c_pause_printing" to EntityState("button.x1c_pause_printing", "unknown"),
             "button.x1c_stop_printing" to EntityState("button.x1c_stop_printing", "unknown"),
-          )
+          ),
       )
     val playback = CardDesignTemplates.playback(card, ByteArray(0))
     fun press(entity: String) =
@@ -771,10 +771,10 @@ class CardDesignTemplatesEndToEndTest {
                 "camera.driveway",
                 "idle",
                 kotlinx.serialization.json.JsonObject(
-                  mapOf("entity_picture" to kotlinx.serialization.json.JsonPrimitive("/cam"))
+                  mapOf("entity_picture" to kotlinx.serialization.json.JsonPrimitive("/cam")),
                 ),
-              )
-          )
+              ),
+          ),
       )
     val playback = CardDesignTemplates.playback(stack, ByteArray(0))
     assertEquals("/cam", playback.bitmapUrl(CardDesignSlots.pictureUrl("camera.s0"), snapshot))

@@ -304,7 +304,7 @@ private fun Hero(state: EntityState?, unit: String?, accent: Color, nowMs: () ->
       HaReadoutStyle.TonalPill ->
         Box(
           Modifier.background(accent.copy(alpha = 0.16f), skin.badgeShape)
-            .padding(horizontal = 18.dp, vertical = 6.dp)
+            .padding(horizontal = 18.dp, vertical = 6.dp),
         ) {
           value()
         }
@@ -330,7 +330,7 @@ private fun Hero(state: EntityState?, unit: String?, accent: Color, nowMs: () ->
               MaterialTheme.colorScheme.outlineVariant,
               RoundedCornerShape(skin.controlCorner),
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
           value()
         }
@@ -338,7 +338,7 @@ private fun Hero(state: EntityState?, unit: String?, accent: Color, nowMs: () ->
     state?.lastChanged?.let { changed ->
       Text(
         skin.label(
-          "Since ${clockLabel(changed)} · ${durationLabel(nowMs() - changed.toEpochMilliseconds())}"
+          "Since ${clockLabel(changed)} · ${durationLabel(nowMs() - changed.toEpochMilliseconds())}",
         ),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -590,12 +590,12 @@ private val DATE_TIME_FORMAT: DateTimeFormatter =
 
 private fun clockLabel(instant: Instant): String =
   CLOCK_FORMAT.format(
-    java.time.Instant.ofEpochMilli(instant.toEpochMilliseconds()).atZone(ZoneId.systemDefault())
+    java.time.Instant.ofEpochMilli(instant.toEpochMilliseconds()).atZone(ZoneId.systemDefault()),
   )
 
 private fun dateTimeLabel(instant: Instant): String =
   DATE_TIME_FORMAT.format(
-    java.time.Instant.ofEpochMilli(instant.toEpochMilliseconds()).atZone(ZoneId.systemDefault())
+    java.time.Instant.ofEpochMilli(instant.toEpochMilliseconds()).atZone(ZoneId.systemDefault()),
   )
 
 private const val DEFAULT_HOURS = 24

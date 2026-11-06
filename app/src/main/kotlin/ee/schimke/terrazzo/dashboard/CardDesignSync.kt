@@ -103,7 +103,7 @@ object CardDesignSync {
           Constraints.Builder()
             .setRequiresCharging(true)
             .setRequiredNetworkType(NetworkType.UNMETERED)
-            .build()
+            .build(),
         )
         .build()
     workManager.enqueueUniquePeriodicWork(PERIODIC_WORK, ExistingPeriodicWorkPolicy.UPDATE, nightly)
@@ -111,7 +111,7 @@ object CardDesignSync {
       val now =
         OneTimeWorkRequestBuilder<CardDesignSyncWorker>()
           .setConstraints(
-            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
           )
           .build()
       workManager.enqueueUniqueWork(NOW_WORK, ExistingWorkPolicy.REPLACE, now)

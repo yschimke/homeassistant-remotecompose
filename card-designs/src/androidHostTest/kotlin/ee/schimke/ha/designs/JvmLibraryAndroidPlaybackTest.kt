@@ -80,7 +80,7 @@ class JvmLibraryAndroidPlaybackTest {
       samePixels(drawn, render(android))
     }
     println(
-      "JVM library on Android: ${sample.size - different.size} of ${sample.size} draw the same"
+      "JVM library on Android: ${sample.size - different.size} of ${sample.size} draw the same",
     )
     assertEquals(
       emptyList(),

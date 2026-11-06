@@ -146,7 +146,7 @@ fun HaCardSurface(
   val theme = currentRemoteHaTheme()
   RemoteBox(
     modifier =
-      modifier.fillMaxWidth().then(cardChrome(theme.cardBackground, theme.divider)).padding(12.rdp)
+      modifier.fillMaxWidth().then(cardChrome(theme.cardBackground, theme.divider)).padding(12.rdp),
   ) {
     ProvideCardChrome(enabled = false, content = content)
   }

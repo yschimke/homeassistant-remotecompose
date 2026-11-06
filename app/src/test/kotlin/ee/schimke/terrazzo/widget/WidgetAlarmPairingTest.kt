@@ -50,7 +50,7 @@ class WidgetAlarmPairingTest {
   @Test
   fun keysOfAnUnknownLengthCodeCallOnTheButtonAfterThem() {
     for (key in listOf("1", "2", "9", "backspace", "3")) assertNull(
-      pairing.accept(1, HaAction.AlarmKey(house, key))
+      pairing.accept(1, HaAction.AlarmKey(house, key)),
     )
     assertEquals(
       call("arm_away", "123"),

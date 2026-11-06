@@ -61,7 +61,7 @@ object CardMemory {
           releaseAll()
           release()
         }
-      }
+      },
     )
   }
 

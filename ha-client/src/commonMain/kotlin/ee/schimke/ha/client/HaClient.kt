@@ -225,7 +225,7 @@ class HaClient(
           put("type", "auth")
           put("access_token", accessToken)
         },
-      )
+      ),
     )
     val authResult = readMessage(s)
     if (authResult["type"]?.jsonPrimitive?.content != "auth_ok") {
@@ -673,7 +673,7 @@ class HaClient(
               put("type", type)
               extra()
             },
-          )
+          ),
         )
       }
       val ack = withTimeout(30_000) { deferred.await() }
@@ -808,7 +808,7 @@ class HaClient(
             put("session_id", sessionId)
             put("text", text)
             if (target != null) put("target", target)
-          }
+          },
         )
 
       override suspend fun discard(sessionId: String) =
@@ -819,7 +819,7 @@ class HaClient(
           edit("terrazzo/edit/apply") {
             put("session_id", sessionId)
             put("draft_id", draftId)
-          }
+          },
         )
 
       override suspend fun undo(sessionId: String) =
@@ -1079,7 +1079,7 @@ class HaClient(
         val live =
           session
             ?: throw CommandNotSentException(
-              "Not connected — socket closed before send (cmd=$type)"
+              "Not connected — socket closed before send (cmd=$type)",
             )
         if (live !== s) throw CommandNotSentException("Connection replaced before send (cmd=$type)")
         live.send(json.encodeToString(JsonObject.serializer(), msg))

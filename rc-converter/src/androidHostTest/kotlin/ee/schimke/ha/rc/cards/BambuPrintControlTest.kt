@@ -26,7 +26,7 @@ class BambuPrintControlTest {
           mapOf(
             "type" to JsonPrimitive("custom:ha-bambulab-print_control-card"),
             "printer" to JsonPrimitive("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-          )
+          ),
         ),
     )
 
@@ -41,7 +41,7 @@ class BambuPrintControlTest {
             EntityState("button.x1c_resume_printing", buttons),
             EntityState("button.x1c_stop_printing", buttons),
           )
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private fun pad(snapshot: HaSnapshot): HaBambuPrintControlData =
@@ -116,7 +116,7 @@ class BambuPrintControlTest {
               EntityState("button.x1c_resume_printing", "unavailable"),
               EntityState("button.x1c_stop_printing", "unknown"),
             )
-            .associateBy { it.entityId }
+            .associateBy { it.entityId },
       )
     val data = pad(snap)
     assertEquals(listOf("Pause" to true, "Resume" to false, "Stop" to true), data.shown())

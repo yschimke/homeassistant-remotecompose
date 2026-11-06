@@ -353,7 +353,7 @@ object LauncherDesigns {
         }
       val embedded = if (images.isEmpty()) document else document.embedBitmapUrls(images)
       RcDocumentCodec.encode(
-        embedded.hardcodeNamedValues(values).collapseConstantStateLayouts().optimize()
+        embedded.hardcodeNamedValues(values).collapseConstantStateLayouts().optimize(),
       )
     }
       .getOrNull()

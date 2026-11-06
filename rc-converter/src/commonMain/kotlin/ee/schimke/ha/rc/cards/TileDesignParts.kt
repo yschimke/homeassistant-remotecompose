@@ -34,8 +34,8 @@ object TileDesignParts {
     LocalCardInput.current
       ?: requireNotNull(
         converter.framedDesignTemplate(
-          DesignProperties.build { string(TileCardConverter.DOMAIN, "light") }
-        )
+          DesignProperties.build { string(TileCardConverter.DOMAIN, "light") },
+        ),
       )
 
   @Composable

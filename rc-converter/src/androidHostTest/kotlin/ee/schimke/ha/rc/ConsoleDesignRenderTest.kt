@@ -82,7 +82,7 @@ class ConsoleDesignRenderTest {
   private fun template(card: CardConfig, snapshot: HaSnapshot): CardTemplatePlayback {
     val key =
       assertNotNull(
-        CardDesignTemplates.keyFor(card, snapshot, style, false, cardStyle = HaUberTheme.Console)
+        CardDesignTemplates.keyFor(card, snapshot, style, false, cardStyle = HaUberTheme.Console),
       )
     assertEquals(
       key,
@@ -123,7 +123,7 @@ class ConsoleDesignRenderTest {
           Modifier.width(f.width.dp)
             .then(if (f.fixed) Modifier.height(80.dp) else Modifier)
             .background(if (f.dark) Color(0xFF111315) else Color(0xFFF2F1ED))
-            .testTag("card")
+            .testTag("card"),
         ) {
           key(f.playback ?: if (f.direct) f.card else null) {
             CachedCardPreview(
@@ -152,8 +152,8 @@ class ConsoleDesignRenderTest {
                         cardChrome(
                           currentRemoteHaTheme().cardBackground,
                           currentRemoteHaTheme().divider,
-                        )
-                      )
+                        ),
+                      ),
                   ) {
                     RemoteHaThermometer(
                       HaReading.live(
@@ -211,7 +211,7 @@ class ConsoleDesignRenderTest {
             "friendly_name" to "Studio",
             "media_title" to "Blue in Green",
             "media_artist" to "Miles Davis",
-          )
+          ),
         )
       capture("media-$state", Frame(media, music, template(media, music), clock = dawn))
     }
@@ -250,11 +250,11 @@ class ConsoleDesignRenderTest {
     val temp = card("sensor", "entity" to "sensor.temp")
     val low =
       snapshot(
-        state("sensor.temp", "10", "unit_of_measurement" to "°C", "device_class" to "temperature")
+        state("sensor.temp", "10", "unit_of_measurement" to "°C", "device_class" to "temperature"),
       )
     val high =
       snapshot(
-        state("sensor.temp", "32", "unit_of_measurement" to "°C", "device_class" to "temperature")
+        state("sensor.temp", "32", "unit_of_measurement" to "°C", "device_class" to "temperature"),
       )
     val cold = capture("thermometer-low", Frame(temp, low, null, clock = dawn))
     val hot = capture("thermometer-high", Frame(temp, high, null, clock = dawn))
@@ -328,11 +328,11 @@ class ConsoleDesignRenderTest {
             if (target != null) add("temperature" to target)
             add(
               "hvac_action" to
-                if (mode == "cool") "cooling" else if (mode == "off") "off" else "idle"
+                if (mode == "cool") "cooling" else if (mode == "off") "off" else "idle",
             )
           }
             .toTypedArray(),
-        )
+        ),
       )
     val initial = climate("19")
     val playback = template(thermostat, initial)
@@ -415,14 +415,14 @@ class ConsoleDesignRenderTest {
           "climate.room",
           "heat",
           kotlinx.serialization.json.Json.parseToJsonElement(
-            """{"friendly_name":"Studio","current_temperature":21.5,"temperature":22,"min_temp":10,"max_temp":32,"supported_features":401,"hvac_modes":["heat","off"]}"""
+            """{"friendly_name":"Studio","current_temperature":21.5,"temperature":22,"min_temp":10,"max_temp":32,"supported_features":401,"hvac_modes":["heat","off"]}""",
           ) as JsonObject,
         ),
         EntityState(
           "todo.shopping",
           "1",
           kotlinx.serialization.json.Json.parseToJsonElement(
-            """{"friendly_name":"Shopping","items":[{"uid":"1","summary":"Milk","status":"needs_action"},{"uid":"2","summary":"Bread","status":"completed"}]}"""
+            """{"friendly_name":"Shopping","items":[{"uid":"1","summary":"Milk","status":"needs_action"},{"uid":"2","summary":"Bread","status":"completed"}]}""",
           ) as JsonObject,
         ),
       )

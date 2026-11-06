@@ -51,7 +51,7 @@ class WearCardStyleSyncTest {
       "",
       style(
         CardDesignOverrides()
-          .with(CardDesignScope.Card, card, CardDesignOverride(variant = "compact"))
+          .with(CardDesignScope.Card, card, CardDesignOverride(variant = "compact")),
       ),
     )
   }

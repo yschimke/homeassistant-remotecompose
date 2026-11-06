@@ -447,7 +447,7 @@ private fun WearAppFrame(
     RemoteBox(
       modifier =
         RemoteModifier.fillMaxSize()
-          .padding(frame.horizontalPaddingDp.rdp, frame.verticalPaddingDp.rdp)
+          .padding(frame.horizontalPaddingDp.rdp, frame.verticalPaddingDp.rdp),
     ) {
       content()
     }

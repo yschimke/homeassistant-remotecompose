@@ -100,7 +100,7 @@ class WearWidgetCardStoreTest {
         listOf(
           PinnedCard(card = office, cardKey = "pin-office", orderIndex = 3),
           PinnedCard(card = kitchen, cardKey = "pin-kitchen", orderIndex = 0),
-        )
+        ),
     )
   private val sections =
     PinnedSectionSet(
@@ -119,7 +119,7 @@ class WearWidgetCardStoreTest {
             cards = listOf(door),
             orderIndex = 2,
           ),
-        )
+        ),
     )
 
   @Test

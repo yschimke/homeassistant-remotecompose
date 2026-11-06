@@ -41,7 +41,7 @@ class CardSourceTest {
         listOf(
           fake("second", priority = 100, result = secondBytes),
           fake("first", priority = 0, result = firstBytes),
-        )
+        ),
       )
     val result = source.render(key, card, snapshot, size, ClientProfile.Phone)
     assertIs<CardRender.Bytes>(result)
@@ -57,7 +57,7 @@ class CardSourceTest {
         listOf(
           fake("addon", priority = 0, result = null),
           fake("local", priority = 100, result = secondBytes),
-        )
+        ),
       )
     val result = source.render(key, card, snapshot, size, ClientProfile.Phone)
     assertIs<CardRender.Bytes>(result)
@@ -102,7 +102,7 @@ class CardSourceTest {
         listOf(
           fake("addon", priority = 0, result = null),
           fake("local", priority = 100, result = null),
-        )
+        ),
       )
     val result = source.render(key, card, snapshot, size, ClientProfile.Phone)
     assertIs<CardRender.Unsupported>(result)
@@ -124,7 +124,7 @@ class CardSourceTest {
           fake("c", priority = 100, result = null),
           fake("a", priority = 0, result = null),
           fake("b", priority = 50, result = null),
-        )
+        ),
       )
     assertEquals(listOf("a", "b", "c"), source.generators.map { it.name })
   }

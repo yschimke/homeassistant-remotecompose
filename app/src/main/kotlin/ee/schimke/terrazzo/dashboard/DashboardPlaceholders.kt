@@ -100,7 +100,7 @@ internal fun DashboardPlaceholders(
           save(
             if (cards.any { it.id == updated.id })
               cards.map { if (it.id == updated.id) updated else it }
-            else cards + updated
+            else cards + updated,
           )
         },
       )
@@ -196,7 +196,7 @@ internal fun PlaceholderCardEditor(
         style = MaterialTheme.typography.titleMedium,
       )
       Text(
-        "Describe the card now. An agent can implement its HA data and Remote Compose bindings later. Saved only on this phone."
+        "Describe the card now. An agent can implement its HA data and Remote Compose bindings later. Saved only on this phone.",
       )
       OutlinedTextField(
         value = title,
@@ -240,7 +240,7 @@ internal fun PlaceholderCardEditor(
                   request.trim(),
                   PlaceholderCard.parseEntityIds(entities),
                   bindings.trim(),
-                )
+                ),
               )
             } catch (failure: IllegalArgumentException) {
               error = failure.message

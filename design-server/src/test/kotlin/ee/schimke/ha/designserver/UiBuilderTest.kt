@@ -64,7 +64,7 @@ class UiBuilderTest {
     put(
       "entities",
       Json.parseToJsonElement(
-        """["light.kitchen", {"entity": "sensor.temp", "name": "Temperature"}]"""
+        """["light.kitchen", {"entity": "sensor.temp", "name": "Temperature"}]""",
       ),
     )
   }
@@ -97,7 +97,7 @@ class UiBuilderTest {
       )
     File(dir, DesignCatalog.PATH)
       .writeText(
-        Json.encodeToString(DesignCatalog.serializer(), DesignCatalog(1, 1_000, listOf(entry)))
+        Json.encodeToString(DesignCatalog.serializer(), DesignCatalog(1, 1_000, listOf(entry))),
       )
     return dir
   }
@@ -223,7 +223,7 @@ class UiBuilderTest {
     assertTrue(
       cardSchema["shared"]!!.jsonArray.any {
         it.jsonObject["name"]!!.jsonPrimitive.content == "HA:sun.sun.elevation"
-      }
+      },
     )
     assertTrue("shared" in design)
     assertEquals(
@@ -332,7 +332,7 @@ class UiBuilderTest {
     val cookie = assertNotNull(edit.headers[HttpHeaders.SetCookie]).substringBefore(';')
     assertTrue(
       "Fork in UI Builder" in
-        browser.get("/designs/$id") { header(HttpHeaders.Cookie, cookie) }.bodyAsText()
+        browser.get("/designs/$id") { header(HttpHeaders.Cookie, cookie) }.bodyAsText(),
     )
 
     val response =
@@ -432,7 +432,7 @@ class UiBuilderTest {
     assertEquals("[fd00::5]", UiBuilderConfig.connectHost("fd00::5"))
     val (config, _) =
       UiBuilderConfig.fromEnvironment(
-        mapOf("UI_BUILDER_BINARY" to "/bin/true", "UI_BUILDER_HOST" to "10.0.0.5")
+        mapOf("UI_BUILDER_BINARY" to "/bin/true", "UI_BUILDER_HOST" to "10.0.0.5"),
       )!!
     assertEquals("http://10.0.0.5:8724", config.apiUrl)
   }
@@ -536,7 +536,7 @@ class UiBuilderTest {
         .substringBefore(';')
     assertTrue(
       "as <b>octocat</b>" in
-        browser.get("/designs/$id") { header(HttpHeaders.Cookie, session) }.bodyAsText()
+        browser.get("/designs/$id") { header(HttpHeaders.Cookie, session) }.bodyAsText(),
     )
 
     // Seeded, then shared with the designer as an editor; the editor link carries no token.
@@ -554,7 +554,7 @@ class UiBuilderTest {
     val forged = session.dropLast(2) + "xx"
     assertTrue(
       "Sign in with GitHub" in
-        browser.get("/designs/$id") { header(HttpHeaders.Cookie, forged) }.bodyAsText()
+        browser.get("/designs/$id") { header(HttpHeaders.Cookie, forged) }.bodyAsText(),
     )
   }
 
@@ -568,7 +568,7 @@ class UiBuilderTest {
           "UI_BUILDER_GITHUB_CLIENT_SECRET" to "secret",
           "UI_BUILDER_COOKIE_SECRET" to "cookie",
           "UI_BUILDER_BROWSER_URL" to "https://builder.ha.coo.ee",
-        )
+        ),
       )
     assertEquals(
       "https://builder.ha.coo.ee",

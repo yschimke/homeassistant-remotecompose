@@ -64,7 +64,7 @@ abstract class TerrazzoAppFunctions : AppFunctionService() {
   suspend fun findEntities(query: String? = null, domain: String? = null): HomeEntities =
     withHome { session ->
       HomeEntities(
-        AssistantEntities.search(states(session).values, query, domain).map { it.toHomeEntity() }
+        AssistantEntities.search(states(session).values, query, domain).map { it.toHomeEntity() },
       )
     }
 
@@ -146,7 +146,7 @@ abstract class TerrazzoAppFunctions : AppFunctionService() {
     val baseUrl =
       graph.offlineCache.lastInstance()?.takeIf { graph.tokenVault.get(it) != null }
         ?: throw AppFunctionPermissionRequiredException(
-          "Sign in to Home Assistant in the Terrazzo app first"
+          "Sign in to Home Assistant in the Terrazzo app first",
         )
     WidgetActionRunner.connectedAppSession(baseUrl)?.let {
       return block(it)
@@ -200,7 +200,7 @@ class HomeEntity(
 @AppFunctionSerializable(isDescribedByKDoc = true)
 class HomeEntities(
   /** The matches, best first. */
-  val entities: List<HomeEntity>
+  val entities: List<HomeEntity>,
 )
 
 private fun EntityState.toHomeEntity(): HomeEntity =

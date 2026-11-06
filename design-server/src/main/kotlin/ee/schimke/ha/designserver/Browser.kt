@@ -182,7 +182,7 @@ object Api {
               buildJsonObject {
                 put("name", b.name)
                 put("type", b.type)
-              }
+              },
             )
           }
         }
@@ -236,18 +236,18 @@ object Pages {
     val shapes = all.map { it.key.cardType to it.key.shape }.distinct().size
     return page("Card designs") {
       append(
-        "<nav><a href=\"/\">← Terrazzo</a></nav><header><h1>Card designs</h1><p class=\"stats\">"
+        "<nav><a href=\"/\">← Terrazzo</a></nav><header><h1>Card designs</h1><p class=\"stats\">",
       )
       append("${all.size} designs · $shapes shapes · ${types.size} card types · ")
       append(
-        "${all.map { it.entry.sha256 }.distinct().size} blobs (${kib(library.totalBlobBytes)}) · "
+        "${all.map { it.entry.sha256 }.distinct().size} blobs (${kib(library.totalBlobBytes)}) · ",
       )
       append(
-        "serial ${library.manifest.serial} · generated ${date(library.manifest.generatedAtEpochMs)}"
+        "serial ${library.manifest.serial} · generated ${date(library.manifest.generatedAtEpochMs)}",
       )
       append(
         "</p><p class=\"hint\">App design server URL: <code>&lt;this host&gt;${esc(paths.api)}</code> · " +
-          "<a href=\"/schema\">Schema from a card's JSON</a></p>"
+          "<a href=\"/schema\">Schema from a card's JSON</a></p>",
       )
       channelBanner(library)
       diff?.let { changeSummary(it, filter) }
@@ -261,7 +261,7 @@ object Pages {
       select("style", "Theme", styles, filter.style)
       select("mode", "Mode", modes, filter.mode)
       append(
-        "<label>Search <input type=\"search\" name=\"q\" value=\"${esc(filter.query.orEmpty())}\" placeholder=\"type or property\"></label>"
+        "<label>Search <input type=\"search\" name=\"q\" value=\"${esc(filter.query.orEmpty())}\" placeholder=\"type or property\"></label>",
       )
       append("<label>Preview <select name=\"preview\">")
       option("example", "With example values", filter.preview == BrowserFilter.Preview.Example)
@@ -270,12 +270,12 @@ object Pages {
       append(
         "<label><input type=\"checkbox\" name=\"wear\" value=\"1\"" +
           (if (filter.wear) " checked" else "") +
-          "> On a watch</label>"
+          "> On a watch</label>",
       )
       append(
         "<label><input type=\"checkbox\" name=\"live\" value=\"1\"" +
           (if (filter.live) " checked" else "") +
-          "> Live</label>"
+          "> Live</label>",
       )
       if (diff != null) {
         append("<label>Changes <select name=\"changes\">")
@@ -285,7 +285,7 @@ object Pages {
         append(
           "<label><input type=\"checkbox\" name=\"compare\" value=\"1\"" +
             (if (filter.compare) " checked" else "") +
-            "> Before and after</label>"
+            "> Before and after</label>",
         )
       }
       append("<button type=\"submit\">Apply</button></form>")
@@ -293,7 +293,7 @@ object Pages {
       append(
         "<p class=\"count\">${designs.size} shown" +
           (if (removed.isNotEmpty()) " · ${removed.size} removed" else "") +
-          "</p>"
+          "</p>",
       )
       if (filter.live) liveControls()
       if (designs.isEmpty() && removed.isEmpty()) {
@@ -307,22 +307,22 @@ object Pages {
         if (filter.mode != null && styleModes.isNotEmpty() && filter.mode !in styleModes) {
           append(
             "<p class=\"mode-hint\">Theme <b>${esc(filter.style.orEmpty())}</b> has no " +
-              "${esc(filter.mode)} designs in this library. Available modes: "
+              "${esc(filter.mode)} designs in this library. Available modes: ",
           )
           append(
             styleModes.joinToString(", ") { mode ->
               "<a href=\"${esc(paths.page("/designs", filter.query { copy(mode = mode) }))}\">${esc(mode)}</a>"
-            }
+            },
           )
           append(".</p>")
         }
         append(
-          "<p><a href=\"${esc(paths.page("/designs", "type=all&style=all&mode=all"))}\">Clear all filters</a></p>"
+          "<p><a href=\"${esc(paths.page("/designs", "type=all&style=all&mode=all"))}\">Clear all filters</a></p>",
         )
       }
       for ((type, group) in designs.groupBy { it.key.cardType }.toSortedMap()) {
         append(
-          "<section><h2 id=\"${esc(type)}\">${esc(type)} <span>${group.size}</span></h2><div class=\"grid\">"
+          "<section><h2 id=\"${esc(type)}\">${esc(type)} <span>${group.size}</span></h2><div class=\"grid\">",
         )
         for (design in group) {
           val change = diff?.of(design)
@@ -345,7 +345,7 @@ object Pages {
         append(
           "<section><h2 id=\"removed\">Removed <span>${removed.size}</span></h2>" +
             "<p class=\"muted\">In the published library, with no design for the same key here: " +
-            "merging this pull request takes them away.</p><div class=\"grid\">"
+            "merging this pull request takes them away.</p><div class=\"grid\">",
         )
         for (design in removed) tile(design, filter.preview, removed = true)
         append("</div></section>")
@@ -370,7 +370,7 @@ object Pages {
     val paths = library.paths
     return page("${key.cardType} · card design") {
       append(
-        "<nav><a href=\"${esc(paths.page("/designs", "type=${enc(key.cardType)}&style=all&mode=all"))}\">← ${esc(key.cardType)} designs</a></nav>"
+        "<nav><a href=\"${esc(paths.page("/designs", "type=${enc(key.cardType)}&style=all&mode=all"))}\">← ${esc(key.cardType)} designs</a></nav>",
       )
       channelBanner(library)
       val change = diff?.of(design)
@@ -395,7 +395,7 @@ object Pages {
           "<b>Change values</b> swaps them for others and back, so you see how it moves when a " +
           "card's data changes. <b>Ambient</b> sets the host's ambient flag, as a watch in " +
           "always-on would (<a href=\"https://github.com/yschimke/homeassistant-remotecompose/" +
-          "blob/main/docs/architecture/ambient-mode.md\">ambient mode</a>).</p>"
+          "blob/main/docs/architecture/ambient-mode.md\">ambient mode</a>).</p>",
       )
       liveControls()
       append("<div class=\"live big\"${liveAttributes(library, design)}>")
@@ -418,7 +418,7 @@ object Pages {
           append(
             "<p class=\"muted\">Document <a href=\"${before.paths.api}/blobs/${before.entry.sha256}.rc\">" +
               "<code>${before.entry.sha256.take(12)}</code></a> · ${kib(before.entry.bytes.toLong())} " +
-              "→ <code>${design.entry.sha256.take(12)}</code> · ${kib(design.entry.bytes.toLong())}</p>"
+              "→ <code>${design.entry.sha256.take(12)}</code> · ${kib(design.entry.bytes.toLong())}</p>",
           )
       }
       design.catalog?.previews?.example?.let { example ->
@@ -426,12 +426,12 @@ object Pages {
           append("<h2>On a watch</h2>")
           wearPanes("${paths.api}/$example", key.cardType)
           append(
-            "<p class=\"muted\"><a href=\"${esc(paths.design(design.id))}\">Hide the watch</a></p>"
+            "<p class=\"muted\"><a href=\"${esc(paths.design(design.id))}\">Hide the watch</a></p>",
           )
         } else {
           append(
             "<p class=\"muted\"><a href=\"${esc(paths.design(design.id, "wear=1"))}\">On a watch</a>: " +
-              "this design as Small and Large Wear widgets, roughly</p>"
+              "this design as Small and Large Wear widgets, roughly</p>",
           )
         }
       }
@@ -460,14 +460,14 @@ object Pages {
 
       append("<h2>Bindings <span>${decoded.bindings.size}</span></h2>")
       append(
-        "<p class=\"muted\">Named values a client pushes to show a card's values. <code>&lt;domain&gt;.s&lt;N&gt;</code> is slot N's entity; <code>card.*</code> is the card's own config.</p>"
+        "<p class=\"muted\">Named values a client pushes to show a card's values. <code>&lt;domain&gt;.s&lt;N&gt;</code> is slot N's entity; <code>card.*</code> is the card's own config.</p>",
       )
       if (decoded.error != null)
         append("<p class=\"error\">Couldn't decode the template: ${esc(decoded.error)}</p>")
       if (decoded.bindings.isNotEmpty()) {
         append("<table><tr><th>Name</th><th>Type</th></tr>")
         for (b in decoded.bindings) append(
-          "<tr><td><code>${esc(b.name)}</code></td><td>${esc(b.type)}</td></tr>"
+          "<tr><td><code>${esc(b.name)}</code></td><td>${esc(b.type)}</td></tr>",
         )
         append("</table>")
       }
@@ -493,10 +493,10 @@ object Pages {
 
       design.catalog?.example?.let { example ->
         append(
-          "<h2>Example card</h2><p class=\"muted\">From <code>${esc(example.source)}</code>: a card whose generation properties give this shape.</p>"
+          "<h2>Example card</h2><p class=\"muted\">From <code>${esc(example.source)}</code>: a card whose generation properties give this shape.</p>",
         )
         append(
-          "<pre>${esc(prettyJson.encodeToString(JsonObject.serializer(), example.card))}</pre>"
+          "<pre>${esc(prettyJson.encodeToString(JsonObject.serializer(), example.card))}</pre>",
         )
       }
       append("<h2>Design it</h2>")
@@ -511,7 +511,7 @@ object Pages {
             " (the UI Builder design this card type is drawn from: every theme of it).</p>"
           else
             " (rebuilt from Home Assistant card components in this design's theme, so close to " +
-              "it rather than identical).</p>")
+              "it rather than identical).</p>"),
       )
       // A pull request's designs are a preview: forking and editing start from main's.
       if (paths.isMain)
@@ -524,11 +524,11 @@ object Pages {
             "and imported into the repository as a pull request " +
             "(<a href=\"/api/library/sources/${enc(CardDesignFiles.fileName(key.cardType))}\">" +
             "current source</a>)." +
-            "</span></form>"
+            "</span></form>",
         )
       }
       append(
-        "<p class=\"muted\"><a href=\"${esc(paths.page("/api/designs/${design.id}"))}\">JSON</a></p>"
+        "<p class=\"muted\"><a href=\"${esc(paths.page("/api/designs/${design.id}"))}\">JSON</a></p>",
       )
     }
   }
@@ -544,11 +544,11 @@ object Pages {
         "<p class=\"muted\">Paste a card's Lovelace config, or <code>{\"card\": {…}, \"states\": " +
           "{\"light.kitchen\": {\"state\": \"on\", \"attributes\": {…}}}}</code>. The schema is what a " +
           "design for it can bind: one slot per entity, named by position, and the values a client " +
-          "pushes for each.</p>"
+          "pushes for each.</p>",
       )
       append("<form method=\"post\" action=\"/schema\" class=\"stack\">")
       append(
-        "<textarea name=\"card\" rows=\"10\" spellcheck=\"false\" placeholder=\"{&quot;type&quot;: &quot;entities&quot;, &quot;entities&quot;: [&quot;light.kitchen&quot;]}\">"
+        "<textarea name=\"card\" rows=\"10\" spellcheck=\"false\" placeholder=\"{&quot;type&quot;: &quot;entities&quot;, &quot;entities&quot;: [&quot;light.kitchen&quot;]}\">",
       )
       append(esc(input.orEmpty()))
       append("</textarea><button type=\"submit\">Show schema</button></form>")
@@ -567,12 +567,12 @@ object Pages {
     else {
       append("<table><tr><th>Slot</th><th>Entity</th></tr>")
       for (slot in schema.slots) append(
-        "<tr><td><code>${esc(slot.slot)}</code></td><td>${esc(slot.entity ?: "")}${slot.name?.let { " · " + esc(it) } ?: ""}</td></tr>"
+        "<tr><td><code>${esc(slot.slot)}</code></td><td>${esc(slot.entity ?: "")}${slot.name?.let { " · " + esc(it) } ?: ""}</td></tr>",
       )
       append("</table>")
     }
     append(
-      "<h2>Bindings <span>${schema.bindings.size}</span></h2><table><tr><th>Name</th><th>Type</th><th>Example</th></tr>"
+      "<h2>Bindings <span>${schema.bindings.size}</span></h2><table><tr><th>Name</th><th>Type</th><th>Example</th></tr>",
     )
     for (b in schema.bindings) {
       val type =
@@ -580,15 +580,15 @@ object Pages {
           if (UiBuilderSeed.supports(b.type)) ""
           else " <span class=\"muted\">(not in UI Builder yet)</span>"
       append(
-        "<tr><td><code>${esc(b.name)}</code></td><td>$type</td><td>${esc(b.example?.content ?: "")}</td></tr>"
+        "<tr><td><code>${esc(b.name)}</code></td><td>$type</td><td>${esc(b.example?.content ?: "")}</td></tr>",
       )
     }
     append("</table>")
     append(
-      "<h2>Shared values <span>${schema.shared.size}</span></h2><p class=\"muted\">Any design may also read these: entities every Home Assistant has under the same id.</p><table><tr><th>Name</th><th>Type</th><th>Meaning</th></tr>"
+      "<h2>Shared values <span>${schema.shared.size}</span></h2><p class=\"muted\">Any design may also read these: entities every Home Assistant has under the same id.</p><table><tr><th>Name</th><th>Type</th><th>Meaning</th></tr>",
     )
     for (b in schema.shared) append(
-      "<tr><td><code>${esc(b.name)}</code></td><td>${b.type.name.lowercase()}</td><td>${esc(b.description ?: "")}</td></tr>"
+      "<tr><td><code>${esc(b.name)}</code></td><td>${b.type.name.lowercase()}</td><td>${esc(b.description ?: "")}</td></tr>",
     )
     append("</table>")
   }
@@ -603,24 +603,24 @@ object Pages {
     when {
       !editor.enabled ->
         append(
-          "<p class=\"muted\">Run the server with UI Builder (<code>UI_BUILDER_BINARY</code> or <code>UI_BUILDER_URL</code>) to design this card's content there.</p>"
+          "<p class=\"muted\">Run the server with UI Builder (<code>UI_BUILDER_BINARY</code> or <code>UI_BUILDER_URL</code>) to design this card's content there.</p>",
         )
       !editor.authorized && editor.signInPath != null ->
         append(
           "<p><a href=\"${esc(editor.signInPath)}\">Sign in with GitHub</a> " +
             "<span class=\"muted\">to design this card in UI Builder. Your designs are yours: " +
-            "shared with your GitHub account and nobody else.</span></p>"
+            "shared with your GitHub account and nobody else.</span></p>",
         )
       !editor.authorized ->
         append(
-          "<p class=\"muted\">UI Builder is available: open the edit link the server printed at startup to design this card there.</p>"
+          "<p class=\"muted\">UI Builder is available: open the edit link the server printed at startup to design this card there.</p>",
         )
       else -> {
         append("<form method=\"post\" action=\"$SEED_PATH\">")
         append("<input type=\"hidden\" name=\"$field\" value=\"${esc(value)}\">")
         val fork = field == "design"
         append(
-          "<button type=\"submit\">${if (fork) "Fork in UI Builder" else "Design in UI Builder"}</button> "
+          "<button type=\"submit\">${if (fork) "Fork in UI Builder" else "Design in UI Builder"}</button> ",
         )
         editor.login?.let {
           append(
@@ -628,7 +628,7 @@ object Pages {
               (if (editor.signOutPath == null) "</span> "
               else
                 " · <button form=\"sign-out\" class=\"link\" type=\"submit\">sign out</button>" +
-                  "</span> ")
+                  "</span> "),
           )
         }
         append(
@@ -637,7 +637,7 @@ object Pages {
               "Starts from this design's source: Home Assistant card components in its theme, " +
                 "bound to these values."
             else "Seeds an adaptive RemoteCompose layout bound to these values.") +
-            "</span></form>"
+            "</span></form>",
         )
         editor.signOutPath
           ?.takeIf { editor.login != null }
@@ -649,7 +649,7 @@ object Pages {
               unsupported.joinToString {
                 "<code>${esc(it.name)}</code> (${it.type.name.lowercase()})"
               } +
-              ", so nothing in it can bind them yet.</p>"
+              ", so nothing in it can bind them yet.</p>",
           )
       }
     }
@@ -676,7 +676,7 @@ object Pages {
     append(
       "</p><p class=\"muted\">To try it in the app, set the card design server to " +
         "<code>&lt;this host&gt;${esc(paths.api)}</code>. " +
-        "<a href=\"/designs\">Back to the published library</a></p></div>"
+        "<a href=\"/designs\">Back to the published library</a></p></div>",
     )
   }
 
@@ -714,7 +714,7 @@ object Pages {
           link(BrowserFilter.Changes.Removed, diff.removed.size, "removed"),
           "<span class=\"muted\">${count(LibraryDiff.Change.Unchanged)} unchanged</span>",
         )
-        .joinToString(" · ")
+        .joinToString(" · "),
     )
     append("</p>")
   }
@@ -741,7 +741,7 @@ object Pages {
         .joinToString(" · ") { (paths, label) ->
           if (paths.channel == current) "<b>${esc(label)}</b>"
           else "<a href=\"${esc(paths.page("/designs"))}\">${esc(label)}</a>"
-        }
+        },
     )
     append("</p>")
   }
@@ -768,13 +768,13 @@ object Pages {
       }
     val image = imageOf(design)
     append(
-      "<a class=\"tile${if (change != null && change != LibraryDiff.Change.Unchanged || removed) " changed" else ""}\" href=\"${esc(design.paths.design(design.id))}\">"
+      "<a class=\"tile${if (change != null && change != LibraryDiff.Change.Unchanged || removed) " changed" else ""}\" href=\"${esc(design.paths.design(design.id))}\">",
     )
     val beforeImage = before?.let(::imageOf)
     if (beforeImage != null) {
       append("<div class=\"compare\"><figure>")
       append(
-        "<img loading=\"lazy\" src=\"${before.paths.api}/$beforeImage\" alt=\"published ${esc(design.key.cardType)} preview\">"
+        "<img loading=\"lazy\" src=\"${before.paths.api}/$beforeImage\" alt=\"published ${esc(design.key.cardType)} preview\">",
       )
       append("<figcaption>Published</figcaption></figure><figure>")
     }
@@ -782,7 +782,7 @@ object Pages {
     if (live != null) append("<div class=\"live\"${liveAttributes(live, design)}>")
     if (image != null)
       append(
-        "<img loading=\"lazy\" src=\"${design.paths.api}/$image\" alt=\"${esc(design.key.cardType)} preview\">"
+        "<img loading=\"lazy\" src=\"${design.paths.api}/$image\" alt=\"${esc(design.key.cardType)} preview\">",
       )
     else append("<div class=\"noimage\">no preview</div>")
     if (live != null) append("</div>")
@@ -800,7 +800,7 @@ object Pages {
       append("</div>")
     }
     append(
-      "<div class=\"facts\">${esc(theme.style)}${theme.mode?.let { " · ${esc(it)}" } ?: ""} · ${design.entry.slots} slots · ${kib(design.entry.bytes.toLong())}</div>"
+      "<div class=\"facts\">${esc(theme.style)}${theme.mode?.let { " · ${esc(it)}" } ?: ""} · ${design.entry.slots} slots · ${kib(design.entry.bytes.toLong())}</div>",
     )
     append("</div></a>")
   }
@@ -844,7 +844,7 @@ object Pages {
     append(
       "<div class=\"live-controls\"><label><input type=\"checkbox\" id=\"live-ambient\"> " +
         "Ambient</label> <button type=\"button\" id=\"live-change\">Change values</button>" +
-        " <span class=\"muted\" id=\"live-state\">example values</span></div>"
+        " <span class=\"muted\" id=\"live-state\">example values</span></div>",
     )
   }
 
@@ -894,7 +894,7 @@ change.addEventListener('click', () => {
   state.textContent = changed ? 'changed values' : 'example values';
   for (const card of cards) card.el.setValues(valuesOf(card));
 });
-</script>"""
+</script>""",
     )
   }
 
@@ -912,7 +912,7 @@ change.addEventListener('click', () => {
 
   private fun StringBuilder.option(value: String, label: String, selected: Boolean) {
     append(
-      "<option value=\"${esc(value)}\"${if (selected) " selected" else ""}>${esc(label)}</option>"
+      "<option value=\"${esc(value)}\"${if (selected) " selected" else ""}>${esc(label)}</option>",
     )
   }
 
@@ -931,7 +931,7 @@ change.addEventListener('click', () => {
         append("<figure class=\"watch $screen\"><div class=\"screen\"><div class=\"pane $pane\">")
         append(
           "<img loading=\"lazy\" src=\"$src\" alt=\"${esc(cardType)} on a " +
-            "${screen} watch, ${pane} widget\">"
+            "${screen} watch, ${pane} widget\">",
         )
         append("</div></div><figcaption>$caption</figcaption></figure>")
       }
@@ -941,7 +941,7 @@ change.addEventListener('click', () => {
 
   private fun StringBuilder.figure(src: String, caption: String) {
     append(
-      "<figure><img src=\"$src\" alt=\"${esc(caption)}\"><figcaption>${esc(caption)}</figcaption></figure>"
+      "<figure><img src=\"$src\" alt=\"${esc(caption)}\"><figcaption>${esc(caption)}</figcaption></figure>",
     )
   }
 

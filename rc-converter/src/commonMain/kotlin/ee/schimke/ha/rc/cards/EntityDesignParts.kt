@@ -38,8 +38,8 @@ object EntityDesignParts {
     LocalCardInput.current
       ?: requireNotNull(
         converter.framedDesignTemplate(
-          DesignProperties.build { string(EntityDesign.DOMAIN, "light") }
-        )
+          DesignProperties.build { string(EntityDesign.DOMAIN, "light") },
+        ),
       )
 
   /**

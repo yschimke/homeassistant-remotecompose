@@ -21,7 +21,7 @@ object DashboardFixtures {
   private val DASHBOARDS_ROOT: File =
     File(
       System.getProperty("ha.dashboards.root")
-        ?: "${System.getProperty("user.home")}/workspace/homeassistant-agents/dashboards"
+        ?: "${System.getProperty("user.home")}/workspace/homeassistant-agents/dashboards",
     )
 
   data class Loaded(val dashboard: Dashboard, val snapshot: HaSnapshot)

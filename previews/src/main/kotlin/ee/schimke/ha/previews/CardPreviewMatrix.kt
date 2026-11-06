@@ -343,7 +343,7 @@ private fun FixedModeCell(
               dark = true,
               widgetActions =
                 WidgetActionRegistry(
-                  snapshot.states.mapValues { (_, entity) -> formatState(entity, snapshot) }
+                  snapshot.states.mapValues { (_, entity) -> formatState(entity, snapshot) },
                 ),
               card = card,
               snapshot = snapshot,
@@ -563,7 +563,7 @@ fun CardPreviewMatrix_Sensor() {
 fun CardPreviewMatrix_Statistic() {
   val card =
     card(
-      """{"type":"statistic","entity":"sensor.living_room","name":"Living Room","period":"day","stat_type":"mean"}"""
+      """{"type":"statistic","entity":"sensor.living_room","name":"Living Room","period":"day","stat_type":"mean"}""",
     )
   CardPreviewMatrix(
     card = card,
@@ -704,7 +704,7 @@ fun CardPreviewMatrix_WeatherForecast() {
   val card =
     card(
       """{"type":"weather-forecast","entity":"weather.forecast_home",
-            "show_current":true,"show_forecast":true}"""
+            "show_current":true,"show_forecast":true}""",
     )
   CardPreviewMatrix(
     card = card,
@@ -771,7 +771,7 @@ fun CardPreviewMatrix_Entities() {
     card(
       """{"type":"entities","title":"Living Room","entities":[
             "sensor.living_room","light.office_lamp","switch.coffee_maker","lock.front_door"
-        ]}"""
+        ]}""",
     )
   // Pick entries from Fixtures.mixed whose isActive resolves to false
   // (sensor / off light / off switch / locked lock) so the entities
@@ -815,7 +815,7 @@ fun CardPreviewMatrix_PictureEntity() {
   val card =
     card(
       """{"type":"picture-entity","entity":"camera.driveway","name":"Driveway",
-            "show_name":true,"show_state":true}"""
+            "show_name":true,"show_state":true}""",
     )
   // Bake a landscape sample bitmap into every cell so the matrix shows
   // the image filling and cropping the cell rather than the offline
@@ -844,7 +844,7 @@ fun CardPreviewMatrix_HistoryGraph() {
   val card =
     card(
       """{"type":"history-graph","title":"Temperature","hours_to_show":24,
-            "entities":["sensor.outside_temp","sensor.upstairs_temp"]}"""
+            "entities":["sensor.outside_temp","sensor.upstairs_temp"]}""",
     )
   CardPreviewMatrix(
     card = card,
@@ -882,7 +882,7 @@ fun CardPreviewMatrix_Calendar() {
   val card =
     card(
       """{"type":"calendar","title":"Family calendar","initial_view":"listWeek",
-            "entities":["calendar.family"]}"""
+            "entities":["calendar.family"]}""",
     )
   CardPreviewMatrix(
     card = card,
@@ -903,7 +903,7 @@ fun CardPreviewMatrix_Logbook() {
   val card =
     card(
       """{"type":"logbook","title":"Recent activity","hours_to_show":24,
-            "entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}"""
+            "entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}""",
     )
   CardPreviewMatrix(
     card = card,
@@ -923,7 +923,7 @@ fun CardPreviewMatrix_Logbook() {
 fun CardPreviewMatrix_Markdown() {
   val card =
     card(
-      """{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}"""
+      """{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}""",
     )
   CardPreviewMatrix(
     card = card,

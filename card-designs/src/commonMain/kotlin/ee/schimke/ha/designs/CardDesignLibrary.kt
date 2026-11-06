@@ -214,7 +214,7 @@ object CardDesignLibrary {
           json.encodeToString(
             DesignCatalog.serializer(),
             catalog.copy(serial = output.manifest.serial, entries = entries),
-          )
+          ),
         )
     }
     // Last, after everything it names.

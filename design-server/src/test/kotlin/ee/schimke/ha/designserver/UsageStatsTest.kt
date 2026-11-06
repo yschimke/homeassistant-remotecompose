@@ -192,7 +192,7 @@ class UsageStatsTest {
     assertEquals("widget", stats.rows("2026-10-01", "2026-10-31").single().cell.surface)
     val bad = widget.copy(rows = listOf(widget.rows.single().copy(surface = "Living Room")))
     assertTrue(
-      UsageReportCheck.parse(Json.encodeToString(UsageReport.serializer(), bad), today).isFailure
+      UsageReportCheck.parse(Json.encodeToString(UsageReport.serializer(), bad), today).isFailure,
     )
   }
 
@@ -229,7 +229,7 @@ class UsageStatsTest {
     repeat(5) {
       client.get(
         "$API_BASE/blobs/$sha.rc?client=" +
-          java.net.URLEncoder.encode("Terrazzo/0.1.51 (web; surface=web)", "UTF-8")
+          java.net.URLEncoder.encode("Terrazzo/0.1.51 (web; surface=web)", "UTF-8"),
       )
     }
     val fetch = stats.rows("2026-10-01", "2026-10-31").single { it.cell.kind == UsageStats.FETCH }

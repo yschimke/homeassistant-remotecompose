@@ -25,12 +25,12 @@ class RemoteComposeCardConverterTest {
               "sensor.nozzle",
               "220",
               Json.parseToJsonElement(
-                  """{"device_class":"temperature","unit_of_measurement":"°C"}"""
+                  """{"device_class":"temperature","unit_of_measurement":"°C"}""",
                 )
                 .jsonObject,
             ),
           "binary_sensor.online" to EntityState("binary_sensor.online", "on"),
-        )
+        ),
     )
 
   private fun card(json: String): CardConfig {
@@ -42,7 +42,7 @@ class RemoteComposeCardConverterTest {
   private val wrapper =
     card(
       """{"type":"$REMOTE_COMPOSE_CARD_TYPE","card_style":"braun",
-         "card":{"type":"tile","entity":"sensor.nozzle","name":"Nozzle"}}"""
+         "card":{"type":"tile","entity":"sensor.nozzle","name":"Nozzle"}}""",
     )
 
   @Test
@@ -88,12 +88,12 @@ class RemoteComposeCardConverterTest {
       card(
         """{"type":"$REMOTE_COMPOSE_CARD_TYPE","card":{"type":"conditional",
            "conditions":[{"entity":"binary_sensor.online","state":"on"}],
-           "card":{"type":"tile","entity":"sensor.nozzle"}}}"""
+           "card":{"type":"tile","entity":"sensor.nozzle"}}}""",
       )
     val off =
       snapshot.copy(
         states =
-          snapshot.states + ("binary_sensor.online" to EntityState("binary_sensor.online", "off"))
+          snapshot.states + ("binary_sensor.online" to EntityState("binary_sensor.online", "off")),
       )
     assertEquals("1", cardVisibilitySignature(conditional, snapshot))
     assertEquals("0", cardVisibilitySignature(conditional, off))

@@ -14,7 +14,9 @@ class ConversationTest {
     assertEquals(id, conversationEntity(card("""{"type":"tile","entity":"$id"}""")))
     assertEquals(id, conversationEntity(card("""{"type":"logbook","entities":["$id"]}""")))
     assertNull(
-      conversationEntity(card("""{"type":"tile","entity":"binary_sensor.meshcore_room_contact"}"""))
+      conversationEntity(
+        card("""{"type":"tile","entity":"binary_sensor.meshcore_room_contact"}"""),
+      ),
     )
     assertNull(conversationEntity(card("""{"type":"logbook","entities":["$id","light.room"]}""")))
   }
@@ -30,7 +32,7 @@ class ConversationTest {
       {"entity_id":"$id","when":3,"state":"Active"},
       {"entity_id":"binary_sensor.meshcore_other_messages","when":4,"message":"Private: Excluded"},
       {"entity_id":"$id","message":"No timestamp"}
-    ]"""
+    ]""",
         )
         .jsonArray
     val result = conversationMessages(rows, id)

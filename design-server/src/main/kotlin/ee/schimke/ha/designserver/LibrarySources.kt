@@ -91,7 +91,7 @@ class LibrarySources(
           mapOf(
             "title" to JsonPrimitive("${design.key.cardType} (fork)"),
             "revision" to JsonPrimitive(0),
-          )
+          ),
       )
 
     /** The checked-in [source] as a new UI Builder design for its card type. */
@@ -102,7 +102,7 @@ class LibrarySources(
             "id" to JsonPrimitive(designId(cardType)),
             "title" to JsonPrimitive("Library · $cardType"),
             "revision" to JsonPrimitive(0),
-          )
+          ),
       )
   }
 }
@@ -142,7 +142,7 @@ internal fun Route.librarySourceRoutes(
                     put("edited", source.edited)
                     source.revision?.let { put("revision", it) }
                     put("document", source.document)
-                  }
+                  },
                 )
               }
             },

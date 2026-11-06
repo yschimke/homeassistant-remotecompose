@@ -17,7 +17,7 @@ class AnonymousTemplateCardTest {
       "type":"entities", "title":"Private house", "entities":[
         "light.private_room", {"entity":"light.private_room","name":"Private label"}, "sensor.private_power"
       ]
-    }"""
+    }""",
           )
           .jsonObject,
       )

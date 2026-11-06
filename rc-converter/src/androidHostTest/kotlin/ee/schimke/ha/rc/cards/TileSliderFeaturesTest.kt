@@ -28,14 +28,14 @@ class TileSliderFeaturesTest {
               is List<*> -> JsonArray(value.map { JsonPrimitive(it as String) })
               else -> JsonPrimitive(value.toString())
             }
-        }
+        },
       ),
     )
 
   private fun feature(type: String, vararg extra: Pair<String, String>) =
     JsonObject(
       mapOf("type" to JsonPrimitive(type)) +
-        extra.associate { it.first to JsonPrimitive(it.second) }
+        extra.associate { it.first to JsonPrimitive(it.second) },
     )
 
   private fun slider(entity: EntityState, type: String, vararg extra: Pair<String, String>) =

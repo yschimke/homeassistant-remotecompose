@@ -142,7 +142,7 @@ internal fun LibraryCard(
         Modifier.entityDetails(
           CardDesignSlots.slotEntries(card).orEmpty().map { it.entityId }.distinct().singleOrNull(),
           onMoreInfo,
-        )
+        ),
       ) {
         // Theme swaps and responsive resizes should not animate text through clipped widths.
         RemoteComposeCard(current, Modifier.fillMaxWidth(), values, animateLayoutChanges = false) {
@@ -504,7 +504,7 @@ internal suspend fun loadLibraryDesign(
             put("dark", key.dark)
             if (key.shapeHint.isNotEmpty()) put("shapeHint", key.shapeHint)
           }
-            .toString()
+            .toString(),
         )
       }
     if (response.status == HttpStatusCode.NotFound) {

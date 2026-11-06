@@ -147,7 +147,7 @@ fun CardActionsSheet(
                   baseUrl = baseUrl,
                   dashboardUrlPath = dashboardUrlPath,
                   card = cardData,
-                )
+                ),
               )
             else pinStore.unpinCard(pinKey)
           }
@@ -161,7 +161,7 @@ fun CardActionsSheet(
                 context.startActivity(
                   android.content
                     .Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
-                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
                 )
               }
             }
@@ -272,7 +272,7 @@ fun CardActions(
             supportingContent = {
               Text(
                 "A new frame every ${LiveCameras.FRAME_INTERVAL_MS / 1000} s, not " +
-                  "${LiveCameras.DASHBOARD_FRAME_INTERVAL_MS / 1000} s, for 10 min"
+                  "${LiveCameras.DASHBOARD_FRAME_INTERVAL_MS / 1000} s, for 10 min",
               )
             },
             leadingContent = { Icon(Icons.Outlined.Videocam, contentDescription = null) },
@@ -351,7 +351,7 @@ private fun PlacementChips(
           if (state.homeScreenCount == 1) "On home screen"
           else "On home screen ×${state.homeScreenCount}",
           onAddToHomeScreen,
-        )
+        ),
       )
     }
     if (state.onWatch) add(Triple(Icons.Outlined.PushPin, "On watch", { onWatchChange(false) }))

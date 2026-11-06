@@ -22,7 +22,7 @@ class MessageInputCaptureTest {
     CardConfig(
       MESSAGE_CARD_TYPE,
       Json.parseToJsonElement(
-          """{"type":"custom:terrazzo-message","title":"Send to a room","inputs":[{"key":"room","label":"Contact / Room","type":"choice","value":"Kitchen","options":["Kitchen","Living room"]},{"key":"message","label":"Message","type":"multiline"}],"tap_action":{"action":"perform-action","perform_action":"script.send_room_message","data":{"room":"{{input.room}}","message":"{{input.message}}"}}}"""
+          """{"type":"custom:terrazzo-message","title":"Send to a room","inputs":[{"key":"room","label":"Contact / Room","type":"choice","value":"Kitchen","options":["Kitchen","Living room"]},{"key":"message","label":"Message","type":"multiline"}],"tap_action":{"action":"perform-action","perform_action":"script.send_room_message","data":{"room":"{{input.room}}","message":"{{input.message}}"}}}""",
         )
         .jsonObject,
     )
@@ -79,7 +79,7 @@ class MessageInputCaptureTest {
     assertTrue(
       document.operations.filterIsInstance<RcTextData>().any {
         it.text == "Open app to send a message"
-      }
+      },
     )
   }
 }

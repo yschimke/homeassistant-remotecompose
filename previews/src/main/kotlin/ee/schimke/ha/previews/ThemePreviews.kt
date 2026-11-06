@@ -182,7 +182,7 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
               Modifier.uiFillMaxWidth()
                 .height(56.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(haTheme.cardBackground)
+                .background(haTheme.cardBackground),
           ) {
             RcContentPreview(profile = androidXExperimental) {
               ProvideCardRegistry(defaultRegistry()) {
@@ -201,7 +201,7 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
               Modifier.uiFillMaxWidth()
                 .height(96.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(haTheme.cardBackground)
+                .background(haTheme.cardBackground),
           ) {
             RcContentPreview(profile = androidXExperimental) {
               ProvideCardRegistry(defaultRegistry()) {
@@ -225,7 +225,7 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
 private fun Swatch(label: String, color: Color, onColor: Color) {
   Box(
     modifier =
-      Modifier.size(width = 48.dp, height = 36.dp).clip(RoundedCornerShape(6.dp)).background(color)
+      Modifier.size(width = 48.dp, height = 36.dp).clip(RoundedCornerShape(6.dp)).background(color),
   ) {
     Text(
       text = label,

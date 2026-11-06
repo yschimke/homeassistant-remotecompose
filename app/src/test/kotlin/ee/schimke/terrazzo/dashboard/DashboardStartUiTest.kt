@@ -72,9 +72,9 @@ class DashboardStartUiTest {
           Scaffold(
             topBar = {
               TopAppBar(
-                title = { DashboardSwitcher(dashboards, opened, onSwitch = { opened = it }) }
+                title = { DashboardSwitcher(dashboards, opened, onSwitch = { opened = it }) },
               )
-            }
+            },
           ) { padding ->
             Column(Modifier.padding(padding)) { Screen_DashboardView() }
           }

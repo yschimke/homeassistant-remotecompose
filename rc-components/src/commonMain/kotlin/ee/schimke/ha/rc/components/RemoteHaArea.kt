@@ -50,7 +50,7 @@ fun RemoteHaArea(
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = padding.rdp, vertical = 12.rdp)
+        .padding(horizontal = padding.rdp, vertical = 12.rdp),
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(

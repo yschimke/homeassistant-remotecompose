@@ -24,7 +24,7 @@ class LockedControlsTest {
         mapOf(
           "light.kitchen" to EntityState("light.kitchen", "off"),
           "lock.front_door" to EntityState("lock.front_door", "locked"),
-        )
+        ),
     )
 
   @Test

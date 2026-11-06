@@ -75,7 +75,7 @@ class CardTouchTargetTest {
                 JsonArray(
                   listOf("Salt" to "needs_action", "Milk" to "completed").map { (s, st) ->
                     JsonObject(mapOf("summary" to JsonPrimitive(s), "status" to JsonPrimitive(st)))
-                  }
+                  },
                 ),
             ),
             state(
@@ -87,7 +87,7 @@ class CardTouchTargetTest {
                   listOf("Bins", "Dishes", "Laundry", "Plants", "Hoover").mapIndexed { i, s ->
                     val st = if (i < 4) "needs_action" else "completed"
                     JsonObject(mapOf("summary" to JsonPrimitive(s), "status" to JsonPrimitive(st)))
-                  }
+                  },
                 ),
             ),
             state("light.living_room_lamp", "on", name("Lamp")),
@@ -106,7 +106,7 @@ class CardTouchTargetTest {
               "unit_of_measurement" to JsonPrimitive("°C"),
             ),
           )
-          .associateBy { it.entityId }
+          .associateBy { it.entityId },
     )
 
   private fun card(json: String): CardConfig {
@@ -182,8 +182,8 @@ class CardTouchTargetTest {
       rowOverlaps(
         card(
           """{"type":"picture-glance","title":"Living room","image":"/local/lr.png",
-            "entities":["light.living_room_lamp","light.kitchen_lights"]}"""
-        )
+            "entities":["light.living_room_lamp","light.kitchen_lights"]}""",
+        ),
       )
     assertEquals(1, overlaps.size)
     assertTrue(overlaps.all { it <= 0.5f }, "neighbouring targets overlap: $overlaps dp")

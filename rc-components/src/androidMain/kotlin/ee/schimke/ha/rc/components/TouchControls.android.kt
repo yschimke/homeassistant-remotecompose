@@ -37,7 +37,7 @@ internal actual fun reservedString(slot: ReservedId): RemoteString =
         slot.id(creationState)
 
       override fun computeRequiredCodePointSet(
-        creationState: RemoteComposeCreationState
+        creationState: RemoteComposeCreationState,
       ): Set<String>? = null
     },
   )

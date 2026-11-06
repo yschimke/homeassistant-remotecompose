@@ -145,7 +145,7 @@ class WidgetPreviewRefreshTest {
       val host = text?.parent?.parent
       if (host != null) hosts.add(System.identityHashCode(host))
       samples.add(
-        "${android.os.SystemClock.elapsedRealtime() - started},${System.identityHashCode(host)},\"${text?.text ?: "BLANK"}\""
+        "${android.os.SystemClock.elapsedRealtime() - started},${System.identityHashCode(host)},\"${text?.text ?: "BLANK"}\"",
       )
       root.postInvalidateOnAnimation()
       true
@@ -192,8 +192,8 @@ class WidgetPreviewRefreshTest {
               .matchEntire(
                 handle
                   .fetchSemanticsNode()
-                  .config[androidx.compose.ui.semantics.SemanticsProperties.StateDescription]
-              )
+                  .config[androidx.compose.ui.semantics.SemanticsProperties.StateDescription],
+              ),
           )
           .groupValues
           .drop(1)
@@ -226,7 +226,7 @@ class WidgetPreviewRefreshTest {
               put(MediaStore.Downloads.MIME_TYPE, "text/csv")
               put(MediaStore.Downloads.RELATIVE_PATH, "Download/TerrazzoWidgetTests")
             },
-          )
+          ),
         )
       checkNotNull(context.contentResolver.openOutputStream(uri)).bufferedWriter().use {
         it.write("elapsed_ms,host_identity,native_preview\n" + samples.joinToString("\n"))
@@ -296,7 +296,7 @@ class WidgetPreviewRefreshTest {
               put("type", "tile")
               put("entity", "light.preview")
               put("name", "Edited preview")
-            }
+            },
         )
     }
     val edit = nextRequest()

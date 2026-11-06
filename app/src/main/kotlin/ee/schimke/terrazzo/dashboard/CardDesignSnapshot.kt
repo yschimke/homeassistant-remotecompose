@@ -87,7 +87,7 @@ internal object CardDesignSnapshot {
       deviceByKey = snapshot.device.groupBy({ it.key }) { it.match to it.bytes },
       byDesign =
         DesignsById(
-          snapshot.designed.groupBy({ it.designId }) { DesignedBlob(it.key, it.match, it.bytes) }
+          snapshot.designed.groupBy({ it.designId }) { DesignedBlob(it.key, it.match, it.bytes) },
         ),
     )
   }

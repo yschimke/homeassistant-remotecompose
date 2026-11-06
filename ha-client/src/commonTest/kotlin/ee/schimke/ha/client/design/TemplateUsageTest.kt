@@ -103,7 +103,7 @@ class TemplateUsageTest {
         MockEngine {
           requests += it
           respond("")
-        }
+        },
       )
     assertEquals(0, usage.upload(client, "https://designs.test/designs/v1", agent))
     assertTrue(requests.isEmpty())
@@ -120,7 +120,7 @@ class TemplateUsageTest {
         MockEngine {
           requests += it
           respond("")
-        }
+        },
       )
     assertEquals(1, usage.upload(client, "https://designs.test/designs/v1/", agent))
 
@@ -163,7 +163,7 @@ class TemplateUsageTest {
             sentDays += report.day
             respond("")
           }
-        }
+        },
       )
     assertEquals(1, usage.upload(client, "https://designs.test/designs/v1", agent))
     assertEquals(listOf("2026-10-21"), sentDays)
@@ -216,7 +216,7 @@ class TemplateUsageTest {
         MockEngine {
           agents += it.headers[HttpHeaders.UserAgent]
           respond("")
-        }
+        },
       )
     assertEquals(
       1,
@@ -271,7 +271,7 @@ class TemplateUsageTest {
         MockEngine { request ->
           agents += request.headers[HttpHeaders.UserAgent]
           respond(files.getValue(request.url.encodedPath.removePrefix("/v1/")))
-        }
+        },
       )
     val repository =
       DesignRepository(

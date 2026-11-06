@@ -78,7 +78,7 @@ class DemoImageFetcherTest {
     val url = demo(DemoData.cameraPictureUrl("camera.a1mini_sn1_camera", NOW))
     val next =
       demo(
-        DemoData.cameraPictureUrl("camera.a1mini_sn1_camera", NOW + DemoData.CAMERA_FRAME_MILLIS)
+        DemoData.cameraPictureUrl("camera.a1mini_sn1_camera", NOW + DemoData.CAMERA_FRAME_MILLIS),
       )
     assertTrue(render(url).sameAs(render(url)), "the same frame draws the same pixels")
     assertFalse(render(url).sameAs(render(next)), "the next frame differs")

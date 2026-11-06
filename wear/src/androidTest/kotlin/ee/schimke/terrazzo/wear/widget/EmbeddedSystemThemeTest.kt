@@ -47,7 +47,7 @@ class EmbeddedSystemThemeTest {
     val document =
       CoreDocument().apply {
         initFromBuffer(
-          RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(writer.encodeToByteArray()))
+          RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(writer.encodeToByteArray())),
         )
       }
 

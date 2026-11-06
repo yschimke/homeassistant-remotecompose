@@ -44,8 +44,8 @@ class CardRebuildsTest {
               "camera.yard",
               state,
               JsonObject(mapOf("entity_picture" to JsonPrimitive(picture))),
-            )
-        )
+            ),
+        ),
     )
 
   @Test
@@ -95,7 +95,7 @@ class CardRebuildsTest {
           CardRebuilds.REASON_PICTURE,
           CardRebuilds.Cost.Encode,
           1,
-        )
+        ),
       ),
       CardRebuilds.peek(),
     )
@@ -162,7 +162,7 @@ class CardRebuildsTest {
         kotlinx.coroutines
           .runBlocking {
             androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument(
-              context = context
+              context = context,
             ) {
               androidx.compose.remote.creation.compose.layout.RemoteText(text = text.rs)
             }

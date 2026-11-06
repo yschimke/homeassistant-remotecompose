@@ -22,11 +22,11 @@ internal fun parseHaAction(cfg: JsonObject?, defaultEntityId: String?): HaAction
   return when (action) {
     "toggle" ->
       HaAction.Toggle(
-        cfg["entity"]?.jsonPrimitive?.content ?: defaultEntityId ?: return HaAction.None
+        cfg["entity"]?.jsonPrimitive?.content ?: defaultEntityId ?: return HaAction.None,
       )
     "more-info" ->
       HaAction.MoreInfo(
-        cfg["entity"]?.jsonPrimitive?.content ?: defaultEntityId ?: return HaAction.None
+        cfg["entity"]?.jsonPrimitive?.content ?: defaultEntityId ?: return HaAction.None,
       )
     "navigate" ->
       cfg["navigation_path"]?.jsonPrimitive?.content?.let(HaAction::Navigate) ?: HaAction.None
