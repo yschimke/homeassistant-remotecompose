@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.86](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.85...v0.1.86) (2026-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ha:** Home Assistant 2026.11 or newer is required, and releases are no longer published to homeassistant-remotecompose-out. Users on that repository remove it and add this one in the Marketplace.
+
+### Features
+
+* **ha:** publish the integration for the Home Assistant Marketplace ([#1490](https://github.com/yschimke/homeassistant-remotecompose/issues/1490)) ([d3ad113](https://github.com/yschimke/homeassistant-remotecompose/commit/d3ad113b3939a2ed7e96b0287ba0dbeee13d962c))
+* **rugged:** LCD screens are the watch's display windows ([#1478](https://github.com/yschimke/homeassistant-remotecompose/issues/1478)) ([f7f4f42](https://github.com/yschimke/homeassistant-remotecompose/commit/f7f4f4279690f9f57d162e46e13f328948e271ed))
+* **rugged:** section headings in the G-SPOT lettering's face ([#1482](https://github.com/yschimke/homeassistant-remotecompose/issues/1482)) ([4d56e16](https://github.com/yschimke/homeassistant-remotecompose/commit/4d56e16f78fdb91f8f0f3b73dc8f652a648b3ab2))
+* serve card fonts by URL from the design server ([#1489](https://github.com/yschimke/homeassistant-remotecompose/issues/1489)) ([ac7e61b](https://github.com/yschimke/homeassistant-remotecompose/commit/ac7e61b34faa11c59b4fdf4c63882b2a1899c7bf))
+
+
+### Bug Fixes
+
+* **deps:** rc-players 2.24.0 and Remote Compose 1.0.0-alpha23 ([#1487](https://github.com/yschimke/homeassistant-remotecompose/issues/1487)) ([fdbff7e](https://github.com/yschimke/homeassistant-remotecompose/commit/fdbff7e6b6f742fa3fae2651b4ef4482e2cf518d))
+* **deps:** update compose-ai-tools ([#1488](https://github.com/yschimke/homeassistant-remotecompose/issues/1488)) ([a28ee40](https://github.com/yschimke/homeassistant-remotecompose/commit/a28ee400ac8f8810a751e5d294e4d564398f845d))
+* **deps:** update ktfmt.gradle to v0.28.0 ([#1486](https://github.com/yschimke/homeassistant-remotecompose/issues/1486)) ([fbfea4c](https://github.com/yschimke/homeassistant-remotecompose/commit/fbfea4ce65b627ce651eae2c7e94eb4959f83e42))
+* **rugged:** bound the display window's scale by its box's width ([#1481](https://github.com/yschimke/homeassistant-remotecompose/issues/1481)) ([f2b5698](https://github.com/yschimke/homeassistant-remotecompose/commit/f2b56989b4233f70e45ea4218e5d05e0f0a8bcc2))
+
 ## [0.1.85](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.84...v0.1.85) (2026-11-05)
 
 
