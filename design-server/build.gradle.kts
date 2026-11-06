@@ -82,7 +82,26 @@ configurations.runtimeClasspath {
   exclude(group = "org.jetbrains.compose.runtime", module = "runtime-saveable-desktop")
 }
 
+/**
+ * Compose's desktop text stack and Skia's native library for the machine the server runs on: the
+ * bitmap-font widget filter draws each glyph with the player's own text (WidgetFilters). As the
+ * Compose plugin's `compose.desktop.currentOs` picks it, which a plain JVM project can't call.
+ */
+val composeDesktopPlatform: String = run {
+  val os = System.getProperty("os.name").lowercase()
+  val arch = if (System.getProperty("os.arch") in setOf("aarch64", "arm64")) "arm64" else "x64"
+  when {
+    "mac" in os -> "macos-$arch"
+    "windows" in os -> "windows-$arch"
+    else -> "linux-$arch"
+  }
+}
+
 dependencies {
+  implementation(
+    "org.jetbrains.compose.desktop:desktop-jvm-$composeDesktopPlatform:" +
+      libs.versions.compose.multiplatform.get(),
+  )
   implementation(platform(libs.rc.players.bom))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))

@@ -142,14 +142,6 @@ data class DesignEntry(
   val designId: String? = null,
   /** What a picker calls the design ([LIBRARY_TITLE], or its UI Builder title); null for none. */
   val title: String? = null,
-  /**
-   * How the design draws the faces its text names that no device ships (Rugged Digital's
-   * Digital-7): null, by name, from the fonts the server serves beside its designs
-   * ([CardFontManifest]); [BITMAP_FONTS], from bitmap fonts embedded in the design, for a host that
-   * can't load fonts — a Wear widget's, a launcher's. The two share a [key]: a client asks for the
-   * form its host plays ([DesignQuery.fonts]).
-   */
-  val fonts: String? = null,
 ) {
   /**
    * [designId], or for a library entry from a manifest written before ids existed the id the
@@ -161,9 +153,6 @@ data class DesignEntry(
 
   companion object {
     const val BUILTIN_AUTHOR: String = "terrazzo"
-
-    /** [fonts] for a design whose faces are embedded as bitmap fonts. */
-    const val BITMAP_FONTS: String = "bitmap"
 
     /** What a picker calls the library's own design for a card type. */
     const val LIBRARY_TITLE: String = "Built-in"

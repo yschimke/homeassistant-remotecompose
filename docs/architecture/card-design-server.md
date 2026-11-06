@@ -613,6 +613,10 @@ GET /designs/v1/fonts/fonts.json      (ETag, no-cache)
 
 GET /designs/v1/fonts/<file>          (Cache-Control: max-age=86400)
 
+POST /designs/v1/filters/bitmap-fonts?host=wear-widgets|launcher-widgets&density=<1-4>
+  body: a .rc document   → the document with its card fonts as bitmap fonts
+                           (X-Bitmap-Fonts: converted=<n>; skipped=<n>)
+
 ```
 
 **Tags.** A design is chosen by four tags: its **card type**, its **style** (the card style it is
@@ -631,7 +635,14 @@ matches, never which cards it renders.
   the manifest and caches them by hash beside the designs (`DesignFonts`), and the app installs
   them for every player by name (`HaFontLibrary`): the same for `main` and every channel. A card
   naming a font the cache doesn't hold yet draws in its theme's own face, and draws again when it
-  arrives. A launcher widget, played by the system, keeps the theme's face.
+  arrives.
+- **Bitmap fonts for widgets.** A widget is played by the system's widget host, which can't load
+  the fonts the app fetched. For it the server offers a filter, `rc-player-edit`'s
+  `coreTextAsBitmapFonts` for the host's profile (`WidgetBitmapFonts`, `WidgetFilters`): a client
+  posts a widget's template and gets it back with the card fonts drawn from glyphs embedded in it,
+  each drawn once on the server with the player's own text stack (no phone or watch can draw them
+  yet). Text the card fills in later carries every printable ASCII glyph, about 27 KB for one face
+  at one size; a widget's budget is about 50 KB.
 - One manifest lists every target. The client filters it to the
   surfaces it serves. The manifest is small, and a single file keeps
   hosting static. Split it by surface only if size becomes a problem.

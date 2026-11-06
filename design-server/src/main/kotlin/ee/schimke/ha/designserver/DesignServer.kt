@@ -104,7 +104,9 @@ class LibraryHolder(
  *   captured on the JVM now ([DesignGenerator]), its blob then served beside the library's.
  * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
  * - `/designs/v1/fonts/fonts.json`, `/designs/v1/fonts/<file>` — the fonts designs name
- *   ([CardFonts]), which the app fetches with its designs.
+ * - `POST /designs/v1/filters/bitmap-fonts?host=…` — a document with its card fonts drawn from
+ *   embedded bitmap fonts, for a widget host that can't load fonts (WidgetFilters) ([CardFonts]),
+ *   which the app fetches with its designs.
  * - `/` — the app's front page ([Landing]); `/site/<name>` — its pictures.
  * - `/designs`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
  * - `/designs/v1/channels/<channel>/...` — the same protocol for a pull request's preview, and
@@ -220,6 +222,9 @@ fun Application.designServer(
     val fonts = CardFonts.fromClasspath()
     cardFontRoutes(API_BASE, fonts)
     cardFontRoutes("$API_BASE/channels/{channel}", fonts)
+    val filters = WidgetFilters(fonts)
+    widgetFilterRoutes(API_BASE, filters)
+    widgetFilterRoutes("$API_BASE/channels/{channel}", filters)
 
     get("/embed/v1/{name}") {
       val name = call.parameters["name"].orEmpty()

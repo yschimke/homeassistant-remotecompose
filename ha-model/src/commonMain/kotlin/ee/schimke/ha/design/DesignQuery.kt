@@ -25,11 +25,6 @@ data class DesignQuery(
   val device: DeviceInfo? = null,
   /** One design by id ([DesignEntry.stableDesignId]): the design a card was switched to. */
   val designId: String? = null,
-  /**
-   * How the design draws its faces ([DesignEntry.fonts]): [DesignEntry.BITMAP_FONTS] for one that
-   * embeds them, for a host that can't load fonts. Unset matches either.
-   */
-  val fonts: String? = null,
 ) {
   fun matches(entry: DesignEntry): Boolean {
     val key = entry.key
@@ -43,8 +38,7 @@ data class DesignQuery(
       tag(author, entry.author) &&
       (surface == null || surface == key.surface) &&
       (shape == null || shape == key.shape) &&
-      (theme == null || theme == key.theme) &&
-      (fonts == null || fonts == entry.fonts)
+      (theme == null || theme == key.theme)
   }
 
   /**
@@ -64,7 +58,6 @@ data class DesignQuery(
       device?.model?.let { MODEL to it },
       device?.translationKey?.let { TRANSLATION_KEY to it },
       designId?.let { DESIGN_ID to it },
-      fonts?.let { FONTS to it },
     )
 
   companion object {
@@ -80,7 +73,6 @@ data class DesignQuery(
     const val MODEL = "model"
     const val TRANSLATION_KEY = "translationKey"
     const val DESIGN_ID = "designId"
-    const val FONTS = "fonts"
 
     /**
      * The query [parameter] reads, or null when a value is unusable (an unknown surface): an
@@ -109,7 +101,6 @@ data class DesignQuery(
             )
             .takeIf { it != DeviceInfo() },
         designId = value(DESIGN_ID),
-        fonts = value(FONTS),
       )
     }
 
