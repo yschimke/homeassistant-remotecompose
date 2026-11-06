@@ -10,6 +10,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcCoreText
 import ee.schimke.composeai.rcplayer.protocol.RcDocument
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcTextData
+import ee.schimke.composeai.rcplayer.protocol.RcTextLayout
 import ee.schimke.composeai.rcplayer.protocol.RcTextStyleProperty
 import ee.schimke.composeai.rcplayer.runtime.RcTextRasterizer
 import ee.schimke.ha.rc.components.HaDigital7Font
@@ -106,17 +107,21 @@ object WidgetBitmapFonts {
         .filterIsInstance<RcNamedVariable>()
         .filter { it.type == RcNamedVariable.STRING_TYPE }
         .associate { it.id to it.name.substringAfter(':') }
+    // Each text's id by its component id: a `CoreText`, or the launcher's `TextLayout`.
     val texts =
-      document.operations.filterIsInstance<RcCoreText>().associateBy { text ->
+      document.operations.filterIsInstance<RcCoreText>().associate { text ->
         (text.properties.firstOrNull { it.id == COMPONENT_ID } as? RcTextStyleProperty.IntValue)
-          ?.value
-      }
+          ?.value to text.textId
+      } +
+        document.operations.filterIsInstance<RcTextLayout>().associate {
+          it.componentId to it.textId
+        }
     val locale = live.locale?.let { localeLetters(it) ?: return { null } }.orEmpty()
     val default = ALPHANUMERIC + locale + live.chars
     return glyphs@{ componentId ->
-      val text = texts[componentId] ?: return@glyphs null
-      val sample = samples[text.textId].orEmpty()
-      val values = names[text.textId]?.let { live.values[it] }?.takeIf { it.isNotEmpty() }
+      val textId = texts[componentId] ?: return@glyphs null
+      val sample = samples[textId].orEmpty()
+      val values = names[textId]?.let { live.values[it] }?.takeIf { it.isNotEmpty() }
       if (values != null) {
         val chars = values.joinToString("").toSet().joinToString("")
         return@glyphs chars

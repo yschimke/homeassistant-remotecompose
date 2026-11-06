@@ -24,8 +24,13 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import ee.schimke.composeai.rcplayer.edit.bitmapUrls
 import ee.schimke.composeai.rcplayer.edit.namedVariables
+import ee.schimke.composeai.rcplayer.protocol.RcCoreText
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcDrawBitmapFontTextRun
+import ee.schimke.composeai.rcplayer.protocol.RcTextData
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
+import ee.schimke.composeai.rcplayer.runtime.RcRasterizedText
+import ee.schimke.composeai.rcplayer.runtime.RcTextRasterizer
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -82,6 +87,191 @@ class LauncherDesignsTest {
         )
       }
     assertTrue(document.canBeDisplayed(1, 0, 0L))
+  }
+
+  /**
+   * A launcher can't load the card fonts, so a capture drops them unless a bitmap-font filter will
+   * draw them: with one, Rugged Digital's heading keeps G-SPOT, drawn from embedded glyphs, in a
+   * document Android 16 reads. The clock's Digital-7 stays dropped: its digits stand taller than
+   * their line, which only `CoreText` can lengthen, so a launcher's glyphs would cut their feet
+   * off.
+   */
+  @Test
+  fun aFontFilterKeepsTheCardFontsAndDrawsThemFromGlyphs() {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val look = LauncherLook(HaUberTheme.RuggedDigital)
+    val cards =
+      listOf(
+        CardConfig(
+          type = "heading",
+          raw =
+            buildJsonObject {
+              put("type", "heading")
+              put("heading", "Kitchen")
+            },
+        ),
+      )
+    for (card in cards) {
+      fun capture(filter: LauncherFontFilter?) =
+        captureLauncherWidgetDocument(
+          context,
+          card,
+          snapshotOf(),
+          registry,
+          widthDp * density / 160,
+          heightDp * density / 160,
+          density,
+          widgetsProfile,
+          dark = false,
+          look = look,
+          fontFilter = filter,
+        ) {
+          null
+        }
+      val plain = RcDocumentCodec.decode(capture(null).bytes, RcWireLimits())
+      assertEquals(0, cardFontTexts(plain), "${card.type}: no card font without a filter")
+      var named = 0
+      val filtered = capture { bytes, _ ->
+        val document = RcDocumentCodec.decode(bytes, RcWireLimits())
+        named = cardFontTexts(document)
+        RcDocumentCodec.encode(
+          WidgetBitmapFonts.apply(document, WidgetHost.Launcher, boxGlyphs).document,
+        )
+      }
+      assertTrue(named > 0, "${card.type}: the filter sees the card fonts")
+      val document = RcDocumentCodec.decode(filtered.bytes, RcWireLimits())
+      assertTrue(
+        document.operations.any { it is RcDrawBitmapFontTextRun },
+        "${card.type}: drawn from glyphs",
+      )
+      assertReadsOnAndroid16(filtered.bytes)
+    }
+    // The clock keeps the theme's own face, filter or not.
+    var clockFonts = -1
+    captureLauncherWidgetDocument(
+      context,
+      card("clock", "sensor.time"),
+      snapshotOf(),
+      registry,
+      widthDp * density / 160,
+      heightDp * density / 160,
+      density,
+      widgetsProfile,
+      dark = false,
+      look = look,
+      fontFilter = { bytes, _ ->
+        clockFonts = cardFontTexts(RcDocumentCodec.decode(bytes, RcWireLimits()))
+        null
+      },
+    ) {
+      null
+    }
+    assertEquals(0, clockFonts, "Digital-7 stays off the launcher")
+    // A filter that can't answer leaves the plain capture.
+    val fallback =
+      captureLauncherWidgetDocument(
+        context,
+        cards.first(),
+        snapshotOf(),
+        registry,
+        widthDp * density / 160,
+        heightDp * density / 160,
+        density,
+        widgetsProfile,
+        dark = false,
+        look = look,
+        fontFilter = { _, _ -> null },
+      ) {
+        null
+      }
+    assertEquals(0, cardFontTexts(RcDocumentCodec.decode(fallback.bytes, RcWireLimits())))
+  }
+
+  /**
+   * A template filtered before it's baked still takes the card's values: Rugged Digital's heading
+   * template names G-SPOT, and the card's own title, baked in afterwards, is drawn from its glyphs.
+   */
+  @Test
+  fun aFilteredTemplateStillBakesItsValues() {
+    val heading =
+      CardConfig(
+        type = "heading",
+        raw =
+          buildJsonObject {
+            put("type", "heading")
+            put("heading", "Kitchen")
+          },
+      )
+    var named = 0
+    val baked =
+      assertNotNull(
+        LauncherDesigns.render(
+          org.robolectric.RuntimeEnvironment.getApplication(),
+          heading,
+          snapshotOf(),
+          widthDp,
+          heightDp,
+          density,
+          dark = false,
+          systemTheme = false,
+          registry = registry,
+          look = LauncherLook(HaUberTheme.RuggedDigital),
+          fontFilter = { bytes, _ ->
+            val document = RcDocumentCodec.decode(bytes, RcWireLimits())
+            named = cardFontTexts(document)
+            RcDocumentCodec.encode(
+              WidgetBitmapFonts.apply(document, WidgetHost.Launcher, boxGlyphs).document,
+            )
+          },
+        ),
+      )
+    assertTrue(named > 0, "the template keeps G-SPOT for the filter")
+    val document = RcDocumentCodec.decode(baked.bytes, RcWireLimits())
+    val runs = document.operations.filterIsInstance<RcDrawBitmapFontTextRun>()
+    val texts = document.operations.filterIsInstance<RcTextData>().associate { it.id to it.text }
+    assertTrue(runs.any { texts[it.textId] == "Kitchen" }, "the baked title, drawn from glyphs")
+    assertEquals(0, cardFontTexts(document), "no text left in a card font")
+    assertReadsOnAndroid16(baked.bytes)
+  }
+
+  private fun assertReadsOnAndroid16(bytes: ByteArray) {
+    val platform =
+      CoreDocument().apply {
+        initFromBuffer(
+          RemoteComposeBuffer.fromInputStream(platformWidgetDocument(bytes).inputStream()),
+        )
+      }
+    assertTrue(platform.canBeDisplayed(1, 0, 0L))
+  }
+
+  /**
+   * How many of [document]'s texts (`CoreText` or the launcher's `TextLayout`) are in a card font.
+   */
+  private fun cardFontTexts(document: ee.schimke.composeai.rcplayer.protocol.RcDocument): Int {
+    val strings = document.operations.filterIsInstance<RcTextData>().associate { it.id to it.text }
+    val core =
+      document.operations.filterIsInstance<RcCoreText>().count { text ->
+        val family =
+          text.properties.firstOrNull { it.id == 8 }
+            as? ee.schimke.composeai.rcplayer.protocol.RcTextStyleProperty.IntValue
+        strings[family?.value] in WidgetBitmapFonts.FAMILIES
+      }
+    val layouts =
+      document.operations
+        .filterIsInstance<ee.schimke.composeai.rcplayer.protocol.RcTextLayout>()
+        .count { strings[it.fontFamilyId] in WidgetBitmapFonts.FAMILIES }
+    return core + layouts
+  }
+
+  /** Each glyph a filled box its text's size: enough to check what the filter does with them. */
+  private val boxGlyphs = RcTextRasterizer { text ->
+    val width = (text.fontSize * 0.6f * text.text.length).toInt().coerceAtLeast(1)
+    val height = (text.fontSize * 1.2f).toInt().coerceAtLeast(1)
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    bitmap.eraseColor(text.color)
+    val png = java.io.ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, png)
+    RcRasterizedText(png.toByteArray(), width, height, text.fontSize)
   }
 
   @Test

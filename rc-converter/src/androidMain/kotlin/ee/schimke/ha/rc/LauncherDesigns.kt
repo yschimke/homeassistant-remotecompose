@@ -110,6 +110,8 @@ fun LauncherWidgetContent(
   snapshot: HaSnapshot,
   captureSizeDp: WidgetCaptureSizeDp? = null,
   look: LauncherLook = LauncherLook(),
+  /** Keep the card fonts, for a [LauncherFontFilter] to draw from bitmap fonts. */
+  cardFonts: Boolean = false,
   controlLock: HaControlLockMode =
     if (cardHasDragControls(card)) HaControlLockMode.Locked else HaControlLockMode.Off,
   content: @Composable (RemoteModifier) -> Unit = { RenderChild(card, snapshot, it) },
@@ -121,6 +123,7 @@ fun LauncherWidgetContent(
     ee.schimke.rc.m3.LocalRcAmbientAware provides false,
     ee.schimke.ha.rc.components.LocalSupportsFlowLayout provides
       (androidx.compose.remote.core.Operations.LAYOUT_FLOW in profile.supportedOperations),
+    ee.schimke.ha.rc.components.LocalWidgetCardFonts provides cardFonts,
   ) {
     ProvideCardRegistry(registry) {
       ProvideSystemHaTheme(
@@ -148,6 +151,17 @@ fun LauncherWidgetContent(
       }
     }
   }
+}
+
+/**
+ * Draws the card fonts in a launcher document from bitmap fonts embedded in it, since the launcher
+ * can't load them ([WidgetBitmapFonts], run by the design server for `launcher-widgets`): the
+ * document filtered, or null when it can't be (offline, no server), and the widget is then captured
+ * without the card fonts, as it would be with no filter. [densityDpi] is the display the document
+ * was captured for, which its glyphs are drawn at.
+ */
+fun interface LauncherFontFilter {
+  fun filter(bytes: ByteArray, densityDpi: Int): ByteArray?
 }
 
 /**
@@ -205,8 +219,9 @@ object LauncherDesigns {
     key: DesignKey,
     densityDpi: Int,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    cardFonts: Boolean = false,
   ): Template =
-    captureWith(context, key, densityDpi, registry) { card, snapshot, modifier ->
+    captureWith(context, key, densityDpi, registry, cardFonts) { card, snapshot, modifier ->
       RenderChild(card, snapshot, modifier)
     }
 
@@ -222,6 +237,7 @@ object LauncherDesigns {
     key: DesignKey,
     densityDpi: Int,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    cardFonts: Boolean = false,
     content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
   ): Template {
     require(key.surface == DesignSurface.Launcher) { "not a launcher key: $key" }
@@ -255,6 +271,7 @@ object LauncherDesigns {
                 snapshot,
                 WidgetCaptureSizeDp(widthDp, heightDp),
                 look,
+                cardFonts,
               ) {
                 content(card, snapshot, it)
               }
@@ -294,6 +311,10 @@ object LauncherDesigns {
   /**
    * The baked launcher document for [card], or null when it has no design or can't be baked. The
    * template comes from the process-wide [library], captured on first use.
+   *
+   * With [fontFilter] the template keeps the card fonts and is filtered before its values go in, so
+   * they are drawn from its embedded glyphs; the filter sees the values-free template, which it can
+   * cache by its bytes. A template the filter can't take is the plain one.
    */
   fun render(
     context: Context,
@@ -307,11 +328,19 @@ object LauncherDesigns {
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
     fetchImage: (url: String) -> ByteArray? = { null },
     look: LauncherLook = LauncherLook(),
+    fontFilter: LauncherFontFilter? = null,
   ): Baked? {
     val key =
       keyFor(card, snapshot, widthDp, heightDp, dark, systemTheme, registry, look) ?: return null
+    fun template(cardFonts: Boolean) =
+      library.getOrPut(Triple(key, densityDpi, cardFonts)) {
+        capture(context, key, densityDpi, registry, cardFonts)
+      }
     val template =
-      library.getOrPut(key to densityDpi) { capture(context, key, densityDpi, registry) }
+      fontFilter?.let { filter ->
+        val withFonts = template(cardFonts = true)
+        filter.filter(withFonts.bytes, densityDpi)?.let { Template(it, withFonts.actions) }
+      } ?: template(cardFonts = false)
     return bake(
       template,
       CardDesignTemplates.designCard(card, snapshot, registry),
@@ -359,7 +388,7 @@ object LauncherDesigns {
       .getOrNull()
   }
 
-  private val library = ConcurrentHashMap<Pair<DesignKey, Int>, Template>()
+  private val library = ConcurrentHashMap<Triple<DesignKey, Int, Boolean>, Template>()
 
   /** Forgets the captured templates, for [CardMemory]: the next widget update captures again. */
   fun releaseMemory() {

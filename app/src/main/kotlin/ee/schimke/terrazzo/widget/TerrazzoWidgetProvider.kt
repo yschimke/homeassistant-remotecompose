@@ -262,6 +262,8 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         android.content.res.Configuration.UI_MODE_NIGHT_YES
 
     val look = launcherLook(context, styleCard)
+    // The card fonts drawn from bitmap fonts by the design server, where there is one to ask.
+    val fontFilter = LauncherWidgetFonts.filterFor(context)
 
     // Share fetches (including failures) between the template and direct paths. Keep image bytes
     // comfortably below Binder's transaction limit even for cards containing several pictures.
@@ -300,6 +302,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         registry = registry,
         fetchImage = fetchImage,
         look = look,
+        fontFilter = fontFilter,
       )
     }
       .onFailure { Log.w(TAG, "launcher design failed for id=$widgetId", it) }
@@ -343,6 +346,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           captureProfile,
           dark,
           look,
+          fontFilter,
           fetchImage,
         ) ?: return null
       }
@@ -372,6 +376,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     captureProfile: androidx.compose.remote.creation.profile.Profile,
     dark: Boolean,
     look: LauncherLook,
+    fontFilter: ee.schimke.ha.rc.LauncherFontFilter?,
     fetchImage: (String) -> ByteArray?,
   ): RemoteViews? {
     val captured = runCatching {
@@ -386,6 +391,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         captureProfile,
         dark,
         look,
+        fontFilter,
         fetchImage,
       )
     }

@@ -32,7 +32,9 @@ class LauncherDirectCapture(
 
 /**
  * Capture non-templated cards with self-contained images. Fetch through the embedding app before
- * the final capture; an unavailable image takes the component's icon/name/state fallback.
+ * the final capture; an unavailable image takes the component's icon/name/state fallback. With
+ * [fontFilter] the card fonts are kept and drawn from bitmap fonts ([LauncherFontFilter]); a
+ * capture it can't take is captured again without them.
  */
 fun captureLauncherWidgetDocument(
   context: Context,
@@ -45,6 +47,59 @@ fun captureLauncherWidgetDocument(
   captureProfile: Profile,
   dark: Boolean,
   look: LauncherLook = LauncherLook(),
+  fontFilter: LauncherFontFilter? = null,
+  fetchImage: (String) -> ByteArray?,
+): LauncherDirectCapture {
+  if (fontFilter != null) {
+    // The card fonts kept, then drawn from bitmap fonts; a capture the filter can't take is the
+    // plain one, below.
+    val withFonts =
+      captureDirect(
+        context,
+        card,
+        snapshot,
+        registry,
+        widthPx,
+        heightPx,
+        densityDpi,
+        captureProfile,
+        dark,
+        look,
+        cardFonts = true,
+        fetchImage,
+      )
+    fontFilter.filter(withFonts.bytes, densityDpi)?.let {
+      return LauncherDirectCapture(it, withFonts.actions, withFonts.lockedActions)
+    }
+  }
+  return captureDirect(
+    context,
+    card,
+    snapshot,
+    registry,
+    widthPx,
+    heightPx,
+    densityDpi,
+    captureProfile,
+    dark,
+    look,
+    cardFonts = false,
+    fetchImage,
+  )
+}
+
+private fun captureDirect(
+  context: Context,
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  registry: CardRegistry,
+  widthPx: Int,
+  heightPx: Int,
+  densityDpi: Int,
+  captureProfile: Profile,
+  dark: Boolean,
+  look: LauncherLook,
+  cardFonts: Boolean,
   fetchImage: (String) -> ByteArray?,
 ): LauncherDirectCapture {
   val widgetActions =
@@ -71,6 +126,7 @@ fun captureLauncherWidgetDocument(
               (heightPx * 160f / densityDpi).roundToInt(),
             ),
             look,
+            cardFonts,
           )
         }
       }
