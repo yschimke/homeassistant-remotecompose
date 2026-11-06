@@ -11,6 +11,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * The design server's document filters (`<designs>/filters/…`), for a document a client hands a
@@ -29,6 +32,11 @@ object DesignFilters {
    * [baseUrl]'s server, or null when it can't be had (offline, an older server): the caller then
    * sends the document as it is, which draws its theme's own face. [token] is the server's bearer,
    * as for its designs.
+   *
+   * Text the card fills in later can't be known yet: [locale] (a BCP 47 tag) adds its language's
+   * letters to the default alphanumeric set, or keeps such text as text for a script too large to
+   * embed; [chars] adds characters; [values] gives a binding's possible values by name
+   * (`sensor.s0.state`), its glyphs and slot exactly; [maxLength] is the slot of any other.
    */
   suspend fun bitmapFonts(
     baseUrl: String,
@@ -37,12 +45,20 @@ object DesignFilters {
     density: Float,
     client: HttpClient,
     token: suspend () -> String = { "" },
+    locale: String? = null,
+    chars: String = "",
+    values: Map<String, List<String>> = emptyMap(),
+    maxLength: Int? = null,
   ): ByteArray? {
     val response =
       runCatching {
         client.post("${baseUrl.trimEnd('/')}/$BITMAP_FONTS_PATH") {
           parameter("host", host)
           parameter("density", density)
+          locale?.let { parameter("locale", it) }
+          chars.takeIf { it.isNotEmpty() }?.let { parameter("chars", it) }
+          values.takeIf { it.isNotEmpty() }?.let { parameter("values", valuesJson(it)) }
+          maxLength?.let { parameter("maxLength", it) }
           token()
             .takeIf { it.isNotBlank() }
             ?.let { header(HttpHeaders.Authorization, "Bearer $it") }
@@ -62,10 +78,11 @@ object DesignFilters {
     host: String,
     density: Float,
     token: suspend () -> String = { "" },
+    locale: String? = null,
   ): ByteArray? {
     val client = platformHttpClient()
     return try {
-      bitmapFonts(baseUrl, document, host, density, client, token)
+      bitmapFonts(baseUrl, document, host, density, client, token, locale)
     } finally {
       client.close()
     }
@@ -87,6 +104,9 @@ object DesignFilters {
     }
     return false
   }
+
+  private fun valuesJson(values: Map<String, List<String>>): String =
+    JsonObject(values.mapValues { (_, list) -> JsonArray(list.map(::JsonPrimitive)) }).toString()
 
   /** The bitmap-font filter's path under a design server's base URL. */
   const val BITMAP_FONTS_PATH: String = "filters/bitmap-fonts"

@@ -27,6 +27,8 @@ class DesignFiltersTest {
           seen += request.url.parameters["host"].orEmpty()
           seen += request.url.parameters["density"].orEmpty()
           seen += request.headers[HttpHeaders.Authorization].orEmpty()
+          seen += request.url.parameters["locale"].orEmpty()
+          seen += request.url.parameters["values"].orEmpty()
           assertContentEquals(document, request.body.toByteArray())
           respond(byteArrayOf(7, 7), HttpStatusCode.OK)
         },
@@ -39,10 +41,19 @@ class DesignFiltersTest {
         2f,
         client,
         token = { "device" },
+        locale = "de-DE",
+        values = mapOf("sensor.s0.state" to listOf("on", "off")),
       )
     assertContentEquals(byteArrayOf(7, 7), filtered)
     assertEquals(
-      listOf("/designs/v1/filters/bitmap-fonts", "wear-widgets", "2.0", "Bearer device"),
+      listOf(
+        "/designs/v1/filters/bitmap-fonts",
+        "wear-widgets",
+        "2.0",
+        "Bearer device",
+        "de-DE",
+        """{"sensor.s0.state":["on","off"]}""",
+      ),
       seen,
     )
   }

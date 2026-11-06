@@ -89,8 +89,8 @@ class WidgetFiltersTest {
     val fonts = document.operations.filterIsInstance<RcBitmapFontData>()
     val glyphs = fonts.flatMap { font -> font.glyphs.map { it.chars } }.toSet()
     assertTrue(
-      WidgetBitmapFonts.LIVE_CHARS.map { it.toString() }.all { it in glyphs },
-      "the live reading can show any printable character",
+      WidgetBitmapFonts.ALPHANUMERIC.map { it.toString() }.all { it in glyphs },
+      "the live reading can show any letter, digit or common sign",
     )
     assertTrue(
       RcNamedVariable(43, RcNamedVariable.STRING_TYPE, "USER:sensor.s0.state") in
@@ -101,6 +101,35 @@ class WidgetFiltersTest {
       emptyList(),
       document.validateFor(RcTargetProfiles.WEAR_WIDGETS).filter { it.opcode != null },
     )
+  }
+
+  private suspend fun io.ktor.server.testing.ApplicationTestBuilder.liveGlyphs(
+    query: String,
+  ): Pair<String?, Set<String>> {
+    val response =
+      client.post("$API_BASE/filters/bitmap-fonts?host=wear-widgets&$query") { setBody(readout) }
+    assertEquals(HttpStatusCode.OK, response.status)
+    val fonts = filtered(response.bodyAsBytes()).operations.filterIsInstance<RcBitmapFontData>()
+    return response.headers["X-Bitmap-Fonts"] to
+      fonts.flatMap { font -> font.glyphs.map { it.chars } }.toSet()
+  }
+
+  @Test
+  fun aLocaleAddsItsLettersAndAScriptTooLargeLeavesLiveTextAsText() = testApplication {
+    routing { widgetFilterRoutes(API_BASE, WidgetFilters(CardFonts.fromClasspath())) }
+    val (_, german) = liveGlyphs("locale=de-DE")
+    assertTrue(listOf("ä", "Ü", "ß").all { it in german }, "German's letters, both cases")
+
+    val (chinese, _) = liveGlyphs("locale=zh-CN")
+    assertEquals("converted=1; skipped=1", chinese, "the fixed clock only: the reading stays text")
+  }
+
+  @Test
+  fun aBindingsValuesAreItsGlyphsExactly() = testApplication {
+    routing { widgetFilterRoutes(API_BASE, WidgetFilters(CardFonts.fromClasspath())) }
+    val values = java.net.URLEncoder.encode("""{"sensor.s0.state":["on","off"]}""", "UTF-8")
+    val (_, glyphs) = liveGlyphs("values=$values")
+    assertEquals(setOf("1", "2", ":", "3", "0", "o", "n", "f"), glyphs, "the clock's and on/off's")
   }
 
   @Test
@@ -114,6 +143,10 @@ class WidgetFiltersTest {
     assertEquals(
       HttpStatusCode.BadRequest,
       client.post("$path?host=wear-widgets&density=40") { setBody(readout) }.status,
+    )
+    assertEquals(
+      HttpStatusCode.BadRequest,
+      client.post("$path?host=wear-widgets&values=nope") { setBody(readout) }.status,
     )
     assertEquals(
       HttpStatusCode.UnprocessableEntity,

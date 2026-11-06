@@ -10,10 +10,12 @@ import ee.schimke.ha.client.design.CachedFontFace
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.CardFontManifest
 import ee.schimke.ha.rc.HaFontLibrary
+import ee.schimke.ha.rc.LiveText
 import ee.schimke.ha.rc.WidgetBitmapFonts
 import ee.schimke.ha.rc.WidgetHost
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
 import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.header
 import io.ktor.server.response.respondBytes
@@ -24,6 +26,10 @@ import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.io.readByteArray
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * The widget filters a client asks for a document it hands a widget host: today the bitmap-font
@@ -56,22 +62,26 @@ internal class WidgetFilters(fonts: CardFonts) {
     }
 
   /** [bytes] filtered for [host] at [density], or null when [bytes] isn't a document. */
-  suspend fun bitmapFonts(bytes: ByteArray, host: WidgetHost, density: Float): Filtered? =
-    lock.withLock {
-      val key = "${Sha256.hex(bytes)}:${host.wire}:$density"
-      cache[key]?.let {
-        return@withLock it
-      }
-      val document = runCatching { RcDocumentCodec.decode(bytes, RcWireLimits()) }.getOrNull()
-      if (document == null) return@withLock null
-      val result = WidgetBitmapFonts.apply(document, host, rasterizer, RcDisplay(density))
-      Filtered(
-          RcDocumentCodec.encode(result.document),
-          converted = result.texts.size,
-          skipped = result.skipped.size + result.skippedOnPath.size,
-        )
-        .also { cache[key] = it }
+  suspend fun bitmapFonts(
+    bytes: ByteArray,
+    host: WidgetHost,
+    density: Float,
+    live: LiveText = LiveText(),
+  ): Filtered? = lock.withLock {
+    val key = "${Sha256.hex(bytes)}:${host.wire}:$density:${live.hashCode()}"
+    cache[key]?.let {
+      return@withLock it
     }
+    val document = runCatching { RcDocumentCodec.decode(bytes, RcWireLimits()) }.getOrNull()
+    if (document == null) return@withLock null
+    val result = WidgetBitmapFonts.apply(document, host, rasterizer, RcDisplay(density), live)
+    Filtered(
+        RcDocumentCodec.encode(result.document),
+        converted = result.texts.size,
+        skipped = result.skipped.size + result.skippedOnPath.size,
+      )
+      .also { cache[key] = it }
+  }
 
   class Filtered(val bytes: ByteArray, val converted: Int, val skipped: Int)
 
@@ -87,8 +97,9 @@ internal class WidgetFilters(fonts: CardFonts) {
  * `POST <base>/filters/bitmap-fonts?host=wear-widgets|launcher-widgets&density=<dp scale>`: the
  * request body, a Remote Compose document, back with its card fonts drawn from embedded bitmap
  * fonts for that widget host ([WidgetBitmapFonts]). `density` is the display the glyphs are drawn
- * for (1–4, default 2); a Wear widget scales them with the watch's. `X-Bitmap-Fonts` says how many
- * texts were converted and how many left as they were.
+ * for (1–4, default 2); a Wear widget scales them with the watch's. `locale`, `chars`, `values` and
+ * `maxLength` say what text the card fills in later may show ([LiveText]). `X-Bitmap-Fonts` says
+ * how many texts were converted and how many left as they were.
  */
 internal fun Route.widgetFilterRoutes(base: String, filters: WidgetFilters) {
   post("$base/filters/bitmap-fonts") {
@@ -100,6 +111,15 @@ internal fun Route.widgetFilterRoutes(base: String, filters: WidgetFilters) {
           status = HttpStatusCode.BadRequest,
         )
     val density = call.request.queryParameters["density"]?.toFloatOrNull() ?: DEFAULT_DENSITY
+    val live = runCatching {
+      liveText(call.request.queryParameters)
+    }
+      .getOrElse {
+        return@post call.respondText(
+          it.message ?: "bad live text",
+          status = HttpStatusCode.BadRequest,
+        )
+      }
     if (density !in 1f..4f) {
       return@post call.respondText("density must be 1 to 4", status = HttpStatusCode.BadRequest)
     }
@@ -111,7 +131,7 @@ internal fun Route.widgetFilterRoutes(base: String, filters: WidgetFilters) {
       )
     }
     val filtered =
-      filters.bitmapFonts(body, host, density)
+      filters.bitmapFonts(body, host, density, live)
         ?: return@post call.respondText(
           "not a Remote Compose document",
           status = HttpStatusCode.UnprocessableEntity,
@@ -125,3 +145,36 @@ internal fun Route.widgetFilterRoutes(base: String, filters: WidgetFilters) {
 }
 
 private const val DEFAULT_DENSITY = 2f
+
+/**
+ * The [LiveText] a request asks for: `locale` (a BCP 47 tag), `chars`, `values` (a JSON object of
+ * each binding's possible values: `{"sensor.s0.state":["on","off"]}`) and `maxLength`.
+ */
+private fun liveText(parameters: Parameters): LiveText {
+  val values =
+    parameters["values"]?.let { text ->
+      Json.parseToJsonElement(text).jsonObject.mapValues { (_, list) ->
+        list.jsonArray.map { it.jsonPrimitive.content }
+      }
+    }
+  val maxLength =
+    parameters["maxLength"]?.let { it.toIntOrNull() ?: error("maxLength must be a number") }
+  require(maxLength == null || maxLength in 1..MAX_LIVE_LENGTH) {
+    "maxLength must be 1 to $MAX_LIVE_LENGTH"
+  }
+  require((parameters["chars"]?.length ?: 0) <= MAX_LIVE_CHARS) {
+    "chars must be at most $MAX_LIVE_CHARS"
+  }
+  return LiveText(
+    locale = parameters["locale"]?.takeIf { it.isNotBlank() },
+    chars = parameters["chars"].orEmpty(),
+    values = values.orEmpty(),
+    maxLength = maxLength ?: WidgetBitmapFonts.DEFAULT_LIVE_LENGTH,
+  )
+}
+
+/** The longest live text a request may ask a slot for. */
+private const val MAX_LIVE_LENGTH = 64
+
+/** The most extra characters a request may ask for: a glyph each. */
+private const val MAX_LIVE_CHARS = 256

@@ -614,6 +614,7 @@ GET /designs/v1/fonts/fonts.json      (ETag, no-cache)
 GET /designs/v1/fonts/<file>          (Cache-Control: max-age=86400)
 
 POST /designs/v1/filters/bitmap-fonts?host=wear-widgets|launcher-widgets&density=<1-4>
+       [&locale=<bcp47>&chars=<extra>&values=<{"binding":["value",…]}>&maxLength=<n>]
   body: a .rc document   → the document with its card fonts as bitmap fonts
                            (X-Bitmap-Fonts: converted=<n>; skipped=<n>)
 
@@ -641,8 +642,11 @@ matches, never which cards it renders.
   `coreTextAsBitmapFonts` for the host's profile (`WidgetBitmapFonts`, `WidgetFilters`): a client
   posts a widget's template and gets it back with the card fonts drawn from glyphs embedded in it,
   each drawn once on the server with the player's own text stack (no phone or watch can draw them
-  yet). Text the card fills in later carries every printable ASCII glyph, about 27 KB for one face
-  at one size; a widget's budget is about 50 KB.
+  yet). Text the card fills in later isn't known yet: it carries letters, digits and common signs
+  plus its locale's letters (`locale`), a client's extra characters (`chars`), or exactly the values
+  its binding may take (`values`, which also size its slot), and stays text where its script is too
+  large to embed (Chinese, Japanese, Korean) or its sample falls outside the set. One face at one
+  size costs about 25 KB; a widget's budget is about 50 KB.
 - One manifest lists every target. The client filters it to the
   surfaces it serves. The manifest is small, and a single file keeps
   hosting static. Split it by surface only if size becomes a problem.

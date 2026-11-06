@@ -8,6 +8,7 @@ import ee.schimke.terrazzo.dashboard.CardDesignChoice
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
 import java.util.Collections
+import java.util.Locale
 
 /**
  * The Wear designs the phone sends the watch, with their card fonts drawn from bitmap fonts: the
@@ -46,6 +47,9 @@ internal object WearWidgetFonts {
               DesignFilters.WEAR_WIDGETS,
               WATCH_DENSITY,
               token,
+              // Live text in the language the phone shows: its letters, or text where they won't
+              // fit.
+              locale = Locale.getDefault().toLanguageTag(),
             )
             ?.also { filtered[design.sha256] = it }
           ?: return@map design to bytes
