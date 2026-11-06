@@ -34,10 +34,3 @@ jobs:
         with:
           category: integration
           comment: false
-          # Repository settings the catalog review (hacs/default) asks for, not an install from a
-          # link: a description and topics set on GitHub. Drop them before submitting to the
-          # catalog, which does not accept ignored checks. GitHub reports a repository's license
-          # from its default branch, so a pull request that changes LICENSE can't pass that
-          # check; it runs on main.
-          ignore: >-
-            description topics${{ github.event_name == 'pull_request' && ' license' || '' }}
