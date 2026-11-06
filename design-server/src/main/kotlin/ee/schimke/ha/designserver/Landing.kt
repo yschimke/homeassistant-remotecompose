@@ -52,15 +52,15 @@ object Landing {
   private const val TEASER_SIZE = 6
   private const val SOURCE_URL = "https://github.com/yschimke/homeassistant-remotecompose"
   private const val RELEASE_DOWNLOAD_URL = "$SOURCE_URL/releases/latest/download"
-  /** My Home Assistant's link that opens this repository in the visitor's own HACS. */
-  private const val HACS_REDIRECT_URL =
-    "https://my.home-assistant.io/redirect/hacs_repository/" +
+  /** My Home Assistant's link that opens this repository in the visitor's own Marketplace. */
+  private const val MARKETPLACE_REDIRECT_URL =
+    "https://my.home-assistant.io/redirect/marketplace_repository/" +
       "?owner=yschimke&amp;repository=homeassistant-remotecompose&amp;category=integration"
   /** My Home Assistant's link that starts Terrazzo's setup in the visitor's own instance. */
   private const val ADD_INTEGRATION_URL =
     "https://my.home-assistant.io/redirect/config_flow_start/?domain=terrazzo"
   /** `hacs.json`'s `homeassistant`. */
-  private const val MIN_HA_VERSION = "2024.7"
+  private const val MIN_HA_VERSION = "2026.11"
 
   fun page(library: DesignLibrary, site: SiteConfig): String = buildString {
     append("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">")
@@ -217,21 +217,17 @@ object Landing {
     append("<details><summary>Install it in Home Assistant</summary>")
     append("<ol class=\"steps\">")
     append(
-      "<li><h3>Add Terrazzo to HACS</h3><p>With <a href=\"https://www.hacs.xyz/docs/use/\">HACS</a> " +
-        "installed, <a href=\"$HACS_REDIRECT_URL\">open the repository in HACS</a>. Or in HACS, " +
-        "open <b>⋮ → Custom repositories</b>, add <code>$SOURCE_URL</code> and choose " +
-        "<b>Integration</b>.</p></li>"
+      "<li><h3>Add Terrazzo to the Marketplace</h3><p>" +
+        "<a href=\"$MARKETPLACE_REDIRECT_URL\">Open the repository in your Marketplace</a>. " +
+        "Or go to <b>Settings → Marketplace → ⋮ → Add from link</b> and enter " +
+        "<code>$SOURCE_URL</code>. Home Assistant asks to connect GitHub the first time.</p></li>"
     )
     append(
-      "<li><h3>Download it and restart</h3><p>Find <b>Terrazzo Remote Compose</b>, download the " +
-        "latest release and restart Home Assistant. Pick a release, not the default branch: " +
-        "only releases carry the built dashboard.</p></li>"
-    )
-    append(
-      "<li><h3>Add the integration</h3><p><a href=\"$ADD_INTEGRATION_URL\">Add Terrazzo to " +
-        "Home Assistant</a>, or go to <b>Settings → Devices &amp; services → Add integration</b> " +
-        "and search for Terrazzo. Name its sidebar entry and, if you like, pick the dashboard " +
-        "it opens first. <b>Configure</b> changes either later; no YAML or restart needed.</p></li>"
+      "<li><h3>Install and set it up</h3><p>Select <b>Install</b> on <b>Terrazzo Remote " +
+        "Compose</b>. Its setup opens straight away, no restart needed: name its sidebar entry " +
+        "and, if you like, pick the dashboard it opens first. <b>Configure</b> changes either " +
+        "later. If you closed it, <a href=\"$ADD_INTEGRATION_URL\">add Terrazzo to Home " +
+        "Assistant</a> from <b>Settings → Devices &amp; services</b>.</p></li>"
     )
     append(
       "<li><h3>Open it</h3><p>Pick it in the sidebar or go to " +
@@ -242,19 +238,20 @@ object Landing {
         "usual.</p></li>"
     )
     append("</ol>")
-    append("<details><summary>Without HACS</summary>")
+    append("<details><summary>Without the Marketplace</summary>")
     append(
       "<p>Download <a href=\"$RELEASE_DOWNLOAD_URL/terrazzo-home-assistant.zip\">" +
         "<code>terrazzo-home-assistant.zip</code></a> and check it against " +
         "<a href=\"$RELEASE_DOWNLOAD_URL/SHA256SUMS-home-assistant.txt\">" +
         "<code>SHA256SUMS-home-assistant.txt</code></a>. Extract it into your Home Assistant " +
         "config folder so that <code>custom_components/terrazzo/manifest.json</code> exists, " +
-        "restart Home Assistant and carry on from step 3. To update, replace the whole <code>terrazzo</code> folder " +
+        "restart Home Assistant and add Terrazzo from <b>Settings → Devices &amp; services</b>. " +
+        "To update, replace the whole <code>terrazzo</code> folder " +
         "rather than extracting over it.</p>"
     )
     append("</details>")
     append(
-      "<p class=\"note\">Updates appear in Home Assistant as an update from HACS. Install it, restart, and " +
+      "<p class=\"note\">Updates appear under <b>Settings → Updates</b>. Install one, restart, and " +
         "refresh any wall-panel tabs. Setup also adds a <b>Remote Compose</b> card to the card " +
         "picker of your existing Lovelace dashboards.</p>"
     )

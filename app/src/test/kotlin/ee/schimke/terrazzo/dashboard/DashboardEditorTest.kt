@@ -165,10 +165,10 @@ class DashboardEditorTest {
     }
     compose.onNodeWithText("Ask your agent").performClick()
     assertEquals(1, asked)
-    compose.onNodeWithText("Install with HACS").assertDoesNotExist()
+    compose.onNodeWithText("Install from the Marketplace").assertDoesNotExist()
     status = IntegrationStatus.Missing
     compose.onNodeWithText("Ask your agent").assertDoesNotExist()
-    compose.onNodeWithText("Install with HACS").assertExists()
+    compose.onNodeWithText("Install from the Marketplace").assertExists()
   }
 
   @Test

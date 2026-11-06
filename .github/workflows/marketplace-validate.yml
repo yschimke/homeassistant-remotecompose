@@ -1,0 +1,36 @@
+name: Marketplace validation
+# The checks Home Assistant's Marketplace catalog asks of a custom integration:
+# hassfest (manifest, translations, config flow) and the HACS action (hacs.json, brand
+# images, repository metadata). See
+# https://contributors.home-assistant.io/marketplace/reference/validation/
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - 'custom_components/terrazzo/**'
+      - 'hacs.json'
+      - '.github/workflows/marketplace-validate.yml'
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: marketplace-validate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  hassfest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: integration
+          comment: false

@@ -4,6 +4,9 @@
   "after_dependencies": [
     "lovelace"
   ],
+  "categories": [
+    "presence_location.phones_companion_apps"
+  ],
   "codeowners": [
     "@yschimke"
   ],

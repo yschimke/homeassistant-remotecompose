@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bundle the same WASM/TS renderers for manual and HACS release installation."""
+"""Bundle the same WASM/TS renderers for manual and Marketplace release installation."""
 import argparse
 import hashlib
 import json
@@ -36,17 +36,17 @@ def package(wasm, player, output, version=None):
     shutil.copyfile(ROOT / "embed/ha-card.js", stage / "frontend/ha-card.js")
     shutil.copyfile(player, stage / "frontend/rc-player.js")
     archive = output / "terrazzo-home-assistant.zip"
-    hacs_archive = output / "terrazzo.zip"
-    # HACS extracts directly into /config/custom_components/terrazzo; manual
+    release_archive = output / "terrazzo.zip"
+    # The Marketplace extracts directly into /config/custom_components/terrazzo; manual
     # installs extract into /config. Both archives contain the same payload.
-    for target, relative_to in ((archive, output), (hacs_archive, stage)):
+    for target, relative_to in ((archive, output), (release_archive, stage)):
         with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as bundle:
             for path in sorted(stage.rglob('*')):
                 if path.is_file():
                     bundle.write(path, path.relative_to(relative_to))
     (output / "SHA256SUMS-home-assistant.txt").write_text("".join(
         f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n"
-        for path in (archive, hacs_archive)
+        for path in (archive, release_archive)
     ))
     return archive
 

@@ -10,7 +10,7 @@ permissions of the person who made it.
   deleting work on the live dashboard with nothing installed. Anything more is the panel's job,
   and the phone says so rather than squeezing a full editor onto a small screen.
 - **Anything further needs the Terrazzo integration** (`custom_components/terrazzo`, installed
-  from HACS). It hosts the web panel and the MCP endpoint, and holds agent edit sessions.
+  from the Marketplace). It hosts the web panel and the MCP endpoint, and holds agent edit sessions.
 - **No new credentials.** Each caller signs in the way it already does (below); nobody hands a
   general-purpose token to an agent.
 - **An agent never saves.** It submits drafts; a person previews them with real cards and applies
@@ -38,7 +38,7 @@ Assistant is the editor in practice.
 
 | | Without the integration | With the integration |
 | --- | --- | --- |
-| Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install with HACS** card | Light edits; **Ask your agent** from the editor's top bar (dashboard or section sessions, copy a prompt); preview, apply or discard agent drafts, or **Adjust** one: it comes back into the editor as an unsaved edit to move and resize by hand and save |
+| Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install from the Marketplace** card | Light edits; **Ask your agent** from the editor's top bar (dashboard or section sessions, copy a prompt); preview, apply or discard agent drafts, or **Adjust** one: it comes back into the editor as an unsaved edit to move and resize by hand and save |
 | Web panel | — | Full editor (add cards, sections and views, card settings); **Ask your agent** and the same draft preview |
 | Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session |
 
@@ -129,7 +129,7 @@ Assistant's storage:
      dashboard, and the copy-paste agent flows (**Edit with an agent**, **Populate with an
      agent**).
    - The editor ends with a card pointing to Home Assistant's own editor and, when
-     `get_config`'s `components` lacks `terrazzo`, to the integration's HACS page.
+     `get_config`'s `components` lacks `terrazzo`, to the integration's Marketplace page.
 2. **Integration, edit sessions** — done.
    - `custom_components/terrazzo/edit_sessions.py` holds the rules with no Home Assistant
      imports: a session keeps its dashboard, request, starting config, drafts (the newest 10) and

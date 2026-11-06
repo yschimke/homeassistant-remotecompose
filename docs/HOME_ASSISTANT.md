@@ -6,51 +6,44 @@ backend or separate renderer service is needed. It registers an authenticated
 sidebar panel at **`https://YOUR-HA/terrazzo`** and serves both renderers locally.
 Use that URL as the start page in a wall-panel browser. Normal HA login runs first.
 
-## Install and update with HACS
+## Install and update from the Marketplace
 
-The release pipeline publishes two ZIPs containing the same built renderers:
-`terrazzo.zip` and `terrazzo-home-assistant.zip` for manual installation. It
-also commits the contents of `terrazzo.zip` to the `hacs/terrazzo` branch of
-[yschimke/homeassistant-remotecompose-out](https://github.com/yschimke/homeassistant-remotecompose-out)
-and releases them there under the same `vX.Y.Z`. **Install from that repository
-in HACS.** The source checkout does not include the built renderers.
-Home Assistant 2024.7 or newer is required.
+Terrazzo installs from Home Assistant's **Marketplace** (Settings → Marketplace),
+built into Home Assistant 2026.11 and newer. Home Assistant 2026.11 or newer is
+required. Each release attaches the built integration as `terrazzo.zip`; the
+Marketplace downloads that asset and unpacks it into
+`/config/custom_components/terrazzo/`. The source checkout does not include the
+built renderers, which is why only releases install.
 
-HACS currently cannot download GitHub release assets: github.com answers with a
-response header larger than the HTTP client it uses accepts
-([hacs/integration#5643](https://github.com/hacs/integration/issues/5643)).
-Releases from the `-out` repository install file by file from
-`raw.githubusercontent.com` instead, which avoids that header. HACS still logs an
-error for its first attempt, the repository archive, before it falls back to
-the per-file download.
+Terrazzo is not in the Marketplace catalog yet, so add it from a link:
 
-1. Install [HACS](https://www.hacs.xyz/docs/use/) if you do not have it already.
-2. In HACS, open **Custom repositories**, add
-   `https://github.com/yschimke/homeassistant-remotecompose-out`, and select
-   **Integration** (not Dashboard). Terrazzo is a custom repository; it does not
-   need to be listed in the default HACS store.
-   With My Home Assistant set up, [open the repository in your HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=yschimke&repository=homeassistant-remotecompose-out&category=integration)
-   instead of adding it by hand.
-3. Find **Terrazzo Remote Compose** and download a published release. HACS
-   installs its complete contents into `/config/custom_components/terrazzo/`.
-   Do not select a branch.
+1. With My Home Assistant set up,
+   [open the repository in your Marketplace](https://my.home-assistant.io/redirect/marketplace_repository/?owner=yschimke&repository=homeassistant-remotecompose&category=integration).
+   Or go to **Settings → Marketplace → ⋮ → Add from link** and enter
+   `https://github.com/yschimke/homeassistant-remotecompose`. A repository added
+   from a link needs a GitHub connection; the Marketplace asks for one with
+   GitHub's device sign-in.
+2. Select **Install** on **Terrazzo Remote Compose**. Terrazzo has a config flow,
+   so a first install opens its [setup](#set-up) straight away, without a restart.
+3. Open `/terrazzo`.
 
-If you added `https://github.com/yschimke/homeassistant-remotecompose` itself
-before, remove that custom repository and add the `-out` one: both install the
-same `terrazzo` integration, and only one of them should track updates.
-4. Restart Home Assistant, then [set it up](#set-up) and open `/terrazzo`.
+If you used `yschimke/homeassistant-remotecompose-out` in HACS before, remove it
+from the Marketplace's repositories and add this one: both install the same
+`terrazzo` domain, and the Marketplace refuses a second repository for a domain
+that is already installed. That repository no longer gets releases.
 
 If you installed manually before, back up the existing integration outside
-`custom_components` and your YAML first, then add the custom repository and
-redownload the selected release in HACS. Keep your existing `terrazzo:` settings; they
-are imported on start, so no second configuration is needed.
+`custom_components` and your YAML first, then add the repository and install the
+selected release. Keep your existing `terrazzo:` settings; they are imported on
+start, so no second configuration is needed.
 
-HACS tracks new releases through a Home Assistant **update entity**. Use its
-install action to download an update, then restart HA at a convenient time and
-refresh wall-panel/browser tabs. Discovery is automatic; installation and restart
-remain user-triggered by default. You can later automate `update.install` for the
-Terrazzo update entity, but it does not replace the required restart. Confirm the
-entity ID in your instance rather than copying a guessed ID.
+New releases show up under **Settings → Updates** as an update entity, with the
+release notes. For a repository added from a link, the Marketplace checks for new
+releases every 48 hours. Install the update, then restart HA at a convenient time
+(the Marketplace raises a repair with a restart button) and refresh
+wall-panel/browser tabs. You can automate `update.install` for the Terrazzo update
+entity, but it does not replace the required restart. Confirm the entity ID in
+your instance rather than copying a guessed ID.
 
 ## Manual installation
 
@@ -73,7 +66,7 @@ unzip terrazzo-home-assistant.zip -d /config
 
 `/config` means your HA configuration directory; use the mounted config directory
 for Container/Core. The manifest must end up at
-`/config/custom_components/terrazzo/manifest.json`. The HACS ZIP has a different
+`/config/custom_components/terrazzo/manifest.json`. The Marketplace ZIP, `terrazzo.zip`, has a different
 layout: do not extract `terrazzo.zip` into `/config`.
 For a first install, restart HA and [set it up](#set-up).
 For a manual update, back up and replace the entire old `terrazzo` directory with
@@ -84,7 +77,7 @@ published releases for normal installations.
 
 ## Set up
 
-After installing and restarting, add the integration:
+After a manual install and restart, add the integration (a Marketplace install opens this flow by itself):
 [start Terrazzo's setup in your Home Assistant](https://my.home-assistant.io/redirect/config_flow_start/?domain=terrazzo),
 or go to **Settings → Devices & services → Add integration** and search for
 **Terrazzo**. Setup asks for two things:
@@ -187,13 +180,12 @@ If you use the Lovelace card below, verify it separately too. Actions use the
 signed-in user's permissions. A restart interrupts HA; arrange the restart with
 the instance owner when an agent installs or updates it.
 
-To roll back with HACS, use its redownload/version selector to choose a previous
-release of the `-out` repository, restart HA and refresh tabs. Its releases start
-at 0.1.63. For a manual
+To roll back from the Marketplace, pick an earlier release from the menu of the
+Terrazzo repository there, restart HA and refresh tabs. Only releases with a
+`terrazzo.zip` asset install. For a manual
 rollback, restore the backed-up integration directory (outside `custom_components`
 until replacement), or replace it with a checksum-verified older manual ZIP.
-Restore YAML only if it changed. Keep a backup of the last known working package;
-releases predating plugin publication cannot serve as HACS rollback versions.
+Restore YAML only if it changed. Keep a backup of the last known working package.
 
 ## Add a Remote Compose Lovelace card
 
@@ -439,7 +431,7 @@ same `home-assistant-plugin.yml` checks used for PRs, at that exact tag. It:
 
 1. Rejects a tag that does not match the source integration version.
 2. Builds both renderers, verifies both ZIP layouts and checksums, and runs the
-   frontend and installed-Home-Assistant browser checks using the HACS ZIP.
+   frontend and installed-Home-Assistant browser checks using the Marketplace ZIP.
 3. Uploads the tested `terrazzo.zip`, `terrazzo-home-assistant.zip`, and
    `SHA256SUMS-home-assistant.txt` to that existing GitHub release only after all
    plugin checks pass. Screenshots remain in the separate
@@ -454,8 +446,11 @@ partial uploads before retrying; never replace an already distributed package
 with different bytes under the same version. A bare tag push must already have
 an associated GitHub release before upload succeeds.
 
-The first release carrying this setup enables HACS installation. Publication can
-lag creation of the GitHub release while tests run; check the Home Assistant job
-and presence of all three assets before announcing availability. The site at
-`ha.coo.ee` shows the short install steps and links to this guide; deploying the updated site is a separate operation. Default HACS
-store inclusion is optional and is not performed by this workflow.
+The GitHub release exists before its assets: publication lags creation while
+tests run, and until `terrazzo.zip` is attached the Marketplace cannot install that
+version. Check the Home Assistant job and presence of all assets before announcing
+availability. The site at `ha.coo.ee` shows the short install steps and links to
+this guide; deploying the updated site is a separate operation.
+`marketplace-validate.yml` runs hassfest and the HACS action, the checks the
+Marketplace catalog asks for. Catalog inclusion (a pull request to `hacs/default`)
+is optional and is not performed by this workflow.

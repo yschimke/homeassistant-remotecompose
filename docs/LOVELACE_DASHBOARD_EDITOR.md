@@ -92,7 +92,7 @@ dashboard's top bar; `EditorScope.Full` in `app-ui`'s `DashboardDraftEditor`), w
 settings open on a form for its type with its JSON a tab away; creating dashboards is still Home
 Assistant's.
 The editor ends with **Open in Home Assistant**, which opens the dashboard in HA's own editor, and,
-when HA's `get_config` doesn't list the `terrazzo` component, **Install with HACS** for the Terrazzo
+when HA's `get_config` doesn't list the `terrazzo` component, **Install from the Marketplace** for the Terrazzo
 integration. With it installed the card offers **Ask an agent** instead: an edit session in Home
 Assistant whose prompt the phone shares with the person's AI assistant, and whose drafts it draws
 with the dashboard's own cards for the person to apply, answer with a note, or discard
