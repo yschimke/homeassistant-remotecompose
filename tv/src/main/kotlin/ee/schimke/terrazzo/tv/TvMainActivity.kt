@@ -55,9 +55,7 @@ private fun TvApp() {
   val design by prefs.design.collectAsState(initial = TvDesign.Kiosk)
   // Demo mode is a debugging aid: only a debug build offers it (or honours one left on).
   val debuggable =
-    remember(context) {
-      (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-    }
+    remember(context) { (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 }
   val demoMode = prefs.demoMode.collectAsState(initial = false).value && debuggable
   val style = design.palette
 

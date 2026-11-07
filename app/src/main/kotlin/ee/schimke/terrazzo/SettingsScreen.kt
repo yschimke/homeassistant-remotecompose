@@ -404,9 +404,7 @@ internal fun SettingsScreen(
                 "changes. Handy with demo mode to see which cards are live. " +
                 "Visual only — nothing about the rendered card changes.",
             checked = flashOnDataChange,
-            onCheckedChange = {
-              scope.launch { graph.preferencesStore.setFlashOnDataChange(it) }
-            },
+            onCheckedChange = { scope.launch { graph.preferencesStore.setFlashOnDataChange(it) } },
           )
           SettingSwitch(
             title = "Data grid overlay",
