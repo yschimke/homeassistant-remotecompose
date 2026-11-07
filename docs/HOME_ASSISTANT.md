@@ -425,8 +425,8 @@ API references: [HA custom panels](https://developers.home-assistant.io/docs/fro
 
 The integration uses the repository's release version. Release Please updates
 `custom_components/terrazzo/manifest.json` together with the application version.
-After the release PR is reviewed and merged, Release Please creates the tag and
-GitHub release and calls `release-build.yml`. Its Home Assistant job calls the
+After the release PR is reviewed and merged, Release Please creates the tag and a
+**draft** GitHub release and calls `release-build.yml`. Its Home Assistant job calls the
 same `home-assistant-plugin.yml` checks used for PRs, at that exact tag. It:
 
 1. Rejects a tag that does not match the source integration version.
@@ -437,19 +437,27 @@ same `home-assistant-plugin.yml` checks used for PRs, at that exact tag. It:
    plugin checks pass. Screenshots remain in the separate
    `home-assistant-plugin-evidence` workflow artifact.
 
+`release-build.yml` publishes the draft (its **Publish the GitHub release** job)
+only after the Home Assistant packages, the desktop installers and the
+Android/Apple assets are all attached, and checks the Marketplace files are there
+first. Until then the Marketplace, `releases/latest` and update entities keep
+offering the previous release, so no one is offered a version without its
+`terrazzo.zip`. If an asset job fails, the release stays a draft: re-run the failed
+jobs, and the publish job runs after them.
+
 PRs and main builds never publish plugin assets. A build-only manual run can
 check any ref; for a tagged build enter its tag. To recover missing publication,
 run **Home Assistant plugin** manually, select the release tag, and explicitly
 check **publish**. It requires an existing stable `vX.Y.Z` tag and GitHub release,
-rebuilds/tests that tag, and does not overwrite existing release assets. Investigate
+rebuilds/tests that tag, and does not overwrite existing release assets. A release
+still in draft after that is published with `gh release edit vX.Y.Z --draft=false`,
+or by re-running the release workflow's failed jobs. Investigate
 partial uploads before retrying; never replace an already distributed package
-with different bytes under the same version. A bare tag push must already have
-an associated GitHub release before upload succeeds.
+with different bytes under the same version. A bare tag push gets a draft release
+created for it, published the same way.
 
-The GitHub release exists before its assets: publication lags creation while
-tests run, and until `terrazzo.zip` is attached the Marketplace cannot install that
-version. Check the Home Assistant job and presence of all assets before announcing
-availability. The site at `ha.coo.ee` shows the short install steps and links to
+Check the Home Assistant job before announcing availability; the release goes
+public on its own once every asset job has passed. The site at `ha.coo.ee` shows the short install steps and links to
 this guide; deploying the updated site is a separate operation.
 `marketplace-validate.yml` runs hassfest and the HACS action, the checks the
 Marketplace catalog asks for. Catalog inclusion (a pull request to `hacs/default`)
