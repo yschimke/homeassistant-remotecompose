@@ -88,8 +88,36 @@ concurrency:
 # The project is GOOGLE_SERVICES_JSON's project_id, the one the app's
 # PUSH_RELAY_URL names, unless the FIREBASE_PROJECT_ID variable says otherwise.
 jobs:
+  # Release Please creates each release as a draft (with its tag), and publish-release below turns
+  # it into a published release only once every asset is attached. Until then the Marketplace and
+  # releases/latest keep serving the previous release, so nobody sees a version without its
+  # terrazzo.zip. A hand-pushed tag has no release yet: give it a draft to attach to.
+  ensure-release:
+    name: Ensure a draft release exists
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      PUBLISH: ${{ github.event_name == 'push' || inputs.publish_release == true || inputs.publish_home_assistant == true }}
+    steps:
+      - name: Create a draft release for the tag if none exists
+        if: env.PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME exists"
+          else
+            gh release create "$TAG_NAME" --verify-tag --draft --title "$TAG_NAME" --generate-notes
+          fi
+
   home-assistant:
     name: Home Assistant release assets
+    needs: ensure-release
     uses: ./.github/workflows/home-assistant-plugin.yml
     permissions:
       contents: write
@@ -99,6 +127,7 @@ jobs:
 
   desktop:
     name: Desktop release assets
+    needs: ensure-release
     uses: ./.github/workflows/desktop-release.yml
     permissions:
       contents: write
@@ -255,7 +284,7 @@ jobs:
 
   release:
     name: Build & publish release
-    needs: ios-assets
+    needs: [ensure-release, ios-assets]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -428,14 +457,18 @@ jobs:
           ls -la _release/
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
+      # gh finds a draft release by its tag; releases/tags/{tag}, which other upload actions use,
+      # does not, and they would create a second, published release beside the draft.
       - name: Attach assets to GitHub release
         if: github.event_name == 'push' || inputs.publish_release == true
-        uses: softprops/action-gh-release@v3.0.4
-        with:
-          tag_name: ${{ env.TAG_NAME }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
           # The staged directory always contains the Apple assets; Android
           # AABs are added when signing is configured.
-          files: _release/*
+          gh release upload "$TAG_NAME" _release/* --clobber
 
       - name: Upload workflow artifact
         if: ${{ !(github.event_name == 'push' || inputs.publish_release == true) }}
@@ -443,3 +476,36 @@ jobs:
         with:
           name: release-${{ steps.stage.outputs.version }}
           path: _release/
+
+  # The release goes public only when the Home Assistant packages, the desktop installers and the
+  # Android/Apple assets are all attached. If any of them fails it stays a draft: re-run the failed
+  # jobs and this one publishes it. A release that is already published is left as it is.
+  publish-release:
+    name: Publish the GitHub release
+    needs: [home-assistant, desktop, release]
+    if: github.event_name == 'push' || inputs.publish_release == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Check every Marketplace asset is attached
+        run: |
+          set -euo pipefail
+          assets="$(gh release view "$TAG_NAME" --json assets --jq '.assets[].name')"
+          for name in terrazzo.zip terrazzo-home-assistant.zip SHA256SUMS-home-assistant.txt; do
+            grep -qx "$name" <<<"$assets" || { echo "::error::$TAG_NAME has no $name"; exit 1; }
+          done
+      - name: Publish the draft
+        run: |
+          set -euo pipefail
+          if [[ "$(gh release view "$TAG_NAME" --json isDraft --jq .isDraft)" == "true" ]]; then
+            gh release edit "$TAG_NAME" --draft=false
+            echo "Published $TAG_NAME" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "$TAG_NAME is already published" >> "$GITHUB_STEP_SUMMARY"
+          fi

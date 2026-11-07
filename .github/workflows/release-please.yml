@@ -1,8 +1,9 @@
 name: Release Please
 
 # Maintains a release PR from conventional-commit history. When merged,
-# release-please cuts the tag + GitHub Release, then this workflow calls
-# release-build.yml via workflow_call to build and publish artifacts.
+# release-please cuts the tag and a draft GitHub Release, then this workflow
+# calls release-build.yml via workflow_call to build and attach artifacts;
+# release-build.yml publishes the draft once every asset is attached.
 # This bypasses the GITHUB_TOKEN recursion guard that otherwise prevents
 # tag-push events from triggering downstream workflows.
 

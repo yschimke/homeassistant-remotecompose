@@ -111,8 +111,16 @@ jobs:
           pattern: desktop-*
           path: _release-desktop
           merge-multiple: true
-      - uses: softprops/action-gh-release@v3.0.4
-        with:
-          tag_name: ${{ inputs.tag }}
-          files: _release-desktop/*
-          fail_on_unmatched_files: true
+      # gh finds a draft release by its tag (Release Please creates drafts; release-build.yml
+      # publishes them once every asset is attached).
+      - name: Attach installers to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(_release-desktop/*)
+          (( ${#files[@]} )) || { echo "::error::no desktop installers to attach"; exit 1; }
+          gh release upload "$TAG" "${files[@]}" --clobber

@@ -6,7 +6,8 @@
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "versioning": "always-bump-patch",
-  "draft": false,
+  "draft": true,
+  "force-tag-creation": true,
   "prerelease": false,
   "packages": {
     ".": {
