@@ -168,6 +168,7 @@ class Hub:
                 self.by_entity.setdefault(entity, set()).add(cid)
         self.store = wall_api.ValueStore(epoch=int(time.time() * 1000))
         self.dirty = set(self.cards)
+        self.retry = set()
         # One resolve per card at a time, so a later one (with later states) is always stored last.
         self.locks = {cid: asyncio.Lock() for cid in self.cards}
         self.wake = asyncio.Event()
@@ -194,16 +195,19 @@ class Hub:
                         hass, self.user, base, authorization, self.cards[cid], self.look
                     )
                 except wall_api.WallError as failure:
-                    self.store.fail(cid, failure.message)
+                    if self.store.fail(cid, failure.message):
+                        self.wake.set()
                     if failure.status == 502:
-                        self.dirty.add(cid)  # Try again on the next poll.
+                        self.retry.add(cid)  # Again on the next poll, not in a loop in this one.
                     return
                 values.update(
                     wall_api.picture_values(
                         self.url_path, cid, self.cards[cid], _pictures(hass, self.user, self.cards[cid])
                     )
                 )
-                self.store.update(cid, sha, wall_api.blob_url(sha), exact, values)
+                if self.store.update(cid, sha, wall_api.blob_url(sha), exact, values):
+                    # Wakes polls that saw this card dirty but left the resolve to this one.
+                    self.wake.set()
 
         await asyncio.gather(*(one(cid) for cid in todo))
 
@@ -375,6 +379,8 @@ class WallValuesView(HomeAssistantView):
         reset = bool(cursor) and not hub.store.is_current(cursor)
         wait = wall_api.clamp_wait(request.query.get("wait"))
 
+        hub.dirty |= hub.retry
+        hub.retry.clear()
         await hub.refresh(self.hass, base, authorization, card_ids)
         changes = hub.store.changes(card_ids, since)
         deadline = time.monotonic() + wait
@@ -395,6 +401,9 @@ class WallValuesView(HomeAssistantView):
             await hub.refresh(self.hass, base, authorization, card_ids)
             changes = hub.store.changes(card_ids, since)
         hub.used = time.monotonic()
+        # Read with the cursor, with no await between: whatever another poll's resolve stored while
+        # this one waited is in this answer, never behind the cursor it returns.
+        changes = hub.store.changes(card_ids, since)
         return _json(
             {
                 "cursor": hub.store.cursor(),
