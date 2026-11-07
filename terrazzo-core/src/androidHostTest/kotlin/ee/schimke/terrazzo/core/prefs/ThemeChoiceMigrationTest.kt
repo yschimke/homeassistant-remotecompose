@@ -26,7 +26,7 @@ class ThemeChoiceMigrationTest {
     assertEquals(
       ThemeChoice(ThemeChoice.MATERIAL3),
       PreferencesStore.themeChoiceOf(
-        preferencesOf(legacyTheme to "Material3", legacyCardStyle to "Classic")
+        preferencesOf(legacyTheme to "Material3", legacyCardStyle to "Classic"),
       ),
     )
     // Only a palette stored: the card style was its default, Classic.
@@ -41,7 +41,7 @@ class ThemeChoiceMigrationTest {
     for (palette in ThemeChoice.CLASSIC_VARIANTS) {
       val choice =
         PreferencesStore.themeChoiceOf(
-          preferencesOf(legacyTheme to palette.name, legacyCardStyle to "Classic")
+          preferencesOf(legacyTheme to palette.name, legacyCardStyle to "Classic"),
         )
       assertEquals(ThemeChoice("classic", palette.name), choice)
       // The same look as before: Classic cards, and that palette on the app and the cards.
@@ -61,7 +61,7 @@ class ThemeChoiceMigrationTest {
         val choice =
           PreferencesStore.themeChoiceOf(
             // The legacy card style was stored by its enum name, not its id.
-            preferencesOf(legacyTheme to palette.name, legacyCardStyle to style.name)
+            preferencesOf(legacyTheme to palette.name, legacyCardStyle to style.name),
           )
         assertEquals(ThemeChoice(style.id), choice)
         assertEquals(style, choice.cardStyle)
@@ -75,13 +75,13 @@ class ThemeChoiceMigrationTest {
     assertEquals(
       ThemeChoice.Default,
       PreferencesStore.themeChoiceOf(
-        preferencesOf(legacyTheme to "Future", legacyCardStyle to "Future")
+        preferencesOf(legacyTheme to "Future", legacyCardStyle to "Future"),
       ),
     )
     assertEquals(
       ThemeChoice.classic(ThemePref.TerrazzoMushroom),
       PreferencesStore.themeChoiceOf(
-        preferencesOf(legacyTheme to "TerrazzoMushroom", legacyCardStyle to "Future")
+        preferencesOf(legacyTheme to "TerrazzoMushroom", legacyCardStyle to "Future"),
       ),
     )
   }
@@ -98,7 +98,7 @@ class ThemeChoiceMigrationTest {
     assertEquals(
       ThemeChoice.classic(ThemePref.TerrazzoMinimalist),
       PreferencesStore.themeChoiceOf(
-        preferencesOf(design to "classic", variant to "TerrazzoMinimalist")
+        preferencesOf(design to "classic", variant to "TerrazzoMinimalist"),
       ),
     )
   }

@@ -17,8 +17,8 @@ import kotlinx.coroutines.flow.map
 class TvPrefs(private val context: Context) {
 
   /**
-   * The design ([TvDesign]) the kiosk is drawn in. A TV set up before the design list reads its
-   * old palette and card style settings as one ([TvDesign.fromLegacy]).
+   * The design ([TvDesign]) the kiosk is drawn in. A TV set up before the design list reads its old
+   * palette and card style settings as one ([TvDesign.fromLegacy]).
    */
   val design: Flow<TvDesign> =
     context.store.data.map { prefs ->

@@ -48,8 +48,8 @@ data class TvDesign(
           .map(::styled)
 
     /**
-     * The design with [id]: one of [all], else any other card style by its id (one an earlier
-     * build let the TV pick), else [Kiosk].
+     * The design with [id]: one of [all], else any other card style by its id (one an earlier build
+     * let the TV pick), else [Kiosk].
      */
     fun byId(id: String?): TvDesign =
       all.firstOrNull { it.id == id }

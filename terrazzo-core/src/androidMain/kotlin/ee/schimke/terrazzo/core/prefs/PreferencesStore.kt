@@ -274,8 +274,8 @@ class PreferencesStore(private val context: Context) {
 
   /**
    * Whether a card's actions offer Card Studio even with no AI agent connected (Settings →
-   * Designers). Off by default: without it the studio is offered as "Ask your agent", only while
-   * an agent is connected.
+   * Designers). Off by default: without it the studio is offered as "Ask your agent", only while an
+   * agent is connected.
    */
   val cardStudioEntry: Flow<Boolean>
     get() = context.store.data.map { it[CARD_STUDIO_ENTRY_KEY] ?: false }

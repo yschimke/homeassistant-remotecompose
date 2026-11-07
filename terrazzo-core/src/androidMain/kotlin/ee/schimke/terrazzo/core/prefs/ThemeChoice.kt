@@ -8,8 +8,8 @@ package ee.schimke.terrazzo.core.prefs
  * The designs are [MATERIAL3] (the cards' own look in the system's dynamic, wallpaper-seeded
  * colours) and every [CardStylePref] by its id. Only [CardStylePref.Classic] has variants today:
  * the curated Terrazzo palettes ([CLASSIC_VARIANTS]), stored by [ThemePref] name. Every other
- * design brings its own palette, and the app around a design that doesn't theme the whole app
- * keeps Material 3's dynamic colours.
+ * design brings its own palette, and the app around a design that doesn't theme the whole app keeps
+ * Material 3's dynamic colours.
  */
 data class ThemeChoice(val design: String, val variant: String? = null) {
 

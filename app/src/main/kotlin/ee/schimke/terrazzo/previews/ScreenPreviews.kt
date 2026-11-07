@@ -1159,8 +1159,8 @@ fun Screen_Settings_ClassicPalettes() = PhoneHost {
 }
 
 /**
- * The design list expanded: every design over a sample tile drawn in it, so a regression in any
- * one design's sample shows here. Settings itself opens it collapsed to the installed designs.
+ * The design list expanded: every design over a sample tile drawn in it, so a regression in any one
+ * design's sample shows here. Settings itself opens it collapsed to the installed designs.
  */
 @Preview(
   name = "settings · card styles",
