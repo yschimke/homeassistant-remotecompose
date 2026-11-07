@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Terrazzo
+GenericName=Home Assistant dashboards
+Comment=Home Assistant dashboards rendered with RemoteCompose
+Exec=terrazzo
+Icon=terrazzo
+Terminal=false
+Categories=Network;
+Keywords=Home Assistant;Lovelace;dashboard;smart home;
+StartupWMClass=terrazzo

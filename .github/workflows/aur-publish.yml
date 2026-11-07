@@ -1,0 +1,135 @@
+name: AUR package
+
+# Pushes packaging/aur/terrazzo-bin to the AUR for a published release: the PKGBUILD's pkgver and
+# the .deb checksum come from the release's SHA256SUMS-desktop-linux-x64.txt, and makepkg writes
+# .SRCINFO. pacman helpers (paru, yay) then offer the update to anyone with terrazzo-bin installed.
+#
+# release-build.yml calls this once it publishes the release, but only while the repository
+# variable AUR_PUBLISH is 'true'. Setup, once:
+#   1. Create an AUR account (https://aur.archlinux.org/register) and add an SSH public key to it.
+#   2. Store the private key as the repository secret AUR_SSH_PRIVATE_KEY.
+#   3. Set the repository variable AUR_PUBLISH to 'true'.
+# The first push creates the AUR package; later pushes update it.
+#
+# On pull requests that touch the packaging it builds the PKGBUILD against the latest release
+# without pushing, so a broken package fails here rather than on users' machines.
+
+on:
+  pull_request:
+    paths:
+      - 'packaging/aur/**'
+      - '.github/workflows/aur-publish.yml'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Published release tag to package (e.g. v0.1.88)'
+        required: true
+        type: string
+      push:
+        description: 'Push to the AUR (untick to only build)'
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      push:
+        type: boolean
+        default: true
+    secrets:
+      AUR_SSH_PRIVATE_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aur-${{ inputs.tag || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  aur:
+    name: AUR / terrazzo-bin
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: archlinux:base-devel
+    env:
+      PKG: terrazzo-bin
+      # Pull requests have no inputs, so they only build.
+      PUSH: ${{ inputs.push == true }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install tools
+        run: pacman -Syu --noconfirm --needed git openssh github-cli
+      - name: Resolve the release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          tag="${TAG:-$(gh release view --json tagName --jq .tagName)}"
+          version="${tag#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::$tag is not vMAJOR.MINOR.PATCH"; exit 1; }
+          [[ "$(gh release view "$tag" --json isDraft --jq .isDraft)" == "false" ]] \
+            || { echo "::error::$tag is still a draft; its download URLs are not public yet"; exit 1; }
+          deb="terrazzo-desktop-$version-linux-x64.deb"
+          sum="$(gh release download "$tag" -p SHA256SUMS-desktop-linux-x64.txt -O - | awk -v f="$deb" '$2 == f { print $1 }')"
+          [[ "$sum" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::no checksum for $deb in $tag"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha256=$sum" >> "$GITHUB_OUTPUT"
+      - name: Stamp the PKGBUILD
+        working-directory: packaging/aur/terrazzo-bin
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          DEB_SHA256: ${{ steps.release.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          desktop_sha256="$(sha256sum terrazzo.desktop | cut -d' ' -f1)"
+          sed -i \
+            -e "s/^pkgver=.*/pkgver=$VERSION/" \
+            -e "s/^pkgrel=.*/pkgrel=1/" \
+            -e "/^sha256sums=(/,/)/c\\sha256sums=('$DEB_SHA256'\\n            '$desktop_sha256')" \
+            PKGBUILD
+          grep -E '^(pkgver|pkgrel)=' PKGBUILD
+          grep -A1 '^sha256sums=' PKGBUILD
+      # makepkg refuses to run as root, and the builder can't sudo: install the dependencies first.
+      - name: Build the package
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          pacman -S --noconfirm --needed $(source packaging/aur/terrazzo-bin/PKGBUILD && echo "${depends[@]}")
+          useradd -m builder
+          cp -r packaging/aur/terrazzo-bin /home/builder/pkg
+          chown -R builder: /home/builder/pkg
+          su builder -c 'cd ~/pkg && makepkg --printsrcinfo > .SRCINFO && makepkg --noconfirm --noprogressbar' \
+            || { echo "::error::makepkg failed"; exit 1; }
+          pacman -Qip /home/builder/pkg/"$PKG"-*.pkg.tar.zst
+          pacman -Qlp /home/builder/pkg/"$PKG"-*.pkg.tar.zst | grep -E '/usr/(bin|share)/'
+      - name: Push to the AUR
+        if: env.PUSH == 'true'
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          [[ -n "$AUR_SSH_PRIVATE_KEY" ]] || { echo "::error::AUR_SSH_PRIVATE_KEY is not set"; exit 1; }
+          install -dm700 ~/.ssh
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          # Pinned: SHA256:RFzBCUItH9LZS0cKB5UE6ceAYhBD5C8GeOBip8Z11+4, as the Arch wiki's AUR page lists it.
+          echo 'aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN' > ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND='ssh -i ~/.ssh/aur -o IdentitiesOnly=yes'
+          git clone "ssh://aur@aur.archlinux.org/$PKG.git" aur
+          cp /home/builder/pkg/{PKGBUILD,.SRCINFO,terrazzo.desktop} aur/
+          cd aur
+          git add PKGBUILD .SRCINFO terrazzo.desktop
+          if git diff --cached --quiet; then
+            echo "The AUR already has $PKG $VERSION" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git -c user.name='Yuri Schimke' -c user.email='yuri@schimke.ee' commit -m "Update to $VERSION"
+          git push origin HEAD:master
+          echo "Pushed $PKG $VERSION to https://aur.archlinux.org/packages/$PKG" >> "$GITHUB_STEP_SUMMARY"
