@@ -16,6 +16,7 @@ import time
 
 import voluptuous as vol
 from aiohttp import ClientError, ClientTimeout, web
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Context, callback
@@ -87,12 +88,15 @@ async def _design_server_url(hass):
     return f"http://{info['hostname']}:{ADDON_PORT}"
 
 
-async def _resolve(hass, base, authorization, card, look):
-    """The design add-on's resolve of [card] with its entities' current states: (sha, exact,
-    values). Raises WallError."""
+async def _resolve(hass, user, base, authorization, card, look):
+    """The design add-on's resolve of [card] with the current states of its entities [user] may
+    read: (sha, exact, values). An entity they may not read is sent as missing, so its values are
+    the card's unavailable ones. Raises WallError."""
     style, dark, palette = look
     states = {}
     for entity in wall_api.entity_ids(card):
+        if not user.permissions.check_entity(entity, POLICY_READ):
+            continue
         if (state := hass.states.get(entity)) is not None:
             states[entity] = {"state": state.state, "attributes": dict(state.attributes)}
     body = {"card": card, "states": states, "cardStyle": style, "dark": dark}
@@ -119,9 +123,12 @@ async def _resolve(hass, base, authorization, card, look):
 
 
 class Hub:
-    """One dashboard in one look: its cards, the entities they show, and a ValueStore."""
+    """One dashboard in one look for one user: its cards, the entities they show, and a
+    ValueStore. Per user, since what a user may read decides the values."""
 
-    def __init__(self, url_path, look, config):
+    def __init__(self, key, user, url_path, look, config):
+        self.key = key
+        self.user = user
         self.url_path = url_path
         self.look = look
         self.etag = wall_api.config_etag(config)
@@ -135,6 +142,8 @@ class Hub:
                 self.by_entity.setdefault(entity, set()).add(cid)
         self.store = wall_api.ValueStore(epoch=int(time.time() * 1000))
         self.dirty = set(self.cards)
+        # One resolve per card at a time, so a later one (with later states) is always stored last.
+        self.locks = {cid: asyncio.Lock() for cid in self.cards}
         self.wake = asyncio.Event()
         self.used = time.monotonic()
 
@@ -152,10 +161,11 @@ class Hub:
         gate = asyncio.Semaphore(PARALLEL)
 
         async def one(cid):
-            async with gate:
+            async with gate, self.locks[cid]:
                 try:
+                    # States are read once the lock is held: after any resolve still in flight.
                     sha, exact, values = await _resolve(
-                        hass, base, authorization, self.cards[cid], self.look
+                        hass, self.user, base, authorization, self.cards[cid], self.look
                     )
                 except wall_api.WallError as failure:
                     self.store.fail(cid, failure.message)
@@ -191,16 +201,16 @@ class Wall:
                 del self.hubs[key]
                 hub.wake.set()  # Its polls answer `reset`.
 
-    def hub(self, url_path, look, config):
+    def hub(self, user, url_path, look, config):
         now = time.monotonic()
         for key in [k for k, h in self.hubs.items() if now - h.used > IDLE]:
             del self.hubs[key]
-        key = (url_path, look)
+        key = (url_path, user.id, look)
         hub = self.hubs.get(key)
         if hub is None or hub.etag != wall_api.config_etag(config):
             if hub is not None:
                 hub.wake.set()
-            hub = self.hubs[key] = Hub(url_path, look, config)
+            hub = self.hubs[key] = Hub(key, user, url_path, look, config)
         hub.used = now
         return hub
 
@@ -275,7 +285,12 @@ class WallCardView(HomeAssistantView):
             if base is None:
                 raise wall_api.WallError(503, "No card design server: install the Terrazzo Card Designs add-on.")
             sha, exact, values = await _resolve(
-                self.hass, base, request.headers.get("Authorization"), card, _look(request)
+                self.hass,
+                request["hass_user"],
+                base,
+                request.headers.get("Authorization"),
+                card,
+                _look(request),
             )
         except wall_api.WallError as failure:
             return _error(failure)
@@ -309,7 +324,7 @@ class WallValuesView(HomeAssistantView):
             base = await _design_server_url(self.hass)
             if base is None:
                 raise wall_api.WallError(503, "No card design server: install the Terrazzo Card Designs add-on.")
-            hub = _wall(self.hass).hub(key, _look(request), config)
+            hub = _wall(self.hass).hub(request["hass_user"], key, _look(request), config)
         except wall_api.WallError as failure:
             return _error(failure)
         authorization = request.headers.get("Authorization")
@@ -334,7 +349,7 @@ class WallValuesView(HomeAssistantView):
                     await asyncio.wait_for(hub.wake.wait(), left)
                 except TimeoutError:
                     break
-            if _wall(self.hass).hubs.get((key, hub.look)) is not hub:
+            if _wall(self.hass).hubs.get(hub.key) is not hub:
                 reset = True  # The dashboard changed: the device fetches its layout again.
                 break
             await asyncio.sleep(SETTLE)

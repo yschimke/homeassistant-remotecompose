@@ -39,7 +39,9 @@ Authorization: Bearer <long-lived access token>
 Make the token under the HA user's profile (**Security → Long-lived access tokens**). A dedicated
 non-admin user per display is best: the display sees the dashboards that user may see (admin-only
 dashboards are hidden), its taps run as that user (the logbook shows who), and revoking the token
-cuts off the one device. No OAuth flow, refresh tokens or websocket handshake on the device.
+cuts off the one device. Values only ever carry entities the user may read: an
+entity outside the user's read permissions is resolved as missing, so the card shows it
+unavailable, and each user's values are kept apart. No OAuth flow, refresh tokens or websocket handshake on the device.
 
 The integration passes the same token on to the design add-on, which checks it with Core before it
 answers (its nginx `auth_request`), so the integration keeps no credentials of its own.
@@ -212,7 +214,9 @@ polling ever shows up in a profile, with the same cursor as `Last-Event-ID`.
 | Drawing | Device (RC player) | Plays a document and pushes named values. |
 
 A card is re-resolved only when one of its entities changes, and only while a display polls it; a
-hub nobody polled for 10 minutes is dropped.
+hub (one per dashboard, look and user) nobody polled for 10 minutes is dropped. Resolves of one card
+run one at a time, each reading states once it starts, so a slow resolve never overwrites a newer
+one.
 
 ## Requirements and limits
 
