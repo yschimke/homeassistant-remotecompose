@@ -205,6 +205,10 @@ compose.desktop {
         "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
         "--add-opens=java.desktop/java.awt.peer=ALL-UNNAMED",
       )
+    if (System.getProperty("os.name").contains("Linux")) {
+      // Main.kt names the X11 window class (WM_CLASS) so docks match it to terrazzo.desktop.
+      jvmArgs += "--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED"
+    }
     if (System.getProperty("os.name").contains("Mac")) {
       jvmArgs +=
         listOf(
@@ -219,13 +223,21 @@ compose.desktop {
       includeAllModules = true
       description = "Terrazzo desktop client"
       vendor = "Yuri Schimke"
-      macOS { bundleID = "ee.schimke.terrazzo.desktop" }
+      // Icons come from scripts/generate-desktop-icons.sh; never hand-edit them.
+      macOS {
+        bundleID = "ee.schimke.terrazzo.desktop"
+        iconFile.set(project.file("icons/terrazzo.icns"))
+      }
       windows {
+        iconFile.set(project.file("icons/terrazzo.ico"))
         menu = true
         shortcut = true
         upgradeUuid = "6e4c949a-3f8d-4259-bdf4-fbb042453817"
       }
-      linux { menuGroup = "Network" }
+      linux {
+        iconFile.set(project.file("src/jvmMain/resources/terrazzo.png"))
+        menuGroup = "Network"
+      }
     }
   }
 }

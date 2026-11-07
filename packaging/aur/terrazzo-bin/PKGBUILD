@@ -1,0 +1,40 @@
+# Maintainer: Yuri Schimke <yuri at schimke dot ee>
+#
+# Source of truth: packaging/aur/terrazzo-bin in
+# https://github.com/yschimke/homeassistant-remotecompose. The release workflow
+# (.github/workflows/aur-publish.yml) sets pkgver and the checksum and pushes this
+# to the AUR; edit it there, not in the AUR repository.
+
+pkgname=terrazzo-bin
+_appname=terrazzo
+pkgver=0.1.88
+pkgrel=1
+pkgdesc='Home Assistant dashboards rendered with RemoteCompose (desktop client)'
+arch=('x86_64')
+url='https://github.com/yschimke/homeassistant-remotecompose'
+license=('Apache-2.0')
+# The jpackage image bundles its own Java runtime; these are what that runtime and Skia load.
+depends=('alsa-lib' 'brotli' 'bzip2' 'expat' 'fontconfig' 'freetype2' 'gcc-libs' 'glibc'
+         'libglvnd' 'libpng' 'libx11' 'libxext' 'libxi' 'libxrender' 'libxtst' 'xdg-utils' 'zlib')
+provides=("$_appname")
+conflicts=("$_appname")
+# Stripping breaks the bundled runtime's libraries.
+options=('!strip' '!debug')
+source=("$_appname-$pkgver.deb::$url/releases/download/v$pkgver/$_appname-desktop-$pkgver-linux-x64.deb"
+        "$_appname.desktop")
+sha256sums=('50e56a80b73e3b522b1c6bad48fea713cf7bff1148e125f949cbeaed8dcd1399'
+            '7c04366548f265df6ecd90d6d8f8950706efd0c8ef6762ffd36fabe734ecc641')
+
+package() {
+  bsdtar -xf data.tar.zst -C "$pkgdir"
+
+  # The .deb registers its menu entry from a post-install script, which pacman never runs:
+  # install the entry and icon where desktops look, and drop the copy jpackage left in /opt.
+  rm "$pkgdir/opt/$_appname/lib/$_appname-Terrazzo.desktop"
+  install -Dm644 "$_appname.desktop" "$pkgdir/usr/share/applications/$_appname.desktop"
+  install -Dm644 "$pkgdir/opt/$_appname/lib/Terrazzo.png" \
+    "$pkgdir/usr/share/icons/hicolor/512x512/apps/$_appname.png"
+
+  install -dm755 "$pkgdir/usr/bin"
+  ln -s "/opt/$_appname/bin/Terrazzo" "$pkgdir/usr/bin/$_appname"
+}
