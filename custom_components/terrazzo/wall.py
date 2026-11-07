@@ -106,7 +106,7 @@ async def _resolve(hass, base, authorization, card, look):
             timeout=RESOLVE_TIMEOUT,
         ) as response:
             if response.status == 404:
-                raise wall_api.WallError(404, f"No design draws a {card.get('type')} card yet.")
+                raise wall_api.WallError(404, f"No design draws this {card.get('type')} card yet.")
             if response.status >= 400:
                 raise wall_api.WallError(502, f"The design server answered {response.status}.")
             match = await response.json(content_type=None)

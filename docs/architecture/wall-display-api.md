@@ -121,7 +121,7 @@ One endpoint does both the initial load and the updates, for many cards at once:
     "v0.s0.c1": {"design": "9b2e…", "rc": "/api/terrazzo/wall/v1/blobs/9b2e….rc", "exact": true,
                  "values": {"light.s0.is_on": true, "light.s0.state": "On", "light.s0.name": "Kitchen"}},
     "v0.s0.c2": {"values": {"sensor.s0.state": "21.5 °C", "sensor.s0.numeric_state": 21.5}},
-    "v0.s0.c3": {"error": "No design draws a custom:foo card yet."}
+    "v0.s0.c3": {"error": "No design draws this custom:foo card yet."}
   }
 }
 ```
