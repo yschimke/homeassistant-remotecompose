@@ -172,6 +172,16 @@ For example, `?dashboard=hallway&wall&screensaver_after=0&return_after=60` gives
 a full-screen, always-on hallway panel with no screensaver, back on its first
 view a minute after use.
 
+### Displays that aren't browsers
+
+A display with a RemoteCompose player but no browser (an ESPHome panel, an e-paper frame) reads
+the same dashboards from `/api/terrazzo/wall/v1/` with a long-lived access token in an
+`Authorization: Bearer` header: the dashboard list, each dashboard as a 12-column grid of cards,
+each card's `.rc` and named values with a long poll for changes, and taps. Make the token under a
+non-admin user for the display, so it sees and does only what that user may. Cards need the
+[card design add-on](#your-own-card-design-server). The endpoints are in
+[the wall display API](architecture/wall-display-api.md).
+
 ## Verify and roll back
 
 After installation or an update, check HA logs for integration load errors, open

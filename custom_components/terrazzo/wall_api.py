@@ -1,0 +1,574 @@
+"""The wall display API's rules, as plain data in and out: no Home Assistant imports, so they are
+tested without it (`home-assistant/test/wall_api_test.py`). `wall.py` does the I/O.
+
+A wall display (an ESPHome panel, an e-paper frame, a kiosk tablet) asks four things, and each
+answer is shaped so the device parses as little as possible:
+
+- which dashboards there are ([dashboard_list]);
+- one dashboard as a primitive grid: views, sections, cards with grid boxes and ids ([layout]);
+- each card's design (`.rc`, content-addressed by sha256) and named values, then only the values
+  that changed, by cursor ([ValueStore]);
+- what a tap does: the device sends back the `ha` host action the document fired, and the server
+  picks which of the card's own actions runs ([resolve_tap], [service_call]).
+
+Design: `docs/architecture/wall-display-api.md`.
+"""
+import hashlib
+import json
+import re
+
+API = "/api/terrazzo/wall/v1"
+# Lovelace's sections grid: 12 columns, a row is 56 px plus an 8 px gap.
+GRID_COLUMNS = 12
+ROW_HEIGHT = 56
+ROW_GAP = 8
+# How long a long poll waits for a change by default, and at most.
+DEFAULT_WAIT = 25
+MAX_WAIT = 55
+# The url_path Lovelace's default dashboard is reached at.
+DEFAULT_DASHBOARD = "lovelace"
+# Card ids: `v<view>.c<card>` (a masonry or panel view) or `v<view>.s<section>.c<card>`.
+CARD_ID = re.compile(r"^v(\d{1,4})(?:\.s(\d{1,4}))?\.c(\d{1,4})$")
+SHA256 = re.compile(r"^[0-9a-f]{64}$")
+
+# Cards whose size HA's sections view gives as a default (`getGridOptions`), in grid units.
+# Anything else is full width; its height is estimated and marked `auto`.
+DEFAULT_SIZES = {
+    "tile": (6, 1),
+    "button": (3, 2),
+    "entity": (6, 2),
+    "sensor": (6, 2),
+    "gauge": (6, 4),
+    "light": (6, 4),
+    "thermostat": (6, 6),
+    "humidifier": (6, 6),
+    "clock": (6, 2),
+    "heading": (12, 1),
+}
+
+
+class WallError(Exception):
+    """A request the API answers with [status] and [message]."""
+
+    def __init__(self, status, message):
+        super().__init__(message)
+        self.status = status
+        self.message = message
+
+
+def _text(value):
+    return value if isinstance(value, str) and value else None
+
+
+def dashboard_list(visible, default_url_path=""):
+    """[visible] (url_path, None for Overview → Lovelace's dashboard config) as the device lists
+    them. [default_url_path] is the integration's chosen wall dashboard (`terrazzo: dashboard:`)."""
+    chosen = default_url_path or DEFAULT_DASHBOARD
+    out = []
+    for url_path, config in visible.items():
+        path = url_path or DEFAULT_DASHBOARD
+        config = config if isinstance(config, dict) else {}
+        out.append(
+            {
+                "url_path": path,
+                "title": _text(config.get("title")) or ("Overview" if url_path is None else path),
+                "icon": _text(config.get("icon")),
+                "mode": _text(config.get("mode")) or "storage",
+                "default": path == chosen,
+                "layout": f"{API}/dashboards/{path}",
+            }
+        )
+    out.sort(key=lambda d: (not d["default"], d["url_path"] != DEFAULT_DASHBOARD, d["title"]))
+    return out
+
+
+def config_etag(config):
+    """A short, stable tag for a dashboard's config: the device refetches the layout when it moves."""
+    raw = json.dumps(config, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
+def card_id(view, card, section=None):
+    return f"v{view}.c{card}" if section is None else f"v{view}.s{section}.c{card}"
+
+
+# Terrazzo's own Lovelace card wraps the card it draws in `card:`; a wall display draws that card.
+WRAPPER_CARD = "custom:remote-compose-card"
+
+
+def unwrap(card):
+    """[card], or the card a Remote Compose card wraps."""
+    while isinstance(card, dict) and card.get("type") == WRAPPER_CARD and isinstance(card.get("card"), dict):
+        card = card["card"]
+    return card
+
+
+def find_card(config, cid):
+    """The card config [cid] names in a dashboard's [config]. Raises WallError(404)."""
+    match = CARD_ID.match(cid or "")
+    if not match:
+        raise WallError(404, f"Not a card id: {cid}")
+    view_index, section_index, card_index = (
+        int(match.group(1)),
+        None if match.group(2) is None else int(match.group(2)),
+        int(match.group(3)),
+    )
+    try:
+        view = _views(config)[view_index]
+        holder = view if section_index is None else view["sections"][section_index]
+        card = holder["cards"][card_index]
+    except (IndexError, KeyError, TypeError):
+        raise WallError(404, f"No card {cid}") from None
+    if not isinstance(card, dict):
+        raise WallError(404, f"No card {cid}")
+    return unwrap(card)
+
+
+def _views(config):
+    if not isinstance(config, dict):
+        return []
+    if "strategy" in config and not config.get("views"):
+        raise WallError(
+            422,
+            "This dashboard is generated by a strategy; take control of it in Home Assistant "
+            "(Edit dashboard → ⋮ → Take control) to show it on a wall display.",
+        )
+    views = config.get("views")
+    return views if isinstance(views, list) else []
+
+
+# ---------------------------------------------------------------------------------------------
+# Slots: which entities a card binds, in order. A port of `CardDesignSlots.slotEntries`, the same
+# rule embed/ha-card.js follows, so a template's `<domain>.s<N>` names the same entity everywhere.
+# ---------------------------------------------------------------------------------------------
+
+
+def slot_entries(card):
+    """The entities [card] binds, in slot order: (entity_id, the config it came from, or None).
+    None when the card binds none."""
+    if not isinstance(card, dict):
+        return None
+    entity = _text(card.get("entity"))
+    if entity is not None:
+        return [(entity, card)]
+    if isinstance(card.get("cards"), list):
+        out = []
+        for child in card["cards"]:
+            if isinstance(child, dict) and _text(child.get("type")) is not None:
+                out.extend(slot_entries(child) or [])
+        return out
+    if isinstance(card.get("elements"), list):
+        return [
+            (el["entity"], el)
+            for el in card["elements"]
+            if isinstance(el, dict) and _text(el.get("entity")) is not None
+        ]
+    if not isinstance(card.get("entities"), list):
+        return None
+    out = []
+    for row in card["entities"]:
+        if isinstance(row, dict):
+            if _text(row.get("entity")) is not None:
+                out.append((row["entity"], row))
+        elif _text(row) is not None:
+            out.append((row, None))
+    return out
+
+
+def entity_ids(card):
+    """The distinct entity ids [card] shows: what its values depend on."""
+    seen = []
+    for entity, _ in slot_entries(card) or []:
+        if entity not in seen:
+            seen.append(entity)
+    return seen
+
+
+def domain_of(entity_id):
+    return entity_id.split(".", 1)[0] if "." in entity_id else ""
+
+
+def slot_id(domain, index):
+    return f"{domain}.s{index}"
+
+
+# ---------------------------------------------------------------------------------------------
+# Layout: a dashboard as a primitive grid.
+# ---------------------------------------------------------------------------------------------
+
+
+def _int(value, default):
+    return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else default
+
+
+def card_size(card):
+    """(columns, rows, auto) for [card] on the 12-column grid. `auto` means rows is an estimate
+    and the document's own height decides."""
+    card_type = _text(card.get("type")) or ""
+    default_w, default_h = DEFAULT_SIZES.get(card_type, (GRID_COLUMNS, None))
+    options = card.get("grid_options") if isinstance(card.get("grid_options"), dict) else {}
+    columns = options.get("columns")
+    w = GRID_COLUMNS if columns == "full" else _int(columns, default_w)
+    w = max(1, min(GRID_COLUMNS, w))
+    rows = options.get("rows")
+    if isinstance(rows, int) and not isinstance(rows, bool) and rows > 0:
+        return w, rows, False
+    if default_h is not None:
+        return w, default_h, False
+    # An estimate: a title row and a row per entity, or two rows.
+    count = len(slot_entries(card) or [])
+    return w, max(2, count + (1 if _text(card.get("title")) else 0)), True
+
+
+def pack(sizes, columns=GRID_COLUMNS):
+    """Shelf-pack (w, h) boxes left to right, wrapping when a box doesn't fit: their (x, y)."""
+    out = []
+    x = y = shelf = 0
+    for w, h in sizes:
+        if x + w > columns:
+            x, y, shelf = 0, y + shelf, 0
+        out.append((x, y))
+        x += w
+        shelf = max(shelf, h)
+    return out
+
+
+def _cards_json(url_path, view_index, section_index, cards):
+    """[cards] (a view's or section's, as configured) packed on the grid; each id names the card's
+    index in [cards] as configured, so a skipped entry never moves another card's id."""
+    indexed = [
+        (i, unwrap(c)) for i, c in enumerate(cards if isinstance(cards, list) else []) if isinstance(c, dict)
+    ]
+    sizes = [card_size(c) for _, c in indexed]
+    out = []
+    for (index, card), (w, h, auto), (x, y) in zip(indexed, sizes, pack([(w, h) for w, h, _ in sizes])):
+        cid = card_id(view_index, index, section_index)
+        out.append(
+            {
+                "id": cid,
+                "type": _text(card.get("type")) or "",
+                "x": x,
+                "y": y,
+                "w": w,
+                "h": h,
+                "auto_height": auto,
+                "entities": entity_ids(card),
+                "card": f"{API}/cards/{url_path}/{cid}",
+            }
+        )
+    return out
+
+
+def layout(config, url_path):
+    """[config] (a dashboard's Lovelace config) as a primitive grid for a wall display."""
+    path = url_path or DEFAULT_DASHBOARD
+    views = []
+    for vi, view in enumerate(_views(config)):
+        if not isinstance(view, dict):
+            continue
+        view_type = _text(view.get("type")) or ("sections" if "sections" in view else "masonry")
+        sections = []
+        if isinstance(view.get("sections"), list):
+            for si, section in enumerate(view["sections"]):
+                if not isinstance(section, dict):
+                    continue
+                span = _int(section.get("column_span"), 1)
+                sections.append(
+                    {
+                        "title": _section_title(section),
+                        "column_span": span,
+                        "cards": _cards_json(path, vi, si, section.get("cards")),
+                    }
+                )
+        if isinstance(view.get("cards"), list) and view["cards"]:
+            # A masonry or panel view: one section, cards full width in order (panel: the first).
+            cards = view["cards"][:1] if view_type == "panel" else view["cards"]
+            section = {"title": None, "column_span": 1, "cards": _cards_json(path, vi, None, cards)}
+            for card in section["cards"]:
+                if view_type != "sections":
+                    card["x"], card["w"] = 0, GRID_COLUMNS
+            y = 0
+            for card in section["cards"]:
+                if view_type != "sections":
+                    card["y"] = y
+                    y += card["h"]
+            sections.insert(0, section)
+        views.append(
+            {
+                "index": vi,
+                "path": _text(view.get("path")) or str(vi),
+                "title": _text(view.get("title")) or f"View {vi + 1}",
+                "icon": _text(view.get("icon")),
+                "type": view_type,
+                "max_columns": _int(view.get("max_columns"), 4),
+                "sections": sections,
+            }
+        )
+    return {
+        "dashboard": path,
+        "title": _text(config.get("title")) if isinstance(config, dict) else None,
+        "etag": config_etag(config),
+        "grid": {"columns": GRID_COLUMNS, "row_height": ROW_HEIGHT, "gap": ROW_GAP},
+        "views": views,
+        "values": f"{API}/values/{path}",
+        "actions": f"{API}/actions/{path}",
+    }
+
+
+def _section_title(section):
+    """A section's heading: its own title, or a leading heading card's."""
+    if _text(section.get("title")):
+        return section["title"]
+    cards = section.get("cards") if isinstance(section.get("cards"), list) else []
+    first = cards[0] if cards and isinstance(cards[0], dict) else {}
+    return _text(first.get("heading")) if first.get("type") == "heading" else None
+
+
+def view_card_ids(layout_json, view=None):
+    """Every card id in a [layout] (or just view [view]'s)."""
+    return [
+        card["id"]
+        for v in layout_json["views"]
+        if view is None or v["index"] == view
+        for section in v["sections"]
+        for card in section["cards"]
+    ]
+
+
+# ---------------------------------------------------------------------------------------------
+# Actions: a template only picks which of the card's own actions runs (as embed/ha-card.js's
+# resolveTap and the app's CardTemplatePlayback.resolveTap).
+# ---------------------------------------------------------------------------------------------
+
+HA_ACTION_TYPE = "ee.schimke.ha.rc.components.HaAction."
+TOGGLE_DEFAULT = {"light", "switch", "input_boolean", "fan", "cover", "media_player", "lock"}
+SLOT_ENTITY = re.compile(r"^[a-z0-9_]+\.s(\d+)$")
+NONE = {"kind": "None"}
+
+
+def decode_template_action(value):
+    """An `ha` host action's JSON payload (kotlinx polymorphic `HaAction`), or None."""
+    if not isinstance(value, str):
+        return None
+    try:
+        action = json.loads(value)
+    except ValueError:
+        return None
+    if not isinstance(action, dict) or not isinstance(action.get("type"), str):
+        return None
+    if not action["type"].startswith(HA_ACTION_TYPE):
+        return None
+    return {**action, "kind": action["type"][len(HA_ACTION_TYPE):]}
+
+
+def parse_lovelace_action(cfg, default_entity):
+    """A Lovelace `tap_action`; None when there is none, NONE when it is `none` or broken."""
+    if not isinstance(cfg, dict):
+        return None
+    kind = cfg.get("action")
+    if kind in ("toggle", "more-info"):
+        entity = _text(cfg.get("entity")) or default_entity
+        if not entity:
+            return NONE
+        return {"kind": "Toggle" if kind == "toggle" else "MoreInfo", "entity_id": entity}
+    if kind == "navigate":
+        path = _text(cfg.get("navigation_path"))
+        return {"kind": "Navigate", "path": path} if path else NONE
+    if kind == "url":
+        url = _text(cfg.get("url_path"))
+        return {"kind": "Url", "url": url} if url else NONE
+    if kind in ("call-service", "perform-action"):
+        svc = _text(cfg.get("perform_action")) or _text(cfg.get("service"))
+        if not svc or "." not in svc:
+            return NONE
+        data = cfg.get("data") if isinstance(cfg.get("data"), dict) else None
+        if data is None:
+            data = cfg.get("service_data") if isinstance(cfg.get("service_data"), dict) else {}
+        target = cfg.get("target") if isinstance(cfg.get("target"), dict) else None
+        domain, service = svc.split(".", 1)
+        return {
+            "kind": "CallService",
+            "domain": domain,
+            "service": service,
+            "data": dict(data),
+            "target": dict(target) if target else None,
+            "entity_id": (_text(target.get("entity_id")) if target else None)
+            or _text(data.get("entity_id"))
+            or default_entity,
+        }
+    return NONE
+
+
+def default_tap_action(entity):
+    if not entity:
+        return NONE
+    kind = "Toggle" if domain_of(entity) in TOGGLE_DEFAULT else "MoreInfo"
+    return {"kind": kind, "entity_id": entity}
+
+
+def resolve_tap(card, value=None):
+    """The card-local action a tap runs. [value] is the `ha` host action's string the document
+    fired, or None for a tap on the card itself. Only a slot it names is taken from it: never its
+    kind, service or data."""
+    entries = slot_entries(card) or []
+    first = entries[0][0] if entries else None
+
+    def card_action():
+        return parse_lovelace_action(card.get("tap_action"), first) or default_tap_action(first)
+
+    template = decode_template_action(value)
+    slot = template.get("entityId") if template else None
+    match = SLOT_ENTITY.match(slot) if isinstance(slot, str) else None
+    if not match:
+        return card_action()
+    index = int(match.group(1))
+    if index >= len(entries) or slot_id(domain_of(entries[index][0]), index) != slot:
+        return card_action()
+    real, config = entries[index]
+    configured = parse_lovelace_action(config.get("tap_action"), real) if config else None
+    return configured or default_tap_action(real)
+
+
+def service_call(action):
+    """(domain, service, data) for a resolved [action], or None when the device handles it
+    itself (more-info, navigate, url) or it does nothing."""
+    kind = action.get("kind")
+    if kind == "Toggle":
+        return "homeassistant", "toggle", {"entity_id": action["entity_id"]}
+    if kind == "CallService":
+        data = dict(action.get("data") or {})
+        target = action.get("target")
+        if target:
+            data.update(target)
+        elif action.get("entity_id") and "entity_id" not in data:
+            data["entity_id"] = action["entity_id"]
+        return action["domain"], action["service"], data
+    return None
+
+
+# ---------------------------------------------------------------------------------------------
+# Values: each card's design and named values, and what changed after a cursor.
+# ---------------------------------------------------------------------------------------------
+
+
+class ValueStore:
+    """Every card's latest design and values for one (dashboard, look), each value stamped with
+    the cursor it changed at, so a poll answers only what is newer than the cursor it sends.
+
+    A cursor is opaque to the device: it sends back what it got. A store made after a restart or a
+    dashboard edit has a new [epoch]; a cursor from another epoch is answered in full.
+    """
+
+    def __init__(self, epoch):
+        self.epoch = epoch
+        self.seq = 0
+        # card id → {"design": sha, "rc": url, "exact": bool, "at": seq of the design,
+        #            "values": {name: (value, seq)}, "error": str or None}
+        self.cards = {}
+
+    def cursor(self):
+        return f"{self.epoch}-{self.seq}"
+
+    def is_current(self, cursor):
+        """Whether [cursor] came from this store (this epoch)."""
+        return isinstance(cursor, str) and cursor.rpartition("-")[0] == str(self.epoch)
+
+    def since(self, cursor):
+        """The seq [cursor] names in this epoch; 0 (everything) for another epoch or nonsense."""
+        if not isinstance(cursor, str) or "-" not in cursor:
+            return 0
+        epoch, _, seq = cursor.rpartition("-")
+        if epoch != str(self.epoch) or not seq.isdigit():
+            return 0
+        return min(int(seq), self.seq)
+
+    def update(self, cid, design, rc, exact, values):
+        """Record [cid]'s resolved design and values. True when anything changed."""
+        entry = self.cards.get(cid)
+        if entry is not None and entry["design"] == design and entry["error"] is None:
+            changed = {
+                name: value
+                for name, value in values.items()
+                if name not in entry["values"] or not _same(entry["values"][name][0], value)
+            }
+            if not changed:
+                return False
+            self.seq += 1
+            for name, value in changed.items():
+                entry["values"][name] = (value, self.seq)
+            return True
+        self.seq += 1
+        self.cards[cid] = {
+            "design": design,
+            "rc": rc,
+            "exact": exact,
+            "at": self.seq,
+            "values": {name: (value, self.seq) for name, value in values.items()},
+            "error": None,
+        }
+        return True
+
+    def fail(self, cid, message):
+        entry = self.cards.get(cid)
+        if entry is not None and entry["error"] == message:
+            return False
+        self.seq += 1
+        self.cards[cid] = {
+            "design": None,
+            "rc": None,
+            "exact": False,
+            "at": self.seq,
+            "values": {},
+            "error": message,
+        }
+        return True
+
+    def changes(self, card_ids, since):
+        """{card id: its change} for [card_ids] with anything newer than [since]. A card whose
+        design is newer comes whole (`design`, `rc`, every value); else only its newer values."""
+        out = {}
+        for cid in card_ids:
+            entry = self.cards.get(cid)
+            if entry is None:
+                continue
+            if entry["at"] > since:
+                if entry["error"] is not None:
+                    out[cid] = {"error": entry["error"]}
+                    continue
+                out[cid] = {
+                    "design": entry["design"],
+                    "rc": entry["rc"],
+                    "exact": entry["exact"],
+                    "values": {name: v for name, (v, _) in entry["values"].items()},
+                }
+                continue
+            newer = {name: v for name, (v, at) in entry["values"].items() if at > since}
+            if newer:
+                out[cid] = {"values": newer}
+        return out
+
+
+def _same(a, b):
+    # 1 and 1.0, True and 1 differ to a player's typed slots.
+    return type(a) is type(b) and a == b
+
+
+def clamp_wait(raw):
+    """A `wait` query value as seconds to hold a poll: 0 answers at once."""
+    try:
+        wait = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_WAIT
+    return max(0, min(MAX_WAIT, wait))
+
+
+def blob_url(sha):
+    return f"{API}/blobs/{sha}.rc"
+
+
+def parse_card_ids(raw, known):
+    """The `cards` query value (comma separated, or empty for every card) against [known]."""
+    if not raw:
+        return list(known)
+    wanted = [c for c in raw.split(",") if c]
+    return [c for c in wanted if c in known]
