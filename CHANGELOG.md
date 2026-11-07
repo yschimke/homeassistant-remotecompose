@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.89](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.88...v0.1.89) (2026-11-07)
+
+
+### Features
+
+* **desktop:** app icons and an AUR terrazzo-bin package ([#1518](https://github.com/yschimke/homeassistant-remotecompose/issues/1518)) ([48120de](https://github.com/yschimke/homeassistant-remotecompose/commit/48120de879ded71e9c6a67b942054930c68f05c5))
+* one design list for the theme, and Developer and Designers settings sections ([#1509](https://github.com/yschimke/homeassistant-remotecompose/issues/1509)) ([3fe5d9b](https://github.com/yschimke/homeassistant-remotecompose/commit/3fe5d9b9199bcb459917e87024cd6d99359ed2f4))
+* wall display API for non-browser displays ([#1520](https://github.com/yschimke/homeassistant-remotecompose/issues/1520)) ([6fd89b9](https://github.com/yschimke/homeassistant-remotecompose/commit/6fd89b94cc999fd465895d0bb2ac2cb3dbdd7a57))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1512](https://github.com/yschimke/homeassistant-remotecompose/issues/1512)) ([c2b32df](https://github.com/yschimke/homeassistant-remotecompose/commit/c2b32df5eb79f80a86fe333627fe9d50f0f10908))
+* don't crash when the socket drops during the design-server check ([#1519](https://github.com/yschimke/homeassistant-remotecompose/issues/1519)) ([03a052d](https://github.com/yschimke/homeassistant-remotecompose/commit/03a052d2160e39a4025ce7ce77f7ad519baa8db3))
+* **notify:** wrap the live card so Android 17 shows it ([#1515](https://github.com/yschimke/homeassistant-remotecompose/issues/1515)) ([6ad8c46](https://github.com/yschimke/homeassistant-remotecompose/commit/6ad8c46204b7b0128c8e56094cdfe6c84a3083dc))
+* **quest:** skip the QuestActivity activity preview ([#1514](https://github.com/yschimke/homeassistant-remotecompose/issues/1514)) ([949ff0e](https://github.com/yschimke/homeassistant-remotecompose/commit/949ff0e4a64444ccf5efc367af50958a213335c2))
+
 ## [0.1.88](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.87...v0.1.88) (2026-11-07)
 
 
