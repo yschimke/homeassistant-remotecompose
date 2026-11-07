@@ -90,104 +90,6 @@ class LauncherDesignsTest {
   }
 
   /**
-   * A launcher can't load the card fonts, so a capture drops them unless a bitmap-font filter will
-   * draw them: with one, Rugged Digital's heading keeps G-SPOT, drawn from embedded glyphs, in a
-   * document Android 16 reads. The clock's Digital-7 stays dropped: its digits stand taller than
-   * their line, which only `CoreText` can lengthen, so a launcher's glyphs would cut their feet
-   * off.
-   */
-  @Test
-  fun aFontFilterKeepsTheCardFontsAndDrawsThemFromGlyphs() {
-    val context = org.robolectric.RuntimeEnvironment.getApplication()
-    val look = LauncherLook(HaUberTheme.RuggedDigital)
-    val cards =
-      listOf(
-        CardConfig(
-          type = "heading",
-          raw =
-            buildJsonObject {
-              put("type", "heading")
-              put("heading", "Kitchen")
-            },
-        ),
-      )
-    for (card in cards) {
-      fun capture(filter: LauncherFontFilter?) =
-        captureLauncherWidgetDocument(
-          context,
-          card,
-          snapshotOf(),
-          registry,
-          widthDp * density / 160,
-          heightDp * density / 160,
-          density,
-          widgetsProfile,
-          dark = false,
-          look = look,
-          fontFilter = filter,
-        ) {
-          null
-        }
-      val plain = RcDocumentCodec.decode(capture(null).bytes, RcWireLimits())
-      assertEquals(0, cardFontTexts(plain), "${card.type}: no card font without a filter")
-      var named = 0
-      val filtered = capture { bytes, _ ->
-        val document = RcDocumentCodec.decode(bytes, RcWireLimits())
-        named = cardFontTexts(document)
-        RcDocumentCodec.encode(
-          WidgetBitmapFonts.apply(document, WidgetHost.Launcher, boxGlyphs).document,
-        )
-      }
-      assertTrue(named > 0, "${card.type}: the filter sees the card fonts")
-      val document = RcDocumentCodec.decode(filtered.bytes, RcWireLimits())
-      assertTrue(
-        document.operations.any { it is RcDrawBitmapFontTextRun },
-        "${card.type}: drawn from glyphs",
-      )
-      assertReadsOnAndroid16(filtered.bytes)
-    }
-    // The clock keeps the theme's own face, filter or not.
-    var clockFonts = -1
-    captureLauncherWidgetDocument(
-      context,
-      card("clock", "sensor.time"),
-      snapshotOf(),
-      registry,
-      widthDp * density / 160,
-      heightDp * density / 160,
-      density,
-      widgetsProfile,
-      dark = false,
-      look = look,
-      fontFilter = { bytes, _ ->
-        clockFonts = cardFontTexts(RcDocumentCodec.decode(bytes, RcWireLimits()))
-        null
-      },
-    ) {
-      null
-    }
-    assertEquals(0, clockFonts, "Digital-7 stays off the launcher")
-    // A filter that can't answer leaves the plain capture.
-    val fallback =
-      captureLauncherWidgetDocument(
-        context,
-        cards.first(),
-        snapshotOf(),
-        registry,
-        widthDp * density / 160,
-        heightDp * density / 160,
-        density,
-        widgetsProfile,
-        dark = false,
-        look = look,
-        fontFilter = { _, _ -> null },
-      ) {
-        null
-      }
-    assertEquals(0, cardFontTexts(RcDocumentCodec.decode(fallback.bytes, RcWireLimits())))
-  }
-
-  /**
    * A template filtered before it's baked still takes the card's values: Rugged Digital's heading
    * template names G-SPOT, and the card's own title, baked in afterwards, is drawn from its glyphs.
    */
@@ -217,6 +119,8 @@ class LauncherDesignsTest {
           registry = registry,
           look = LauncherLook(HaUberTheme.RuggedDigital),
           fontFilter = { bytes, _ ->
+            // What may go to a remote server: the template, never the card's own contents.
+            assertFalse("Kitchen" in String(bytes, Charsets.ISO_8859_1), "the card's title")
             val document = RcDocumentCodec.decode(bytes, RcWireLimits())
             named = cardFontTexts(document)
             RcDocumentCodec.encode(

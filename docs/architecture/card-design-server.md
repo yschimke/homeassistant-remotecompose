@@ -649,8 +649,10 @@ matches, never which cards it renders.
   size costs about 25 KB; a widget's budget is about 50 KB.
   The phone filters the Wear designs it sends the watch (`WearWidgetFonts`) and its launcher widgets
   (`LauncherWidgetFonts`). A launcher capture otherwise drops the card fonts (`LocalWidgetCardFonts`);
-  with a server to ask it keeps the heading font, and its template is filtered before its values are
-  baked, so they are drawn from its glyphs. The launcher lays its text out as `TextLayout`, which
+  with a server to ask, a launcher design template keeps the heading font and is filtered before
+  its values are baked, so they are drawn from its glyphs. Only a template, captured from
+  placeholder input, is ever sent: a card captured directly holds its own names, states and text,
+  which stay on the phone (docs/privacy.md), so it keeps the theme's face. The launcher lays its text out as `TextLayout`, which
   `coreTextAsBitmapFonts` converts from rc-players 2.26.0. The LCD clock's Digital-7 stays off the
   launcher: its digits stand taller than their line, which `TextLayout` can't lengthen.
 - One manifest lists every target. The client filters it to the

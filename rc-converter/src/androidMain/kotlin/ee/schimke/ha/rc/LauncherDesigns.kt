@@ -162,6 +162,10 @@ fun LauncherWidgetContent(
  * document filtered, or null when it can't be (offline, no server), and the widget is then captured
  * without the card fonts, as it would be with no filter. [densityDpi] is the display the document
  * was captured for, which its glyphs are drawn at.
+ *
+ * It is only ever handed a design template, captured from placeholder input
+ * ([CardDesignTemplates.designInput]): never a direct capture, which holds the card's own names,
+ * states and text, and may go to a remote server.
  */
 fun interface LauncherFontFilter {
   fun filter(bytes: ByteArray, densityDpi: Int): ByteArray?

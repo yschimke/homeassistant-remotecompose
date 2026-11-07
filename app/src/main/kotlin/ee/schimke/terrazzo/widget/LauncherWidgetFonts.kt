@@ -16,15 +16,15 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * The launcher widgets' card fonts, drawn from bitmap fonts: the launcher plays a widget with the
- * system's faces only, so a widget that names a card font (Rugged Digital's Digital-7 clock and
+ * system's faces only, so a launcher design template that names a card font (Rugged Digital's
  * G-SPOT headings) goes through the design server's bitmap-font filter for `launcher-widgets`
- * ([DesignFilters.bitmapFonts]). With no server, or one that can't filter (offline, an older
- * server), there is no filter and the widget is captured without the card fonts, as before.
+ * ([DesignFilters.bitmapFonts]). Only a template is sent, captured from placeholder input, never a
+ * widget's own contents (docs/privacy.md). With no server, or one that can't filter (offline, an
+ * older server), there is no filter and the widget is captured without the card fonts, as before.
  *
  * Filtered documents are cached by their source's hash, locale and density: a template is the same
- * bytes on every refresh, and so is a direct capture whose values haven't changed. A request that
- * fails holds the filter off for [RETRY_AFTER_MS], so a widget refresh never waits on a server that
- * isn't answering.
+ * bytes on every refresh. A request that fails holds the filter off for [RETRY_AFTER_MS], so a
+ * widget refresh never waits on a server that isn't answering.
  */
 internal object LauncherWidgetFonts {
   /** The filter for [context]'s design server, or null when there is none to ask now. */
