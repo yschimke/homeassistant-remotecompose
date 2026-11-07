@@ -566,7 +566,6 @@ private fun DashboardShell(
             }
             entry<DashboardDestination> { route ->
               var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
-              val agentConnected = rememberAgentConnected(designServer)
               Scaffold(
                 topBar = {
                   TopAppBar(
@@ -584,9 +583,9 @@ private fun DashboardShell(
                         TextButton(onClick = { customizing = false }) { Text("Done customizing") }
                       DashboardMoreMenu(
                         onEdit = { stack.add(DashboardEditDestination(route.path)) },
-                        // Only while an AI agent is connected (Settings → Your AI agent).
+                        // The Home Assistant integration's own agent (its MCP user) answers this.
                         onAskAgent =
-                          if (integrationInstalled && agentConnected)
+                          if (integrationInstalled)
                             ({ stack.add(AgentEditDestination(route.path)) })
                           else null,
                         onCustomize = if (customizing) null else ({ customizing = true }),

@@ -892,7 +892,8 @@ private fun DashboardsRoot(
           onInitialViewShown = { openedView = null },
           canPlanCards = agentConnected,
           onAskAgentAboutSection =
-            if (phoneAgentEdits != null && agentConnected)
+            // Home Assistant's own agent (the integration's MCP user) answers this one.
+            if (phoneAgentEdits != null)
               ({ view, section, title ->
                 agentSessions =
                   AgentSessionsTarget(
