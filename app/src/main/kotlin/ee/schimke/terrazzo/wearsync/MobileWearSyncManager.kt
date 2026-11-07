@@ -719,7 +719,10 @@ class MobileWearSyncManager(
             ->
             pinned to (all + dashboards.values.flatten()).distinct()
           },
-          CardDesignPreload.designs.filterNotNull(),
+          // The widget card fonts setting too: switching it sends the designs again, drawn anew.
+          CardDesignPreload.designs.filterNotNull().combine(prefs.widgetCardFonts) { designs, _ ->
+            designs
+          },
           registrySnapshot,
         ) { cards, designs, snapshot ->
           val (pinned, all) = cards

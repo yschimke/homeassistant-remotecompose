@@ -163,12 +163,17 @@ fun LauncherWidgetContent(
  * without the card fonts, as it would be with no filter. [densityDpi] is the display the document
  * was captured for, which its glyphs are drawn at.
  *
- * It is only ever handed a design template, captured from placeholder input
- * ([CardDesignTemplates.designInput]): never a direct capture, which holds the card's own names,
- * states and text, and may go to a remote server.
+ * It is handed a design template, captured from placeholder input
+ * ([CardDesignTemplates.designInput]). A direct capture holds the card's own names, states and
+ * text, so it is handed one only where [readsContents] says the filter keeps them on the device
+ * ([OnDeviceWidgetFonts]); a filter that may send its input to a server never sees one.
  */
 fun interface LauncherFontFilter {
   fun filter(bytes: ByteArray, densityDpi: Int): ByteArray?
+
+  /** Whether this filter runs on the device, so may be handed a widget's own contents. */
+  val readsContents: Boolean
+    get() = false
 }
 
 /**

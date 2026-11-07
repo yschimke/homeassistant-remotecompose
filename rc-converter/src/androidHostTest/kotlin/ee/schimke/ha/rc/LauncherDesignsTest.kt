@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
 import ee.schimke.composeai.rcplayer.edit.bitmapUrls
 import ee.schimke.composeai.rcplayer.edit.namedVariables
+import ee.schimke.composeai.rcplayer.protocol.RcBitmapFontData
 import ee.schimke.composeai.rcplayer.protocol.RcCoreText
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcDrawBitmapFontTextRun
@@ -31,6 +32,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcTextData
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.composeai.rcplayer.runtime.RcRasterizedText
 import ee.schimke.composeai.rcplayer.runtime.RcTextRasterizer
+import ee.schimke.ha.client.design.CachedFontFace
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -188,6 +190,87 @@ class LauncherDesignsTest {
       "the whole title, as text",
     )
     assertEquals(0, cardFontTexts(document), "in the theme's own face")
+  }
+
+  private val headingCard =
+    CardConfig(
+      type = "heading",
+      raw =
+        buildJsonObject {
+          put("type", "heading")
+          put("heading", "Kitchen")
+        },
+    )
+
+  private fun direct(card: CardConfig, filter: LauncherFontFilter?) =
+    captureLauncherWidgetDocument(
+      org.robolectric.RuntimeEnvironment.getApplication(),
+      card,
+      snapshotOf(entity("sensor.time", "12:30")),
+      registry,
+      widthDp * density / 160,
+      heightDp * density / 160,
+      density,
+      widgetsProfile,
+      dark = false,
+      look = LauncherLook(HaUberTheme.RuggedDigital),
+      fontFilter = filter,
+    ) {
+      null
+    }
+
+  /** A filter that may send its input to a server never sees a card captured directly. */
+  @Test
+  fun aFilterThatMaySendItsInputNeverSeesADirectCapture() {
+    var asked = 0
+    val captured =
+      direct(headingCard) { bytes, _ ->
+        asked++
+        bytes
+      }
+    assertEquals(0, asked)
+    assertEquals(0, cardFontTexts(RcDocumentCodec.decode(captured.bytes, RcWireLimits())))
+  }
+
+  /**
+   * On the device, a card captured directly keeps its card fonts, drawn from glyphs the phone's own
+   * rasterizer draws: Rugged Digital's G-SPOT heading, and its LCD clock's Digital-7, whose digits
+   * stand taller than their line and are drawn whole.
+   */
+  @Test
+  fun onTheDeviceADirectCaptureIsDrawnFromItsOwnGlyphs() {
+    val fonts = File("../card-fonts")
+    HaFontLibrary.install(
+      listOf(
+        CachedFontFace("digital7", 400, true, "d7", File(fonts, "digital7.ttf").readBytes()),
+        CachedFontFace("gspot", 400, false, "gs", File(fonts, "russo-one.ttf").readBytes()),
+      ),
+    )
+    val onDevice =
+      OnDeviceWidgetFonts.launcherFilter(org.robolectric.RuntimeEnvironment.getApplication())
+    val out = System.getenv("LAUNCHER_FONTS_OUT")?.let(::File)?.apply { mkdirs() }
+    for ((name, card) in
+      listOf("heading" to headingCard, "clock" to card("clock", "sensor.time"))) {
+      val plain = direct(card, null)
+      val drawn = direct(card, onDevice)
+      out?.let {
+        File(it, "$name-plain.rc").writeBytes(plain.bytes)
+        File(it, "$name-device.rc").writeBytes(drawn.bytes)
+      }
+      val document = RcDocumentCodec.decode(drawn.bytes, RcWireLimits())
+      assertTrue(
+        document.operations.any { it is RcDrawBitmapFontTextRun },
+        "$name: drawn from glyphs",
+      )
+      assertEquals(0, cardFontTexts(document), "$name: no text left in a card font")
+      val font = document.operations.filterIsInstance<RcBitmapFontData>().first()
+      assertEquals(
+        1,
+        font.glyphs.map { it.marginTop + it.bitmapHeight + it.marginBottom }.distinct().size,
+        "$name: one line for every glyph",
+      )
+      assertReadsOnAndroid16(drawn.bytes)
+    }
   }
 
   private fun assertReadsOnAndroid16(bytes: ByteArray) {

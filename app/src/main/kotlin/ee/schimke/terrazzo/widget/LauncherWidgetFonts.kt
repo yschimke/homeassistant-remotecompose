@@ -5,7 +5,10 @@ import android.os.SystemClock
 import ee.schimke.ha.client.design.DesignFilters
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.rc.LauncherFontFilter
+import ee.schimke.ha.rc.LiveText
+import ee.schimke.ha.rc.OnDeviceWidgetFonts
 import ee.schimke.ha.rc.WidgetBitmapFonts
+import ee.schimke.terrazzo.core.prefs.WidgetCardFontsPref
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.terrazzoGraph
 import java.util.Collections
@@ -16,19 +19,49 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * The launcher widgets' card fonts, drawn from bitmap fonts: the launcher plays a widget with the
- * system's faces only, so a launcher design template that names a card font (Rugged Digital's
- * G-SPOT headings) goes through the design server's bitmap-font filter for `launcher-widgets`
- * ([DesignFilters.bitmapFonts]). Only a template is sent, captured from placeholder input, never a
- * widget's own contents (docs/privacy.md). With no server, or one that can't filter (offline, an
- * older server), there is no filter and the widget is captured without the card fonts, as before.
+ * system's faces only, so a widget that names a card font (Rugged Digital's G-SPOT headings) goes
+ * through a bitmap-font filter, where [WidgetCardFontsPref] says:
+ * - [WidgetCardFontsPref.Server]: the design server's filter for `launcher-widgets`
+ *   ([DesignFilters.bitmapFonts]), sent only a design template, captured from placeholder input,
+ *   never a widget's own contents (docs/privacy.md);
+ * - [WidgetCardFontsPref.OnDevice]: drawn on the phone ([OnDeviceWidgetFonts]), for every widget,
+ *   offline, from the card fonts the app has cached;
+ * - [WidgetCardFontsPref.Off]: none, and the widget keeps its theme's own face.
+ *
+ * With no filter, or one that can't answer (offline, an older server, a font not cached), the
+ * widget is captured without the card fonts, as before.
  *
  * Filtered documents are cached by their source's hash, locale and density: a template is the same
  * bytes on every refresh. A request that fails holds the filter off for [RETRY_AFTER_MS], so a
  * widget refresh never waits on a server that isn't answering.
  */
 internal object LauncherWidgetFonts {
-  /** The filter for [context]'s design server, or null when there is none to ask now. */
+  /** The filter [WidgetCardFontsPref] asks for, or null when there is none to use now. */
   fun filterFor(context: Context): LauncherFontFilter? {
+    val prefs = context.terrazzoGraph().preferencesStore
+    return when (runBlocking { prefs.widgetCardFonts.first() }) {
+      WidgetCardFontsPref.Off -> null
+      WidgetCardFontsPref.OnDevice -> onDevice(context)
+      WidgetCardFontsPref.Server -> server(context)
+    }
+  }
+
+  /** Drawn on the phone, from the card fonts cached for the design server, if any are. */
+  private fun onDevice(context: Context): LauncherFontFilter? {
+    if (!WidgetCardFonts.installed(context)) return null
+    val live = LiveText(locale = Locale.getDefault().toLanguageTag())
+    val drawn = OnDeviceWidgetFonts.launcherFilter(context, live)
+    return object : LauncherFontFilter by drawn {
+      override fun filter(bytes: ByteArray, densityDpi: Int): ByteArray? {
+        if (!DesignFilters.namesAny(bytes, WidgetBitmapFonts.FAMILIES)) return null
+        val key = "device:${Sha256.hex(bytes)}:${live.locale}:$densityDpi"
+        return filtered[key] ?: drawn.filter(bytes, densityDpi)?.also { filtered[key] = it }
+      }
+    }
+  }
+
+  /** The design server's filter, or null when there is none to ask now. */
+  private fun server(context: Context): LauncherFontFilter? {
     if (SystemClock.elapsedRealtime() < retryAt) return null
     val prefs = context.terrazzoGraph().preferencesStore
     val choice = runBlocking { CardDesignSync.choice(context, prefs).first() }

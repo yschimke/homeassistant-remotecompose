@@ -287,11 +287,10 @@ private val LocalWidgetActionRegistry = staticCompositionLocalOf<WidgetActionReg
 internal fun isWidgetActionCapture(): Boolean = LocalWidgetActionRegistry.current != null
 
 /**
- * Whether a widget capture keeps the heading font ([HaUberTheme.headingFont]) a widget host can't
- * load: true when its caller draws it from embedded bitmap fonts afterwards (the launcher's
- * bitmap-font filter). Otherwise a widget capture sets that text in the theme's own face. The LCD
- * clock's Digital-7 is not kept: its digits stand taller than their line, which a launcher's
- * `TextLayout` can't lengthen, so their glyphs would be cut short.
+ * Whether a widget capture keeps the card fonts a widget host can't load (the heading font,
+ * [HaUberTheme.headingFont], and the LCD clock's [HaDigital7Font]): true when its caller draws them
+ * from embedded bitmap fonts afterwards (a widget bitmap-font filter). Otherwise a widget capture
+ * sets that text in the theme's own face.
  */
 val LocalWidgetCardFonts = staticCompositionLocalOf { false }
 

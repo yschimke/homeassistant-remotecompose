@@ -82,6 +82,19 @@ enum class LauncherColoursPref {
 }
 
 /**
+ * Where widgets' card fonts (Rugged Digital's Digital-7 and G-SPOT, which no widget host can load)
+ * are drawn as bitmap fonts. [Server] (the default) asks the design server, and sends it only
+ * value-free design templates, never a card's own contents; [OnDevice] draws them on the phone, for
+ * every widget and offline, from the card fonts the app has cached; [Off] leaves widgets in their
+ * theme's own face.
+ */
+enum class WidgetCardFontsPref {
+  Server,
+  OnDevice,
+  Off,
+}
+
+/**
  * Small app-level preferences. Demo-mode flag plus theme choice (Material 3 vs one of four Terrazzo
  * palettes) and dark-mode preference. Reads are `Flow`s so the UI recomposes when the user flips a
  * switch in Settings; widget refresh takes a one-shot read at update time.
@@ -133,6 +146,18 @@ class PreferencesStore(private val context: Context) {
 
   suspend fun setLauncherColours(colours: LauncherColoursPref) {
     context.store.edit { it[LAUNCHER_COLOURS_KEY] = colours.name }
+  }
+
+  val widgetCardFonts: Flow<WidgetCardFontsPref>
+    get() =
+      context.store.data.map { prefs ->
+        prefs[WIDGET_CARD_FONTS_KEY]?.let {
+          runCatching { WidgetCardFontsPref.valueOf(it) }.getOrNull()
+        } ?: WidgetCardFontsPref.Server
+      }
+
+  suspend fun setWidgetCardFonts(fonts: WidgetCardFontsPref) {
+    context.store.edit { it[WIDGET_CARD_FONTS_KEY] = fonts.name }
   }
 
   val darkMode: Flow<DarkModePref>
@@ -465,6 +490,7 @@ class PreferencesStore(private val context: Context) {
     private val DARK_KEY = stringPreferencesKey("dark_mode")
     private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
     private val LAUNCHER_COLOURS_KEY = stringPreferencesKey("launcher_widget_colours")
+    private val WIDGET_CARD_FONTS_KEY = stringPreferencesKey("widget_card_fonts")
     private val HAPTICS_KEY = booleanPreferencesKey("haptics")
     private val SOUNDS_KEY = booleanPreferencesKey("interface_sounds")
     private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")

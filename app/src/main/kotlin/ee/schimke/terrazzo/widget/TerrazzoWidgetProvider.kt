@@ -262,11 +262,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         android.content.res.Configuration.UI_MODE_NIGHT_YES
 
     val look = launcherLook(context, styleCard)
-    // The card fonts drawn from bitmap fonts by the design server, where there is one to ask. Only
-    // a
-    // values-free design template is ever sent: a direct capture holds the card's own contents,
-    // which
-    // stay on the phone (docs/privacy.md), so it keeps the theme's face.
+    // The card fonts drawn from bitmap fonts where WidgetCardFontsPref says: on the phone, for any
+    // widget, or by the design server, which is sent only a values-free design template (a direct
+    // capture holds the card's own contents, which stay on the phone: docs/privacy.md).
     val fontFilter = LauncherWidgetFonts.filterFor(context)
 
     // Share fetches (including failures) between the template and direct paths. Keep image bytes
@@ -350,6 +348,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           captureProfile,
           dark,
           look,
+          fontFilter,
           fetchImage,
         ) ?: return null
       }
@@ -379,6 +378,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     captureProfile: androidx.compose.remote.creation.profile.Profile,
     dark: Boolean,
     look: LauncherLook,
+    fontFilter: ee.schimke.ha.rc.LauncherFontFilter?,
     fetchImage: (String) -> ByteArray?,
   ): RemoteViews? {
     val captured = runCatching {
@@ -393,6 +393,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         captureProfile,
         dark,
         look,
+        fontFilter,
         fetchImage,
       )
     }
