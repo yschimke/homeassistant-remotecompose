@@ -17,9 +17,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
-import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
-import ee.schimke.terrazzo.core.prefs.ThemePref
+import ee.schimke.terrazzo.core.prefs.ThemeChoice
 import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
@@ -27,12 +26,11 @@ import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.DESIGN_PRELOAD_WAIT_MS
 import ee.schimke.terrazzo.di.AppGraph
+import ee.schimke.terrazzo.shared.LocalDeveloperMode
 import ee.schimke.terrazzo.shared.promptForPlayStoreUpgrade
 import ee.schimke.terrazzo.ui.AndroidImeHost
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.TerrazzoTheme
-import ee.schimke.terrazzo.ui.toThemeStyle
-import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.ui.updateSystemBars
 import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
@@ -136,21 +134,20 @@ class MainActivity : ComponentActivity() {
         LocalTerrazzoGraph provides graph,
         LocalHaImageStack provides imageStack,
       ) {
-        val themePref by
-          graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.Material3)
+        val themeChoice by
+          graph.preferencesStore.themeChoice.collectAsState(initial = ThemeChoice.Default)
         val darkPref by
           graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
-        val cardStylePref by
-          graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
-        TerrazzoTheme(
-          style = themePref.toThemeStyle(),
-          darkMode = darkPref,
-          cardStyle = cardStylePref.toUberTheme(),
-        ) {
+        // Developer mode (Settings → tap the version seven times) shows shared screens' power-user
+        // parts, such as a card's settings as JSON.
+        val developerMode by graph.preferencesStore.developerMode.collectAsState(initial = false)
+        TerrazzoTheme(themeChoice, darkPref) {
           val darkTheme = LocalIsDarkTheme.current
           SideEffect { updateSystemBars(darkTheme) }
-          AndroidImeHost {
-            TerrazzoApp(initialDashboard = initialDashboard, sessionHolder = sessionHolder)
+          CompositionLocalProvider(LocalDeveloperMode provides developerMode) {
+            AndroidImeHost {
+              TerrazzoApp(initialDashboard = initialDashboard, sessionHolder = sessionHolder)
+            }
           }
         }
       }

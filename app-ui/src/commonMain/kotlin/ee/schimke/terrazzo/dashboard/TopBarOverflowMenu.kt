@@ -32,6 +32,8 @@ fun TopBarOverflowMenu(
   /** "Manage widgets": home screen and watch widgets, and the cards the watch shows. */
   onOpenWidgets: () -> Unit,
   onSignOut: () -> Unit,
+  /** What [onSignOut] is called: "Exit demo" in demo mode. */
+  signOutLabel: String = "Sign out",
   onInstallOnWatch: (() -> Unit)? = null,
   onEditDashboard: (() -> Unit)? = null,
   onOpenRoom: (() -> Unit)? = null,
@@ -53,7 +55,7 @@ fun TopBarOverflowMenu(
     onInstallOnWatch?.let { MenuEntry("Install on watch", close, it) }
     HorizontalDivider()
     MenuEntry("Settings", close, onOpenSettings)
-    MenuEntry("Sign out", close, onSignOut)
+    MenuEntry(signOutLabel, close, onSignOut)
   }
 }
 
