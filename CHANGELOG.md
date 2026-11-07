@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.89](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.88...v0.1.89) (2026-11-07)
+
+
+### Features
+
+* one design list for the theme, and Developer and Designers settings sections ([#1509](https://github.com/yschimke/homeassistant-remotecompose/issues/1509)) ([3fe5d9b](https://github.com/yschimke/homeassistant-remotecompose/commit/3fe5d9b9199bcb459917e87024cd6d99359ed2f4))
+
+
+### Bug Fixes
+
+* **quest:** skip the QuestActivity activity preview ([#1514](https://github.com/yschimke/homeassistant-remotecompose/issues/1514)) ([949ff0e](https://github.com/yschimke/homeassistant-remotecompose/commit/949ff0e4a64444ccf5efc367af50958a213335c2))
+
 ## [0.1.88](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.87...v0.1.88) (2026-11-07)
 
 
