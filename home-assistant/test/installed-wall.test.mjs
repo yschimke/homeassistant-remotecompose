@@ -124,11 +124,15 @@ test('a wall display lists, lays out and taps with a long-lived token in a heade
 
   // A long poll ends on the tap's state change, with only the values that changed.
   const started = Date.now();
-  const poll = fetch(`${wall}/values/wall-panel?cards=v0.c1&since=${first.cursor}&wait=30`, {headers: auth}).then((r) => r.json());
+  // Two displays on one user and look poll the same card: one resolve serves both, and neither
+  // misses the change behind the cursor it gets.
+  const longPoll = () => fetch(`${wall}/values/wall-panel?cards=v0.c1&since=${first.cursor}&wait=30`, {headers: auth}).then((r) => r.json());
+  const polls = [longPoll(), longPoll()];
   await new Promise((resolve) => setTimeout(resolve, 500));
   await fetch(`${wall}/actions/wall-panel/v0.c1`, {method: 'POST', headers: auth});
-  const changed = await poll;
+  const [changed, other] = await Promise.all(polls);
   assert.ok(Date.now() - started < 15000, 'answered on the change, not the timeout');
+  assert.deepEqual(other.cards, changed.cards, 'the second display gets the change too');
   const update = changed.cards['v0.c1'];
   assert.ok(update, JSON.stringify(changed));
   const isOn = update.values?.['light.s0.is_on'];
