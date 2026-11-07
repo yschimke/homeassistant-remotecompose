@@ -652,9 +652,14 @@ matches, never which cards it renders.
   with a server to ask, a launcher design template keeps the heading font and is filtered before
   its values are baked, so they are drawn from its glyphs. Only a template, captured from
   placeholder input, is ever sent: a card captured directly holds its own names, states and text,
-  which stay on the phone (docs/privacy.md), so it keeps the theme's face. The launcher lays its text out as `TextLayout`, which
-  `coreTextAsBitmapFonts` converts from rc-players 2.26.0. The LCD clock's Digital-7 stays off the
-  launcher: its digits stand taller than their line, which `TextLayout` can't lengthen.
+  which stay on the phone (docs/privacy.md), so it keeps the theme's face. The launcher lays its
+  text out as `TextLayout`, which
+  `coreTextAsBitmapFonts` converts from rc-players 2.26.0; the LCD clock's Digital-7, whose digits
+  stand taller than their line, is drawn whole from 2.27. Where widgets' card fonts are drawn is a
+  setting (`WidgetCardFontsPref`): by the design server, sent only value-free templates, so a card
+  captured directly keeps the theme's face; on the phone (`OnDeviceWidgetFonts`, rc-players' Android
+  rasterizer over the cached card fonts), for every widget and the watch's designs, offline and with
+  nothing sent; or off.
 - One manifest lists every target. The client filters it to the
   surfaces it serves. The manifest is small, and a single file keeps
   hosting static. Split it by surface only if size becomes a problem.

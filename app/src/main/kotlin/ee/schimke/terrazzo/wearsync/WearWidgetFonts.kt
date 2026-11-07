@@ -3,12 +3,21 @@ package ee.schimke.terrazzo.wearsync
 import android.content.Context
 import ee.schimke.ha.client.design.DesignFilters
 import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.rc.LiveText
+import ee.schimke.ha.rc.OnDeviceWidgetFonts
 import ee.schimke.ha.rc.WidgetBitmapFonts
+import ee.schimke.ha.rc.WidgetHost
+import ee.schimke.terrazzo.core.prefs.WidgetCardFontsPref
 import ee.schimke.terrazzo.dashboard.CardDesignChoice
 import ee.schimke.terrazzo.dashboard.CardDesignSync
+import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
+import ee.schimke.terrazzo.widget.WidgetCardFonts
 import java.util.Collections
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 /**
  * The Wear designs the phone sends the watch, with their card fonts drawn from bitmap fonts: the
@@ -33,7 +42,46 @@ internal object WearWidgetFonts {
       },
     )
 
+  /** [picked] with their card fonts drawn where [WidgetCardFontsPref] says. */
   suspend fun filter(
+    context: Context,
+    choice: CardDesignChoice?,
+    picked: List<Pair<WearSlotDesign, ByteArray>>,
+  ): List<Pair<WearSlotDesign, ByteArray>> =
+    when (context.terrazzoGraph().preferencesStore.widgetCardFonts.first()) {
+      WidgetCardFontsPref.Off -> picked
+      WidgetCardFontsPref.OnDevice -> onDevice(context, picked)
+      WidgetCardFontsPref.Server -> server(context, choice, picked)
+    }
+
+  /** Drawn on the phone, from the card fonts cached for the design server. */
+  private suspend fun onDevice(
+    context: Context,
+    picked: List<Pair<WearSlotDesign, ByteArray>>,
+  ): List<Pair<WearSlotDesign, ByteArray>> =
+    withContext(Dispatchers.Default) {
+      if (!WidgetCardFonts.installed(context)) return@withContext picked
+      val locale = Locale.getDefault().toLanguageTag()
+      picked.map { (design, bytes) ->
+        if (!DesignFilters.namesAny(bytes, WidgetBitmapFonts.FAMILIES)) return@map design to bytes
+        val key = "device:${design.sha256}:$locale"
+        val withFonts =
+          filtered[key]
+            ?: OnDeviceWidgetFonts.convert(
+                context,
+                bytes,
+                WidgetHost.Wear,
+                WATCH_DENSITY,
+                LiveText(locale = locale),
+              )
+              ?.also { filtered[key] = it }
+            ?: return@map design to bytes
+        design.copy(sha256 = Sha256.hex(withFonts)) to withFonts
+      }
+    }
+
+  /** The design server's filter, sent only these value-free designs. */
+  private suspend fun server(
     context: Context,
     choice: CardDesignChoice?,
     picked: List<Pair<WearSlotDesign, ByteArray>>,

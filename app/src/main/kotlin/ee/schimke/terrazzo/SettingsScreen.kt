@@ -84,6 +84,7 @@ import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemePref
+import ee.schimke.terrazzo.core.prefs.WidgetCardFontsPref
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
@@ -132,6 +133,8 @@ internal fun SettingsScreen(
     graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
   val launcherColours by
     graph.preferencesStore.launcherColours.collectAsState(initial = LauncherColoursPref.System)
+  val widgetCardFonts by
+    graph.preferencesStore.widgetCardFonts.collectAsState(initial = WidgetCardFontsPref.Server)
   val gridLayoutEnabled by
     graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
   val collapsedModeEnabled by graph.preferencesStore.collapsedMode.collectAsState(initial = true)
@@ -237,6 +240,16 @@ internal fun SettingsScreen(
           onInstall = { pref -> CardStyleInstallWorker.enqueue(context, pref) },
           onUninstall = { pref ->
             scope.launch { CardStyles.uninstall(context.applicationContext, pref.id) }
+          },
+        )
+
+        WidgetCardFontsSection(
+          selected = widgetCardFonts,
+          onSelect = { pref ->
+            scope.launch {
+              graph.preferencesStore.setWidgetCardFonts(pref)
+              widgetRefresh.refreshAllNow()
+            }
           },
         )
 
@@ -938,6 +951,42 @@ private fun CardStyleInstallRow(
         ) {
           Text("Retry")
         }
+      }
+    }
+  }
+}
+
+/**
+ * Where widgets' card fonts (Rugged Digital's Digital-7 and G-SPOT) are drawn as bitmap fonts,
+ * since no widget host can load them: by the design server, on this phone, or not at all.
+ */
+@Composable
+private fun WidgetCardFontsSection(
+  selected: WidgetCardFontsPref,
+  onSelect: (WidgetCardFontsPref) -> Unit,
+) {
+  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Text("Widget card fonts", style = MaterialTheme.typography.titleMedium)
+    Column(Modifier.selectableGroup()) {
+      WidgetCardFontsPref.entries.forEach { pref ->
+        OptionRow(
+          title =
+            when (pref) {
+              WidgetCardFontsPref.Server -> "Drawn by the design server"
+              WidgetCardFontsPref.OnDevice -> "Drawn on this phone"
+              WidgetCardFontsPref.Off -> "Off"
+            },
+          summary =
+            when (pref) {
+              WidgetCardFontsPref.Server ->
+                "Sends only the card's layout, never its names or states. Cards without a layout keep the theme's font"
+              WidgetCardFontsPref.OnDevice ->
+                "Every widget, offline, from the fonts this phone has downloaded. Nothing is sent"
+              WidgetCardFontsPref.Off -> "Widgets keep the theme's own font"
+            },
+          selected = pref == selected,
+          onClick = { onSelect(pref) },
+        )
       }
     }
   }

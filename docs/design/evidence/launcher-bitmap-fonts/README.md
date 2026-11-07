@@ -13,3 +13,13 @@ The filter needs `coreTextAsBitmapFonts` to convert the launcher's `TextLayout`
 ([yschimke/rc-players#817](https://github.com/yschimke/rc-players/pull/817)). The LCD clock's
 Digital-7 is left off the launcher: its digits stand taller than their line, which `TextLayout`
 can't lengthen, so their glyphs would be cut short.
+
+## On the phone
+
+`on-device.png` is a Rugged Digital heading card and LCD clock captured directly (Robolectric, 320
+dpi), so with the card's own contents, played by the CMP player: left, the capture the launcher gets
+today; right, the same card with **Widget card fonts: Drawn on this phone**, its card fonts drawn by
+rc-players' Android rasterizer over the cached G-SPOT and Digital-7, in the same Robolectric run
+(`LauncherDesignsTest.onTheDeviceADirectCaptureIsDrawnFromItsOwnGlyphs`). Nothing is sent. The
+clock's time is computed (`TextFromFloat` digits and a colon), so it gets those glyphs and a slot of
+five; its Digital-7 digits stand taller than their line and are drawn whole.

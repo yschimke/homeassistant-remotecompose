@@ -8,9 +8,13 @@ import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.coreTextAsBitmapFonts
 import ee.schimke.composeai.rcplayer.protocol.RcCoreText
 import ee.schimke.composeai.rcplayer.protocol.RcDocument
+import ee.schimke.composeai.rcplayer.protocol.RcIdList
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcTextData
+import ee.schimke.composeai.rcplayer.protocol.RcTextFromFloat
 import ee.schimke.composeai.rcplayer.protocol.RcTextLayout
+import ee.schimke.composeai.rcplayer.protocol.RcTextLookupInt
+import ee.schimke.composeai.rcplayer.protocol.RcTextMerge
 import ee.schimke.composeai.rcplayer.protocol.RcTextStyleProperty
 import ee.schimke.composeai.rcplayer.runtime.RcTextRasterizer
 import ee.schimke.ha.rc.components.HaDigital7Font
@@ -116,6 +120,7 @@ object WidgetBitmapFonts {
         document.operations.filterIsInstance<RcTextLayout>().associate {
           it.componentId to it.textId
         }
+    val computed = ComputedTexts(document)
     val locale = live.locale?.let { localeLetters(it) ?: return { null } }.orEmpty()
     val default = ALPHANUMERIC + locale + live.chars
     return glyphs@{ componentId ->
@@ -127,6 +132,10 @@ object WidgetBitmapFonts {
         return@glyphs chars
           .takeIf { it.isNotEmpty() }
           ?.let { RcBitmapFontGlyphs(it, values.maxOf { value -> value.length }.coerceAtLeast(1)) }
+      }
+      // A text the document computes (a clock's time) says what it can show: exactly those.
+      computed.shape(textId)?.let { (chars, length) ->
+        return@glyphs RcBitmapFontGlyphs(chars, length.coerceAtLeast(1))
       }
       // A sample the set can't show says the values won't fit it either.
       if (sample.any { it !in default }) return@glyphs null
@@ -181,4 +190,71 @@ object WidgetBitmapFonts {
 
   /** `CoreText`'s component id property. */
   private const val COMPONENT_ID = 1
+}
+
+/**
+ * What a text a document computes at playback can show, read from the operations that compute it,
+ * where they bound it: a number formatted to a fixed count of digits, text merged from such parts,
+ * and a lookup among them. A clock's time is the case: `TextFromFloat` digits and `:` merged. Null
+ * for a text whose length isn't bounded, or that isn't computed.
+ */
+private class ComputedTexts(document: RcDocument) {
+  private val operations =
+    document.operations
+      .mapNotNull { operation ->
+        when (operation) {
+          is RcTextFromFloat -> operation.outId to operation
+          is RcTextMerge -> operation.outId to operation
+          is RcTextLookupInt -> operation.outId to operation
+          else -> null
+        }
+      }
+      .toMap()
+  private val constants =
+    document.operations.filterIsInstance<RcTextData>().associate { it.id to it.text }
+  private val lists = document.operations.filterIsInstance<RcIdList>().associate { it.id to it.ids }
+
+  /** [textId]'s characters and the most of them it shows at once, or null. */
+  fun shape(textId: Int): Pair<String, Int>? =
+    if (textId !in operations) null else shapeOf(textId, depth = 0)
+
+  private fun shapeOf(textId: Int, depth: Int): Pair<String, Int>? {
+    if (depth > MAX_DEPTH) return null
+    constants[textId]?.let { text ->
+      // A merge's constant part, such as a clock's colon; a bound value is never one.
+      return if (textId in operations) null else text to text.length
+    }
+    return when (val operation = operations[textId]) {
+      is RcTextFromFloat -> {
+        // Digits padded or cut to a count: a larger count says only "as many as it takes".
+        if (operation.digitsBefore !in 1..MAX_DIGITS || operation.digitsAfter !in 0..MAX_DIGITS) {
+          null
+        } else {
+          val fraction = if (operation.digitsAfter > 0) 1 + operation.digitsAfter else 0
+          NUMBER_CHARS to operation.digitsBefore + fraction
+        }
+      }
+      is RcTextMerge -> {
+        val left = shapeOf(operation.leftId, depth + 1) ?: return null
+        val right = shapeOf(operation.rightId, depth + 1) ?: return null
+        (left.first + right.first).toSet().joinToString("") to left.second + right.second
+      }
+      is RcTextLookupInt -> {
+        // One of several formats of a value (12 or 24 hours): those that bound it bound the rest.
+        val shapes = lists[operation.listId]?.map { shapeOf(it, depth + 1) } ?: return null
+        val known = shapes.filterNotNull().takeIf { it.isNotEmpty() } ?: return null
+        val chars =
+          (known.joinToString("") { it.first } + NUMBER_CHARS.takeIf { null in shapes }.orEmpty())
+        chars.toSet().joinToString("") to known.maxOf { it.second }
+      }
+      else -> null
+    }
+  }
+
+  private companion object {
+    const val MAX_DEPTH = 16
+    const val MAX_DIGITS = 9
+    /** What a formatted number can show: digits, a sign, separators and padding. */
+    const val NUMBER_CHARS = "0123456789-., "
+  }
 }

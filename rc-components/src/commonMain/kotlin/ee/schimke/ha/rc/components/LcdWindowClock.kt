@@ -122,8 +122,10 @@ internal fun LcdWindowClock(data: HaClockData, timeLabel: RemoteString, digitSp:
   val smallPx = (digitSp * SecondsShare).toInt()
   // A launcher widget is played by the system, which can't load the app's bundled Digital-7: there
   // the digits fall back to the theme's monospace and the ghosts are left out, since "88:88" lines
-  // up under the time only in Digital-7's single glyph width.
-  val bundledFont = !isWidgetActionCapture()
+  // up under the time only in Digital-7's single glyph width. A capture a bitmap-font filter will
+  // draw keeps Digital-7 ([LocalWidgetCardFonts]): its digits stand taller than their line, and the
+  // glyphs are drawn whole (rc-players 2.27).
+  val bundledFont = !widgetDropsCardFonts()
   val themeStyle = haTextStyle()
   // Digital-7's digits stand taller than the player's default font, which sizes the text's box;
   // a line height of the full glyph keeps their feet inside it.
