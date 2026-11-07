@@ -14,7 +14,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -158,7 +160,13 @@ class DesignPickerUiTest {
     assertEquals(ThemeChoice(CardStylePref.Trinitron.id), choice.value)
     compose.onNodeWithText("Palette").assertDoesNotExist()
     compose.onNodeWithText("Follow system").assertDoesNotExist()
-    compose.onNodeWithContentDescription("Dark only", substring = true).assertExists()
+    // Every dark-only design's row says so; the picked one is Trinitron's.
+    compose
+      .onNode(
+        hasContentDescription("Trinitron.", substring = true) and
+          hasContentDescription("Dark only", substring = true),
+      )
+      .assertIsSelected()
   }
 
   @Test
