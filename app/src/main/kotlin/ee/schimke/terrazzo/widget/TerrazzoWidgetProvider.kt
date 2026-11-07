@@ -262,6 +262,12 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         android.content.res.Configuration.UI_MODE_NIGHT_YES
 
     val look = launcherLook(context, styleCard)
+    // The card fonts drawn from bitmap fonts by the design server, where there is one to ask. Only
+    // a
+    // values-free design template is ever sent: a direct capture holds the card's own contents,
+    // which
+    // stay on the phone (docs/privacy.md), so it keeps the theme's face.
+    val fontFilter = LauncherWidgetFonts.filterFor(context)
 
     // Share fetches (including failures) between the template and direct paths. Keep image bytes
     // comfortably below Binder's transaction limit even for cards containing several pictures.
@@ -300,6 +306,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         registry = registry,
         fetchImage = fetchImage,
         look = look,
+        fontFilter = fontFilter,
       )
     }
       .onFailure { Log.w(TAG, "launcher design failed for id=$widgetId", it) }

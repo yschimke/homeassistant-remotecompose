@@ -15,6 +15,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcOpcodes
 import ee.schimke.composeai.rcplayer.protocol.RcOperation
 import ee.schimke.composeai.rcplayer.protocol.RcRootLayout
 import ee.schimke.composeai.rcplayer.protocol.RcTextData
+import ee.schimke.composeai.rcplayer.protocol.RcTextLayout
 import ee.schimke.composeai.rcplayer.protocol.RcTextStyleProperty.FloatValue
 import ee.schimke.composeai.rcplayer.protocol.RcTextStyleProperty.IntValue
 import ee.schimke.composeai.rcplayer.protocol.RcVersion
@@ -130,6 +131,66 @@ class WidgetFiltersTest {
     val values = java.net.URLEncoder.encode("""{"sensor.s0.state":["on","off"]}""", "UTF-8")
     val (_, glyphs) = liveGlyphs("values=$values")
     assertEquals(setOf("1", "2", ":", "3", "0", "o", "n", "f"), glyphs, "the clock's and on/off's")
+  }
+
+  /** The Android 16 launcher's text component, `TextLayout`, is drawn from glyphs too. */
+  @Test
+  fun aLauncherTextLayoutIsDrawnFromItsGlyphs() = testApplication {
+    routing { widgetFilterRoutes(API_BASE, WidgetFilters(CardFonts.fromClasspath())) }
+    fun layout(textId: Int, componentId: Int, family: Int) =
+      listOf(
+        RcTextLayout(
+          componentId,
+          -1,
+          textId,
+          0xff000000.toInt(),
+          RcFloatWord.literal(28f),
+          0,
+          RcFloatWord.literal(400f),
+          family,
+          1,
+          1,
+          Int.MAX_VALUE,
+        ),
+        RcLayoutContent(componentId - 100),
+        end,
+        end,
+      )
+    val launcher =
+      RcDocumentCodec.encode(
+        RcDocument(
+          RcHeader(RcVersion(1, 0, 0)),
+          listOf(
+            RcTextData(50, "digital7"),
+            RcTextData(51, "sans-serif"),
+            RcTextData(42, "12:30"),
+            RcTextData(44, "Living room"),
+            RcRootLayout(-1),
+            RcLayoutContent(-2),
+            *layout(42, -7, 50).toTypedArray(),
+            *layout(44, -9, 51).toTypedArray(),
+            end,
+            end,
+          ),
+        ),
+      )
+    val response =
+      client.post("$API_BASE/filters/bitmap-fonts?host=launcher-widgets&density=3") {
+        setBody(launcher)
+      }
+    assertEquals(HttpStatusCode.OK, response.status)
+    assertEquals("converted=1; skipped=0", response.headers["X-Bitmap-Fonts"])
+    val document = filtered(response.bodyAsBytes())
+    assertEquals(
+      listOf(44),
+      document.operations.filterIsInstance<RcTextLayout>().map { it.textId },
+      "only the sans-serif label stays text, still a TextLayout",
+    )
+    assertTrue(document.operations.none { it is RcCoreText }, "a launcher reads no CoreText")
+    assertEquals(
+      emptyList(),
+      document.validateFor(RcTargetProfiles.WIDGETS_V6).filter { it.opcode != null },
+    )
   }
 
   @Test

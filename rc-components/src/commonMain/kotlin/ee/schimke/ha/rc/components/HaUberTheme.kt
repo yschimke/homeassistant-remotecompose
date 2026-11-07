@@ -641,13 +641,14 @@ fun haTextStyle(): RemoteTextStyle {
 /**
  * [haTextStyle] in the active theme's heading font ([HaUberTheme.headingFont]), for section
  * headings. A launcher widget is played by the system, which can't load the app's bundled fonts:
- * there it is the theme's own style.
+ * there it is the theme's own style, unless the capture keeps it for the bitmap-font filter
+ * ([LocalWidgetCardFonts]).
  */
 @Composable
 fun haHeadingTextStyle(): RemoteTextStyle {
   val font = LocalHaUberTheme.current.theme.headingFont
   val base = haTextStyle()
-  if (font == null || isWidgetActionCapture()) return base
+  if (font == null || widgetDropsCardFonts()) return base
   return base.merge(RemoteTextStyle(fontFamily = RemoteFontFamily.Named(font)))
 }
 

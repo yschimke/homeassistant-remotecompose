@@ -16,7 +16,10 @@ import ee.schimke.composeai.rcplayer.edit.collapseConstantStateLayouts
 import ee.schimke.composeai.rcplayer.edit.embedBitmapUrls
 import ee.schimke.composeai.rcplayer.edit.hardcodeNamedValues
 import ee.schimke.composeai.rcplayer.edit.optimize
+import ee.schimke.composeai.rcplayer.protocol.RcBitmapFontData
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcDrawBitmapFontTextRun
+import ee.schimke.composeai.rcplayer.protocol.RcTextData
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
@@ -110,6 +113,8 @@ fun LauncherWidgetContent(
   snapshot: HaSnapshot,
   captureSizeDp: WidgetCaptureSizeDp? = null,
   look: LauncherLook = LauncherLook(),
+  /** Keep the card fonts, for a [LauncherFontFilter] to draw from bitmap fonts. */
+  cardFonts: Boolean = false,
   controlLock: HaControlLockMode =
     if (cardHasDragControls(card)) HaControlLockMode.Locked else HaControlLockMode.Off,
   content: @Composable (RemoteModifier) -> Unit = { RenderChild(card, snapshot, it) },
@@ -121,6 +126,7 @@ fun LauncherWidgetContent(
     ee.schimke.rc.m3.LocalRcAmbientAware provides false,
     ee.schimke.ha.rc.components.LocalSupportsFlowLayout provides
       (androidx.compose.remote.core.Operations.LAYOUT_FLOW in profile.supportedOperations),
+    ee.schimke.ha.rc.components.LocalWidgetCardFonts provides cardFonts,
   ) {
     ProvideCardRegistry(registry) {
       ProvideSystemHaTheme(
@@ -148,6 +154,21 @@ fun LauncherWidgetContent(
       }
     }
   }
+}
+
+/**
+ * Draws the card fonts in a launcher document from bitmap fonts embedded in it, since the launcher
+ * can't load them ([WidgetBitmapFonts], run by the design server for `launcher-widgets`): the
+ * document filtered, or null when it can't be (offline, no server), and the widget is then captured
+ * without the card fonts, as it would be with no filter. [densityDpi] is the display the document
+ * was captured for, which its glyphs are drawn at.
+ *
+ * It is only ever handed a design template, captured from placeholder input
+ * ([CardDesignTemplates.designInput]): never a direct capture, which holds the card's own names,
+ * states and text, and may go to a remote server.
+ */
+fun interface LauncherFontFilter {
+  fun filter(bytes: ByteArray, densityDpi: Int): ByteArray?
 }
 
 /**
@@ -205,8 +226,9 @@ object LauncherDesigns {
     key: DesignKey,
     densityDpi: Int,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    cardFonts: Boolean = false,
   ): Template =
-    captureWith(context, key, densityDpi, registry) { card, snapshot, modifier ->
+    captureWith(context, key, densityDpi, registry, cardFonts) { card, snapshot, modifier ->
       RenderChild(card, snapshot, modifier)
     }
 
@@ -222,6 +244,7 @@ object LauncherDesigns {
     key: DesignKey,
     densityDpi: Int,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    cardFonts: Boolean = false,
     content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
   ): Template {
     require(key.surface == DesignSurface.Launcher) { "not a launcher key: $key" }
@@ -255,6 +278,7 @@ object LauncherDesigns {
                 snapshot,
                 WidgetCaptureSizeDp(widthDp, heightDp),
                 look,
+                cardFonts,
               ) {
                 content(card, snapshot, it)
               }
@@ -294,6 +318,10 @@ object LauncherDesigns {
   /**
    * The baked launcher document for [card], or null when it has no design or can't be baked. The
    * template comes from the process-wide [library], captured on first use.
+   *
+   * With [fontFilter] the template keeps the card fonts and is filtered before its values go in, so
+   * they are drawn from its embedded glyphs; the filter sees the values-free template, which it can
+   * cache by its bytes. A template the filter can't take is the plain one.
    */
   fun render(
     context: Context,
@@ -307,18 +335,44 @@ object LauncherDesigns {
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
     fetchImage: (url: String) -> ByteArray? = { null },
     look: LauncherLook = LauncherLook(),
+    fontFilter: LauncherFontFilter? = null,
   ): Baked? {
     val key =
       keyFor(card, snapshot, widthDp, heightDp, dark, systemTheme, registry, look) ?: return null
-    val template =
-      library.getOrPut(key to densityDpi) { capture(context, key, densityDpi, registry) }
-    return bake(
-      template,
-      CardDesignTemplates.designCard(card, snapshot, registry),
-      snapshot,
-      registry,
-      fetchImage,
-    )
+    fun template(cardFonts: Boolean) =
+      library.getOrPut(Triple(key, densityDpi, cardFonts)) {
+        capture(context, key, densityDpi, registry, cardFonts)
+      }
+    val designCard = CardDesignTemplates.designCard(card, snapshot, registry)
+    fun bake(template: Template) = bake(template, designCard, snapshot, registry, fetchImage)
+    val filtered = fontFilter?.let { filter ->
+      val withFonts = template(cardFonts = true)
+      filter.filter(withFonts.bytes, densityDpi)?.let { Template(it, withFonts.actions) }
+    }
+    // The filter saw the template's placeholders, not the card's values: a value with a character
+    // its glyphs don't have (an accent the locale lacks, a curly apostrophe) bakes the plain
+    // template, in the theme's own face, rather than a text with letters missing.
+    return filtered?.let(::bake)?.takeIf { coveredByItsBitmapFonts(it.bytes) }
+      ?: bake(template(cardFonts = false))
+  }
+
+  /**
+   * Whether every text [bytes] draws from a bitmap font has each of its characters in that font. A
+   * text computed at playback (a time) isn't known here and passes: its glyphs are the filter's.
+   */
+  internal fun coveredByItsBitmapFonts(bytes: ByteArray): Boolean {
+    val document =
+      runCatching { RcDocumentCodec.decode(bytes, RcWireLimits()) }.getOrNull() ?: return false
+    val texts = document.operations.filterIsInstance<RcTextData>().associate { it.id to it.text }
+    val glyphs =
+      document.operations.filterIsInstance<RcBitmapFontData>().associate { font ->
+        font.fontId to font.glyphs.map { it.chars }.filter { it.length == 1 }.map { it[0] }.toSet()
+      }
+    return document.operations.filterIsInstance<RcDrawBitmapFontTextRun>().all { run ->
+      val text = texts[run.textId] ?: return@all true
+      val chars = glyphs[run.bitmapFontId] ?: return@all false
+      text.all { it in chars }
+    }
   }
 
   /**
@@ -359,7 +413,7 @@ object LauncherDesigns {
       .getOrNull()
   }
 
-  private val library = ConcurrentHashMap<Pair<DesignKey, Int>, Template>()
+  private val library = ConcurrentHashMap<Triple<DesignKey, Int, Boolean>, Template>()
 
   /** Forgets the captured templates, for [CardMemory]: the next widget update captures again. */
   fun releaseMemory() {

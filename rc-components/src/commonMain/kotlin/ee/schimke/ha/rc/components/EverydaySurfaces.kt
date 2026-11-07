@@ -25,14 +25,15 @@ import androidx.compose.ui.unit.sp
 
 /**
  * The active theme's heading font ([HaUberTheme.headingFont]) as a family, or null for its own;
- * null on a launcher widget, whose system player can't load the app's bundled fonts.
+ * null on a launcher widget, whose system player can't load the app's bundled fonts, unless the
+ * capture keeps them for the bitmap-font filter ([LocalWidgetCardFonts]).
  */
 @Composable
 internal fun headingFamily(): RemoteFontFamily? =
   currentHaUberTheme()
     .theme
     .headingFont
-    ?.takeUnless { isWidgetActionCapture() }
+    ?.takeUnless { widgetDropsCardFonts() }
     ?.let { RemoteFontFamily.Named(it) }
 
 /** The theme's text style with [trackingSp] of letter spacing and, optionally, another family. */
