@@ -309,6 +309,40 @@ internal object AgentLinkStore {
     val values = if (link == null) all() - key else all() + (key to link)
     memory = values
     writeAgentGrants(KEY, if (values.isEmpty()) null else json.encodeToString(values))
+    // A new link waits for an agent to claim its setup code; a removed one has nobody.
+    writeConnected(key, if (link == null) null else false)
+    changes.value++
+  }
+
+  // Whether an agent has claimed each link, as the relay last reported it. A link with no entry
+  // predates this record and was set up before the dashboard waited on it, so it counts as
+  // connected until the relay says otherwise.
+  private const val CONNECTED_KEY = "terrazzo.agentLinksConnected"
+  private var connectedMemory = emptyMap<String, Boolean>()
+
+  private fun connectedAll(): Map<String, Boolean> =
+    readAgentGrants(CONNECTED_KEY)?.let {
+      runCatching { json.decodeFromString<Map<String, Boolean>>(it) }.getOrNull()
+    } ?: connectedMemory
+
+  private fun writeConnected(key: String, connected: Boolean?) {
+    val values =
+      if (connected == null) connectedAll() - key else connectedAll() + (key to connected)
+    connectedMemory = values
+    writeAgentGrants(CONNECTED_KEY, if (values.isEmpty()) null else json.encodeToString(values))
+  }
+
+  /** Whether an agent has claimed this person's link on [server]. */
+  fun isConnected(server: String): Boolean {
+    val key = keyOf(server) ?: return false
+    return all()[key] != null && connectedAll()[key] != false
+  }
+
+  /** Records the relay's view of whether an agent has claimed the link on [server]. */
+  fun setConnected(server: String, connected: Boolean) {
+    val key = keyOf(server) ?: return
+    if (all()[key] == null || connectedAll()[key] == connected) return
+    writeConnected(key, connected)
     changes.value++
   }
 
@@ -326,7 +360,7 @@ internal object AgentLinkStore {
 @Composable
 fun rememberAgentConnected(server: String): Boolean {
   val changes by AgentLinkStore.changes.collectAsState()
-  return remember(server, changes) { AgentLinkStore.get(server) != null }
+  return remember(server, changes) { AgentLinkStore.isConnected(server) }
 }
 
 /**
@@ -350,7 +384,10 @@ fun AgentConnection(server: String, onCopy: (String) -> Unit, modifier: Modifier
       runCatching { ee.schimke.ha.client.agent.AgentRelayClient(server) }.getOrNull()
         ?: return@LaunchedEffect
     try {
-      relay.watchLink(current).collect { state = it }
+      relay.watchLink(current).collect {
+        state = it
+        AgentLinkStore.setConnected(server, it.connected)
+      }
     } catch (e: ee.schimke.ha.client.agent.AgentSessionEndedException) {
       // Disconnected elsewhere, or idle for a month: back to the setup.
       AgentLinkStore.put(server, null)

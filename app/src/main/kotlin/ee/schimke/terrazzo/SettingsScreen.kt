@@ -157,9 +157,9 @@ internal fun SettingsScreen(
     graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
   val developerModePref by graph.preferencesStore.developerMode.collectAsState(initial = false)
   val cardStudioEntry by graph.preferencesStore.cardStudioEntry.collectAsState(initial = false)
-  // Testers who opted in to early updates before developer mode existed keep their way to it.
-  val earlyUpdates = remember(context) { isPlayUpdateTester(context) }
-  val developerMode = developerModePref || earlyUpdates
+  // One developer-mode state, shared with MainActivity's LocalDeveloperMode. Testers who opted in
+  // to early updates stay opted in; they see the switch again once they unlock developer mode.
+  val developerMode = developerModePref
 
   Scaffold(
     topBar = {
@@ -751,17 +751,16 @@ internal fun DesignSection(
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     val designs = listOf(ThemeChoice.MATERIAL3) + CardStylePref.entries.map { it.id }
-    val shown =
-      designs.filter {
-        expanded ||
-          it == selected.design ||
-          stateOf(it) in
-            setOf(
-              CardStyleState.BuiltIn,
-              CardStyleState.Installed,
-              CardStyleState.InUse,
-            )
-      }
+    val shown = designs.filter {
+      expanded ||
+        it == selected.design ||
+        stateOf(it) in
+          setOf(
+            CardStyleState.BuiltIn,
+            CardStyleState.Installed,
+            CardStyleState.InUse,
+          )
+    }
     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
       shown.forEach { design ->
         key(design) {
