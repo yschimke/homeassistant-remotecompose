@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.88](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.87...v0.1.88) (2026-11-07)
+
+
+### Features
+
+* draw widgets' card fonts on the phone or by the design server ([#1508](https://github.com/yschimke/homeassistant-remotecompose/issues/1508)) ([fba8d85](https://github.com/yschimke/homeassistant-remotecompose/commit/fba8d856f3643e7546ba6082aab47a04609e49cd))
+* show camera feeds in Rugged Digital's LCD window ([#1506](https://github.com/yschimke/homeassistant-remotecompose/issues/1506)) ([77b2392](https://github.com/yschimke/homeassistant-remotecompose/commit/77b2392a92bb33a417afe3bb840a8c6934dd4715))
+
 ## [0.1.87](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.86...v0.1.87) (2026-11-07)
 
 
