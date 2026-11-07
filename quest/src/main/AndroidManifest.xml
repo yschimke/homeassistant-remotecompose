@@ -26,6 +26,9 @@
                 <category android:name="com.oculus.intent.category.VR" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- A Spatial SDK activity can't start under Robolectric: compose-preview (2.89.0+)
+                 skips its activity capture. QuestPreviews.kt still renders the panels. -->
+            <meta-data android:name="ee.schimke.composeai.preview.skip" android:value="true" />
         </activity>
 
         <!-- AppAuth receives Home Assistant's OAuth redirect, then returns it to QuestActivity. -->
