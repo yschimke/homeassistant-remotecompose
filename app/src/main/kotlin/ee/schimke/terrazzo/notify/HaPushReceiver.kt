@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo.notify
 
 import android.content.Context
-import android.os.Build
 import android.util.Log
 import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.model.EntityState
@@ -10,7 +9,6 @@ import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
-import ee.schimke.terrazzo.widget.WidgetInstaller
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +67,7 @@ object HaPushReceiver {
             cards[key] = notification to state
             // No card where the platform can't play one: the watch's copy still follows the state.
             val card =
-              if (Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) null
+              if (!NotificationCards.supported) null
               else
                 runCatching {
                   NotificationCards.capture(context, session.baseUrl, entityId, snapshot)

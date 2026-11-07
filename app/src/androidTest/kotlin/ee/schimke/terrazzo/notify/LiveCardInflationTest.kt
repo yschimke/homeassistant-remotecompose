@@ -79,6 +79,11 @@ class LiveCardInflationTest {
     )
   }
 
+  /**
+   * The real card, as [NotificationCards.capture] wraps it. Run it on an Android 17 device: the API
+   * 35/36 emulator images don't have the `validateNestedViews` check the wrapper gets past
+   * ([NotificationCards.wrapForNotification]).
+   */
   @Test
   @SdkSuppress(minSdkVersion = 36)
   fun post_withCard_survivesSystemUiInflation() {

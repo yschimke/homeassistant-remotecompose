@@ -215,7 +215,10 @@ class HaNotificationActionReceiver : BroadcastReceiver() {
       val message = TestNotification.message(entityId)
       if (!HaNotifications.isShowing(context, message)) return
       val snapshot = DemoData.snapshot()
-      val card = NotificationCards.capture(context, baseUrl, entityId, snapshot)
+      val card =
+        if (NotificationCards.supported)
+          NotificationCards.capture(context, baseUrl, entityId, snapshot)
+        else null
       HaNotifications.handle(
         context,
         baseUrl,
