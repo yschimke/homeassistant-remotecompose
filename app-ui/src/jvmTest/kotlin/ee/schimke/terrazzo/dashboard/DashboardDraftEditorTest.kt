@@ -3,11 +3,13 @@ package ee.schimke.terrazzo.dashboard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.*
 import ee.schimke.ha.client.dashboard.DashboardDraft
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.model.EntityState
+import ee.schimke.terrazzo.shared.LocalDeveloperMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -45,18 +47,21 @@ class DashboardDraftEditorTest {
     val edits = DashboardEditSession(original) { _, replacement -> writes += replacement }
     setContent {
       val coroutines = rememberCoroutineScope()
+      // Developer mode, so a card's settings also offer its JSON.
       MaterialTheme {
-        DashboardDraftEditor(
-          edits = edits,
-          title = "Garden",
-          snackbars = SnackbarHostState(),
-          onBack = {},
-          onSaved = {},
-          launch = { block -> coroutines.launch { block() } },
-          scope = scope,
-          entities = entities,
-        ) { card ->
-          Text("card:${card["type"]?.jsonPrimitive?.content}")
+        CompositionLocalProvider(LocalDeveloperMode provides true) {
+          DashboardDraftEditor(
+            edits = edits,
+            title = "Garden",
+            snackbars = SnackbarHostState(),
+            onBack = {},
+            onSaved = {},
+            launch = { block -> coroutines.launch { block() } },
+            scope = scope,
+            entities = entities,
+          ) { card ->
+            Text("card:${card["type"]?.jsonPrimitive?.content}")
+          }
         }
       }
     }

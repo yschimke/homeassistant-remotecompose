@@ -61,6 +61,7 @@ import ee.schimke.terrazzo.shared.CardStudioDefaults
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.HomeDesignServer
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
+import ee.schimke.terrazzo.shared.rememberAgentConnected
 import ee.schimke.terrazzo.wearsync.wearInstallPrompts
 import ee.schimke.terrazzo.widget.WidgetActionRunner
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
@@ -383,7 +384,6 @@ private fun AuthenticatedShell(
         val wearReady by graph.wearSyncManager.wearableAvailable.collectAsState()
         SettingsScreen(
           session = session,
-          onSignOut = onSignOut,
           onBack = { screen = AppScreen.Dashboards },
           onManageDashboards = manageDashboards,
           onOpenLogs = { screen = AppScreen.Logs },
@@ -502,6 +502,10 @@ private fun DashboardsRoot(
   var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
+  // "Ask your agent" and "Plan a card" are offered only while an AI agent is connected (Settings →
+  // Designers), on the server Card Studio talks to.
+  val agentServer = studioServer.ifBlank { "https://ha.coo.ee" }
+  val agentConnected = rememberAgentConnected(agentServer)
   val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
   val privateDesignServer by graph.preferencesStore.privateDesignServer.collectAsState(initial = "")
   // This Home Assistant's own design server, when the one it found is this session's.
@@ -834,6 +838,7 @@ private fun DashboardsRoot(
               onOpenSettings = onOpenSettings,
               onOpenWidgets = onOpenWidgets,
               onSignOut = onSignOut,
+              signOutLabel = if (session is DemoHaSession) "Exit demo" else "Sign out",
               onInstallOnWatch = installOnWatch,
               onEditDashboard = { editorOpen = true },
               onOpenRoom = onOpenRoom,
@@ -885,8 +890,9 @@ private fun DashboardsRoot(
           },
           // Once shown, the view isn't asked for again when the screen is recreated.
           onInitialViewShown = { openedView = null },
+          canPlanCards = agentConnected,
           onAskAgentAboutSection =
-            if (phoneAgentEdits != null)
+            if (phoneAgentEdits != null && agentConnected)
               ({ view, section, title ->
                 agentSessions =
                   AgentSessionsTarget(
@@ -902,6 +908,10 @@ private fun DashboardsRoot(
   val dashboardUrlPath = openedValue ?: ""
   actionsTarget?.let { target ->
     val (card, snapshot) = target
+    // Read as the sheet opens, so an agent connected since the dashboard opened counts.
+    val agentForCard = rememberAgentConnected(agentServer)
+    // Settings → Designers can offer the studio with no agent too.
+    val studioEntry by graph.preferencesStore.cardStudioEntry.collectAsState(initial = false)
     CardActionsSheet(
       baseUrl = session.baseUrl,
       dashboardUrlPath = dashboardUrlPath,
@@ -911,7 +921,8 @@ private fun DashboardsRoot(
       onChangeStyle = { styleTarget = target },
       // Reopened from the history screen, the sheet doesn't offer the screen it sits on.
       onShowHistory = if (historyTarget == null) ({ historyTarget = target }) else null,
-      onOpenInStudio = { studioTarget = target },
+      onOpenInStudio = if (agentForCard || studioEntry) ({ studioTarget = target }) else null,
+      studioLabel = if (agentForCard) "Ask your agent" else "Card Studio",
       onDismiss = { actionsTarget = null },
       // Only offer monitoring in demo mode — the service pulls
       // state from DemoData today. Live mode needs a shared

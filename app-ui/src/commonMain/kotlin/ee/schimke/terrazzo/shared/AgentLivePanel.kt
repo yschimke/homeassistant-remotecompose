@@ -23,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -293,6 +294,9 @@ internal object AgentLinkStore {
   private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
   private var memory = emptyMap<String, String>()
 
+  /** Bumped on every [put], so [rememberAgentConnected] reads the links again. */
+  val changes = kotlinx.coroutines.flow.MutableStateFlow(0)
+
   private fun all(): Map<String, String> =
     readAgentGrants(KEY)?.let {
       runCatching { json.decodeFromString<Map<String, String>>(it) }.getOrNull()
@@ -305,12 +309,24 @@ internal object AgentLinkStore {
     val values = if (link == null) all() - key else all() + (key to link)
     memory = values
     writeAgentGrants(KEY, if (values.isEmpty()) null else json.encodeToString(values))
+    changes.value++
   }
 
   private fun keyOf(server: String) = runCatching {
     ee.schimke.ha.client.design.studioServerUrl(server)
   }
     .getOrNull()
+}
+
+/**
+ * Whether an AI agent is connected to this person on design [server] ([AgentConnection] set one
+ * up): what the dashboard's "Ask your agent" and "Plan a card" wait for. Follows connecting and
+ * disconnecting while the app runs.
+ */
+@Composable
+fun rememberAgentConnected(server: String): Boolean {
+  val changes by AgentLinkStore.changes.collectAsState()
+  return remember(server, changes) { AgentLinkStore.get(server) != null }
 }
 
 /**

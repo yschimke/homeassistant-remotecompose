@@ -68,10 +68,20 @@ class LongPressHistoryTest {
   @After
   fun tearDown() {
     device.pressHome()
+    agentLinks().delete()
   }
+
+  /** Where the app keeps its agent links (`AgentGrantFiles`, `AgentLinkStore`). */
+  private fun agentLinks() =
+    java.io.File(
+      ApplicationProvider.getApplicationContext<Context>().noBackupFilesDir,
+      "agent-grants/terrazzo.agentLinks.json",
+    )
 
   @Test
   fun forkUsesTheDashboardPreviewInsteadOfTheLauncherGrid() {
+    // "Ask your agent" is offered only while an agent is connected: stand one in.
+    agentLinks().apply { parentFile?.mkdirs() }.writeText("""{"https://ha.coo.ee":"test-link"}""")
     waitForFirstCard().longClick()
     val fork = device.wait(Until.findObject(By.text("Ask your agent")), 10_000)
     assertNotNull(fork)

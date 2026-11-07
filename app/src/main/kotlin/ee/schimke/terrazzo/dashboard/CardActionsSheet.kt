@@ -80,9 +80,15 @@ fun CardActionsSheet(
   onAddToHomeScreen: () -> Unit,
   onChangeStyle: () -> Unit,
   onShowHistory: (() -> Unit)?,
-  onOpenInStudio: () -> Unit,
+  /**
+   * Card Studio for this card: offered as "Ask your agent" while an agent is connected, as "Card
+   * Studio" when Settings → Designers turns it on; null (not offered) otherwise.
+   */
+  onOpenInStudio: (() -> Unit)?,
   onDismiss: () -> Unit,
   onMonitor: (() -> Unit)? = null,
+  /** What [onOpenInStudio]'s action is called. */
+  studioLabel: String = "Ask your agent",
 ) {
   val context = LocalContext.current
   val graph = LocalTerrazzoGraph.current
@@ -166,7 +172,8 @@ fun CardActionsSheet(
               }
             }
           },
-        onOpenInStudio = closeThen(onOpenInStudio),
+        onOpenInStudio = onOpenInStudio?.let(::closeThen),
+        studioLabel = studioLabel,
         onMonitor = closeThen { onMonitor?.invoke() },
         onLiveCameraChange = { on -> LiveCameras.setLive(cameras, on) },
       )
@@ -206,10 +213,11 @@ fun CardActions(
   onChangeStyle: () -> Unit,
   onShowHistory: () -> Unit,
   onOpenInHomeAssistant: () -> Unit,
-  onOpenInStudio: () -> Unit,
+  onOpenInStudio: (() -> Unit)?,
   onMonitor: () -> Unit,
   modifier: Modifier = Modifier,
   onLiveCameraChange: (Boolean) -> Unit = {},
+  studioLabel: String = "Ask your agent",
 ) {
   val skin = currentScreenSkin()
   // Scrolls so the last actions stay reachable in landscape, split screen or with large text.
@@ -313,7 +321,9 @@ fun CardActions(
         if (state.canMonitor) {
           SecondaryAction(Icons.Outlined.Timer, "Watch live for 15 minutes", onMonitor)
         }
-        SecondaryAction(Icons.Outlined.Brush, "Ask your agent", onOpenInStudio)
+        if (onOpenInStudio != null) {
+          SecondaryAction(Icons.Outlined.Brush, studioLabel, onOpenInStudio)
+        }
       }
     }
   }

@@ -566,6 +566,7 @@ private fun DashboardShell(
             }
             entry<DashboardDestination> { route ->
               var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
+              val agentConnected = rememberAgentConnected(designServer)
               Scaffold(
                 topBar = {
                   TopAppBar(
@@ -583,8 +584,9 @@ private fun DashboardShell(
                         TextButton(onClick = { customizing = false }) { Text("Done customizing") }
                       DashboardMoreMenu(
                         onEdit = { stack.add(DashboardEditDestination(route.path)) },
+                        // Only while an AI agent is connected (Settings → Your AI agent).
                         onAskAgent =
-                          if (integrationInstalled)
+                          if (integrationInstalled && agentConnected)
                             ({ stack.add(AgentEditDestination(route.path)) })
                           else null,
                         onCustomize = if (customizing) null else ({ customizing = true }),
