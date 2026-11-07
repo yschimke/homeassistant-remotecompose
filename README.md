@@ -189,6 +189,8 @@ Release tags publish desktop installers to [GitHub Releases](https://github.com/
 
 Desktop installer checks run on pull requests and retain their packages as workflow artifacts. The **Desktop installers** workflow can also build any ref without publishing, or rebuild an existing release by supplying its tag. Manual builds stay build-only unless **publish** is explicitly selected; automated tagged releases publish all platforms. Release assets include SHA-256 checksums, and their filenames identify the application version and architecture. Installer metadata offsets the semantic major version by one to satisfy macOS packaging requirements while keeping upgrades monotonic.
 
+On Arch Linux, install from the project's pacman repository so `pacman -Syu` keeps it up to date: see [docs/desktop-linux.md](docs/desktop-linux.md).
+
 Local packaging: `./gradlew :app-ui:packageDistributionForCurrentOS`. Override the app version with `-PdesktopVersion=0.1.0`.
 
 ### Web app

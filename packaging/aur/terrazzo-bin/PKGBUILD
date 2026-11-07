@@ -2,8 +2,8 @@
 #
 # Source of truth: packaging/aur/terrazzo-bin in
 # https://github.com/yschimke/homeassistant-remotecompose. The release workflow
-# (.github/workflows/aur-publish.yml) sets pkgver and the checksum and pushes this
-# to the AUR; edit it there, not in the AUR repository.
+# (.github/workflows/arch-packages.yml) sets pkgver and the checksum, publishes the package to
+# the pacman-repo release and pushes this to the AUR; edit it here, not in the AUR repository.
 
 pkgname=terrazzo-bin
 _appname=terrazzo
