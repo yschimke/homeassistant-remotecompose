@@ -177,8 +177,10 @@ jobs:
           gh release upload "$PACMAN_REPO_TAG" "$pkg" --clobber
           gh release upload "$PACMAN_REPO_TAG" \
             "$PACMAN_REPO.db" "$PACMAN_REPO.db.tar.zst" "$PACMAN_REPO.files" "$PACMAN_REPO.files.tar.zst" --clobber
-          # Only the version the database names stays; pacman -Syu reads the new database first.
-          { grep -E "^$PKG-.*\.pkg\.tar\.zst$" <<<"$assets" || true; } | { grep -vxF "$pkg" || true; } | while read -r old; do
+          # Keep the previous version too: a pacman -Syu that read the old database just before this
+          # run is still downloading (or waiting at its prompt for) that package. Older ones go.
+          { grep -E "^$PKG-.*\.pkg\.tar\.zst$" <<<"$assets" || true; } | { grep -vxF "$pkg" || true; } \
+            | sort -V | head -n -1 | while read -r old; do
             gh release delete-asset "$PACMAN_REPO_TAG" "$old" --yes
           done
           echo "Published $pkg to the $PACMAN_REPO pacman repository" >> "$GITHUB_STEP_SUMMARY"

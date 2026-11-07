@@ -19,7 +19,7 @@ Server = https://github.com/yschimke/homeassistant-remotecompose/releases/downlo
 Then:
 
 ```bash
-sudo pacman -Sy terrazzo-bin
+sudo pacman -Syu terrazzo-bin
 ```
 
 From then on, `sudo pacman -Syu` installs each new release.
