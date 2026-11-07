@@ -163,15 +163,10 @@ object HaNotifications {
       )
     }
     if (card != null) {
-      // The card is the phone's expanded body only. No `setStyle(...)`: on Android 17 DP, pairing
-      // BigTextStyle (or DecoratedCustomViewStyle) with a DrawInstructions-bearing custom view
-      // routes inflation through `Notification$Builder.minimallyDecoratedExpandedContentView` →
-      // `buildCustomContentIntoTemplate` → `RemoteViews.addView`, where the new
-      // `validateNestedViews` refuses with "Cannot add a nested view that has DrawInstructions."
-      // and SystemUI drops the notification with REASON_ERROR before the user sees it. Omitting
-      // the style keeps the standard notification chrome around the custom view — same visual
-      // decoration the earlier BigTextStyle comment described — and sidesteps the template-wrap
-      // path entirely. The watch, which never gets RemoteViews, keeps title + contentText; a card
+      // The card is the phone's expanded body only, already wrapped so SystemUI can nest it in
+      // the template it puts around every custom view
+      // ([NotificationCards.wrapForNotification]). No `setStyle(...)`: the card replaces the
+      // BigText body. The watch, which never gets RemoteViews, keeps title + contentText; a card
       // notification's text is short by nature, so losing the BigText expansion on the bridged
       // watch copy is acceptable.
       builder.setCustomBigContentView(card)

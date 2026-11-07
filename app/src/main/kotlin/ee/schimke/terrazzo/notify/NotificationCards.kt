@@ -36,8 +36,11 @@ import kotlinx.serialization.json.buildJsonObject
  * runs a toggle or service call on Home Assistant (the app's socket while connected, else a
  * short-lived session) and opens the app for a details or navigate tap.
  *
- * API 36+ only, where the platform player supports layout documents (as for widgets); older devices
- * get the plain notification.
+ * API 36+ only ([supported]), where the platform player supports layout documents (as for widgets);
+ * older devices get the plain notification.
+ *
+ * The card goes to the notification wrapped ([wrapForNotification]): Android 17 drops a bare
+ * DrawInstructions custom view.
  */
 object NotificationCards {
   private const val TAG = "NotificationCards"
@@ -46,8 +49,38 @@ object NotificationCards {
   /** The notification's content inset, each side, approximately. */
   private const val SIDE_INSET_DP = 32
 
+  /** Whether this device can show a live card in a notification. */
+  val supported: Boolean
+    get() = isSupported(Build.VERSION.SDK_INT)
+
+  internal fun isSupported(sdkInt: Int): Boolean = sdkInt >= WidgetInstaller.MIN_HOST_API
+
+  /**
+   * [card] as a landscape/portrait pair of itself, which SystemUI can nest in the notification
+   * template.
+   *
+   * Since API 31 SystemUI wraps every custom view of an app targeting it in the system template,
+   * whatever style is set (`Notification$Builder.minimallyDecoratedExpandedContentView` →
+   * `buildCustomContentIntoTemplate` → `RemoteViews.addView`). From Android 17, `addView` runs
+   * `validateNestedViews`, which refuses a nested view that has DrawInstructions:
+   * ```
+   * E/NotifContentInflater: couldn't inflate view for notification ee.schimke.harc/…
+   * java.lang.IllegalArgumentException: Cannot add a nested view that has DrawInstructions.
+   * ```
+   *
+   * and SystemUI cancels the notification with REASON_ERROR within half a second. The
+   * `RemoteViews(landscape, portrait)` wrapper doesn't take `mHasDrawInstructions` from its
+   * children, so it passes the check, and applying it still plays the child's DrawInstructions. On
+   * a Pixel 10a on Android 17 (API 37) the wrapped card survives, draws, and its buttons fire.
+   *
+   * This leans on the check reading only the nested view's own flag. If a later build checks the
+   * wrapper's children too, card notifications drop again with REASON_ERROR;
+   * `LiveCardInflationTest` on an Android 17 device catches that.
+   */
+  internal fun wrapForNotification(card: RemoteViews): RemoteViews = RemoteViews(card, card.clone())
+
   suspend fun render(context: Context, session: HaSession, entityId: String): RemoteViews? {
-    if (Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) return null
+    if (!supported) return null
     val snapshot =
       session.liveStates.value ?: runCatching { session.loadSnapshot() }.getOrNull() ?: return null
     if (entityId !in snapshot.states) return null
@@ -73,7 +106,7 @@ object NotificationCards {
         views.setOnClickPendingIntent(actionId, it)
       }
     }
-    return views
+    return wrapForNotification(views)
   }
 
   /** The entity's tile as a platform document, with its host actions. */
