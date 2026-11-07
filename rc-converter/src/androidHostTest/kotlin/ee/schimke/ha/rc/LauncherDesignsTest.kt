@@ -234,6 +234,58 @@ class LauncherDesignsTest {
     assertReadsOnAndroid16(baked.bytes)
   }
 
+  /**
+   * The filter sees the template's placeholder, not the card's title: a title with a character its
+   * glyphs lack (`é` against the default set) bakes the plain template rather than lose a letter.
+   */
+  @Test
+  fun aValueTheFilteredGlyphsCantShowBakesThePlainTemplate() {
+    val entree =
+      CardConfig(
+        type = "heading",
+        raw =
+          buildJsonObject {
+            put("type", "heading")
+            put("heading", "Entrée")
+          },
+      )
+    var filtered = 0
+    val baked =
+      assertNotNull(
+        LauncherDesigns.render(
+          org.robolectric.RuntimeEnvironment.getApplication(),
+          entree,
+          snapshotOf(),
+          widthDp,
+          heightDp,
+          density,
+          dark = false,
+          systemTheme = false,
+          registry = registry,
+          look = LauncherLook(HaUberTheme.RuggedDigital),
+          fontFilter = { bytes, _ ->
+            filtered++
+            RcDocumentCodec.encode(
+              WidgetBitmapFonts.apply(
+                  RcDocumentCodec.decode(bytes, RcWireLimits()),
+                  WidgetHost.Launcher,
+                  boxGlyphs,
+                )
+                .document,
+            )
+          },
+        ),
+      )
+    assertEquals(1, filtered, "the filter ran")
+    val document = RcDocumentCodec.decode(baked.bytes, RcWireLimits())
+    assertTrue(document.operations.none { it is RcDrawBitmapFontTextRun }, "no glyphs drawn")
+    assertTrue(
+      document.operations.filterIsInstance<RcTextData>().any { it.text == "Entrée" },
+      "the whole title, as text",
+    )
+    assertEquals(0, cardFontTexts(document), "in the theme's own face")
+  }
+
   private fun assertReadsOnAndroid16(bytes: ByteArray) {
     val platform =
       CoreDocument().apply {

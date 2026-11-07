@@ -16,7 +16,10 @@ import ee.schimke.composeai.rcplayer.edit.collapseConstantStateLayouts
 import ee.schimke.composeai.rcplayer.edit.embedBitmapUrls
 import ee.schimke.composeai.rcplayer.edit.hardcodeNamedValues
 import ee.schimke.composeai.rcplayer.edit.optimize
+import ee.schimke.composeai.rcplayer.protocol.RcBitmapFontData
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcDrawBitmapFontTextRun
+import ee.schimke.composeai.rcplayer.protocol.RcTextData
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
@@ -336,18 +339,36 @@ object LauncherDesigns {
       library.getOrPut(Triple(key, densityDpi, cardFonts)) {
         capture(context, key, densityDpi, registry, cardFonts)
       }
-    val template =
-      fontFilter?.let { filter ->
-        val withFonts = template(cardFonts = true)
-        filter.filter(withFonts.bytes, densityDpi)?.let { Template(it, withFonts.actions) }
-      } ?: template(cardFonts = false)
-    return bake(
-      template,
-      CardDesignTemplates.designCard(card, snapshot, registry),
-      snapshot,
-      registry,
-      fetchImage,
-    )
+    val designCard = CardDesignTemplates.designCard(card, snapshot, registry)
+    fun bake(template: Template) = bake(template, designCard, snapshot, registry, fetchImage)
+    val filtered = fontFilter?.let { filter ->
+      val withFonts = template(cardFonts = true)
+      filter.filter(withFonts.bytes, densityDpi)?.let { Template(it, withFonts.actions) }
+    }
+    // The filter saw the template's placeholders, not the card's values: a value with a character
+    // its glyphs don't have (an accent the locale lacks, a curly apostrophe) bakes the plain
+    // template, in the theme's own face, rather than a text with letters missing.
+    return filtered?.let(::bake)?.takeIf { coveredByItsBitmapFonts(it.bytes) }
+      ?: bake(template(cardFonts = false))
+  }
+
+  /**
+   * Whether every text [bytes] draws from a bitmap font has each of its characters in that font. A
+   * text computed at playback (a time) isn't known here and passes: its glyphs are the filter's.
+   */
+  internal fun coveredByItsBitmapFonts(bytes: ByteArray): Boolean {
+    val document =
+      runCatching { RcDocumentCodec.decode(bytes, RcWireLimits()) }.getOrNull() ?: return false
+    val texts = document.operations.filterIsInstance<RcTextData>().associate { it.id to it.text }
+    val glyphs =
+      document.operations.filterIsInstance<RcBitmapFontData>().associate { font ->
+        font.fontId to font.glyphs.map { it.chars }.filter { it.length == 1 }.map { it[0] }.toSet()
+      }
+    return document.operations.filterIsInstance<RcDrawBitmapFontTextRun>().all { run ->
+      val text = texts[run.textId] ?: return@all true
+      val chars = glyphs[run.bitmapFontId] ?: return@all false
+      text.all { it in chars }
+    }
   }
 
   /**
