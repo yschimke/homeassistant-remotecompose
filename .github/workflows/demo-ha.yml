@@ -10,7 +10,7 @@ permissions:
   contents: read
 jobs:
   readonly:
-    runs-on: ubuntu-24.04  # Playwright 1.56 has no Chromium for ubuntu-26.04 (ubuntu-latest)
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     defaults:
       run:
@@ -35,7 +35,7 @@ jobs:
           node-version: '26.13.0'
       - name: Install native dashboard browser tools
         run: |
-          npm install --no-save --prefix ../../embed playwright@1.56.1
+          npm install --no-save --prefix ../../embed playwright@1.62.0
           ../../embed/node_modules/.bin/playwright install --with-deps chromium
       - name: Verify native login, live dashboard and denied writes
         run: node --test native_browser.test.mjs
