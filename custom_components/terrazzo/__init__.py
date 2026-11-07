@@ -7,6 +7,8 @@ own session. The app's notifications, while it holds no websocket, are held here
 the app is woken with a content-free FCM message and collects them with its own session.
 A Terrazzo page on another site can ask for its origin to be allowed (`web_origins.py`); only an
 admin's fix of the repair it raises changes HA's HTTP config.
+Wall displays (`wall.py`) read dashboards as a grid and their cards' designs and values with a
+user's own access token, and their taps run as that user.
 """
 from pathlib import Path
 
@@ -31,7 +33,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
-from . import design_selections, design_server, edits, push, web_origins
+from . import design_selections, design_server, edits, push, wall, web_origins
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -108,6 +110,10 @@ async def async_setup_entry(hass, entry):
     if "design_selections" not in state:
         state["design_selections"] = await design_selections.DesignSelections.async_load(hass)
         design_selections.async_register(hass)
+    # Wall displays: dashboards as a grid, cards' `.rc` and values, and taps (wall.py).
+    if not state.get("wall_views"):
+        wall.async_register(hass)
+        state["wall_views"] = True
     # A Terrazzo page on another site asks for its origin to be allowed (web_origins.py).
     if not state.get("web_origins"):
         web_origins.async_register(hass)
