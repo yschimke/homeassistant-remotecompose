@@ -360,7 +360,26 @@ internal object AgentLinkStore {
 @Composable
 fun rememberAgentConnected(server: String): Boolean {
   val changes by AgentLinkStore.changes.collectAsState()
-  return remember(server, changes) { AgentLinkStore.isConnected(server) }
+  val connected = remember(server, changes) { AgentLinkStore.isConnected(server) }
+  val pendingLink = remember(server, changes) { AgentLinkStore.get(server) }.takeIf { !connected }
+  // A link still waiting for its agent: watch the relay here too, so a claim made after Settings
+  // closed still turns the dashboard's entry points on. Stops once the link is claimed.
+  androidx.compose.runtime.LaunchedEffect(server, pendingLink) {
+    val link = pendingLink ?: return@LaunchedEffect
+    val relay =
+      runCatching { ee.schimke.ha.client.agent.AgentRelayClient(server) }.getOrNull()
+        ?: return@LaunchedEffect
+    try {
+      relay.watchLink(link).collect { AgentLinkStore.setConnected(server, it.connected) }
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // Ended or unreachable: leave the entry points off; Settings shows why.
+    } finally {
+      relay.close()
+    }
+  }
+  return connected
 }
 
 /**
