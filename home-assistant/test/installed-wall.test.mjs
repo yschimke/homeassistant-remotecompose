@@ -135,3 +135,57 @@ test('a wall display lists, lays out and taps with a long-lived token in a heade
   assert.equal(isOn, !tile.values['light.s0.is_on'], JSON.stringify(update));
   assert.ok(!('light.s0.name' in update.values) || update.design, 'only what changed');
 });
+
+/** A PNG's width and height, from its IHDR. */
+function pngSize(bytes) {
+  const view = new DataView(bytes);
+  return [view.getUint32(16), view.getUint32(20)];
+}
+
+test('a wall display gets a slot picture scaled for it, and the fonts designs name', async () => {
+  const tokens = await signIn('panel', 'fixture-only-password', 'Test panel user');
+  const auth = {Authorization: `Bearer ${await longLivedToken(tokens.access_token)}`};
+  const picture = `${wall}/pictures/wall-pictures/v0.c0/sensor.s0`;
+
+  assert.equal((await fetch(picture)).status, 401, 'only with a token');
+  const original = await fetch(picture, {headers: auth});
+  assert.equal(original.status, 200);
+  assert.equal(original.headers.get('content-type'), 'image/png', 'as it came when nothing is asked');
+  assert.deepEqual(pngSize(await original.arrayBuffer()), [400, 300]);
+
+  const contain = await fetch(`${picture}?w=100&h=100&format=png`, {headers: auth});
+  assert.deepEqual(pngSize(await contain.arrayBuffer()), [100, 75], 'all of it inside the box');
+  const cover = await fetch(`${picture}?w=100&h=100&fit=cover&format=png`, {headers: auth});
+  assert.deepEqual(pngSize(await cover.arrayBuffer()), [100, 100], 'the box filled');
+  const wide = await fetch(`${picture}?w=200`, {headers: auth});
+  assert.equal(wide.headers.get('content-type'), 'image/jpeg', 'scaled pictures are jpeg by default');
+  const etag = wide.headers.get('etag');
+  assert.equal((await fetch(`${picture}?w=200`, {headers: {...auth, 'If-None-Match': etag}})).status, 304);
+
+  for (const [path, status] of [
+    [`${wall}/pictures/wall-pictures/v0.c0/sensor.s1`, 404],
+    [`${wall}/pictures/wall-pictures/v0.c0/light.s0`, 404],
+    [`${wall}/pictures/wall-panel/v0.c1/light.s0`, 404],
+    [`${picture}?w=0`, 400],
+    [`${picture}?format=gif`, 400],
+  ]) {
+    assert.equal((await fetch(path, {headers: auth})).status, status, path);
+  }
+
+  if (!withDesigns) return;
+
+  const values = await (await fetch(`${wall}/values/wall-pictures?wait=0`, {headers: auth})).json();
+  const card = values.cards['v0.c0'];
+  assert.ok(card?.values, JSON.stringify(values));
+  assert.match(card.values['sensor.s0.picture_url'], /^\/api\/terrazzo\/wall\/v1\/pictures\/wall-pictures\/v0\.c0\/sensor\.s0\?v=/);
+
+  const fonts = await (await fetch(`${wall}/fonts/fonts.json`, {headers: auth})).json();
+  const face = fonts.families.find((f) => f.name === 'digital7')?.fonts[0];
+  assert.ok(face, JSON.stringify(fonts));
+  const font = await fetch(`${base}${face.url}`, {headers: auth});
+  assert.equal(font.status, 200);
+  assert.equal(font.headers.get('content-type'), 'font/ttf');
+  assert.match(font.headers.get('cache-control'), /immutable/);
+  const digest = Buffer.from(await crypto.subtle.digest('SHA-256', await font.arrayBuffer())).toString('hex');
+  assert.equal(digest, face.sha256);
+});

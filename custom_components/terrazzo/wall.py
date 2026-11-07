@@ -10,6 +10,9 @@ from a design server at TERRAZZO_DESIGN_SERVER_URL where there is no Supervisor;
 the device's own token, which the add-on checks with Core.
 """
 import asyncio
+import hashlib
+import io
+import json
 import logging
 import os
 import time
@@ -38,6 +41,11 @@ PARALLEL = 4
 IDLE = 600
 # Blobs are content-addressed and small; keep the most recent in memory.
 BLOB_CACHE = 256
+# Scaled pictures kept, by (source URL, box, fit, format); fonts' manifest, for this long.
+PICTURE_CACHE = 64
+FONTS_FOR = 300
+# A picture larger than this isn't fetched.
+MAX_PICTURE_BYTES = 10 * 1024 * 1024
 ENV_DESIGN_SERVER = "TERRAZZO_DESIGN_SERVER_URL"
 LOVELACE_UPDATED = "lovelace_updated"
 
@@ -88,17 +96,35 @@ async def _design_server_url(hass):
     return f"http://{info['hostname']}:{ADDON_PORT}"
 
 
+def _readable(hass, user, card):
+    """[card]'s entities' states that [user] may read, by entity id."""
+    out = {}
+    for entity in wall_api.entity_ids(card):
+        if user.permissions.check_entity(entity, POLICY_READ) and (
+            state := hass.states.get(entity)
+        ) is not None:
+            out[entity] = state
+    return out
+
+
+def _pictures(hass, user, card):
+    """entity id → `entity_picture` for [card]'s entities [user] may read."""
+    return {
+        entity: state.attributes["entity_picture"]
+        for entity, state in _readable(hass, user, card).items()
+        if isinstance(state.attributes.get("entity_picture"), str)
+    }
+
+
 async def _resolve(hass, user, base, authorization, card, look):
     """The design add-on's resolve of [card] with the current states of its entities [user] may
     read: (sha, exact, values). An entity they may not read is sent as missing, so its values are
     the card's unavailable ones. Raises WallError."""
     style, dark, palette = look
-    states = {}
-    for entity in wall_api.entity_ids(card):
-        if not user.permissions.check_entity(entity, POLICY_READ):
-            continue
-        if (state := hass.states.get(entity)) is not None:
-            states[entity] = {"state": state.state, "attributes": dict(state.attributes)}
+    states = {
+        entity: {"state": state.state, "attributes": dict(state.attributes)}
+        for entity, state in _readable(hass, user, card).items()
+    }
     body = {"card": card, "states": states, "cardStyle": style, "dark": dark}
     if palette:
         body["palette"] = palette
@@ -172,6 +198,11 @@ class Hub:
                     if failure.status == 502:
                         self.dirty.add(cid)  # Try again on the next poll.
                     return
+                values.update(
+                    wall_api.picture_values(
+                        self.url_path, cid, self.cards[cid], _pictures(hass, self.user, self.cards[cid])
+                    )
+                )
                 self.store.update(cid, sha, wall_api.blob_url(sha), exact, values)
 
         await asyncio.gather(*(one(cid) for cid in todo))
@@ -184,6 +215,9 @@ class Wall:
         self.hass = hass
         self.hubs = {}
         self.blobs = {}
+        self.fonts = {}
+        self.font_manifest = (None, 0)
+        self.pictures = {}
         hass.bus.async_listen(EVENT_STATE_CHANGED, self._state_changed)
         hass.bus.async_listen(LOVELACE_UPDATED, self._lovelace_updated)
 
@@ -294,6 +328,11 @@ class WallCardView(HomeAssistantView):
             )
         except wall_api.WallError as failure:
             return _error(failure)
+        values.update(
+            wall_api.picture_values(
+                url_path, card_id, card, _pictures(self.hass, request["hass_user"], card)
+            )
+        )
         return _json(
             {
                 "id": card_id,
@@ -452,6 +491,211 @@ class WallActionView(HomeAssistantView):
         return _json({"ran": f"{domain}.{service}", "action": action})
 
 
+class WallFontsView(HomeAssistantView):
+    """`GET /fonts/fonts.json`: the faces designs name, each with a sha256 `url` to fetch it at."""
+
+    url = wall_api.API + "/fonts/fonts.json"
+    name = "api:terrazzo:wall:fonts"
+
+    def __init__(self, hass):
+        self.hass = hass
+
+    async def get(self, request):
+        try:
+            manifest = await _font_manifest(self.hass, request.headers.get("Authorization"))
+        except wall_api.WallError as failure:
+            return _error(failure)
+        response = _json(wall_api.font_manifest(manifest))
+        response.headers["Cache-Control"] = "private, max-age=3600"
+        return response
+
+
+class WallFontView(HomeAssistantView):
+    """`GET /fonts/{sha}.{ext}`: one face's bytes, checked against its sha256. Immutable."""
+
+    url = wall_api.API + "/fonts/{file}"
+    name = "api:terrazzo:wall:font"
+
+    def __init__(self, hass):
+        self.hass = hass
+
+    async def get(self, request, file):
+        match = wall_api.FONT_FILE.match(file)
+        if not match:
+            return _json({"message": "Not a font"}, status=404)
+        sha = match.group(1)
+        headers = {"Cache-Control": "private, max-age=31536000, immutable", "ETag": f'"{sha}"'}
+        if request.headers.get("If-None-Match") == f'"{sha}"':
+            return web.Response(status=304, headers=headers)
+        wall = _wall(self.hass)
+        body = wall.fonts.get(sha)
+        if body is None:
+            authorization = request.headers.get("Authorization")
+            try:
+                manifest = await _font_manifest(self.hass, authorization)
+                name = wall_api.font_file(manifest, sha)
+                if name is None:
+                    return _json({"message": "No such font"}, status=404)
+                body = await _fetch_design_server(
+                    self.hass, f"/designs/v1/fonts/{name}", authorization
+                )
+            except wall_api.WallError as failure:
+                return _error(failure)
+            if hashlib.sha256(body).hexdigest() != sha:
+                return _json({"message": "The design server's font doesn't match its hash"}, status=502)
+            wall.fonts[sha] = body
+        content_type = {"ttf": "font/ttf", "otf": "font/otf", "woff": "font/woff", "woff2": "font/woff2"}
+        return web.Response(body=body, headers={**headers, "Content-Type": content_type[match.group(2)]})
+
+
+async def _fetch_design_server(hass, path, authorization):
+    """The design server's bytes at [path]. Raises WallError."""
+    base = await _design_server_url(hass)
+    if base is None:
+        raise wall_api.WallError(503, "No card design server")
+    try:
+        async with async_get_clientsession(hass).get(
+            f"{base}{path}",
+            headers={"Authorization": authorization} if authorization else {},
+            timeout=RESOLVE_TIMEOUT,
+        ) as response:
+            if response.status == 404:
+                raise wall_api.WallError(404, "Not on the design server")
+            if response.status != 200:
+                raise wall_api.WallError(502, f"The design server answered {response.status}.")
+            return await response.read()
+    except (ClientError, TimeoutError) as failure:
+        raise wall_api.WallError(502, f"The design server didn't answer: {failure}") from None
+
+
+async def _font_manifest(hass, authorization):
+    """The design server's `fonts.json`, kept for FONTS_FOR seconds."""
+    wall = _wall(hass)
+    manifest, at = wall.font_manifest
+    if manifest is not None and time.monotonic() - at < FONTS_FOR:
+        return manifest
+    body = await _fetch_design_server(hass, "/designs/v1/fonts/fonts.json", authorization)
+    try:
+        manifest = json.loads(body)
+    except ValueError:
+        raise wall_api.WallError(502, "The design server's font manifest isn't JSON") from None
+    wall.font_manifest = (manifest, time.monotonic())
+    return manifest
+
+
+class WallPictureView(HomeAssistantView):
+    """`GET /pictures/{url_path}/{card_id}/{slot}?w=&h=&fit=&format=`: the picture a card's slot
+    shows (its entity's `entity_picture`), scaled into a `w`×`h` box for the device."""
+
+    url = wall_api.API + "/pictures/{url_path}/{card_id}/{slot}"
+    name = "api:terrazzo:wall:picture"
+
+    def __init__(self, hass):
+        self.hass = hass
+
+    async def get(self, request, url_path, card_id, slot):
+        user = request["hass_user"]
+        try:
+            w, h, fit, fmt = wall_api.picture_query(request.query)
+            _, config = await _dashboard(self.hass, user, url_path)
+            card = wall_api.find_card(config, card_id)
+            entity = wall_api.picture_entity(card, slot)
+            if entity is None:
+                raise wall_api.WallError(404, f"No slot {slot} on {card_id}")
+            picture = _pictures(self.hass, user, card).get(entity)
+            source = wall_api.picture_source(picture)
+            if source is None:
+                raise wall_api.WallError(404, f"{entity} has no picture")
+            body, content_type = await _picture(self.hass, request, source)
+        except wall_api.WallError as failure:
+            return _error(failure)
+        key = (picture, w, h, fit, fmt)
+        wall = _wall(self.hass)
+        cached = wall.pictures.get(key)
+        if cached is None or cached[0] != hashlib.sha256(body).digest():
+            try:
+                out, out_type = await self.hass.async_add_executor_job(
+                    _scale, body, content_type, w, h, fit, fmt
+                )
+            except ValueError as failure:
+                return _json({"message": f"Not a picture: {failure}"}, status=502)
+            cached = wall.pictures[key] = (hashlib.sha256(body).digest(), out, out_type)
+            while len(wall.pictures) > PICTURE_CACHE:
+                wall.pictures.pop(next(iter(wall.pictures)))
+        _, out, out_type = cached
+        etag = '"' + hashlib.sha256(out).hexdigest()[:32] + '"'
+        # With `v` (the URL the long poll gives), the picture at this URL never changes.
+        cache = "private, max-age=86400" if request.query.get("v") else "private, no-cache"
+        headers = {"ETag": etag, "Cache-Control": cache}
+        if request.headers.get("If-None-Match") == etag:
+            return web.Response(status=304, headers=headers)
+        return web.Response(body=out, headers={**headers, "Content-Type": out_type})
+
+
+async def _picture(hass, request, source):
+    """(bytes, content type) of a picture: one Home Assistant serves itself is asked for on its
+    own address with the device's token; an http(s) one is fetched as it is, with no token."""
+    kind, where = source
+    headers = {}
+    if kind == "local":
+        api = hass.config.api
+        if api is None:
+            raise wall_api.WallError(503, "Home Assistant's HTTP server isn't up")
+        scheme = "https" if api.use_ssl else "http"
+        where = f"{scheme}://127.0.0.1:{api.port}{where}"
+        if auth := request.headers.get("Authorization"):
+            headers["Authorization"] = auth
+    try:
+        async with async_get_clientsession(hass, verify_ssl=kind != "local").get(
+            where, headers=headers, timeout=RESOLVE_TIMEOUT, allow_redirects=kind == "remote"
+        ) as response:
+            if response.status != 200:
+                raise wall_api.WallError(502, f"The picture answered {response.status}.")
+            if response.content_length and response.content_length > MAX_PICTURE_BYTES:
+                raise wall_api.WallError(502, "The picture is too large.")
+            body = await response.content.read(MAX_PICTURE_BYTES + 1)
+            if len(body) > MAX_PICTURE_BYTES:
+                raise wall_api.WallError(502, "The picture is too large.")
+            return body, response.content_type
+    except (ClientError, TimeoutError) as failure:
+        raise wall_api.WallError(502, f"The picture didn't load: {failure}") from None
+
+
+def _scale(body, content_type, w, h, fit, fmt):
+    """[body] scaled into a [w]×[h] box ([fit]) as [fmt]: (bytes, content type). As it came when
+    nothing is asked of it. Runs in the executor. Raises ValueError for what isn't a picture."""
+    if w is None and h is None and fmt is None:
+        return body, content_type or "application/octet-stream"
+    from PIL import Image, ImageOps, UnidentifiedImageError
+
+    try:
+        with Image.open(io.BytesIO(body)) as source:
+            source.seek(0)  # An animated picture's first frame.
+            # A copy: the source is closed when this block ends.
+            picture = ImageOps.exif_transpose(source).copy()
+    except (UnidentifiedImageError, OSError) as failure:
+        raise ValueError(str(failure)) from None
+    scaled_w, scaled_h, crop = wall_api.picture_box(picture.width, picture.height, w, h, fit)
+    if (scaled_w, scaled_h) != picture.size:
+        picture = picture.resize((scaled_w, scaled_h), Image.Resampling.LANCZOS)
+    if crop is not None:
+        picture = picture.crop(crop)
+    fmt = fmt or "jpeg"
+    out = io.BytesIO()
+    if fmt == "jpeg":
+        if picture.mode in ("RGBA", "LA", "P"):
+            rgba = picture.convert("RGBA")
+            flat = Image.new("RGB", rgba.size, (0, 0, 0))
+            flat.paste(rgba, mask=rgba.getchannel("A"))
+            picture = flat
+        elif picture.mode != "RGB":
+            picture = picture.convert("RGB")
+        picture.save(out, "JPEG", quality=80, optimize=True)
+    else:
+        picture.save(out, "PNG", optimize=True)
+    return out.getvalue(), wall_api.PICTURE_FORMATS[fmt]
+
+
 @callback
 def async_register(hass):
     for view in (
@@ -461,5 +705,8 @@ def async_register(hass):
         WallValuesView,
         WallBlobView,
         WallActionView,
+        WallFontsView,
+        WallFontView,
+        WallPictureView,
     ):
         hass.http.register_view(view(hass))

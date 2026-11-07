@@ -562,6 +562,148 @@ def clamp_wait(raw):
     return max(0, min(MAX_WAIT, wait))
 
 
+# ---------------------------------------------------------------------------------------------
+# Pictures: a template names a slot's `entity_picture` (`rc-slot://<slot>/entity_picture`), never
+# a URL. The server finds that slot's real entity in the card's own config (as
+# `CardDesignSlots.resolvePictureUrl`), fetches its picture and scales it for the device.
+# ---------------------------------------------------------------------------------------------
+
+SLOT_NAME = re.compile(r"^[a-z0-9_]+\.s(\d{1,4})$")
+PICTURE_FORMATS = {"jpeg": "image/jpeg", "png": "image/png"}
+PICTURE_FITS = ("contain", "cover")
+# The largest box a device may ask for, per side.
+MAX_PICTURE_SIDE = 2048
+
+
+def picture_entity(card, slot):
+    """The entity whose `entity_picture` [slot] (`camera.s0`) names in [card], or None: the slot is
+    found by position, and must be of that entity's domain."""
+    match = SLOT_NAME.match(slot or "")
+    if not match:
+        return None
+    entries = slot_entries(card) or []
+    index = int(match.group(1))
+    if index >= len(entries) or slot_id(domain_of(entries[index][0]), index) != slot:
+        return None
+    return entries[index][0]
+
+
+def picture_url(url_path, cid, slot, entity_picture):
+    """Where a device fetches [slot]'s picture. `v` changes with the picture's own URL, so a device
+    refetches only when it moved (a camera's still moves with its rotating token)."""
+    version = hashlib.sha256(entity_picture.encode()).hexdigest()[:12]
+    return f"{API}/pictures/{url_path or DEFAULT_DASHBOARD}/{cid}/{slot}?v={version}"
+
+
+def picture_values(url_path, cid, card, pictures):
+    """`<slot>.picture_url` for each of [card]'s slots whose entity has a picture. [pictures] is
+    entity id → `entity_picture`, for the entities the user may read. These are for the device,
+    not the document: a player that has a picture loader fetches the slot's picture from here."""
+    out = {}
+    for index, (entity, _) in enumerate(slot_entries(card) or []):
+        picture = pictures.get(entity)
+        if isinstance(picture, str) and picture:
+            slot = slot_id(domain_of(entity), index)
+            out[f"{slot}.picture_url"] = picture_url(url_path, cid, slot, picture)
+    return out
+
+
+def picture_source(entity_picture):
+    """("local", path) for a picture Home Assistant serves itself (`/api/camera_proxy/…`,
+    `/local/…`), ("remote", url) for an http(s) one, or None."""
+    if not isinstance(entity_picture, str) or not entity_picture:
+        return None
+    if entity_picture.startswith("/") and not entity_picture.startswith("//"):
+        return "local", entity_picture
+    if re.match(r"^https?://", entity_picture, re.IGNORECASE):
+        return "remote", entity_picture
+    return None
+
+
+def picture_query(query):
+    """(w, h, fit, format) from a picture request's query: `w`/`h` the box in pixels (either may be
+    left out), `fit` contain (default: all of it, inside the box) or cover (the box filled,
+    cropped), `format` jpeg or png (default: as it came when nothing is resized, else jpeg).
+    Raises WallError(400)."""
+
+    def side(name):
+        raw = query.get(name)
+        if raw in (None, ""):
+            return None
+        if not str(raw).isdigit() or not 1 <= int(raw) <= MAX_PICTURE_SIDE:
+            raise WallError(400, f"{name} must be 1 to {MAX_PICTURE_SIDE}")
+        return int(raw)
+
+    fit = query.get("fit") or "contain"
+    if fit not in PICTURE_FITS:
+        raise WallError(400, "fit must be contain or cover")
+    fmt = query.get("format") or None
+    if fmt == "jpg":
+        fmt = "jpeg"
+    if fmt is not None and fmt not in PICTURE_FORMATS:
+        raise WallError(400, "format must be jpeg or png")
+    return side("w"), side("h"), fit, fmt
+
+
+def picture_box(src_w, src_h, w, h, fit):
+    """(scaled width, scaled height, crop) to draw a [src_w]×[src_h] picture in a [w]×[h] box.
+    A missing side follows the picture's aspect ratio; a picture is never scaled up. crop is a
+    (left, top, right, bottom) box in the scaled picture, or None."""
+    if w is None and h is None:
+        return src_w, src_h, None
+    if w is None or h is None:
+        scale = (w / src_w) if w is not None else (h / src_h)
+        scale = min(1.0, scale)
+        return max(1, round(src_w * scale)), max(1, round(src_h * scale)), None
+    if fit == "contain":
+        scale = min(1.0, w / src_w, h / src_h)
+        return max(1, round(src_w * scale)), max(1, round(src_h * scale)), None
+    scale = min(1.0, max(w / src_w, h / src_h))
+    scaled_w, scaled_h = max(1, round(src_w * scale)), max(1, round(src_h * scale))
+    crop_w, crop_h = min(w, scaled_w), min(h, scaled_h)
+    left, top = (scaled_w - crop_w) // 2, (scaled_h - crop_h) // 2
+    return scaled_w, scaled_h, (left, top, left + crop_w, top + crop_h)
+
+
+# ---------------------------------------------------------------------------------------------
+# Fonts: the faces designs name (`RemoteFontFamily.Named`), from the design server's manifest.
+# ---------------------------------------------------------------------------------------------
+
+FONT_FILE = re.compile(r"^([0-9a-f]{64})\.(ttf|otf|woff2?)$")
+
+
+def font_manifest(manifest):
+    """The design server's `fonts.json` for a device: each face also says where to fetch it, by
+    its sha256 (`url`), so its bytes are immutable and cached by hash like designs."""
+    families = []
+    for family in manifest.get("families", []) if isinstance(manifest, dict) else []:
+        if not isinstance(family, dict) or not _text(family.get("name")):
+            continue
+        fonts = []
+        for face in family.get("fonts", []):
+            if not isinstance(face, dict):
+                continue
+            sha, file = face.get("sha256"), _text(face.get("file"))
+            if not isinstance(sha, str) or not SHA256.match(sha) or not file or "." not in file:
+                continue
+            ext = file.rsplit(".", 1)[1].lower()
+            fonts.append({**face, "url": f"{API}/fonts/{sha}.{ext}"})
+        if fonts:
+            families.append({**family, "fonts": fonts})
+    return {"families": families}
+
+
+def font_file(manifest, sha):
+    """The design server's file name for the face whose sha256 is [sha], or None."""
+    for family in manifest.get("families", []) if isinstance(manifest, dict) else []:
+        for face in family.get("fonts", []) if isinstance(family, dict) else []:
+            if isinstance(face, dict) and face.get("sha256") == sha and _text(face.get("file")):
+                file = face["file"]
+                if "/" not in file and "\\" not in file and not file.startswith("."):
+                    return file
+    return None
+
+
 def blob_url(sha):
     return f"{API}/blobs/{sha}.rc"
 

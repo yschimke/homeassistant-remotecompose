@@ -92,7 +92,9 @@ jobs:
           # Exercise the Marketplace's zip_release extraction with the actual release payload.
           unzip -q build/home-assistant/terrazzo.zip -d build/ha-config/custom_components/terrazzo
           cp home-assistant/test/configuration.yaml build/ha-config/
-          cp home-assistant/test/ui-lovelace.yaml home-assistant/test/second-dashboard.yaml build/ha-config/
+          cp home-assistant/test/ui-lovelace.yaml home-assistant/test/second-dashboard.yaml home-assistant/test/wall-pictures.yaml build/ha-config/
+          mkdir -p build/ha-config/www
+          cp home-assistant/test/wall-test.png build/ha-config/www/
           docker run -d --name ha-plugin -p 127.0.0.1:8123:8123 -v "$PWD/build/ha-config:/config" ghcr.io/home-assistant/home-assistant:stable
           ready=false
           for _ in $(seq 1 90); do
