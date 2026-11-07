@@ -34,10 +34,10 @@ import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.AssistantAccessSetting
-import ee.schimke.terrazzo.CardStyleSection
 import ee.schimke.terrazzo.CardStyleState
 import ee.schimke.terrazzo.ConnectionStatus
 import ee.schimke.terrazzo.DashboardTopBar
+import ee.schimke.terrazzo.DesignSection
 import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.SettingsScreen
@@ -59,6 +59,8 @@ import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
+import ee.schimke.terrazzo.core.prefs.ThemeChoice
+import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.wearsync.NoOpWearSyncManager
@@ -1069,7 +1071,6 @@ fun Screen_DashboardSelection_ThemeStyle(
 fun Screen_Settings() = PhoneHost {
   SettingsScreen(
     session = demoSession(),
-    onSignOut = {},
     onBack = {},
     onOpenSyncDiagnostics = {},
   )
@@ -1086,7 +1087,6 @@ fun Screen_Settings_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) styl
   PhoneHost(style = style) {
     SettingsScreen(
       session = demoSession(),
-      onSignOut = {},
       onBack = {},
       onOpenSyncDiagnostics = {},
     )
@@ -1113,9 +1113,9 @@ fun Screen_Settings_Assistants() = PhoneHost {
 }
 
 /**
- * The theme settings under a card style that themes the whole app: the app draws in the style's
- * palette and type, the palette options are disabled and say why, and a dark-only style (Trinitron)
- * disables light / dark too.
+ * The design list with a design that themes the whole app selected: the app draws in the design's
+ * palette and type, and only a design with both modes (LCD) offers light / dark under it; a
+ * dark-only one (Trinitron) has no options.
  */
 @Preview(
   name = "settings · app theme",
@@ -1129,19 +1129,38 @@ fun Screen_Settings_AppTheme(
 ) =
   PhoneHost(cardStyle = cardStyle) {
     Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
-      ee.schimke.terrazzo.ThemeSection(
-        selected = ee.schimke.terrazzo.core.prefs.ThemePref.TerrazzoHome,
+      DesignSection(
+        selected = ThemeChoice(cardStyle.id),
         darkMode = DarkModePref.Follow,
-        appTheme = cardStyle,
-        onSelectTheme = {},
-        onSelectDark = {},
+        onSelect = {},
       )
     }
   }
 
 /**
- * The card style picker expanded: every style over a sample tile drawn in it, so a regression in
- * any one style's sample shows here. Settings itself opens it collapsed to the current style.
+ * The design list with Classic selected: its palettes and light / dark open under it, its sample
+ * drawn in the chosen palette (Mushroom).
+ */
+@Preview(
+  name = "settings · classic palettes",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Settings_ClassicPalettes() = PhoneHost {
+  Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
+    DesignSection(
+      selected = ThemeChoice.classic(ThemePref.TerrazzoMushroom),
+      darkMode = DarkModePref.Dark,
+      onSelect = {},
+    )
+  }
+}
+
+/**
+ * The design list expanded: every design over a sample tile drawn in it, so a regression in any one
+ * design's sample shows here. Settings itself opens it collapsed to the installed designs.
  */
 @Preview(
   name = "settings · card styles",
@@ -1152,13 +1171,18 @@ fun Screen_Settings_AppTheme(
 @Composable
 fun Screen_Settings_CardStyles() = PhoneHost {
   Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
-    CardStyleSection(selected = CardStylePref.Classic, onSelect = {}, initiallyExpanded = true)
+    DesignSection(
+      selected = ThemeChoice.Default,
+      darkMode = DarkModePref.Follow,
+      onSelect = {},
+      initiallyExpanded = true,
+    )
   }
 }
 
 /**
- * The card style picker on a new install: Classic and Home Assistant come with the app, an
- * installed style offers Remove, one is downloading, one failed, and the rest offer Install.
+ * The design list on a new install: Material 3, Classic and Home Assistant come with the app, an
+ * installed design offers Remove, one is downloading, one failed, and the rest offer Install.
  */
 @Preview(
   name = "settings · card styles to install",
@@ -1169,8 +1193,9 @@ fun Screen_Settings_CardStyles() = PhoneHost {
 @Composable
 fun Screen_Settings_CardStylesToInstall() = PhoneHost {
   Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
-    CardStyleSection(
-      selected = CardStylePref.Classic,
+    DesignSection(
+      selected = ThemeChoice.Default,
+      darkMode = DarkModePref.Follow,
       onSelect = {},
       initiallyExpanded = true,
       state = { pref ->
@@ -1184,23 +1209,6 @@ fun Screen_Settings_CardStylesToInstall() = PhoneHost {
         }
       },
     )
-  }
-}
-
-/**
- * The card style picker previewed on a watch: the current style's sample as Small and Large Wear
- * widgets on round and square watch screens.
- */
-@Preview(
-  name = "settings · card styles on a watch",
-  showBackground = false,
-  widthDp = PHONE_WIDTH_DP,
-  heightDp = PHONE_HEIGHT_DP,
-)
-@Composable
-fun Screen_Settings_CardStylesOnWatch() = PhoneHost {
-  Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp)) {
-    CardStyleSection(selected = CardStylePref.Lcd, onSelect = {}, initiallyOnWatch = true)
   }
 }
 

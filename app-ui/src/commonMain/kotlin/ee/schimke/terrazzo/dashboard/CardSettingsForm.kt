@@ -44,6 +44,7 @@ import ee.schimke.ha.client.dashboard.CardField
 import ee.schimke.ha.client.dashboard.CardSettings
 import ee.schimke.ha.client.dashboard.DashboardDraft
 import ee.schimke.ha.model.EntityState
+import ee.schimke.terrazzo.shared.LocalDeveloperMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -52,10 +53,11 @@ import kotlinx.serialization.json.contentOrNull
 private val settingsJson = Json { prettyPrint = true }
 
 /**
- * A card's settings: a **Form** of the settings its type uses most ([CardSettings.fields]), and its
- * Lovelace **JSON** for anything else. Both edit one working copy of the card; a type the form
- * doesn't know opens on JSON. Apply needs every number to be a number and the JSON (when it is the
- * tab shown) to be one object with a `type`.
+ * A card's settings: a **Form** of the settings its type uses most ([CardSettings.fields]), and, in
+ * developer mode ([LocalDeveloperMode]), its Lovelace **JSON** for anything else. Both edit one
+ * working copy of the card; a type the form doesn't know opens on JSON, developer mode or not.
+ * Apply needs every number to be a number and the JSON (when it is the tab shown) to be one object
+ * with a `type`.
  */
 @Composable
 internal fun CardSettingsDialog(
@@ -63,6 +65,8 @@ internal fun CardSettingsDialog(
   entities: Collection<EntityState>,
   onDismiss: () -> Unit,
   onSave: (JsonObject) -> Unit,
+  /** Whether a card the form knows also offers its JSON. */
+  offerJson: Boolean = LocalDeveloperMode.current,
 ) {
   var working by remember(card) { mutableStateOf(card) }
   // A type the form doesn't know opens on its JSON.
@@ -89,7 +93,7 @@ internal fun CardSettingsDialog(
     title = { Text("Card settings") },
     text = {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (fields.isNotEmpty()) {
+        if (fields.isNotEmpty() && offerJson) {
           PrimaryTabRow(selectedTabIndex = if (showJson) 1 else 0) {
             Tab(
               selected = !showJson,

@@ -19,7 +19,7 @@ import ee.schimke.ha.rc.components.terrazzoTypographyFor
  * TV @Preview fixtures. Sized at 680 × 384 dp — Robolectric renders these at ~2.625× density, so
  * the resulting PNG is 1785 × 1008 px (under the 1800 px ceiling we want to keep TV captures at).
  * The full picker-plus-kiosk shell only fits at TV-native widths; for previews we crop to the kiosk
- * pane (the part that actually changes per palette / demo flag), which is also the part the user
+ * pane (the part that actually changes per design / demo flag), which is also the part the user
  * looks at on the wall.
  */
 @Preview(name = "TV: kiosk (demo)", widthDp = 680, heightDp = 384, showBackground = true)
@@ -48,12 +48,17 @@ fun TvKioskPreview_Live() {
   }
 }
 
-@Preview(name = "TV: kiosk (Home palette)", widthDp = 680, heightDp = 384, showBackground = true)
+@Preview(
+  name = "TV: kiosk (Material 3 design)",
+  widthDp = 680,
+  heightDp = 384,
+  showBackground = true,
+)
 @Composable
-fun TvKioskPreview_HomePalette() {
-  TvPreviewFrame(style = ThemeStyle.TerrazzoHome) {
+fun TvKioskPreview_Material3() {
+  TvPreviewFrame(style = ThemeStyle.Material3) {
     TvKioskPreview(
-      style = ThemeStyle.TerrazzoHome,
+      style = ThemeStyle.Material3,
       demoMode = true,
       modifier = Modifier.fillMaxSize(),
       frozenNowMs = TV_PREVIEW_NOW_MS,

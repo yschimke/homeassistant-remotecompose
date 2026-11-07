@@ -23,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -293,6 +294,9 @@ internal object AgentLinkStore {
   private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
   private var memory = emptyMap<String, String>()
 
+  /** Bumped on every [put], so [rememberAgentConnected] reads the links again. */
+  val changes = kotlinx.coroutines.flow.MutableStateFlow(0)
+
   private fun all(): Map<String, String> =
     readAgentGrants(KEY)?.let {
       runCatching { json.decodeFromString<Map<String, String>>(it) }.getOrNull()
@@ -305,12 +309,77 @@ internal object AgentLinkStore {
     val values = if (link == null) all() - key else all() + (key to link)
     memory = values
     writeAgentGrants(KEY, if (values.isEmpty()) null else json.encodeToString(values))
+    // A new link waits for an agent to claim its setup code; a removed one has nobody.
+    writeConnected(key, if (link == null) null else false)
+    changes.value++
+  }
+
+  // Whether an agent has claimed each link, as the relay last reported it. A link with no entry
+  // predates this record and was set up before the dashboard waited on it, so it counts as
+  // connected until the relay says otherwise.
+  private const val CONNECTED_KEY = "terrazzo.agentLinksConnected"
+  private var connectedMemory = emptyMap<String, Boolean>()
+
+  private fun connectedAll(): Map<String, Boolean> =
+    readAgentGrants(CONNECTED_KEY)?.let {
+      runCatching { json.decodeFromString<Map<String, Boolean>>(it) }.getOrNull()
+    } ?: connectedMemory
+
+  private fun writeConnected(key: String, connected: Boolean?) {
+    val values =
+      if (connected == null) connectedAll() - key else connectedAll() + (key to connected)
+    connectedMemory = values
+    writeAgentGrants(CONNECTED_KEY, if (values.isEmpty()) null else json.encodeToString(values))
+  }
+
+  /** Whether an agent has claimed this person's link on [server]. */
+  fun isConnected(server: String): Boolean {
+    val key = keyOf(server) ?: return false
+    return all()[key] != null && connectedAll()[key] != false
+  }
+
+  /** Records the relay's view of whether an agent has claimed the link on [server]. */
+  fun setConnected(server: String, connected: Boolean) {
+    val key = keyOf(server) ?: return
+    if (all()[key] == null || connectedAll()[key] == connected) return
+    writeConnected(key, connected)
+    changes.value++
   }
 
   private fun keyOf(server: String) = runCatching {
     ee.schimke.ha.client.design.studioServerUrl(server)
   }
     .getOrNull()
+}
+
+/**
+ * Whether an AI agent is connected to this person on design [server] ([AgentConnection] set one
+ * up): what the dashboard's "Ask your agent" and "Plan a card" wait for. Follows connecting and
+ * disconnecting while the app runs.
+ */
+@Composable
+fun rememberAgentConnected(server: String): Boolean {
+  val changes by AgentLinkStore.changes.collectAsState()
+  val connected = remember(server, changes) { AgentLinkStore.isConnected(server) }
+  val pendingLink = remember(server, changes) { AgentLinkStore.get(server) }.takeIf { !connected }
+  // A link still waiting for its agent: watch the relay here too, so a claim made after Settings
+  // closed still turns the dashboard's entry points on. Stops once the link is claimed.
+  androidx.compose.runtime.LaunchedEffect(server, pendingLink) {
+    val link = pendingLink ?: return@LaunchedEffect
+    val relay =
+      runCatching { ee.schimke.ha.client.agent.AgentRelayClient(server) }.getOrNull()
+        ?: return@LaunchedEffect
+    try {
+      relay.watchLink(link).collect { AgentLinkStore.setConnected(server, it.connected) }
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // Ended or unreachable: leave the entry points off; Settings shows why.
+    } finally {
+      relay.close()
+    }
+  }
+  return connected
 }
 
 /**
@@ -334,7 +403,10 @@ fun AgentConnection(server: String, onCopy: (String) -> Unit, modifier: Modifier
       runCatching { ee.schimke.ha.client.agent.AgentRelayClient(server) }.getOrNull()
         ?: return@LaunchedEffect
     try {
-      relay.watchLink(current).collect { state = it }
+      relay.watchLink(current).collect {
+        state = it
+        AgentLinkStore.setConnected(server, it.connected)
+      }
     } catch (e: ee.schimke.ha.client.agent.AgentSessionEndedException) {
       // Disconnected elsewhere, or idle for a month: back to the setup.
       AgentLinkStore.put(server, null)

@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.tv
 
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,22 +25,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import ee.schimke.ha.rc.components.HaUberTheme
-import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.terrazzoColorScheme
 import ee.schimke.ha.rc.components.terrazzoTypographyFor
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
+import ee.schimke.terrazzo.tv.data.TvDesign
 import ee.schimke.terrazzo.tv.data.TvPrefs
-import ee.schimke.terrazzo.tv.ui.TvCardStylePicker
+import ee.schimke.terrazzo.tv.ui.TvDesignPicker
 import ee.schimke.terrazzo.tv.ui.TvKioskPreview
-import ee.schimke.terrazzo.tv.ui.TvThemePicker
 import kotlinx.coroutines.launch
 
 /**
- * TV companion. Two-column kiosk layout: theme picker on the left runs the DPAD focus, the right
- * pane re-skins live as the selection changes. Demo mode is a local toggle (persisted via
- * [TvPrefs]) — when on, the kiosk preview shows animated `TvDemoData` instead of the static
- * placeholder, so the room sees motion without a working HA instance.
+ * TV companion. Two-column kiosk layout: the design picker on the left runs the DPAD focus, the
+ * right pane re-skins live as the selection changes. In debug builds a demo-mode toggle (persisted
+ * via [TvPrefs]) shows animated `TvDemoData` instead of the static placeholder, so the room sees
+ * motion without a working HA instance.
  */
 class TvMainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,9 +52,12 @@ private fun TvApp() {
   val context = LocalContext.current
   val prefs = remember(context) { TvPrefs(context.applicationContext) }
   val scope = rememberCoroutineScope()
-  val style by prefs.themeStyle.collectAsState(initial = ThemeStyle.TerrazzoKiosk)
-  val demoMode by prefs.demoMode.collectAsState(initial = false)
-  val cardStyle by prefs.cardStyle.collectAsState(initial = HaUberTheme.Classic.id)
+  val design by prefs.design.collectAsState(initial = TvDesign.Kiosk)
+  // Demo mode is a debugging aid: only a debug build offers it (or honours one left on).
+  val debuggable =
+    remember(context) { (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0 }
+  val demoMode = prefs.demoMode.collectAsState(initial = false).value && debuggable
+  val style = design.palette
 
   val colors = terrazzoColorScheme(style, darkTheme = true)
   MaterialTheme(colorScheme = colors, typography = terrazzoTypographyFor(style)) {
@@ -75,22 +77,23 @@ private fun TvApp() {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown",
           platform = "Android TV",
         )
-        TvThemePicker(
-          selected = style,
-          onSelect = { picked -> scope.launch { prefs.setThemeStyle(picked) } },
-        )
-        TvCardStylePicker(
-          selected = cardStyle,
-          onSelect = { picked -> scope.launch { prefs.setCardStyle(picked) } },
+        TvDesignPicker(
+          selected = design,
+          onSelect = { picked -> scope.launch { prefs.setDesign(picked) } },
         )
 
-        TvDemoToggle(enabled = demoMode, onChange = { v -> scope.launch { prefs.setDemoMode(v) } })
+        if (debuggable) {
+          TvDemoToggle(
+            enabled = demoMode,
+            onChange = { v -> scope.launch { prefs.setDemoMode(v) } },
+          )
+        }
       }
       TvKioskPreview(
         style = style,
         demoMode = demoMode,
         modifier = Modifier.weight(1f),
-        cardStyle = HaUberTheme.byId(cardStyle),
+        cardStyle = design.cardStyle,
       )
     }
   }
@@ -109,7 +112,7 @@ private fun TvDemoToggle(enabled: Boolean, onChange: (Boolean) -> Unit) {
         color = MaterialTheme.colorScheme.onBackground,
       )
       Text(
-        text = "Animate the kiosk with fake data — handy for room photos.",
+        text = "Debug builds: animate the kiosk with fake data — handy for room photos.",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )

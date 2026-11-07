@@ -35,11 +35,11 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * A tile card drawn in [cardStyle], on the app's palette and dark mode, that names the style
- * ([name]) and describes it ([description]): each option of the card style picker in Settings, so a
- * style is judged by a real card rather than a label. Renders the way a dashboard slot does — the
- * local design library's template where the tile has one, else its converter — but from a frozen
- * sample, so it never changes and needs no session.
+ * A tile card drawn in [cardStyle], on the app's dark mode (and [palette], the app's by default),
+ * that names the style ([name]) and describes it ([description]): each option of the design list in
+ * Settings, so a style is judged by a real card rather than a label. Renders the way a dashboard
+ * slot does — the local design library's template where the tile has one, else its converter — but
+ * from a frozen sample, so it never changes and needs no session.
  */
 @Composable
 internal fun CardStyleSample(
@@ -47,10 +47,12 @@ internal fun CardStyleSample(
   name: String,
   description: String,
   modifier: Modifier = Modifier,
+  /** The palette a style drawn in the app's palette (Classic) is drawn in: the app's own. */
+  palette: ThemeStyle = LocalThemeStyle.current,
 ) {
   val context = LocalContext.current
   val registry = remember { defaultRegistry().withEnhancedShutter() }
-  val style = LocalThemeStyle.current
+  val style = palette
   val dark = LocalIsDarkTheme.current
   val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
   val snapshot = remember(name, description) { sampleSnapshot(name, description) }

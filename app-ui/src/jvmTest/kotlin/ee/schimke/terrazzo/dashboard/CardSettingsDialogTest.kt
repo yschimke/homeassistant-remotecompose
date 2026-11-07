@@ -26,8 +26,36 @@ class CardSettingsDialogTest {
 
   private fun card(json: String): JsonObject = Json.parseToJsonElement(json).jsonObject
 
-  private fun ComposeUiTest.show(card: JsonObject, saved: MutableList<JsonObject>) = setContent {
-    MaterialTheme { CardSettingsDialog(card, entities, onDismiss = {}, onSave = { saved += it }) }
+  private fun ComposeUiTest.show(
+    card: JsonObject,
+    saved: MutableList<JsonObject>,
+    developerMode: Boolean = true,
+  ) = setContent {
+    MaterialTheme {
+      CardSettingsDialog(
+        card,
+        entities,
+        onDismiss = {},
+        onSave = { saved += it },
+        offerJson = developerMode,
+      )
+    }
+  }
+
+  @Test
+  fun outsideDeveloperModeAKnownTypeOffersOnlyItsForm() = runComposeUiTest {
+    val saved = mutableListOf<JsonObject>()
+    show(card("""{"type":"tile","entity":"sensor.soil"}"""), saved, developerMode = false)
+    onNode(hasSetTextAction() and hasText("Name")).assertExists()
+    onNodeWithText("JSON").assertDoesNotExist()
+    onNodeWithText("Form").assertDoesNotExist()
+  }
+
+  @Test
+  fun outsideDeveloperModeAnUnknownTypeStillOpensOnJson() = runComposeUiTest {
+    val saved = mutableListOf<JsonObject>()
+    show(card("""{"type":"custom:thing","x":1}"""), saved, developerMode = false)
+    onNode(hasSetTextAction() and hasText("custom:thing", substring = true)).assertExists()
   }
 
   @Test

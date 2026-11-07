@@ -76,6 +76,7 @@ import ee.schimke.ha.client.design.privateDesignServerUrl
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignTags
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.assistant.AssistantAccess
 import ee.schimke.terrazzo.auth.designTokenLogin
 import ee.schimke.terrazzo.auth.rememberDesignSignIn
@@ -83,6 +84,7 @@ import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
+import ee.schimke.terrazzo.core.prefs.ThemeChoice
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.prefs.WidgetCardFontsPref
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -93,28 +95,27 @@ import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardStyleInstallWorker
 import ee.schimke.terrazzo.dashboard.CardStyleSample
 import ee.schimke.terrazzo.dashboard.CardStyleStore
-import ee.schimke.terrazzo.dashboard.CardStyleWearPanes
 import ee.schimke.terrazzo.dashboard.CardStyles
 import ee.schimke.terrazzo.notify.HaNotifications
 import ee.schimke.terrazzo.notify.TestNotification
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
 import ee.schimke.terrazzo.shared.isPlayUpdateTester
 import ee.schimke.terrazzo.shared.setPlayUpdateTester
-import ee.schimke.terrazzo.ui.appThemeOrNull
+import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 /**
- * The app's settings, in groups: the connection, how things look, how the dashboard behaves, then
- * the experimental and debug switches, and help last.
+ * The app's settings, in groups: the connection, the theme (one design list), how the dashboard
+ * behaves, feedback and privacy, then the collapsed Designers and (once unlocked) Developer
+ * sections, and help last.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingsScreen(
   session: HaSession,
-  onSignOut: () -> Unit,
   onBack: () -> Unit,
   onOpenSyncDiagnostics: (() -> Unit)?,
   /** Which of Home Assistant's dashboards the switcher lists; null in demo mode. */
@@ -127,10 +128,9 @@ internal fun SettingsScreen(
   val scope = rememberCoroutineScope()
   val context = LocalContext.current
   val widgetRefresh = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
-  val themePref by graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.Material3)
+  val themeChoice by
+    graph.preferencesStore.themeChoice.collectAsState(initial = ThemeChoice.Default)
   val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
-  val cardStylePref by
-    graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
   val launcherColours by
     graph.preferencesStore.launcherColours.collectAsState(initial = LauncherColoursPref.System)
   val widgetCardFonts by
@@ -155,6 +155,11 @@ internal fun SettingsScreen(
     graph.preferencesStore.usageSharing.collectAsState(initial = UsageSharing.Default)
   val permanentWriteEnabled by
     graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
+  val developerModePref by graph.preferencesStore.developerMode.collectAsState(initial = false)
+  val cardStudioEntry by graph.preferencesStore.cardStudioEntry.collectAsState(initial = false)
+  // One developer-mode state, shared with MainActivity's LocalDeveloperMode. Testers who opted in
+  // to early updates stay opted in; they see the switch again once they unlock developer mode.
+  val developerMode = developerModePref
 
   Scaffold(
     topBar = {
@@ -178,6 +183,7 @@ internal fun SettingsScreen(
           .padding(horizontal = 24.dp, vertical = 16.dp),
       verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
+      // Sign out (and Exit demo) is in the dashboard's overflow menu.
       SettingsGroup("Connection") {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Text("Connected to", style = MaterialTheme.typography.labelMedium)
@@ -197,10 +203,9 @@ internal fun SettingsScreen(
           }
         }
         HaNotificationsSetting(session)
-        OutlinedButton(onClick = onSignOut) { Text(if (isDemo) "Exit demo" else "Sign out") }
       }
 
-      SettingsGroup("Designs") {
+      SettingsGroup("Theme") {
         val installedStyles by CardStyleStore.of(context).installed.collectAsState()
         val styleOverrides by CardDesignOverrideStore.of(context).overrides.collectAsState()
         // WorkManager owns installs, including when Settings is closed or the process restarts.
@@ -213,12 +218,21 @@ internal fun SettingsScreen(
                 WorkManager.getInstance(context).getWorkInfosByTagFlow(CardStyleInstallWorker.TAG)
             }
             .collectAsState(initial = emptyList())
-        val stylesInUse = CardStyles.inUse(cardStylePref.id, styleOverrides.cardStyles)
-        CardStyleSection(
-          selected = cardStylePref,
-          onSelect = { pref ->
+        val stylesInUse = CardStyles.inUse(themeChoice.cardStyle.id, styleOverrides.cardStyles)
+        DesignSection(
+          selected = themeChoice,
+          darkMode = darkPref,
+          onSelect = { choice ->
             scope.launch {
-              graph.preferencesStore.setCardStyle(pref)
+              graph.preferencesStore.setThemeChoice(choice)
+              // Each pinned widget has a baked .rc doc in the old look; broadcast a refresh so
+              // the provider re-captures under the new one.
+              widgetRefresh.refreshAllNow()
+            }
+          },
+          onSelectDark = { pref ->
+            scope.launch {
+              graph.preferencesStore.setDarkMode(pref)
               widgetRefresh.refreshAllNow()
             }
           },
@@ -243,45 +257,11 @@ internal fun SettingsScreen(
           },
         )
 
-        WidgetCardFontsSection(
-          selected = widgetCardFonts,
-          onSelect = { pref ->
-            scope.launch {
-              graph.preferencesStore.setWidgetCardFonts(pref)
-              widgetRefresh.refreshAllNow()
-            }
-          },
-        )
-
         LauncherColoursSection(
           selected = launcherColours,
           onSelect = { pref ->
             scope.launch {
               graph.preferencesStore.setLauncherColours(pref)
-              widgetRefresh.refreshAllNow()
-            }
-          },
-        )
-      }
-
-      SettingsGroup("Theme") {
-        ThemeSection(
-          selected = themePref,
-          darkMode = darkPref,
-          appTheme = cardStylePref.toUberTheme().appThemeOrNull(),
-          design = cardStylePref.toUberTheme(),
-          onSelectTheme = { pref ->
-            scope.launch {
-              graph.preferencesStore.setThemeStyle(pref)
-              // Each pinned widget has a baked .rc doc using the
-              // old palette; broadcast a refresh so the provider
-              // re-captures under the new one.
-              widgetRefresh.refreshAllNow()
-            }
-          },
-          onSelectDark = { pref ->
-            scope.launch {
-              graph.preferencesStore.setDarkMode(pref)
               widgetRefresh.refreshAllNow()
             }
           },
@@ -333,6 +313,9 @@ internal fun SettingsScreen(
           checked = collapsedModeEnabled,
           onCheckedChange = { scope.launch { graph.preferencesStore.setCollapsedMode(it) } },
         )
+      }
+
+      SettingsGroup("Feedback") {
         SettingSwitch(
           title = "Haptics",
           summary =
@@ -344,88 +327,15 @@ internal fun SettingsScreen(
         SettingSwitch(
           title = "Interface sounds",
           summary =
-            "Quiet sounds for the same moments, voiced to the card style: a " +
-              "mechanical switch for Console, a beep for LCD and Trinitron, a soft " +
-              "tick otherwise. Silent while the ringer is on vibrate or silent.",
+            "Quiet sounds for the same moments, voiced to the design: a mechanical " +
+              "switch for Console, a beep for LCD and Trinitron, a soft tick otherwise. " +
+              "Silent while the ringer is on vibrate or silent.",
           checked = soundsEnabled,
           onCheckedChange = { scope.launch { graph.preferencesStore.setInterfaceSounds(it) } },
         )
       }
 
-      SettingsGroup("Experimental & debug") {
-        SettingSwitch(
-          title = "Grid layout",
-          summary =
-            "Use Compose 1.11's Grid API for the wide-screen side-by-side " +
-              "section layout instead of the chunked Row path. Only takes " +
-              "effect on tablets / unfolded foldables with ≥2 sections.",
-          checked = gridLayoutEnabled,
-          onCheckedChange = {
-            scope.launch { graph.preferencesStore.setExperimentalGridLayout(it) }
-          },
-        )
-        SettingSwitch(
-          title = "Show logs view",
-          summary =
-            "Adds a debug screen, opened below, listing recent " +
-              "dashboard-entity updates, connect / disconnect events, and " +
-              "locally-dispatched service calls. In-memory only.",
-          checked = logsViewEnabled,
-          onCheckedChange = { scope.launch { graph.preferencesStore.setLogsViewEnabled(it) } },
-        )
-        if (logsViewEnabled && onOpenLogs != null) {
-          OutlinedButton(onClick = onOpenLogs) { Text("Open logs") }
-        }
-        SettingSwitch(
-          title = "Flash cards on data change",
-          summary =
-            "Briefly highlight a card whenever the entity state it renders " +
-              "changes. Handy with demo mode to see which cards are live. " +
-              "Visual only — nothing about the rendered card changes.",
-          checked = flashOnDataChange,
-          onCheckedChange = { scope.launch { graph.preferencesStore.setFlashOnDataChange(it) } },
-        )
-        SettingSwitch(
-          title = "Data grid overlay",
-          summary =
-            "Float a grid over the dashboard listing every entity its cards " +
-              "use — the key, current value, and how long ago it last changed. " +
-              "Tap ✕ on the panel to dismiss.",
-          checked = dataGridOverlay,
-          onCheckedChange = { scope.launch { graph.preferencesStore.setDataGridOverlay(it) } },
-        )
-        // Saving a setting changes the design choice, which syncs the designs it needs (see
-        // TerrazzoApplication).
-        DesignServerSetting(
-          url = designServerUrl,
-          variant = designVariant,
-          author = designAuthor,
-          token = designToken,
-          homeAssistant = privateDesignServer,
-          onUrlChange = { url -> scope.launch { graph.preferencesStore.setDesignServerUrl(url) } },
-          onVariantChange = { scope.launch { graph.preferencesStore.setDesignVariant(it) } },
-          onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
-          onTokenChange = { scope.launch { graph.preferencesStore.setDesignToken(it) } },
-        )
-        // Connect an AI agent once; Card Studio's requests then go straight to it.
-        val shareContext = androidx.compose.ui.platform.LocalContext.current
-        ee.schimke.terrazzo.shared.AgentConnection(
-          designServerUrl.ifBlank { "https://ha.coo.ee" },
-          onCopy = { text ->
-            runCatching {
-              shareContext.startActivity(
-                android.content.Intent.createChooser(
-                    android.content
-                      .Intent(android.content.Intent.ACTION_SEND)
-                      .setType("text/plain")
-                      .putExtra(android.content.Intent.EXTRA_TEXT, text),
-                    "Send to your agent",
-                  )
-                  .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
-              )
-            }
-          },
-        )
+      SettingsGroup("Privacy") {
         if (designServerUrl.isNotBlank()) {
           UsageSharingSetting(
             // The switch shows the effective value; touching it stores an explicit choice.
@@ -434,64 +344,169 @@ internal fun SettingsScreen(
               scope.launch { graph.preferencesStore.setUsageSharing(UsageSharing.chosen(it)) }
             },
           )
+        } else {
+          PrivacyPolicyLink()
+        }
+      }
+
+      CollapsibleSettingsGroup(
+        title = "Designers",
+        summary = "Sign in to the card design server and connect an AI agent, to make designs.",
+      ) {
+        DesignersSettings(
+          url = designServerUrl,
+          token = designToken,
+          homeAssistant = privateDesignServer,
+          onTokenChange = { scope.launch { graph.preferencesStore.setDesignToken(it) } },
+        )
+        SettingSwitch(
+          title = "Card Studio",
+          summary =
+            "Offer Card Studio in a card's actions (long-press a card) even with no agent " +
+              "connected, to design a card yourself.",
+          checked = cardStudioEntry,
+          onCheckedChange = { scope.launch { graph.preferencesStore.setCardStudioEntry(it) } },
+        )
+      }
+
+      if (developerMode) {
+        CollapsibleSettingsGroup(
+          title = "Developer",
+          summary = "Debug aids, the card design server and early updates.",
+        ) {
+          SettingSwitch(
+            title = "Grid layout (experimental)",
+            summary =
+              "Use Compose 1.11's Grid API for the wide-screen side-by-side " +
+                "section layout instead of the chunked Row path. Only takes " +
+                "effect on tablets / unfolded foldables with ≥2 sections.",
+            checked = gridLayoutEnabled,
+            onCheckedChange = {
+              scope.launch { graph.preferencesStore.setExperimentalGridLayout(it) }
+            },
+          )
+          SettingSwitch(
+            title = "Show logs view",
+            summary =
+              "Adds a debug screen, opened below, listing recent " +
+                "dashboard-entity updates, connect / disconnect events, and " +
+                "locally-dispatched service calls. In-memory only.",
+            checked = logsViewEnabled,
+            onCheckedChange = { scope.launch { graph.preferencesStore.setLogsViewEnabled(it) } },
+          )
+          if (logsViewEnabled && onOpenLogs != null) {
+            OutlinedButton(onClick = onOpenLogs) { Text("Open logs") }
+          }
+          SettingSwitch(
+            title = "Flash cards on data change",
+            summary =
+              "Briefly highlight a card whenever the entity state it renders " +
+                "changes. Handy with demo mode to see which cards are live. " +
+                "Visual only — nothing about the rendered card changes.",
+            checked = flashOnDataChange,
+            onCheckedChange = { scope.launch { graph.preferencesStore.setFlashOnDataChange(it) } },
+          )
+          SettingSwitch(
+            title = "Data grid overlay",
+            summary =
+              "Float a grid over the dashboard listing every entity its cards " +
+                "use — the key, current value, and how long ago it last changed. " +
+                "Tap ✕ on the panel to dismiss.",
+            checked = dataGridOverlay,
+            onCheckedChange = { scope.launch { graph.preferencesStore.setDataGridOverlay(it) } },
+          )
+          // Saving a setting changes the design choice, which syncs the designs it needs (see
+          // TerrazzoApplication).
+          DesignServerSetting(
+            url = designServerUrl,
+            variant = designVariant,
+            author = designAuthor,
+            homeAssistant = privateDesignServer,
+            onUrlChange = { url ->
+              scope.launch { graph.preferencesStore.setDesignServerUrl(url) }
+            },
+            onVariantChange = { scope.launch { graph.preferencesStore.setDesignVariant(it) } },
+            onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
+          )
+          WidgetCardFontsSection(
+            selected = widgetCardFonts,
+            onSelect = { pref ->
+              scope.launch {
+                graph.preferencesStore.setWidgetCardFonts(pref)
+                widgetRefresh.refreshAllNow()
+              }
+            },
+          )
+          EarlyUpdatesSetting()
+          // Sync diagnostics: DataItem write / MessageClient send counts, to sanity-check the
+          // watch's chatter. Hidden when the device has no usable Wearable API (no paired watch /
+          // wearable component) so the link doesn't dangle.
+          if (onOpenSyncDiagnostics != null) {
+            TextButton(onClick = onOpenSyncDiagnostics) { Text("Sync diagnostics") }
+          }
+          TextButton(
+            onClick = { scope.launch { graph.preferencesStore.setDeveloperMode(false) } },
+          ) {
+            Text("Hide developer options")
+          }
         }
       }
 
       SettingsGroup("Help", divider = false) {
         ReportFeedbackButton(version = BuildConfig.VERSION_NAME)
-        AppVersionRow(version = BuildConfig.VERSION_NAME)
-        // Sync diagnostics — buried at the bottom of Settings on
-        // purpose. Shows DataItem write / MessageClient send counts
-        // so power users can sanity-check wear-side chatter. Hidden
-        // when the device has no usable Wearable API (no paired
-        // watch / wearable component) so the link doesn't dangle.
-        if (onOpenSyncDiagnostics != null) {
-          TextButton(onClick = onOpenSyncDiagnostics) { Text("Sync diagnostics") }
-        }
+        AppVersionRow(
+          version = BuildConfig.VERSION_NAME,
+          developerMode = developerMode,
+          onUnlock = { scope.launch { graph.preferencesStore.setDeveloperMode(true) } },
+        )
       }
     }
   }
 }
 
-/** Taps on [AppVersionRow] that turn on early Play updates for internal testers. */
-private const val TESTER_TAPS = 7
+/** Taps on [AppVersionRow] that unlock developer mode. */
+private const val DEVELOPER_TAPS = 7
 
 /**
- * The installed version. Tapping it [TESTER_TAPS] times opts this device in to Play updates as soon
- * as they appear (internal testers); otherwise updates are offered once they are a week old. While
- * opted in, a switch shows the choice and turns it back off.
+ * The installed version. Tapping it [DEVELOPER_TAPS] times turns on developer mode, which shows
+ * Settings' Developer section (and the JSON of a card's settings); that section turns it off again.
  */
 @Composable
-private fun AppVersionRow(version: String) {
-  val context = LocalContext.current
-  var tester by remember { mutableStateOf(isPlayUpdateTester(context)) }
+private fun AppVersionRow(version: String, developerMode: Boolean, onUnlock: () -> Unit) {
   var taps by remember { mutableStateOf(0) }
-  fun choose(on: Boolean) {
-    tester = on
-    setPlayUpdateTester(context, on)
-  }
   Text(
     "Version $version",
     style = MaterialTheme.typography.bodySmall,
     color = MaterialTheme.colorScheme.onSurfaceVariant,
     modifier =
-      Modifier.clickable(enabled = !tester) {
+      Modifier.clickable(enabled = !developerMode) {
           taps++
-          if (taps >= TESTER_TAPS) {
+          if (taps >= DEVELOPER_TAPS) {
             taps = 0
-            choose(true)
+            onUnlock()
           }
         }
         .padding(horizontal = 12.dp, vertical = 8.dp),
   )
-  if (tester) {
-    SettingSwitch(
-      title = "Early updates",
-      summary = "Update as soon as a new version is on Play, for testers.",
-      checked = true,
-      onCheckedChange = { choose(it) },
-    )
-  }
+}
+
+/**
+ * Early Play updates for internal testers: updates as soon as they appear, rather than once they
+ * are a week old.
+ */
+@Composable
+private fun EarlyUpdatesSetting() {
+  val context = LocalContext.current
+  var tester by remember { mutableStateOf(isPlayUpdateTester(context)) }
+  SettingSwitch(
+    title = "Early updates",
+    summary = "Update as soon as a new version is on Play, for testers.",
+    checked = tester,
+    onCheckedChange = {
+      tester = it
+      setPlayUpdateTester(context, it)
+    },
+  )
 }
 
 /**
@@ -500,7 +515,6 @@ private fun AppVersionRow(version: String) {
  */
 @Composable
 internal fun UsageSharingSetting(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-  val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
   Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
     SettingSwitch(
       title = "Share anonymous card usage",
@@ -510,8 +524,15 @@ internal fun UsageSharingSetting(checked: Boolean, onCheckedChange: (Boolean) ->
       checked = checked,
       onCheckedChange = onCheckedChange,
     )
-    TextButton(onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) }) { Text("Privacy policy") }
+    PrivacyPolicyLink()
   }
+}
+
+/** Opens the published privacy policy. */
+@Composable
+private fun PrivacyPolicyLink() {
+  val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+  TextButton(onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) }) { Text("Privacy policy") }
 }
 
 /**
@@ -550,6 +571,49 @@ private fun SettingsGroup(
     )
     content()
     if (divider) HorizontalDivider(Modifier.padding(top = 8.dp))
+  }
+}
+
+/**
+ * A titled group of settings that opens on demand: its heading and [summary] toggle the [content]
+ * underneath, closed at first. For the sections few people need (Designers, Developer).
+ */
+@Composable
+private fun CollapsibleSettingsGroup(
+  title: String,
+  summary: String,
+  content: @Composable () -> Unit,
+) {
+  var expanded by rememberSaveable(title) { mutableStateOf(false) }
+  Column(
+    modifier = Modifier.animateContentSize(),
+    verticalArrangement = Arrangement.spacedBy(16.dp),
+  ) {
+    Row(
+      modifier =
+        Modifier.fillMaxWidth()
+          .toggleable(value = expanded, role = Role.Button, onValueChange = { expanded = it }),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+          title,
+          style = MaterialTheme.typography.titleSmall,
+          color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+          summary,
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+      }
+      Icon(
+        if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+        contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+      )
+    }
+    if (expanded) content()
+    HorizontalDivider(Modifier.padding(top = 8.dp))
   }
 }
 
@@ -643,101 +707,22 @@ private fun SettingSwitch(
 }
 
 /**
- * The app palette and light / dark choice, after the design ([CardStyleSection]) it depends on. The
- * palette is a choice only while the [design] draws in it: Classic, the cards' own look in the app
- * palette. Any other design brings its own colours, and one that themes the whole app ([appTheme],
- * an LCD or a Trinitron deck) replaces the app's palette too, so the options are disabled and say
- * why; a single-mode style (dark-only Trinitron) disables light / dark too. The choices are kept
- * and come back when the design changes.
- */
-@Composable
-internal fun ThemeSection(
-  selected: ThemePref,
-  darkMode: DarkModePref,
-  appTheme: HaUberTheme?,
-  onSelectTheme: (ThemePref) -> Unit,
-  onSelectDark: (DarkModePref) -> Unit,
-  design: HaUberTheme = HaUberTheme.Classic,
-) {
-  val paletteEnabled = appTheme == null && design.id == HaUberTheme.Classic.id
-  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    Text("Palette", style = MaterialTheme.typography.titleMedium)
-    Text(
-      when {
-        appTheme != null ->
-          "The ${appTheme.displayName} design themes the whole app in its own colours and type. " +
-            "Pick Classic to choose a palette here."
-        !paletteEnabled ->
-          "The ${design.displayName} design brings its own colours. " +
-            "Pick Classic to draw cards in a palette chosen here."
-        else ->
-          "Material 3 uses the system default palette (dynamic colour on Android 12+). " +
-            "The Terrazzo themes ship a curated Home-Assistant-flavoured palette plus a Google-Fonts pairing."
-      },
-      style = MaterialTheme.typography.bodySmall,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Column(Modifier.selectableGroup()) {
-      ThemePref.entries.forEach { pref ->
-        OptionRow(
-          title = themePrefDisplayName(pref),
-          summary = themePrefTagline(pref),
-          selected = pref == selected,
-          onClick = { onSelectTheme(pref) },
-          enabled = paletteEnabled,
-        )
-      }
-    }
-
-    val modeFixed = appTheme?.singleMode == true
-    Text("Dark mode", style = MaterialTheme.typography.titleMedium)
-    if (modeFixed) {
-      Text(
-        "${appTheme?.displayName} is ${if (appTheme?.dark == null) "light" else "dark"} only.",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-      )
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      DarkModePref.entries.forEach { pref ->
-        FilterChip(
-          selected = pref == darkMode,
-          onClick = { onSelectDark(pref) },
-          enabled = !modeFixed,
-          label = {
-            Text(
-              when (pref) {
-                DarkModePref.Follow -> "Follow system"
-                DarkModePref.Light -> "Light"
-                DarkModePref.Dark -> "Dark"
-              },
-            )
-          },
-        )
-      }
-    }
-  }
-}
-
-/**
- * The card style: how dashboard cards are drawn. Classic keeps the cards' own look in the chosen
- * palette; each uber theme brings its own palette, shapes, type and instrument designs (an LCD's
- * segment bars, a Trinitron VU needle). Dashboard cards and launcher widgets: widgets take the
- * style on the launcher's colours unless [LauncherColoursSection] says otherwise. The app's own
- * screens keep the palette above, unless the style themes the whole app ([HaUberTheme.appTheme]),
- * which its sample's description says.
+ * The theme: one list of designs, each shown with a sample card drawn in it ([CardStyleSample]).
+ * Material 3 is the cards' own look on the system's dynamic (wallpaper) colours; Classic is that
+ * look in one of the curated Terrazzo palettes; every other design is a complete look with its own
+ * colours, shapes and gauges, and some theme the whole app. The selected design's options open
+ * underneath it ([DesignOptions]): Classic's palettes, and light / dark for a design that has both.
  *
- * Each style is shown with a sample card drawn in it ([CardStyleSample]). Collapsed (the default),
- * installed styles and the current style are listed; expanding lists them all. "Preview on a watch"
- * draws the samples as Wear widgets instead, on approximate round and square watch screens
- * ([CardStyleWearPanes]).
+ * Collapsed (the default), the built-in and installed designs and the current one are listed;
+ * expanding lists them all, the rest offering Install.
  */
 @Composable
-internal fun CardStyleSection(
-  selected: CardStylePref,
-  onSelect: (CardStylePref) -> Unit,
+internal fun DesignSection(
+  selected: ThemeChoice,
+  darkMode: DarkModePref,
+  onSelect: (ThemeChoice) -> Unit,
+  onSelectDark: (DarkModePref) -> Unit = {},
   initiallyExpanded: Boolean = false,
-  initiallyOnWatch: Boolean = false,
   state: (CardStylePref) -> CardStyleState = {
     if (it.id in CardStyles.BUILT_IN) CardStyleState.BuiltIn else CardStyleState.NotInstalled
   },
@@ -745,56 +730,60 @@ internal fun CardStyleSection(
   onUninstall: (CardStylePref) -> Unit = {},
 ) {
   var expanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
-  var onWatch by rememberSaveable { mutableStateOf(initiallyOnWatch) }
+  // Material 3 and Classic draw the same cards; the design list tells them apart by palette.
+  fun stateOf(design: String): CardStyleState =
+    if (design == ThemeChoice.MATERIAL3) CardStyleState.BuiltIn
+    else state(ThemeChoice(design).cardStyle)
   Column(
     modifier = Modifier.animateContentSize(),
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
-    Text("Card design", style = MaterialTheme.typography.titleMedium)
+    Text("Design", style = MaterialTheme.typography.titleMedium)
     Text(
-      "How dashboard cards are drawn. Classic follows the theme below; the others are complete " +
-        "looks with their own colours, shapes and gauges. Classic and Home Assistant come with " +
-        "the app. Browse all designs to install more; a new design is selected when its " +
-        "background download finishes.",
+      "How the app and its cards look. Material 3 takes its colours from your wallpaper; " +
+        "Classic draws the cards' own look in a palette of your choice; the others are complete " +
+        "looks with their own colours, shapes and gauges. Material 3, Classic and Home " +
+        "Assistant come with the app. Browse all designs to install more; a new design is " +
+        "selected when its background download finishes.",
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
-    Row(
-      modifier =
-        Modifier.fillMaxWidth()
-          .toggleable(value = onWatch, role = Role.Switch, onValueChange = { onWatch = it }),
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Text(
-        "Preview on a watch",
-        style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.weight(1f),
-      )
-      Switch(checked = onWatch, onCheckedChange = null)
+    val designs = listOf(ThemeChoice.MATERIAL3) + CardStylePref.entries.map { it.id }
+    val shown = designs.filter {
+      expanded ||
+        it == selected.design ||
+        stateOf(it) in
+          setOf(
+            CardStyleState.BuiltIn,
+            CardStyleState.Installed,
+            CardStyleState.InUse,
+          )
     }
-    val shown =
-      CardStylePref.entries.filter {
-        expanded ||
-          it == selected ||
-          state(it) in
-            setOf(
-              CardStyleState.BuiltIn,
-              CardStyleState.Installed,
-              CardStyleState.InUse,
-            )
-      }
     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-      shown.forEach { pref ->
-        key(pref) {
-          CardStyleOption(
-            pref = pref,
-            selected = pref == selected,
-            onWatch = onWatch,
-            state = state(pref),
-            onClick = { onSelect(pref) },
+      shown.forEach { design ->
+        key(design) {
+          val isSelected = design == selected.design
+          val pref = ThemeChoice(design).cardStyle
+          DesignOption(
+            design = design,
+            // Classic's sample shows its chosen palette; another design's, Classic's default.
+            palette =
+              if (isSelected) selected.palette.toThemeStyle()
+              else ThemeChoice(design).normalized().palette.toThemeStyle(),
+            selected = isSelected,
+            state = stateOf(design),
+            onClick = { if (!isSelected) onSelect(ThemeChoice(design).normalized()) },
             onInstall = { onInstall(pref) },
             onUninstall = { onUninstall(pref) },
           )
+          if (isSelected) {
+            DesignOptions(
+              choice = selected,
+              darkMode = darkMode,
+              onSelect = onSelect,
+              onSelectDark = onSelectDark,
+            )
+          }
         }
       }
     }
@@ -806,6 +795,67 @@ internal fun CardStyleSection(
       )
       Spacer(Modifier.width(8.dp))
       Text(if (expanded) "Show installed designs" else "Browse all designs")
+    }
+  }
+}
+
+/**
+ * The selected design's options, under it in the list: Classic's palettes, and light / dark for a
+ * design with both (Material 3, Classic and most others). A single-mode design (dark-only
+ * Trinitron) has nothing to choose, so shows nothing.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+internal fun DesignOptions(
+  choice: ThemeChoice,
+  darkMode: DarkModePref,
+  onSelect: (ThemeChoice) -> Unit,
+  onSelectDark: (DarkModePref) -> Unit,
+) {
+  val variants =
+    if (choice.cardStyle == CardStylePref.Classic && choice.design != ThemeChoice.MATERIAL3)
+      ThemeChoice.CLASSIC_VARIANTS
+    else emptyList()
+  val bothModes = !choice.cardStyle.toUberTheme().singleMode
+  if (variants.isEmpty() && !bothModes) return
+  Column(
+    modifier = Modifier.fillMaxWidth().padding(start = 48.dp),
+    verticalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    if (variants.isNotEmpty()) {
+      Text("Palette", style = MaterialTheme.typography.labelLarge)
+      Column(Modifier.selectableGroup()) {
+        variants.forEach { palette ->
+          OptionRow(
+            title = themePrefDisplayName(palette),
+            summary = themePrefTagline(palette),
+            selected = palette == choice.palette,
+            onClick = { onSelect(ThemeChoice.classic(palette)) },
+          )
+        }
+      }
+    }
+    if (bothModes) {
+      Text("Dark mode", style = MaterialTheme.typography.labelLarge)
+      androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        DarkModePref.entries.forEach { pref ->
+          FilterChip(
+            selected = pref == darkMode,
+            onClick = { onSelectDark(pref) },
+            label = {
+              Text(
+                when (pref) {
+                  DarkModePref.Follow -> "Follow system"
+                  DarkModePref.Light -> "Light"
+                  DarkModePref.Dark -> "Dark"
+                },
+              )
+            },
+          )
+        }
+      }
     }
   }
 }
@@ -825,42 +875,51 @@ internal enum class CardStyleState {
 }
 
 /**
- * One card style: its radio button beside a sample card drawn in it, the card itself naming and
- * describing the style. The whole row selects it once the style is installed; until then the row
- * offers Install, and an installed style nothing uses offers Remove.
+ * One design: its radio button beside a sample card drawn in it (in [palette], for the designs
+ * drawn in the app's palette), the card itself naming and describing the design. The whole row
+ * selects it once the design is installed; until then the row offers Install, and an installed
+ * design nothing uses offers Remove.
  */
 @Composable
-private fun CardStyleOption(
-  pref: CardStylePref,
+private fun DesignOption(
+  design: String,
+  palette: ThemeStyle,
   selected: Boolean,
-  onWatch: Boolean,
   state: CardStyleState,
   onClick: () -> Unit,
   onInstall: () -> Unit,
   onUninstall: () -> Unit,
 ) {
-  val uber = pref.toUberTheme()
-  // A style that themes the whole app says so, so it is found before it is picked.
-  val tagline = cardStyleTagline(pref) + if (uber.appTheme) " · Themes the whole app" else ""
+  val uber = ThemeChoice(design).cardStyle.toUberTheme()
+  val name = if (design == ThemeChoice.MATERIAL3) "Material 3" else uber.displayName
+  // A design that themes the whole app, or has one mode only, says so before it is picked.
+  val tagline =
+    designTagline(design) +
+      (if (uber.appTheme) " · Themes the whole app" else "") +
+      when {
+        !uber.singleMode -> ""
+        uber.palette(darkTheme = true).isDark -> " · Dark only"
+        else -> " · Light only"
+      }
   val pickable =
     selected ||
       state == CardStyleState.BuiltIn ||
       state == CardStyleState.Installed ||
       state == CardStyleState.InUse
   Column {
-    CardStyleOptionRow(pref, uber, tagline, selected, pickable, onWatch, onClick)
-    CardStyleInstallRow(uber.displayName, state, selected, onInstall, onUninstall)
+    DesignOptionRow(uber, name, palette, tagline, selected, pickable, onClick)
+    CardStyleInstallRow(name, state, selected, onInstall, onUninstall)
   }
 }
 
 @Composable
-private fun CardStyleOptionRow(
-  pref: CardStylePref,
-  uber: ee.schimke.ha.rc.components.HaUberTheme,
+private fun DesignOptionRow(
+  uber: HaUberTheme,
+  name: String,
+  palette: ThemeStyle,
   tagline: String,
   selected: Boolean,
   pickable: Boolean,
-  onWatch: Boolean,
   onClick: () -> Unit,
 ) {
   Row(
@@ -872,7 +931,7 @@ private fun CardStyleOptionRow(
           role = Role.RadioButton,
           onClick = onClick,
         )
-        .semantics { contentDescription = "${uber.displayName}. $tagline" },
+        .semantics { contentDescription = "$name. $tagline" },
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(4.dp),
   ) {
@@ -882,11 +941,10 @@ private fun CardStyleOptionRow(
       enabled = pickable,
       modifier = Modifier.padding(12.dp),
     )
-    // The sample is a picture of the style, not a control: a tap on it picks the style rather
+    // The sample is a picture of the design, not a control: a tap on it picks the design rather
     // than reaching the card, and screen readers hear the option, not the sample's contents.
     Box(Modifier.weight(1f).clearAndSetSemantics {}) {
-      if (onWatch) CardStyleWearPanes(uber, name = uber.displayName, description = tagline)
-      else CardStyleSample(uber, name = uber.displayName, description = tagline)
+      CardStyleSample(uber, name = name, description = tagline, palette = palette)
       Box(
         Modifier.matchParentSize()
           .clickable(
@@ -1064,9 +1122,13 @@ private fun OptionRow(
   }
 }
 
+private fun designTagline(design: String): String =
+  if (design == ThemeChoice.MATERIAL3) "Dynamic colour from your wallpaper · the cards' own look"
+  else cardStyleTagline(ThemeChoice(design).cardStyle)
+
 private fun cardStyleTagline(pref: CardStylePref): String =
   when (pref) {
-    CardStylePref.Classic -> "The cards' own look, in your theme's palette"
+    CardStylePref.Classic -> "The cards' own look, in a Terrazzo palette"
     CardStylePref.HomeAssistant ->
       "Built-in HA · light and dark cards, half gauges and thermostat rings"
     CardStylePref.Expressive -> "Material 3 Expressive · big shapes, capsule meters"
@@ -1104,7 +1166,7 @@ private fun themePrefDisplayName(pref: ThemePref): String =
 
 private fun themePrefTagline(pref: ThemePref): String =
   when (pref) {
-    ThemePref.Material3 -> "Defaults · dynamic colour on Android 12+"
+    ThemePref.Material3 -> "Dynamic colour from your wallpaper"
     ThemePref.TerrazzoHome -> "Home Assistant blue · Roboto Flex + Inter"
     ThemePref.TerrazzoMushroom -> "Warm salmon · Figtree"
     ThemePref.TerrazzoMinimalist -> "Neutral slate · IBM Plex Sans"
@@ -1112,16 +1174,16 @@ private fun themePrefTagline(pref: ThemePref): String =
   }
 
 /**
- * Experimental: base URL of a card design server. Empty (the default) keeps the feature off. Saved
- * when the field loses focus or the keyboard's Done is pressed, not on every keystroke, so a
- * half-typed URL never triggers a fetch.
+ * Developer: base URL of a card design server ([PreferencesStore.DEFAULT_DESIGN_SERVER_URL] until
+ * changed; empty turns designs off), with the variant and author to prefer. Saved when the field
+ * loses focus or the keyboard's Done is pressed, not on every keystroke, so a half-typed URL never
+ * triggers a fetch. Signing in to it is in the Designers section ([DesignersSettings]).
  */
 @Composable
 private fun DesignServerSetting(
   url: String,
   variant: String,
   author: String,
-  token: String,
   /**
    * The Home Assistant (base URL) whose own design server is used in place of [url] while designs
    * are on; blank for none.
@@ -1130,7 +1192,6 @@ private fun DesignServerSetting(
   onUrlChange: (String) -> Unit,
   onVariantChange: (String) -> Unit,
   onAuthorChange: (String) -> Unit,
-  onTokenChange: (String) -> Unit,
 ) {
   val context = LocalContext.current
   var draft by remember(url) { mutableStateOf(url) }
@@ -1145,8 +1206,8 @@ private fun DesignServerSetting(
   Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Text("Card design server", style = MaterialTheme.typography.titleMedium)
     Text(
-      "Card designs come from this server (manifest.json + blobs/), chosen by your palette, " +
-        "card style, variant and author; one it lacks is fetched by its key as a card needs it, " +
+      "Card designs come from this server (manifest.json + blobs/), chosen by your design, " +
+        "its palette, variant and author; one it lacks is fetched by its key as a card needs it, " +
         "and the card draws from the app's converter meanwhile. The manifest is checked nightly " +
         "while charging. Leave empty to draw every card from the app's converters.",
       style = MaterialTheme.typography.bodySmall,
@@ -1174,11 +1235,8 @@ private fun DesignServerSetting(
           "Assistant, and its library follows ha.coo.ee. Clear the address to turn designs off.",
         style = MaterialTheme.typography.bodySmall,
       )
-      DesignSourcesSummary()
-    } else if (url.isNotBlank()) {
-      DesignTokenField(url, token, onTokenChange)
-      DesignSourcesSummary()
     }
+    if (url.isNotBlank()) DesignSourcesSummary()
     tags?.let { tags ->
       DesignTagPicker(
         title = "Variant",
@@ -1200,6 +1258,52 @@ private fun DesignServerSetting(
       )
     }
   }
+}
+
+/**
+ * Designers: signing in to the card design server ([DesignTokenField]) and connecting an AI agent
+ * ([ee.schimke.terrazzo.shared.AgentConnection]), whose connection is what offers "Ask your agent"
+ * and "Plan a card" on the dashboard.
+ */
+@Composable
+private fun DesignersSettings(
+  url: String,
+  token: String,
+  /** The Home Assistant whose own design server is in use, signed in as Home Assistant is. */
+  homeAssistant: String,
+  onTokenChange: (String) -> Unit,
+) {
+  val home = homeAssistant.takeIf { it.isNotBlank() && url.isNotBlank() }
+  when {
+    url.isBlank() ->
+      Text(
+        "The card design server is off: turn it on in Developer to sign in.",
+        style = MaterialTheme.typography.bodySmall,
+      )
+    home != null ->
+      Text(
+        "Your designs are kept on your Home Assistant's own design server, signed in as you " +
+          "are to Home Assistant.",
+        style = MaterialTheme.typography.bodySmall,
+      )
+    else -> DesignTokenField(url, token, onTokenChange)
+  }
+  // Connect an AI agent once; Card Studio's requests then go straight to it.
+  val context = LocalContext.current
+  ee.schimke.terrazzo.shared.AgentConnection(
+    url.ifBlank { "https://ha.coo.ee" },
+    onCopy = { text ->
+      runCatching {
+        context.startActivity(
+          Intent.createChooser(
+              Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text),
+              "Send to your agent",
+            )
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+      }
+    },
+  )
 }
 
 /**

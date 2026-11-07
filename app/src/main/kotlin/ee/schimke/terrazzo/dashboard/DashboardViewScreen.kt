@@ -198,6 +198,11 @@ fun DashboardViewScreen(
   connectionPending: Boolean = false,
   /** A section heading's long press: start an agent session about that section. */
   onAskAgentAboutSection: ((view: Int, section: Int, title: String) -> Unit)? = null,
+  /**
+   * Whether a section heading's long press offers "Plan a card": only while an AI agent is
+   * connected, which is who fills a planned card in.
+   */
+  canPlanCards: Boolean = false,
   unlockSnackbars: SnackbarHostState? = null,
   onUnlock: () -> Unit = {},
 ) {
@@ -439,6 +444,7 @@ fun DashboardViewScreen(
           dashboardUrlPath = urlPath ?: "",
           onCardLongPress = onCardLongPress,
           onAskAgentAboutSection = onAskAgentAboutSection,
+          canPlanCards = canPlanCards,
           contentPadding = contentPadding,
           pendingView = pendingView,
           onViewShown = {
@@ -528,6 +534,7 @@ private fun DashboardList(
   dashboardUrlPath: String,
   onCardLongPress: (card: CardConfig, snapshot: HaSnapshot, section: List<CardConfig>) -> Unit,
   onAskAgentAboutSection: ((view: Int, section: Int, title: String) -> Unit)?,
+  canPlanCards: Boolean,
   contentPadding: PaddingValues,
   pendingView: ViewTarget? = null,
   onViewShown: () -> Unit = {},
@@ -813,7 +820,7 @@ private fun DashboardList(
                 viewPath = view.viewPath,
                 pinStore = pinStore,
                 onPinAction = { action -> pinScope.launch { action() } },
-                onPlanCard = { planningCard = true },
+                onPlanCard = if (canPlanCards) ({ planningCard = true }) else null,
                 onAskAgent =
                   onAskAgentAboutSection?.let { ask ->
                     { sectionIndex, title -> ask(viewIndex, sectionIndex, title) }
@@ -1312,7 +1319,8 @@ private fun sectionHeadingFont(): androidx.compose.ui.text.font.FontFamily? {
 /**
  * Context plumbed from [DashboardList] down through every section renderer. Carries enough to
  * compute a stable pin key ([PinStore.sectionKey]) and to dispatch pin/unpin coroutines, plus
- * [onPlanCard], which a long press on a section heading runs to plan a placeholder card.
+ * [onPlanCard], which a long press on a section heading runs to plan a placeholder card (while an
+ * agent is connected).
  */
 private data class SectionPinContext(
   val baseUrl: String,
@@ -1320,7 +1328,8 @@ private data class SectionPinContext(
   val viewPath: String,
   val pinStore: PinStore,
   val onPinAction: (suspend () -> Unit) -> Unit,
-  val onPlanCard: () -> Unit,
+  /** Plan a placeholder card in this view, or null when it isn't offered. */
+  val onPlanCard: (() -> Unit)?,
   /** Start an agent session about one section of this view: its index and title. */
   val onAskAgent: ((sectionIndex: Int, title: String) -> Unit)? = null,
 )
@@ -1353,12 +1362,13 @@ private fun PinnableSectionHeading(
   // A long press offers what a section can start: an agent session about it, or a planned card.
   var menu by remember { mutableStateOf(false) }
   val askAgent = pinContext.onAskAgent
+  val planCard = pinContext.onPlanCard
   SectionHeading(
     title = title,
     collapsible = collapsible,
     expanded = expanded,
     onClick = onClick,
-    onLongClick = if (askAgent == null) pinContext.onPlanCard else ({ menu = true }),
+    onLongClick = if (askAgent == null) planCard else ({ menu = true }),
     onLongClickLabel = if (askAgent == null) "Plan a card" else "Section actions",
     trailing = {
       if (askAgent != null)
@@ -1373,13 +1383,14 @@ private fun PinnableSectionHeading(
               askAgent(sectionIndex, title)
             },
           )
-          androidx.compose.material3.DropdownMenuItem(
-            text = { Text("Plan a card") },
-            onClick = {
-              menu = false
-              pinContext.onPlanCard()
-            },
-          )
+          if (planCard != null)
+            androidx.compose.material3.DropdownMenuItem(
+              text = { Text("Plan a card") },
+              onClick = {
+                menu = false
+                planCard()
+              },
+            )
         }
       IconButton(
         onClick = {

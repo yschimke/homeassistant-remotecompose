@@ -583,6 +583,7 @@ private fun DashboardShell(
                         TextButton(onClick = { customizing = false }) { Text("Done customizing") }
                       DashboardMoreMenu(
                         onEdit = { stack.add(DashboardEditDestination(route.path)) },
+                        // The Home Assistant integration's own agent (its MCP user) answers this.
                         onAskAgent =
                           if (integrationInstalled)
                             ({ stack.add(AgentEditDestination(route.path)) })
