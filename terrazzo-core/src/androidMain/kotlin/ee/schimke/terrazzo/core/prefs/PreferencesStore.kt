@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.core.prefs
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -26,9 +27,10 @@ enum class DarkModePref {
 }
 
 /**
- * Top-level theme selection: Material 3 defaults, or one of the curated Terrazzo palettes. The
- * string values here match `ThemeStyle.name` in the rc-components module so the two tables stay in
- * sync without an explicit mapper.
+ * The palette the app (and Classic cards) draw in: Material 3's dynamic colours, or one of the
+ * curated Terrazzo palettes. Not chosen on its own any more: it follows the [ThemeChoice] (the
+ * Terrazzo palettes are Classic's variants). The string values here match `ThemeStyle.name` in the
+ * rc-components module so the two tables stay in sync without an explicit mapper.
  */
 enum class ThemePref {
   Material3,
@@ -39,9 +41,10 @@ enum class ThemePref {
 }
 
 /**
- * How dashboard cards are drawn, on top of the palette: [Classic] keeps the cards' own look in the
- * chosen [ThemePref] palette; the others are uber themes (`HaUberTheme` in rc-components, matched
- * by [id]) that bring their own palette, shapes, typeface and instrument designs.
+ * How dashboard cards are drawn: [Classic] keeps the cards' own look in the [ThemePref] palette;
+ * the others are uber themes (`HaUberTheme` in rc-components, matched by [id]) that bring their own
+ * palette, shapes, typeface and instrument designs. Chosen through [ThemeChoice], whose designs
+ * these are (with Material 3 beside them).
  */
 enum class CardStylePref(val id: String) {
   Classic("classic"),
@@ -95,9 +98,9 @@ enum class WidgetCardFontsPref {
 }
 
 /**
- * Small app-level preferences. Demo-mode flag plus theme choice (Material 3 vs one of four Terrazzo
- * palettes) and dark-mode preference. Reads are `Flow`s so the UI recomposes when the user flips a
- * switch in Settings; widget refresh takes a one-shot read at update time.
+ * Small app-level preferences. Demo-mode flag plus the theme choice (a design and its variant,
+ * [ThemeChoice]) and dark-mode preference. Reads are `Flow`s so the UI recomposes when the user
+ * flips a switch in Settings; widget refresh takes a one-shot read at update time.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -112,28 +115,38 @@ class PreferencesStore(private val context: Context) {
     context.store.edit { it[DEMO_KEY] = enabled }
   }
 
+  /**
+   * The one theme choice ([ThemeChoice]): a design and, where it has them, its variant. An install
+   * from before the design list has none stored yet and reads its old palette and card style
+   * settings as one ([ThemeChoice.fromLegacy]); those keys are left in place, never written again.
+   */
+  val themeChoice: Flow<ThemeChoice>
+    get() = context.store.data.map(::themeChoiceOf)
+
+  suspend fun themeChoiceNow(): ThemeChoice = themeChoice.first()
+
+  suspend fun setThemeChoice(choice: ThemeChoice) {
+    val normalized = choice.normalized()
+    context.store.edit {
+      it[THEME_DESIGN_KEY] = normalized.design
+      if (normalized.variant == null) it.remove(THEME_VARIANT_KEY)
+      else it[THEME_VARIANT_KEY] = normalized.variant
+    }
+  }
+
+  /** The palette the app (and Classic cards) draw in: [ThemeChoice.palette] of [themeChoice]. */
   val themeStyle: Flow<ThemePref>
-    get() =
-      context.store.data.map { prefs ->
-        prefs[THEME_KEY]?.let { runCatching { ThemePref.valueOf(it) }.getOrNull() }
-          ?: ThemePref.Material3
-      }
+    get() = themeChoice.map { it.palette }
 
   suspend fun themeStyleNow(): ThemePref = themeStyle.first()
 
-  suspend fun setThemeStyle(style: ThemePref) {
-    context.store.edit { it[THEME_KEY] = style.name }
-  }
-
+  /** How dashboard cards are drawn: [ThemeChoice.cardStyle] of [themeChoice]. */
   val cardStyle: Flow<CardStylePref>
-    get() =
-      context.store.data.map { prefs ->
-        prefs[CARD_STYLE_KEY]?.let { runCatching { CardStylePref.valueOf(it) }.getOrNull() }
-          ?: CardStylePref.Classic
-      }
+    get() = themeChoice.map { it.cardStyle }
 
+  /** Chooses the design that draws cards in [style] ([ThemeChoice.of]). */
   suspend fun setCardStyle(style: CardStylePref) {
-    context.store.edit { it[CARD_STYLE_KEY] = style.name }
+    setThemeChoice(ThemeChoice.of(style))
   }
 
   val launcherColours: Flow<LauncherColoursPref>
@@ -245,6 +258,30 @@ class PreferencesStore(private val context: Context) {
    */
   suspend fun updateRoomPins(update: (encoded: String?) -> String) {
     context.store.edit { it[ROOM_PINS_KEY] = update(it[ROOM_PINS_KEY]) }
+  }
+
+  /**
+   * Developer mode, unlocked by tapping the version in Settings seven times: Settings then shows
+   * its Developer section (debug aids, the design server, early updates) and card settings offer
+   * their Lovelace JSON. Off by default; turned back off from that section.
+   */
+  val developerMode: Flow<Boolean>
+    get() = context.store.data.map { it[DEVELOPER_MODE_KEY] ?: false }
+
+  suspend fun setDeveloperMode(enabled: Boolean) {
+    context.store.edit { it[DEVELOPER_MODE_KEY] = enabled }
+  }
+
+  /**
+   * Whether a card's actions offer Card Studio even with no AI agent connected (Settings →
+   * Designers). Off by default: without it the studio is offered as "Ask your agent", only while
+   * an agent is connected.
+   */
+  val cardStudioEntry: Flow<Boolean>
+    get() = context.store.data.map { it[CARD_STUDIO_ENTRY_KEY] ?: false }
+
+  suspend fun setCardStudioEntry(enabled: Boolean) {
+    context.store.edit { it[CARD_STUDIO_ENTRY_KEY] = enabled }
   }
 
   val logsViewEnabled: Flow<Boolean>
@@ -484,10 +521,22 @@ class PreferencesStore(private val context: Context) {
 
   companion object {
     private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
+
+    /** The theme choice in [prefs]: the stored design, else the legacy settings' look. */
+    internal fun themeChoiceOf(prefs: Preferences): ThemeChoice =
+      prefs[THEME_DESIGN_KEY]?.let { ThemeChoice(it, prefs[THEME_VARIANT_KEY]).normalized() }
+        ?: ThemeChoice.fromLegacy(prefs[THEME_KEY], prefs[CARD_STYLE_KEY])
+
+    private val THEME_DESIGN_KEY = stringPreferencesKey("theme_design")
+    private val THEME_VARIANT_KEY = stringPreferencesKey("theme_variant")
+    private val DEVELOPER_MODE_KEY = booleanPreferencesKey("developer_mode")
+    private val CARD_STUDIO_ENTRY_KEY = booleanPreferencesKey("card_studio_entry")
     private val USAGE_SHARING_KEY = stringPreferencesKey("usage_sharing")
     private val DEMO_KEY = booleanPreferencesKey("demo_mode")
+    /** Legacy (read-only): the palette before [THEME_DESIGN_KEY]. */
     private val THEME_KEY = stringPreferencesKey("theme_style")
     private val DARK_KEY = stringPreferencesKey("dark_mode")
+    /** Legacy (read-only): the card style before [THEME_DESIGN_KEY]. */
     private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
     private val LAUNCHER_COLOURS_KEY = stringPreferencesKey("launcher_widget_colours")
     private val WIDGET_CARD_FONTS_KEY = stringPreferencesKey("widget_card_fonts")

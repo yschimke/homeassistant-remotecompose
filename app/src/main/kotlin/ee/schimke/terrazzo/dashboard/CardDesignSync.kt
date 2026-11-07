@@ -56,12 +56,17 @@ object CardDesignSync {
   fun choice(context: Context, prefs: PreferencesStore): Flow<CardDesignChoice> =
     combine(
         prefs.designServerUrl,
-        prefs.themeStyle,
-        prefs.cardStyle,
+        prefs.themeChoice,
         prefs.designVariant,
         prefs.designAuthor,
-      ) { url, theme, cardStyle, variant, author ->
-        CardDesignChoice(url.trim(), theme.toThemeStyle(), cardStyle.toUberTheme(), variant, author)
+      ) { url, theme, variant, author ->
+        CardDesignChoice(
+          url.trim(),
+          theme.palette.toThemeStyle(),
+          theme.cardStyle.toUberTheme(),
+          variant,
+          author,
+        )
       }
       .combine(CardDesignOverrideStore.of(context).overrides) { choice, overrides ->
         choice.copy(overrides = overrides)

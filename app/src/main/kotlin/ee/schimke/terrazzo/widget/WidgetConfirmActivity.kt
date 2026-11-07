@@ -17,13 +17,10 @@ import ee.schimke.ha.rc.HighRiskActions
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.decodeHaAction
 import ee.schimke.ha.rc.encodeHaAction
-import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
-import ee.schimke.terrazzo.core.prefs.ThemePref
+import ee.schimke.terrazzo.core.prefs.ThemeChoice
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.TerrazzoTheme
-import ee.schimke.terrazzo.ui.toThemeStyle
-import ee.schimke.terrazzo.ui.toUberTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -64,13 +61,11 @@ class WidgetConfirmActivity : ComponentActivity() {
       val snapshot = entry?.let { graph.offlineCache.latestSnapshot(it.baseUrl) }
       val prompt = widgetConfirmPrompt(action, snapshot)
       setContent {
-        val themePref by
-          graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.Material3)
+        val themeChoice by
+          graph.preferencesStore.themeChoice.collectAsState(initial = ThemeChoice.Default)
         val darkPref by
           graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
-        val cardStylePref by
-          graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
-        TerrazzoTheme(themePref.toThemeStyle(), darkPref, cardStylePref.toUberTheme()) {
+        TerrazzoTheme(themeChoice, darkPref) {
           AlertDialog(
             onDismissRequest = ::finish,
             title = { Text(prompt) },

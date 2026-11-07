@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.components.terrazzoColorScheme
 import ee.schimke.ha.rc.components.terrazzoTypographyFor
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
+import ee.schimke.terrazzo.core.prefs.ThemeChoice
 import ee.schimke.terrazzo.core.prefs.ThemePref
 
 /**
@@ -87,6 +88,15 @@ fun TerrazzoTheme(
   ) {
     MaterialTheme(colorScheme = colors, typography = typography, content = content)
   }
+}
+
+/**
+ * [TerrazzoTheme] for the user's [choice] (a design and its variant): the palette it implies and
+ * the card style it draws in.
+ */
+@Composable
+fun TerrazzoTheme(choice: ThemeChoice, darkMode: DarkModePref, content: @Composable () -> Unit) {
+  TerrazzoTheme(choice.palette.toThemeStyle(), darkMode, choice.cardStyle.toUberTheme(), content)
 }
 
 /** Convenience: map a [ThemePref] value to the corresponding [ThemeStyle]. */

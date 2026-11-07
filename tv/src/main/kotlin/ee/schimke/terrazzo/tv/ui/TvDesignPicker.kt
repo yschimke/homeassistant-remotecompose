@@ -25,62 +25,36 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import ee.schimke.ha.rc.components.HaUberTheme
-import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.tv.data.TvDesign
 
 /**
- * TV-side theme picker. Vertical column of focusable rows; the row's border lights up while
- * focused, the row's surface fills with `primaryContainer` while selected. The first row grabs
- * initial focus so the remote's DPAD has a starting point.
+ * TV-side design picker: the TV's one theme choice, a short list of designs ([TvDesign.all], plus
+ * the current one if an earlier build picked another). Vertical column of focusable rows; the row's
+ * border lights up while focused, the row's surface fills with `primaryContainer` while selected.
+ * The first row grabs initial focus so the remote's DPAD has a starting point.
  */
 @Composable
-fun TvThemePicker(
-  selected: ThemeStyle,
-  onSelect: (ThemeStyle) -> Unit,
+fun TvDesignPicker(
+  selected: TvDesign,
+  onSelect: (TvDesign) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   Column(modifier = modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
     Text(
-      text = "Theme",
+      text = "Design",
       style = MaterialTheme.typography.titleLarge,
       color = MaterialTheme.colorScheme.onBackground,
     )
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
-    ThemeStyle.entries.forEachIndexed { index, style ->
+    val designs = TvDesign.all.let { if (selected in it) it else it + selected }
+    designs.forEachIndexed { index, design ->
       PickerRow(
-        title = style.displayName,
-        subtitle = style.tagline,
-        selected = style == selected,
-        onSelect = { onSelect(style) },
+        title = design.title,
+        subtitle = design.subtitle,
+        selected = design == selected,
+        onSelect = { onSelect(design) },
         modifier = if (index == 0) Modifier.focusRequester(firstFocus) else Modifier,
-      )
-    }
-  }
-}
-
-/**
- * TV-side card style picker: the uber themes (`HaUberTheme.all`), in the same focusable rows as
- * [TvThemePicker]. Classic keeps the theme's palette; every other style brings its own look.
- */
-@Composable
-fun TvCardStylePicker(
-  selected: String,
-  onSelect: (String) -> Unit,
-  modifier: Modifier = Modifier,
-) {
-  Column(modifier = modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-    Text(
-      text = "Card style",
-      style = MaterialTheme.typography.titleLarge,
-      color = MaterialTheme.colorScheme.onBackground,
-    )
-    HaUberTheme.all.forEach { uber ->
-      PickerRow(
-        title = uber.displayName,
-        subtitle = if (uber.id == HaUberTheme.Classic.id) "Follows the theme's palette" else null,
-        selected = uber.id == selected,
-        onSelect = { onSelect(uber.id) },
       )
     }
   }

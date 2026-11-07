@@ -554,16 +554,16 @@ class MobileWearSyncManager(
 
     // Current mobile settings → /wear/settings, including every appearance change.
     scope.launch {
-      combine(prefs.demoMode, sessionState, inputEditing, prefs.themeStyle, prefs.cardStyle) {
+      combine(prefs.demoMode, sessionState, inputEditing, prefs.themeChoice) {
           demo,
           session,
           editing,
-          theme,
-          style ->
+          theme ->
           WearSettings(
             demoMode = demo,
-            themeStyle = theme.name,
-            cardStyle = style.id,
+            // The watch follows the phone's design: its palette and the card style it draws in.
+            themeStyle = theme.palette.name,
+            cardStyle = theme.cardStyle.id,
             inputEditingEnabled =
               editing &&
                 !demo &&

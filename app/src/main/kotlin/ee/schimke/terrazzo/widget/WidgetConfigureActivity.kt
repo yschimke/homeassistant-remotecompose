@@ -48,16 +48,13 @@ import androidx.lifecycle.lifecycleScope
 import ee.schimke.ha.client.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
-import ee.schimke.terrazzo.core.prefs.ThemePref
+import ee.schimke.terrazzo.core.prefs.ThemeChoice
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.TerrazzoTheme
-import ee.schimke.terrazzo.ui.toThemeStyle
-import ee.schimke.terrazzo.ui.toUberTheme
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -101,13 +98,11 @@ class WidgetConfigureActivity : ComponentActivity() {
         } ?: HaSnapshot()
       val size = WidgetSizing.forWidgetCapture(manager, widgetId)
       setContent {
-        val themePref by
-          graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.Material3)
+        val themeChoice by
+          graph.preferencesStore.themeChoice.collectAsState(initial = ThemeChoice.Default)
         val darkPref by
           graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
-        val cardStylePref by
-          graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
-        TerrazzoTheme(themePref.toThemeStyle(), darkPref, cardStylePref.toUberTheme()) {
+        TerrazzoTheme(themeChoice, darkPref) {
           // Previews an edit in the widget's own style: a card's style override is keyed by its
           // whole config, so a renamed card would otherwise lose it until saved.
           val capture: WidgetPreviewCapture = { ctx, url, card, state, previewSize ->

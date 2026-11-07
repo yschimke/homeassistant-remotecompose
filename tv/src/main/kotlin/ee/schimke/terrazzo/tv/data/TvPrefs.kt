@@ -5,44 +5,35 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import ee.schimke.ha.rc.components.ThemeStyle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * TV-local preferences. Mirrors the shape of `WearPrefs` — theme style plus a demo-mode toggle.
- * Unlike the Wear app, the TV has no phone pairing, so demo mode is a local toggle on the TV
- * itself.
+ * TV-local preferences: the design the kiosk is drawn in plus a demo-mode toggle. Unlike the Wear
+ * app, the TV has no phone pairing, so both are local to the TV itself.
  *
- * Defaults to [ThemeStyle.TerrazzoKiosk] since wall-mounted dashboards are the TV module's brief.
+ * Defaults to [TvDesign.Kiosk] since wall-mounted dashboards are the TV module's brief.
  */
 class TvPrefs(private val context: Context) {
 
-  val themeStyle: Flow<ThemeStyle> =
+  /**
+   * The design ([TvDesign]) the kiosk is drawn in. A TV set up before the design list reads its
+   * old palette and card style settings as one ([TvDesign.fromLegacy]).
+   */
+  val design: Flow<TvDesign> =
     context.store.data.map { prefs ->
-      prefs[THEME_KEY]?.let { runCatching { ThemeStyle.valueOf(it) }.getOrNull() }
-        ?: ThemeStyle.TerrazzoKiosk
+      prefs[DESIGN_KEY]?.let(TvDesign::byId)
+        ?: TvDesign.fromLegacy(prefs[THEME_KEY], prefs[CARD_STYLE_KEY])
     }
 
-  suspend fun setThemeStyle(style: ThemeStyle) {
-    context.store.edit { it[THEME_KEY] = style.name }
-  }
-
-  /**
-   * The card style the kiosk is drawn in: an `HaUberTheme` id (`classic`, `console`, …). Classic
-   * follows [themeStyle]'s palette; the others bring their own palette, corners and type weight.
-   */
-  val cardStyle: Flow<String> =
-    context.store.data.map { prefs -> prefs[CARD_STYLE_KEY] ?: "classic" }
-
-  suspend fun setCardStyle(id: String) {
-    context.store.edit { it[CARD_STYLE_KEY] = id }
+  suspend fun setDesign(design: TvDesign) {
+    context.store.edit { it[DESIGN_KEY] = design.id }
   }
 
   /**
    * Demo-mode toggle. When on, the kiosk preview pulls from `DemoData` instead of the
    * (not-yet-wired) live HA session, so the room sees animated values without a working HA
-   * instance.
+   * instance. Offered in debug builds only.
    */
   val demoMode: Flow<Boolean> = context.store.data.map { prefs -> prefs[DEMO_KEY] ?: false }
 
@@ -52,7 +43,10 @@ class TvPrefs(private val context: Context) {
 
   companion object {
     private val Context.store by preferencesDataStore(name = "terrazzo_tv_prefs")
+    private val DESIGN_KEY = stringPreferencesKey("design")
+    /** Legacy (read-only): the palette before [DESIGN_KEY]. */
     private val THEME_KEY = stringPreferencesKey("theme_style")
+    /** Legacy (read-only): the card style before [DESIGN_KEY]. */
     private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
     private val DEMO_KEY = booleanPreferencesKey("demo_mode")
   }
