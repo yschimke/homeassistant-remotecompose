@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.87](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.86...v0.1.87) (2026-11-07)
+
+
+### Features
+
+* bitmap-font filter for widget hosts, applied by the design server for Wear designs ([#1493](https://github.com/yschimke/homeassistant-remotecompose/issues/1493)) ([29f0fb7](https://github.com/yschimke/homeassistant-remotecompose/commit/29f0fb7e982447798d80a2361392b4e0d3323d57))
+* draw Rugged Digital's heading font on launcher widgets ([#1503](https://github.com/yschimke/homeassistant-remotecompose/issues/1503)) ([77f6095](https://github.com/yschimke/homeassistant-remotecompose/commit/77f6095b2935d052403325ae04c63d35882cb47f))
+
+
+### Bug Fixes
+
+* **deps:** update androidx-compose ([#1457](https://github.com/yschimke/homeassistant-remotecompose/issues/1457)) ([3bf71f6](https://github.com/yschimke/homeassistant-remotecompose/commit/3bf71f6eddabbfc58d7898b2e5202713cd13ea80))
+* **deps:** update dependency ee.schimke.composeai:rc-players-bom to v2.25.0 ([#1495](https://github.com/yschimke/homeassistant-remotecompose/issues/1495)) ([118194d](https://github.com/yschimke/homeassistant-remotecompose/commit/118194d4a34a4ef0570b0a71f3157710cd8e8ac0))
+
 ## [0.1.86](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.85...v0.1.86) (2026-11-06)
 
 
