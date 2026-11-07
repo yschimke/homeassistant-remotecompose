@@ -645,12 +645,22 @@ private fun DashboardsRoot(
   val logStore = graph.logStore
   // Whether this Home Assistant runs its own design server (the Card Designs add-on), asked on each
   // connect so installing or removing the add-on takes effect then. The design choice follows the
-  // preference, and a change syncs (TerrazzoApplication).
+  // preference, and a change syncs (TerrazzoApplication). The socket can drop between Connected and
+  // the reply (backgrounding disconnects it); that fails the call rather than answering it, so keep
+  // the preference as it is and ask again on the next connect.
   LaunchedEffect(session) {
     if (session is DemoHaSession) return@LaunchedEffect
-    session.connectionStatus.collect { status ->
-      if (status != SessionConnectionStatus.Connected) return@collect
-      val found = if (session.privateDesignServer()) session.baseUrl else ""
+    session.connectionStatus.collectLatest { status ->
+      if (status != SessionConnectionStatus.Connected) return@collectLatest
+      val available =
+        try {
+          session.privateDesignServer()
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          return@collectLatest
+        }
+      val found = if (available) session.baseUrl else ""
       if (graph.preferencesStore.privateDesignServer.first() != found) {
         graph.preferencesStore.setPrivateDesignServer(found)
       }
