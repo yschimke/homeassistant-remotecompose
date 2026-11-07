@@ -221,32 +221,44 @@ fun RemoteHaPictureGlance(
 @Composable
 @RemoteComposable
 private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifier: RemoteModifier) {
+  // Under a kit with display windows a camera's feed is in one, as its readouts are.
+  if (cameraInLcdWindow(data.pictureEntityId)) {
+    LcdPictureWindow(modifier) { GlancePicture(data, theme) }
+    return
+  }
   RemoteBox(
     modifier = modifier.background(theme.divider),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    // The placeholder first, the picture over it: a picture that can't load (no loader, offline)
-    // leaves the placeholder showing rather than an empty band.
-    if (haLayouts().notes == HaNoteStyle.Tape) ConsoleTapeLabel("Image unavailable".rs)
-    else
-      RemoteBasicIcon(
-        imageVector = data.placeholderIcon.toRemoteImageVector(),
-        contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
-        modifier = RemoteModifier.size(40.rdp),
-        tint = theme.placeholderAccent,
-      )
-    data.imageUrl
-      ?.let { rememberPictureBitmap(it, data.pictureEntityId) }
-      ?.let { picture ->
-        RemoteImage(
-          bitmap = picture,
-          contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
-          modifier = RemoteModifier.fillMaxSize(),
-          // Fill-crop, as HA's picture cards cover their area.
-          contentScale = ContentScale.Crop,
-        )
-      }
+    GlancePicture(data, theme)
   }
+}
+
+/** The glance's picture over its placeholder, centred in its area. */
+@Composable
+@RemoteComposable
+private fun GlancePicture(data: HaPictureGlanceData, theme: RemoteHaTheme) {
+  // The placeholder first, the picture over it: a picture that can't load (no loader, offline)
+  // leaves the placeholder showing rather than an empty band.
+  if (haLayouts().notes == HaNoteStyle.Tape) ConsoleTapeLabel("Image unavailable".rs)
+  else
+    RemoteBasicIcon(
+      imageVector = data.placeholderIcon.toRemoteImageVector(),
+      contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
+      modifier = RemoteModifier.size(40.rdp),
+      tint = theme.placeholderAccent,
+    )
+  data.imageUrl
+    ?.let { rememberPictureBitmap(it, data.pictureEntityId) }
+    ?.let { picture ->
+      RemoteImage(
+        bitmap = picture,
+        contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
+        modifier = RemoteModifier.fillMaxSize(),
+        // Fill-crop, as HA's picture cards cover their area.
+        contentScale = ContentScale.Crop,
+      )
+    }
 }
 
 @Composable
