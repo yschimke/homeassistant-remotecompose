@@ -510,15 +510,18 @@ jobs:
             echo "$TAG_NAME is already published" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  # Arch users get the release through the AUR's terrazzo-bin once it is public (the PKGBUILD
-  # downloads the .deb from the release). Off until the repository variable AUR_PUBLISH is 'true';
-  # aur-publish.yml says how to set it up.
-  aur:
-    name: AUR package
+  # Arch users get the release from the pacman repository on the `pacman-repo` release, and through
+  # the AUR's terrazzo-bin once AUR_PUBLISH is 'true' (arch-packages.yml says how to set it up).
+  # Both are built from the release's .deb, so they wait until the release is public.
+  arch:
+    name: Arch packages
     needs: publish-release
-    if: vars.AUR_PUBLISH == 'true'
-    uses: ./.github/workflows/aur-publish.yml
+    uses: ./.github/workflows/arch-packages.yml
+    permissions:
+      contents: write
     with:
       tag: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      push_repo: true
+      push_aur: ${{ vars.AUR_PUBLISH == 'true' }}
     secrets:
       AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
