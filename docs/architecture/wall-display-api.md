@@ -18,8 +18,10 @@ GET  /dashboards                          once: pick one (or use the `default`)
 GET  /dashboards/{d}                      the grid; again when `etag` changes
 GET  /values/{d}?cards=…&wait=0           every card's design sha + every value
 GET  /blobs/{sha}.rc                      each design it doesn't have cached: immutable
+GET  /fonts/fonts.json                     the named faces; each by hash, immutable
 loop:
   GET /values/{d}?cards=…&since={cursor}  long poll: only what changed
+  GET /pictures/{d}/{card}/{slot}?w=&h=   when a `<slot>.picture_url` changes
 on tap:
   POST /actions/{d}/{card}                {"action": "<the `ha` host action's string>"}
 ```
@@ -135,6 +137,7 @@ One endpoint does both the initial load and the updates, for many cards at once:
   pushes them into the player as they are. Types are JSON's: `true`/`false` booleans, integers
   without a point, floats with one, strings; `null` is a number with no JSON form (an
   unavailable reading, NaN).
+- `<slot>.picture_url` is where to fetch a slot's picture (see [pictures](#get-picturesurl_pathcard_idslotwhfitformat)).
 - **`reset: true`** means the cursor is from before a restart or a dashboard edit: the answer is
   full again, and if `etag` differs from the layout the device holds, it fetches the layout.
 - The poll answers as soon as anything it asked about changes. A burst of state changes (a scene)
@@ -179,6 +182,50 @@ switches, locks, …; more-info otherwise). A template can never choose the serv
 `ran: null` is an action the device handles itself, from the card's config: `MoreInfo` (show
 something or nothing), `Navigate` (switch view when the path is this dashboard's), `Url`. 403 is a
 service the user may not call. The state change it causes reaches the device through its poll.
+
+## Icons, fonts and pictures
+
+**Icons** need nothing: MDI icons are vector paths inside the design, captured with it (an on/off
+design carries both glyphs and a value picks one).
+
+### `GET /fonts/fonts.json` and `GET /fonts/{sha256}.{ext}`
+
+A design may name a face no device ships (`RemoteFontFamily.Named`: `digital7`, `gspot`, from
+`card-fonts/`). The manifest is the design server's, with a `url` per face:
+
+```json
+{"families": [{"name": "digital7", "role": "display",
+  "fonts": [{"file": "digital7.ttf", "weight": 400, "style": "italic",
+             "sha256": "4261…", "url": "/api/terrazzo/wall/v1/fonts/4261….ttf"}]}]}
+```
+
+A device fetches the manifest at boot (`Cache-Control: max-age=3600`), then each face it can use by
+hash: immutable, checked against its sha256 here before it's served, and cached by hash like
+designs. A player hands faces to its typeface loader by `name`; a device that can't load a face
+keeps its own for that name, as a launcher widget does.
+
+### `GET /pictures/{url_path}/{card_id}/{slot}?w=&h=&fit=&format=`
+
+A design never carries an image URL: a picture slot is `rc-slot://<slot>/entity_picture`. This
+endpoint is the device's loader for it. It finds `<slot>` (`camera.s0`) among the card's own
+entities by position and domain (`CardDesignSlots.resolvePictureUrl`'s rule), checks the user may
+read that entity, fetches its `entity_picture` (one Home Assistant serves, such as
+`/api/camera_proxy/…` or `/local/…`, on its own loopback address with the device's token; an
+`http(s)` one as it is, with no token) and scales it:
+
+| query | |
+|---|---|
+| `w`, `h` | The box in pixels, 1–2048. Either may be left out: the other side follows the picture's aspect ratio. A picture is never scaled up. |
+| `fit` | `contain` (default): all of it, inside the box. `cover`: the box filled, cropped at the centre. |
+| `format` | `jpeg` (default once scaled, quality 80, alpha flattened onto black) or `png`. With no query at all, the picture as it came. |
+
+The `ETag` is the answer's hash, so `If-None-Match` gets a 304 when the picture didn't change. The
+long poll says when to fetch: every card value map also has a `<slot>.picture_url` for each slot
+whose entity has a picture, for example
+`/api/terrazzo/wall/v1/pictures/wall-panel/v0.c3/camera.s0?v=1a2b3c4d5e6f`. Its `v` changes with
+the entity's picture URL (a camera's still moves with its rotating token), and that URL is
+cacheable for a day. These names are the device's, not the document's: the player has no slot for
+them, so they aren't pushed into it.
 
 ## Why long poll, not a websocket
 
@@ -230,6 +277,8 @@ one.
   and the device shows a placeholder.
 - **Strategy dashboards** (the auto-generated Overview) have no saved cards: take control first.
 - **`last_changed`** bindings read 0: the resolve request carries a state and its attributes only.
+- **Pictures Home Assistant serves** are fetched from `127.0.0.1` on its HTTP port; an `http:
+  server_host` that leaves out loopback breaks them.
 - **Converter bindings that tick** (a clock's date) update when an entity changes or the document
   computes them itself; there's no timer on the server.
 

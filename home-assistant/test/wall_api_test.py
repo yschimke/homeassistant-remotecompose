@@ -215,6 +215,75 @@ class ValueStoreTest(unittest.TestCase):
         self.assertEqual({'a': {'error': 'No design'}}, store.changes(['a'], 0))
 
 
+class PictureTest(unittest.TestCase):
+    glance = {'type': 'picture-glance', 'entities': ['camera.front', 'person.ann', 'light.porch']}
+
+    def test_a_slot_names_its_own_entity_by_position_and_domain(self):
+        self.assertEqual('camera.front', wall.picture_entity(self.glance, 'camera.s0'))
+        self.assertEqual('person.ann', wall.picture_entity(self.glance, 'person.s1'))
+        for slot in ('camera.s1', 'camera.s9', 'camera.front', '../x', '', None):
+            self.assertIsNone(wall.picture_entity(self.glance, slot), slot)
+
+    def test_values_point_at_the_slots_with_pictures_and_move_with_them(self):
+        values = wall.picture_values(None, 'v0.c0', self.glance, {
+            'camera.front': '/api/camera_proxy/camera.front?token=a', 'person.ann': '/local/ann.png'})
+        self.assertEqual({'camera.s0.picture_url', 'person.s1.picture_url'}, set(values))
+        self.assertTrue(values['camera.s0.picture_url'].startswith(
+            '/api/terrazzo/wall/v1/pictures/lovelace/v0.c0/camera.s0?v='))
+        moved = wall.picture_values(None, 'v0.c0', self.glance, {
+            'camera.front': '/api/camera_proxy/camera.front?token=b'})
+        self.assertNotEqual(values['camera.s0.picture_url'], moved['camera.s0.picture_url'])
+
+    def test_sources(self):
+        self.assertEqual(('local', '/local/a.png'), wall.picture_source('/local/a.png'))
+        self.assertEqual(('remote', 'https://x/a.png'), wall.picture_source('https://x/a.png'))
+        for bad in ('//evil/a.png', 'file:///etc/passwd', 'a.png', '', None):
+            self.assertIsNone(wall.picture_source(bad), bad)
+
+    def test_the_query(self):
+        self.assertEqual((None, None, 'contain', None), wall.picture_query({}))
+        self.assertEqual((320, 240, 'cover', 'jpeg'),
+                         wall.picture_query({'w': '320', 'h': '240', 'fit': 'cover', 'format': 'jpg'}))
+        for bad in ({'w': '0'}, {'h': '99999'}, {'w': '-1'}, {'fit': 'stretch'}, {'format': 'gif'}):
+            with self.assertRaises(wall.WallError):
+                wall.picture_query(bad)
+
+    def test_boxes(self):
+        # Contain: all of it, inside the box.
+        self.assertEqual((320, 180, None), wall.picture_box(1920, 1080, 320, 320, 'contain'))
+        # Cover: the box filled, centred crop.
+        self.assertEqual((569, 320, (124, 0, 444, 320)), wall.picture_box(1920, 1080, 320, 320, 'cover'))
+        # One side: the other follows.
+        self.assertEqual((640, 360, None), wall.picture_box(1920, 1080, 640, None, 'contain'))
+        # Never scaled up.
+        self.assertEqual((100, 50, None), wall.picture_box(100, 50, 400, 400, 'contain'))
+        self.assertEqual((100, 50, (0, 0, 100, 50)), wall.picture_box(100, 50, 400, 400, 'cover'))
+        self.assertEqual((1920, 1080, None), wall.picture_box(1920, 1080, None, None, 'contain'))
+
+
+class FontTest(unittest.TestCase):
+    sha = 'a' * 64
+    manifest = {'families': [
+        {'name': 'digital7', 'role': 'display',
+         'fonts': [{'file': 'digital7.ttf', 'weight': 400, 'style': 'italic', 'sha256': 'a' * 64}]},
+        {'name': 'broken', 'fonts': [{'file': 'x.ttf'}]},
+    ]}
+
+    def test_faces_are_fetched_by_hash(self):
+        out = wall.font_manifest(self.manifest)
+        self.assertEqual(['digital7'], [f['name'] for f in out['families']])
+        self.assertEqual(f'/api/terrazzo/wall/v1/fonts/{self.sha}.ttf', out['families'][0]['fonts'][0]['url'])
+        self.assertEqual('italic', out['families'][0]['fonts'][0]['style'])
+
+    def test_a_hash_finds_its_file(self):
+        self.assertEqual('digital7.ttf', wall.font_file(self.manifest, self.sha))
+        self.assertIsNone(wall.font_file(self.manifest, 'b' * 64))
+        sneaky = {'families': [{'fonts': [{'file': '../secrets', 'sha256': self.sha}]}]}
+        self.assertIsNone(wall.font_file(sneaky, self.sha))
+        self.assertTrue(wall.FONT_FILE.match(f'{self.sha}.woff2'))
+        self.assertFalse(wall.FONT_FILE.match('fonts.json'))
+
+
 class QueryTest(unittest.TestCase):
     def test_wait_is_clamped(self):
         self.assertEqual(wall.DEFAULT_WAIT, wall.clamp_wait(None))

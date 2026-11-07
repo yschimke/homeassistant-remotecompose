@@ -1,0 +1,6 @@
+title: Wall pictures
+views:
+  - title: Pictures
+    cards:
+      - type: picture-entity
+        entity: sensor.wall_picture

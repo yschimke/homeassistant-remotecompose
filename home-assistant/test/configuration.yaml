@@ -15,6 +15,11 @@ lovelace:
       title: Second panel
       show_in_sidebar: false
       filename: second-dashboard.yaml
+    wall-pictures:
+      mode: yaml
+      title: Wall pictures
+      show_in_sidebar: false
+      filename: wall-pictures.yaml
     wall-panel:
       mode: yaml
       title: Wall panel
@@ -33,3 +38,8 @@ template:
           action: input_boolean.turn_off
           target:
             entity_id: input_boolean.wall_light
+  - sensor:
+      - name: Wall picture
+        unique_id: wall_picture
+        state: ok
+        picture: /local/wall-test.png
