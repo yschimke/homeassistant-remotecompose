@@ -2,6 +2,9 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.layout.RemoteAlignment
+import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteSize
@@ -9,6 +12,8 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.drawWithContent
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shaders.RemoteBrush
 import androidx.compose.remote.creation.compose.shaders.linearGradient
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
@@ -52,6 +57,65 @@ internal fun lcdScreen(cornerDp: Int = HaSpace.XXS): RemoteModifier =
       .background(haTheme().dashboardBackground)
 
 /**
+ * Whether the picture of [pictureEntityId] is a camera's live feed shown in the watch's display
+ * window: under a kit with [HaLayouts.screenChamber] (Rugged Digital), for a `camera` entity.
+ */
+@Composable
+internal fun cameraInLcdWindow(pictureEntityId: String?): Boolean =
+  haLayouts().screenChamber && pictureEntityId?.substringBefore('.') == "camera"
+
+/**
+ * A camera's feed in the watch's display window, as the kit's readouts sit in theirs: the window
+ * fills [modifier] inside a [PictureWindowMarginDp] margin, and [content] (the picture, or its
+ * placeholder) lies on its floor, clipped to its corners, under the lip's shadow, the sheen and the
+ * bevel. The window's scale is fixed ([PictureWindowUnitDp] a face unit), so its inset and corners
+ * are the clip's.
+ */
+@Composable
+@RemoteComposable
+internal fun LcdPictureWindow(
+  modifier: RemoteModifier,
+  content: @Composable @RemoteComposable () -> Unit,
+) {
+  val inset = PictureWindowPadUnits * PictureWindowUnitDp
+  val corner = ChamberWinR * PictureWindowUnitDp
+  RemoteBox(
+    modifier =
+      modifier
+        .padding(PictureWindowMarginDp.rdp)
+        .then(
+          lcdChamber(
+            padUnits = PictureWindowPadUnits,
+            unitPx = PictureWindowUnitDpX4.rdp.toPx() / 4f.rf,
+            glassOverContent = true,
+          ),
+        ),
+  ) {
+    RemoteBox(
+      modifier =
+        RemoteModifier.fillMaxSize()
+          .padding(inset.toInt().rdp)
+          .clip(RemoteRoundedCornerShape(corner.toInt().rdp)),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      content()
+    }
+  }
+}
+
+/** The room around a camera's window in its card, in dp. */
+private const val PictureWindowMarginDp = 8
+
+/** A camera window's face unit, in dp, four times over (a whole number of dp). */
+private const val PictureWindowUnitDpX4 = 3
+
+/** A camera window's face unit, in dp: its 12-unit corners 9 dp, its 4-unit inset 3 dp. */
+private const val PictureWindowUnitDp = PictureWindowUnitDpX4 / 4f
+
+/** The room around a camera's window for its trench and edge, in face units. */
+private const val PictureWindowPadUnits = 4f
+
+/**
  * The watch's display window, drawn behind its content:
  * - a dark trench just outside the edge,
  * - the floor in the window colour, under the [wafer] if it has one (wall segments x0, y0, x1, y1
@@ -64,12 +128,19 @@ internal fun lcdScreen(cornerDp: Int = HaSpace.XXS): RemoteModifier =
  * [padUnits] is the room around the window for its trench and edge. While [isOn] is true the window
  * is backlit, a soft accent glow rising from the middle of its floor like the watch's backlight;
  * with no [isOn] it's never lit.
+ *
+ * [unitPx] fixes one face unit, in pixels, rather than fitting the window to the box, so its inset
+ * and corners are known lengths a content can be clipped to ([LcdPictureWindow]). With
+ * [glassOverContent] the content sits on the floor, under the lip's shadow, the sheen and the
+ * bevel, as a picture behind the watch's glass; otherwise it's drawn over the whole window.
  */
 @Composable
 internal fun lcdChamber(
   isOn: RemoteBoolean? = null,
   padUnits: Float = 6f,
   wafer: List<FloatArray>? = null,
+  unitPx: RemoteFloat? = null,
+  glassOverContent: Boolean = false,
 ): RemoteModifier {
   val theme = haTheme()
   val dark = currentHaUberTheme().let { it.theme.palette(it.darkTheme).isDark }
@@ -88,7 +159,8 @@ internal fun lcdChamber(
     // One face unit: the box's height over the face's window height, unless the box is narrower
     // than the face's window (a tall note), when its width sets it instead, so the corners and
     // edge never outgrow a narrow box. The window then fills the box both ways.
-    val unit = (height / (ChamberWinH + p * 2f).rf).min(width / (ChamberMinWinW + p * 2f).rf)
+    val unit =
+      unitPx ?: (height / (ChamberWinH + p * 2f).rf).min(width / (ChamberMinWinW + p * 2f).rf)
     val ww = width / unit - (p * 2f).rf
     val wh = height / unit - (p * 2f).rf
     val wr = ChamberWinR.rf
@@ -124,6 +196,10 @@ internal fun lcdChamber(
           (9f + i * 2f).rf,
         )
       }
+    }
+    // A picture on the floor, under the glass.
+    if (glassOverContent) drawContent()
+    scale(unit, unit, RemoteOffset(0f.rf, 0f.rf)) {
       // The lip's shadow and the glass's sheen, each a gradient across the whole window that fades
       // out where it ends, so the window's own corners clip it.
       fun window(from: RemoteOffset, to: RemoteOffset, vararg stops: Pair<Float, Ink>) =
@@ -270,7 +346,7 @@ internal fun lcdChamber(
         1f to left,
       )
     }
-    drawContent()
+    if (!glassOverContent) drawContent()
   }
 }
 

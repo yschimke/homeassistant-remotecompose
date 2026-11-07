@@ -95,13 +95,10 @@ fun RemoteHaPictureEntity(
       modifier.then(clickable).then(sizeModifier).then(cardChrome(theme.divider, theme.divider)),
   ) {
     RemoteColumn(modifier = RemoteModifier.fillMaxSize()) {
-      RemoteBox(
-        modifier =
-          RemoteModifier.fillMaxWidth()
-            .weight(1f)
-            .background(accent.copy(alpha = accent.alpha * 0.10f.rf)),
-        contentAlignment = RemoteAlignment.Center,
-      ) {
+      // The picture's area: under a kit with display windows a camera's feed is in one, as its
+      // readouts are; else the area tinted in the accent, edge to edge.
+      val area = RemoteModifier.fillMaxWidth().weight(1f)
+      val picture: @Composable @RemoteComposable () -> Unit = {
         if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel(
             (if (data.imageUrl == null) "No image" else "Image unavailable").rs,
@@ -181,6 +178,14 @@ fun RemoteHaPictureEntity(
           }
         }
       }
+      if (cameraInLcdWindow(data.pictureEntityId)) LcdPictureWindow(area, picture)
+      else
+        RemoteBox(
+          modifier = area.background(accent.copy(alpha = accent.alpha * 0.10f.rf)),
+          contentAlignment = RemoteAlignment.Center,
+        ) {
+          picture()
+        }
       if (showStrip) {
         val barBg = theme.cardBackground
         RemoteRow(
