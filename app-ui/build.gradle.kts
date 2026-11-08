@@ -51,6 +51,9 @@ kotlin {
     }
     androidMain.dependencies { implementation(libs.play.app.update) }
     jvmMain.dependencies {
+      implementation(libs.desktop.keyring)
+      implementation(libs.kotlinx.serialization.json)
+      implementation(libs.compose.multiplatform.ui.tooling.preview)
       implementation(compose.desktop.currentOs)
       implementation(libs.kotlinx.coroutines.swing)
       implementation(libs.compose.webview)

@@ -146,6 +146,7 @@ try:
             page.route('https://ha.coo.ee/designs/v1/generate', generate)
             page.route(DESIGN_BLOB, lambda route: route.fulfill(body=gauge, content_type='application/octet-stream', headers={'Access-Control-Allow-Origin': '*'}))
             page.goto(f'http://127.0.0.1:{server.server_port}/', wait_until='networkidle')
+            page.get_by_role('button', name='Advanced options', exact=True).dispatch_event('click')
             for label, value in [('Home Assistant URL', 'https://ha.example.test'), ('Long-lived access token', 'fixture-token')]:
                 page.get_by_role('textbox', name=label, exact=True).click(force=True, delay=100)
                 page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')

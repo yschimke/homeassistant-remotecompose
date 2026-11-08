@@ -6,9 +6,9 @@ actor CardCache {
   private let decoder = JSONDecoder()
   private let encoder = JSONEncoder()
 
-  init(fileManager: FileManager = .default) {
-    let support = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-    root = support.appendingPathComponent("Terrazzo", isDirectory: true)
+  init(fileManager: FileManager = .default, directory: URL? = nil) {
+    root = directory ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+      .appendingPathComponent("Terrazzo", isDirectory: true)
     try? fileManager.createDirectory(at: root, withIntermediateDirectories: true)
   }
 

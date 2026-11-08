@@ -161,6 +161,7 @@ try:
                     headers={'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization'})
             page.route('https://ha.example.test/api/image_proxy/**', picture)
             page.goto(f'http://127.0.0.1:{server.server_port}/', wait_until='networkidle')
+            page.get_by_role('button', name='Advanced options', exact=True).dispatch_event('click')
             for label, value in [('Home Assistant URL', 'https://ha.example.test'), ('Long-lived access token', 'fixture-token')]:
                 page.get_by_role('textbox', name=label, exact=True).click(force=True, delay=100)
                 page.evaluate('() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))')
