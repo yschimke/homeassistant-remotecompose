@@ -189,9 +189,21 @@ internal class DesktopHomeAssistantAuth(
 
   private suspend fun requestToken(server: String, parameters: Parameters): Token {
     val response = http.submitForm("$server/auth/token", parameters)
-    if (response.status.value in listOf(400, 401, 403)) throw DesktopSignInExpired()
-    check(response.status.isSuccess()) { "Home Assistant sign-in is unavailable." }
-    val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    val responseBody = response.bodyAsText()
+    if (!response.status.isSuccess()) {
+      // Match core's isRefreshTokenRejected: gateway error pages do not revoke the HA session.
+      val oauthError = runCatching {
+        Json.parseToJsonElement(responseBody).jsonObject["error"]?.jsonPrimitive?.contentOrNull
+      }
+        .getOrNull()
+      if (
+        response.status.value in listOf(400, 401, 403) &&
+          oauthError in setOf("invalid_grant", "invalid_request", "access_denied")
+      )
+        throw DesktopSignInExpired()
+      error("Home Assistant sign-in is unavailable.")
+    }
+    val body = Json.parseToJsonElement(responseBody).jsonObject
     val access =
       checkNotNull(body["access_token"]?.jsonPrimitive?.contentOrNull).also {
         check(it.isNotBlank())

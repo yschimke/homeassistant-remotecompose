@@ -209,7 +209,7 @@ class DesktopHomeAssistantAuthTest {
     runBlocking<Unit> {
       val store = MemoryStore().apply { value = DesktopSavedSignIn("https://ha.test", "refresh") }
       var status = HttpStatusCode.ServiceUnavailable
-      val http = HttpClient(MockEngine { respond("{}", status) })
+      val http = HttpClient(MockEngine { respond("""{"error":"invalid_grant"}""", status) })
       val auth = DesktopHomeAssistantAuth(store, http)
       try {
         assertFailsWith<IllegalStateException> { auth.restore() }
@@ -269,11 +269,90 @@ class DesktopHomeAssistantAuthTest {
         assertEquals("rotated-refresh", store.value?.refreshToken)
         clock = 62_000
         status = HttpStatusCode.BadRequest
+        body = """{"error":"invalid_grant"}"""
         assertFailsWith<DesktopSignInExpired> { auth.currentAccessToken() }
         assertNull(auth.session.value)
         assertNull(store.value)
       } finally {
         auth.close()
+      }
+    }
+
+  @Test
+  fun gatewayErrorsPreserveCredentialsAndAllowRecoveryDuringRestoreAndRefresh() =
+    runBlocking<Unit> {
+      for (active in listOf(false, true)) {
+        for (status in
+          listOf(
+            HttpStatusCode.BadRequest,
+            HttpStatusCode.Unauthorized,
+            HttpStatusCode.Forbidden,
+          )) {
+          for (body in
+            listOf(
+              "",
+              "<html>Gateway denied access</html>",
+              "{invalid json",
+              "{}",
+              """{"error":"temporarily_unavailable"}""",
+              """{"error":{"code":"invalid_grant"}}""",
+            )) {
+            val saved = DesktopSavedSignIn("https://ha.test", "refresh")
+            val store = MemoryStore().apply { value = saved }
+            var clock = 0L
+            var gatewayFailure = false
+            val http =
+              HttpClient(
+                MockEngine {
+                  if (gatewayFailure) respond(body, status) else respond(token("recovered", null))
+                },
+              )
+            val auth = DesktopHomeAssistantAuth(store, http, now = { clock })
+            try {
+              if (active) auth.restore()
+              val session = auth.session.value
+              clock = 31_000
+              gatewayFailure = true
+              val failure =
+                assertFailsWith<IllegalStateException> {
+                  if (active) auth.currentAccessToken() else auth.restore()
+                }
+              assertFalse(failure is DesktopSignInExpired)
+              assertSame(saved, store.value)
+              assertSame(session, auth.session.value)
+              gatewayFailure = false
+              if (!active) auth.restore()
+              assertEquals("recovered", auth.currentAccessToken())
+              assertNotNull(auth.session.value)
+            } finally {
+              auth.close()
+            }
+          }
+        }
+      }
+    }
+
+  @Test
+  fun confirmedOAuthRejectionsRemoveSavedCredentials() =
+    runBlocking<Unit> {
+      for ((status, error) in
+        listOf(
+          HttpStatusCode.BadRequest to "invalid_grant",
+          HttpStatusCode.BadRequest to "invalid_request",
+          HttpStatusCode.Unauthorized to "invalid_grant",
+          HttpStatusCode.Forbidden to "access_denied",
+        )) {
+        val store = MemoryStore().apply { value = DesktopSavedSignIn("https://ha.test", "refresh") }
+        val http = HttpClient(MockEngine { respond("""{"error":"$error"}""", status) })
+        val auth = DesktopHomeAssistantAuth(store, http)
+        try {
+          auth.restore()
+          assertNull(store.value)
+          assertNull(auth.session.value)
+          assertFailsWith<DesktopSignInExpired> { auth.currentAccessToken() }
+        } finally {
+          auth.close()
+        }
       }
     }
 
