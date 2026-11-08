@@ -7,7 +7,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import ee.schimke.terrazzo.shared.DesktopAgentGrants
-import ee.schimke.terrazzo.shared.TerrazzoMultiplatformApp
 import java.awt.Toolkit
 
 /** The X11 WM_CLASS, matched by `StartupWMClass` in the Linux packages' `terrazzo.desktop`. */
@@ -30,7 +29,7 @@ fun main() {
       icon = icon,
       state = rememberWindowState(width = 1200.dp, height = 850.dp),
     ) {
-      TerrazzoMultiplatformApp()
+      DesktopApp()
     }
   }
 }
