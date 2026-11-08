@@ -17,7 +17,7 @@ runs:
       with:
         distribution: temurin
         # Reuse the runner's JDK 21 cache instead of forcing an exact release-asset download.
-        java-version: '21'
+        java-version: '21.0.13+9.0.LTS'
     - uses: gradle/actions/setup-gradle@v6.4.1
       with:
         cache-read-only: ${{ inputs.cache-read-only }}
