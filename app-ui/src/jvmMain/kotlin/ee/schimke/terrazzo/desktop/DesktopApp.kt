@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import ee.schimke.ha.client.HaConfig
+import ee.schimke.terrazzo.shared.DesktopCommands
 import ee.schimke.terrazzo.shared.TerrazzoMultiplatformApp
 import java.net.BindException
 import kotlinx.coroutines.CancellationException
@@ -17,7 +18,11 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 
 @Composable
-internal fun DesktopApp() {
+internal fun DesktopApp(
+  desktopCommands: DesktopCommands? = null,
+  isFullScreen: Boolean = false,
+  onToggleFullScreen: (() -> Unit)? = null,
+) {
   val auth = remember { DesktopHomeAssistantAuth() }
   val session by auth.session.collectAsState()
   val scope = rememberCoroutineScope()
@@ -51,6 +56,9 @@ internal fun DesktopApp() {
   // A new OAuth session replaces the login form; sign-out or expiry returns to a fresh form.
   key(session) {
     TerrazzoMultiplatformApp(
+      desktopCommands = desktopCommands,
+      isFullScreen = isFullScreen,
+      onToggleFullScreen = onToggleFullScreen,
       hostedConfig = session?.let { HaConfig(it.server, "") },
       hostedAccessToken = session?.let { { auth.currentAccessToken() } },
       signInWithHomeAssistant = { server ->

@@ -70,6 +70,15 @@ jobs:
       - name: Install Linux packaging tools
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y fakeroot
+      - name: Use the preinstalled Windows WiX toolset
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $wixPath = Join-Path $env:WIX 'bin'
+          if (!(Test-Path (Join-Path $wixPath 'candle.exe')) -or !(Test-Path (Join-Path $wixPath 'light.exe'))) {
+            throw 'The runner WiX installation is incomplete'
+          }
+          "WIX_PATH=$wixPath" >> $env:GITHUB_ENV
       - name: Resolve release version
         id: version
         env:

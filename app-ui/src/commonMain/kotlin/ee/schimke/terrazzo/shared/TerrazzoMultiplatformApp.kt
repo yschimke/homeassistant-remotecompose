@@ -138,6 +138,7 @@ fun TerrazzoMultiplatformApp(
   settingsStorageLabel: String? = null,
   signInStorageLabel: String? = null,
   reportsWebOrigin: Boolean = false,
+  desktopCommands: DesktopCommands? = null,
 ) {
   val dark = hostTheme?.dark ?: isSystemInDarkTheme()
   // App-wide, so the chrome and every dashboard share one look. Chosen in Settings and kept across
@@ -264,6 +265,7 @@ fun TerrazzoMultiplatformApp(
               onToggleFullScreen = onToggleFullScreen,
               settingsStorageLabel = settingsStorageLabel,
               signInStorageLabel = signInStorageLabel,
+              desktopCommands = desktopCommands,
             )
           }
         }
@@ -394,6 +396,7 @@ private fun DashboardShell(
   onToggleFullScreen: (() -> Unit)?,
   settingsStorageLabel: String?,
   signInStorageLabel: String?,
+  desktopCommands: DesktopCommands?,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
   var home by remember { mutableStateOf<NavKey>(DashboardDestination(initialDashboardPath)) }
@@ -507,6 +510,38 @@ private fun DashboardShell(
     stack.clear()
     stack.add(route)
   }
+  val currentDestination = stack.lastOrNull()
+  fun editing() =
+    stack.lastOrNull() is DashboardEditDestination || stack.lastOrNull() is AgentEditDestination
+  val navigationEnabled = !editing()
+  DisposableEffect(desktopCommands) { onDispose { desktopCommands?.clear() } }
+  SideEffect {
+    desktopCommands?.bind(
+      home =
+        if (navigationEnabled)
+          ({
+            if (!editing()) {
+              select(home)
+              homeVisit++
+            }
+          })
+        else null,
+      settings =
+        if (navigationEnabled)
+          ({
+            if (!editing() && stack.lastOrNull() != SettingsDestination) select(SettingsDestination)
+          })
+        else null,
+      edit =
+        if (currentDestination is DashboardDestination)
+          ({
+            (stack.lastOrNull() as? DashboardDestination)?.let {
+              stack.add(DashboardEditDestination(it.path))
+            }
+          })
+        else null,
+    )
+  }
   DisposableEffect(registerReturnHome) {
     registerReturnHome?.invoke {
       // A wall panel returns home after a while unused, but never out of an edit.
@@ -527,9 +562,26 @@ private fun DashboardShell(
       onToggleFullScreen = onToggleFullScreen,
     )
   }
-  Box(Modifier.fillMaxSize()) {
+  Row(Modifier.fillMaxSize()) {
+    if (desktopCommands != null) {
+      DesktopDashboardSidebar(
+        list = list,
+        currentPath = (currentDestination as? DashboardDestination)?.path,
+        showingDashboard = currentDestination is DashboardDestination,
+        showingSettings = currentDestination == SettingsDestination,
+        enabled = navigationEnabled,
+        onDashboard = { path ->
+          if (!editing() && stack.lastOrNull() != DashboardDestination(path))
+            select(DashboardDestination(path))
+        },
+        onSettings = {
+          if (!editing() && stack.lastOrNull() != SettingsDestination) select(SettingsDestination)
+        },
+      )
+    }
     key(homeVisit) {
       NavDisplay(
+        modifier = Modifier.weight(1f).fillMaxHeight(),
         backStack = stack,
         onBack = { if (stack.size > 1) stack.removeLastOrNull() },
         entryProvider =
@@ -606,7 +658,8 @@ private fun DashboardShell(
                       )
                     },
                     actions = {
-                      // Icons only, so a phone-width header keeps room for the dashboard switcher.
+                      // Icons only, so a phone-width header keeps room for the dashboard
+                      // switcher.
                       // Leaving customize mode stays one tap away.
                       if (customizing)
                         TextButton(onClick = { customizing = false }) { Text("Done customizing") }

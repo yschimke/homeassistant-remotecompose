@@ -197,6 +197,9 @@ On Arch Linux, install from the project's pacman repository so `pacman -Syu` kee
 
 Local packaging: `./gradlew :app-ui:packageDistributionForCurrentOS`. Override the app version with `-PdesktopVersion=0.1.0`.
 
+The JVM app has a dashboard sidebar, native navigation menus, keyboard shortcuts, and full screen.
+See [desktop workspace behavior and shortcuts](docs/desktop-experience.md).
+
 ### Web app
 
 For a local authenticated `/terrazzo` wall-panel URL and Remote Compose Lovelace cards, including Marketplace installation, updates and rollback, see [the Home Assistant integration installation guide](docs/HOME_ASSISTANT.md).
