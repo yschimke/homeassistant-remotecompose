@@ -15,8 +15,9 @@ boot: auto
 init: false
 ingress: true
 ingress_port: 8099
+ingress_entry: /designs
 panel_icon: mdi:palette-swatch-variant
-panel_title: Card designs
+panel_title: Terrazzo Card Designs
 panel_admin: true
 hassio_api: true
 options: {}

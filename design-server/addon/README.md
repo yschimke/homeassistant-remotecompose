@@ -13,7 +13,12 @@ remote URL included, and needs no GitHub sign-in.
 3. Install the Terrazzo integration (from the Marketplace) too: it tells the app the add-on is there
    (`terrazzo/design_server`) and passes the app's calls on to it (`/api/terrazzo/designs`).
 
-The **Card designs** panel (administrators only) opens the design server's pages and UI Builder.
+The **Terrazzo Card Designs** panel (administrators only) and **Open Web UI** open the card design
+library directly, rather than the public Terrazzo introduction. This is the private design server
+for browsing and editing card designs with UI Builder. The separate **Terrazzo** panel, provided
+by the integration, displays your Home Assistant dashboards using those designs. **Show in
+sidebar** only controls the design server's shortcut; hiding it does not stop the server or
+disconnect it from the integration.
 Its library follows ha.coo.ee's (`LIBRARY_UPSTREAM`), checked hourly; the image's library is only
 where it starts.
 
