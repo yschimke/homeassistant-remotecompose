@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.91](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.90...v0.1.91) (2026-11-08)
+
+
+### Features
+
+* add a desktop dashboard workspace and native commands ([#1533](https://github.com/yschimke/homeassistant-remotecompose/issues/1533)) ([45c9ef6](https://github.com/yschimke/homeassistant-remotecompose/commit/45c9ef66624cb87c7725e2fab33590b2399907ef))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ee.schimke.composeai:data-render-core to v3.40.0 ([#1513](https://github.com/yschimke/homeassistant-remotecompose/issues/1513)) ([a3bbc6d](https://github.com/yschimke/homeassistant-remotecompose/commit/a3bbc6dabb938e8831280cd5618340dc8545df65))
+
 ## [0.1.90](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.89...v0.1.90) (2026-11-08)
 
 
