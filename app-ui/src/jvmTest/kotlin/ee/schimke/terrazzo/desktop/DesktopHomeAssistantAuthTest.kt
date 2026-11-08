@@ -1,5 +1,7 @@
 package ee.schimke.terrazzo.desktop
 
+import ee.schimke.terrazzo.shared.CardAgentSessions
+import ee.schimke.terrazzo.shared.SavedCardAgentSession
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -13,6 +15,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import kotlin.test.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 
 class DesktopHomeAssistantAuthTest {
   private class MemoryStore : DesktopCredentialStore {
@@ -279,6 +282,65 @@ class DesktopHomeAssistantAuthTest {
     }
 
   @Test
+  fun rejectedRefreshForgetsCardCapabilitiesBeforeReturningToSignIn() =
+    runBlocking<Unit> {
+      val keys = listOf("https://ha.test:card-a", "https://ha.test:card-b")
+      val capabilities =
+        SavedCardAgentSession(
+          "https://design.test",
+          "old-owner",
+          "old request",
+          Long.MAX_VALUE,
+          "old-agent",
+        )
+      for (restoring in listOf(false, true)) {
+        for (failClear in listOf(false, true)) {
+          val store =
+            MemoryStore().apply { value = DesktopSavedSignIn("https://ha.test", "refresh") }
+          var rejected = false
+          val http =
+            HttpClient(
+              MockEngine {
+                if (rejected) respond("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)
+                else respond(token())
+              },
+            )
+          val auth = DesktopHomeAssistantAuth(store, http, now = { if (rejected) 31_000L else 0L })
+          var publishedCapabilities: Deferred<SavedCardAgentSession?>? = null
+          try {
+            if (!restoring) auth.restore()
+            keys.forEach { CardAgentSessions.put(it, capabilities) }
+            if (!restoring) {
+              publishedCapabilities =
+                async(Dispatchers.Unconfined, start = CoroutineStart.UNDISPATCHED) {
+                  auth.session.first { it == null }
+                  CardAgentSessions.get(keys.first())
+                }
+            }
+            rejected = true
+            store.failClear = failClear
+            if (failClear) {
+              assertFailsWith<IllegalStateException> {
+                if (restoring) auth.restore() else auth.currentAccessToken()
+              }
+            } else if (restoring) auth.restore()
+            else assertFailsWith<DesktopSignInExpired> { auth.currentAccessToken() }
+            assertNull(auth.session.value)
+            keys.forEach {
+              assertNull(CardAgentSessions.get(it), "A new user must not recover $it")
+            }
+            publishedCapabilities?.let { assertNull(withTimeout(1_000) { it.await() }) }
+            assertFailsWith<DesktopSignInExpired> { auth.currentAccessToken() }
+          } finally {
+            publishedCapabilities?.cancel()
+            CardAgentSessions.clear()
+            auth.close()
+          }
+        }
+      }
+    }
+
+  @Test
   fun gatewayErrorsPreserveCredentialsAndAllowRecoveryDuringRestoreAndRefresh() =
     runBlocking<Unit> {
       for (active in listOf(false, true)) {
@@ -308,8 +370,18 @@ class DesktopHomeAssistantAuthTest {
                 },
               )
             val auth = DesktopHomeAssistantAuth(store, http, now = { clock })
+            val key = "https://ha.test:card-a"
+            val capabilities =
+              SavedCardAgentSession(
+                "https://design.test",
+                "owner",
+                "request",
+                Long.MAX_VALUE,
+                "agent",
+              )
             try {
               if (active) auth.restore()
+              CardAgentSessions.put(key, capabilities)
               val session = auth.session.value
               clock = 31_000
               gatewayFailure = true
@@ -320,11 +392,14 @@ class DesktopHomeAssistantAuthTest {
               assertFalse(failure is DesktopSignInExpired)
               assertSame(saved, store.value)
               assertSame(session, auth.session.value)
+              assertEquals(capabilities, CardAgentSessions.get(key))
               gatewayFailure = false
               if (!active) auth.restore()
               assertEquals("recovered", auth.currentAccessToken())
               assertNotNull(auth.session.value)
+              assertEquals(capabilities, CardAgentSessions.get(key))
             } finally {
+              CardAgentSessions.clear()
               auth.close()
             }
           }
@@ -369,13 +444,20 @@ class DesktopHomeAssistantAuthTest {
           },
         )
       val auth = DesktopHomeAssistantAuth(store, http)
+      val key = "https://ha.test:card-a"
       try {
         auth.restore()
+        CardAgentSessions.put(
+          key,
+          SavedCardAgentSession("https://design.test", "owner", "request", Long.MAX_VALUE, "agent"),
+        )
         offline = true
         auth.signOut()
         assertNull(store.value)
         assertNull(auth.session.value)
+        assertNull(CardAgentSessions.get(key))
       } finally {
+        CardAgentSessions.clear()
         auth.close()
       }
     }

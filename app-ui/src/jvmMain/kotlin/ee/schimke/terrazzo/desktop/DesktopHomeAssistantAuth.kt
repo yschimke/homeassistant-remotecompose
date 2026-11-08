@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.desktop
 
+import ee.schimke.terrazzo.shared.CardAgentSessions
 import ee.schimke.terrazzo.shared.validServerUrl
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -132,7 +133,7 @@ internal class DesktopHomeAssistantAuth(
         try {
           revoke(value)
         } finally {
-          mutableSession.value = null
+          publishSignedOut()
         }
       }
     }
@@ -155,6 +156,12 @@ internal class DesktopHomeAssistantAuth(
     }
   }
 
+  private fun publishSignedOut() {
+    // A different HA user on the same server must not recover the previous user's capabilities.
+    CardAgentSessions.clear()
+    mutableSession.value = null
+  }
+
   private suspend fun refresh(value: DesktopSavedSignIn) {
     val token =
       try {
@@ -172,7 +179,7 @@ internal class DesktopHomeAssistantAuth(
         } finally {
           saved = null
           accessToken = null
-          mutableSession.value = null
+          publishSignedOut()
         }
         throw e
       }
