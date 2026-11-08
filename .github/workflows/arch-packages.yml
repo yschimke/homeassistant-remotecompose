@@ -104,6 +104,31 @@ jobs:
             PKGBUILD
           grep -E '^(pkgver|pkgrel)=' PKGBUILD
           grep -A1 '^sha256sums=' PKGBUILD
+      # Fetch the .deb through the API with backoff, under the name the PKGBUILD's source gives it:
+      # makepkg then uses the local file (still checking its sha256) instead of downloading. Its own
+      # curl gives up after three tries 3s apart, which a release published seconds earlier can
+      # outlast with 504s from the download host (v0.1.90).
+      - name: Fetch the .deb
+        working-directory: packaging/aur/terrazzo-bin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.release.outputs.version }}
+          DEB_SHA256: ${{ steps.release.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          deb="terrazzo-desktop-$VERSION-linux-x64.deb"
+          for delay in 5 15 30 60 120 0; do
+            if gh release download "v$VERSION" -p "$deb" -O "terrazzo-$VERSION.deb" --clobber \
+              && echo "$DEB_SHA256  terrazzo-$VERSION.deb" | sha256sum -c -; then
+              exit 0
+            fi
+            [[ "$delay" == 0 ]] && break
+            echo "::warning::download of $deb failed; retrying in ${delay}s"
+            sleep "$delay"
+          done
+          echo "::error::could not download $deb from v$VERSION"
+          exit 1
       # makepkg refuses to run as root, and the builder can't sudo: install the dependencies first.
       - name: Build the package
         run: |
