@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.90](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.89...v0.1.90) (2026-11-08)
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1526](https://github.com/yschimke/homeassistant-remotecompose/issues/1526)) ([ea39de6](https://github.com/yschimke/homeassistant-remotecompose/commit/ea39de6de888ea8bb618efe0fa076d7b511da4b0))
+* open card designs library from Home Assistant sidebar ([#1529](https://github.com/yschimke/homeassistant-remotecompose/issues/1529)) ([c6b5541](https://github.com/yschimke/homeassistant-remotecompose/commit/c6b5541ca08c98e76d9f7c2ae611261458a04b25))
+* wall polls on one card all get its change ([#1524](https://github.com/yschimke/homeassistant-remotecompose/issues/1524)) ([06b4fe8](https://github.com/yschimke/homeassistant-remotecompose/commit/06b4fe800b2d8af0d503dfa2963ff2dca2422454))
+
 ## [0.1.89](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.88...v0.1.89) (2026-11-07)
 
 
