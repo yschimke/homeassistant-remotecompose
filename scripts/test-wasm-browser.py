@@ -95,6 +95,9 @@ try:
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.route_web_socket('wss://ha.example.test/api/websocket', route_socket)
         page.goto(f'http://127.0.0.1:{server.server_port}{PREFIX}', wait_until='networkidle')
+        expect(page.get_by_role('button', name='Sign in with Home Assistant', exact=True)).to_be_disabled()
+        expect(page.get_by_role('textbox', name='Long-lived access token', exact=True)).to_have_count(0)
+        page.get_by_role('button', name='Advanced options', exact=True).dispatch_event('click')
         expect(page.get_by_role('button', name='Connect', exact=True)).to_be_disabled()
         for label, text in [('Home Assistant URL', 'https://ha.example.test'),
                             ('Long-lived access token', 'browser-test-token')]:
@@ -212,7 +215,8 @@ try:
         retried.value.close()
         expect(page.get_by_text('Report a PUBLIC issue', exact=True)).not_to_be_visible()
         page.get_by_role('button', name='Sign out').dispatch_event('click')
-        expect(page.get_by_role('button', name='Connect', exact=True)).to_be_disabled()
+        expect(page.get_by_role('button', name='Sign in with Home Assistant', exact=True)).to_be_disabled()
+        expect(page.get_by_role('textbox', name='Long-lived access token', exact=True)).to_have_count(0)
         page.set_viewport_size({'width': 360, 'height': 800})
         open_feedback_review(page)
         expect(page.get_by_text('Report a PUBLIC issue', exact=True)).to_be_visible()
