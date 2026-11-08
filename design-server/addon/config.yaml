@@ -1,6 +1,6 @@
 slug: card_designs
 name: Terrazzo Card Designs
-version: 0.1.89
+version: 0.1.90
 description: >-
   Your own card design server and UI Builder, private to this Home Assistant.
   The Terrazzo app finds it through the Terrazzo integration and keeps your
@@ -15,8 +15,9 @@ boot: auto
 init: false
 ingress: true
 ingress_port: 8099
+ingress_entry: /designs
 panel_icon: mdi:palette-swatch-variant
-panel_title: Card designs
+panel_title: Terrazzo Card Designs
 panel_admin: true
 hassio_api: true
 options: {}

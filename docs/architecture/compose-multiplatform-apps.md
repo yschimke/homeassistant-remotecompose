@@ -27,6 +27,23 @@ with the page's origin as `client_id`, the same flow as the [card embed](card-em
 origin's `localStorage` until the viewer signs out. This is what the [Wasmo app](wasmo-app.md)
 uses.
 
+Desktop also offers **Sign in with Home Assistant**, opening the system browser. During sign-in,
+it listens only on `127.0.0.1:43823`, with `http://127.0.0.1:43823/` as its stable IndieAuth
+client ID and `/auth/callback` as its redirect. Home Assistant accepts same-origin client/redirect
+URLs, including loopback addresses, so this needs neither a public discovery page nor OS URL-scheme
+registration. The fixed port keeps the client ID stable across restarts and refreshes. Only one
+desktop sign-in can use that port at a time; the listener closes on success, failure, cancellation,
+or the three-minute timeout. Random state validates the callback and S256 PKCE binds the code
+exchange on Home Assistant versions supporting PKCE (older versions ignore those extra fields).
+
+Only the server URL and refresh token are saved, through Java Keyring to the OS credential store
+(macOS Keychain, Windows Credential Manager, or the Linux desktop keyring). Access tokens stay in
+memory and refresh automatically; startup restores the session. An unavailable or locked keyring
+is reported without falling back to plaintext storage. Sign-out removes the local saved sign-in
+and attempts server revocation; it still works offline. A rejected refresh returns to sign-in,
+while a temporary network failure preserves the saved credential for a later retry.
+
+**Advanced options** exposes the long-lived token form when browser sign-in is available.
 Desktop and the browser's token form use a long-lived Home Assistant token, kept only
 in memory. The sign-in form requires HTTPS, without credentials, query strings or fragments in the URL.
 The token is sent only through Home Assistant's WSS authentication message, and is never saved

@@ -108,6 +108,9 @@ private class AppConnection(
  *   idle.
  * @param signInWithHomeAssistant starts the host's own Home Assistant sign-in (browser OAuth) for
  *   the entered server address. When null, only a long-lived access token is offered.
+ * @param signInBusy disables connection controls while the host awaits browser sign-in.
+ * @param signInError a host sign-in failure, shown even while advanced options are collapsed.
+ * @param onCancelSignIn cancels the host's pending browser sign-in.
  * @param onSignOut lets the host forget a sign-in it remembers.
  * @param hostTheme the host page's theme (Home Assistant's, in the panel): light or dark, and the
  *   colors the `classic` card style draws the app in. Null follows the system's light or dark.
@@ -125,6 +128,9 @@ fun TerrazzoMultiplatformApp(
   hostedAction: ((String) -> Boolean)? = null,
   registerReturnHome: ((() -> Unit) -> Unit)? = null,
   signInWithHomeAssistant: ((String) -> Unit)? = null,
+  signInBusy: Boolean = false,
+  signInError: String? = null,
+  onCancelSignIn: (() -> Unit)? = null,
   onSignOut: (suspend () -> Unit)? = null,
   hostTheme: HostTheme? = null,
   isFullScreen: Boolean = false,
@@ -173,7 +179,19 @@ fun TerrazzoMultiplatformApp(
     ) {
       Surface(Modifier.fillMaxSize()) {
         if (active == null) {
-          ConnectionScreen(busy, error, signInWithHomeAssistant) { url, token ->
+          ConnectionScreen(
+            busy = busy || signInBusy,
+            error = if (signInBusy) null else error ?: signInError,
+            signIn =
+              signInWithHomeAssistant?.let { signIn ->
+                { server ->
+                  error = null
+                  signIn(server)
+                }
+              },
+            signingIn = signInBusy,
+            cancelSignIn = onCancelSignIn,
+          ) { url, token ->
             scope.launch {
               busy = true
               error = null
@@ -267,15 +285,18 @@ fun TerrazzoMultiplatformApp(
 }
 
 @Composable
-private fun ConnectionScreen(
+internal fun ConnectionScreen(
   busy: Boolean,
   error: String?,
   signIn: ((String) -> Unit)?,
+  signingIn: Boolean = false,
+  cancelSignIn: (() -> Unit)? = null,
   connect: (String, String) -> Unit,
 ) {
   var url by rememberSaveable { mutableStateOf("") }
   // Credentials intentionally never enter saved state or browser localStorage.
   var token by remember { mutableStateOf("") }
+  var advanced by rememberSaveable { mutableStateOf(false) }
   Scaffold(topBar = { TopAppBar(title = { Text("Terrazzo") }) }) { padding ->
     Column(
       Modifier.padding(padding)
@@ -301,29 +322,37 @@ private fun ConnectionScreen(
           onClick = { signIn(url.trim().trimEnd('/')) },
           enabled = !busy && validServerUrl(url),
         ) {
-          Text("Sign in with Home Assistant")
+          Text(if (signingIn) "Waiting for browser…" else "Sign in with Home Assistant")
         }
-        Text("Or connect with a token instead:", style = MaterialTheme.typography.bodySmall)
+        Text("Sign in securely in your browser.", style = MaterialTheme.typography.bodySmall)
+        if (signingIn && cancelSignIn != null) {
+          TextButton(onClick = cancelSignIn) { Text("Cancel sign-in") }
+        }
+        TextButton(onClick = { advanced = !advanced }, enabled = !busy) {
+          Text(if (advanced) "Hide advanced options" else "Advanced options")
+        }
       }
-      OutlinedTextField(
-        token,
-        { token = it },
-        label = { Text("Long-lived access token") },
-        visualTransformation = PasswordVisualTransformation(),
-        singleLine = true,
-        enabled = !busy,
-        modifier = Modifier.fillMaxWidth(),
-      )
-      Text(
-        "Create a long-lived access token in your Home Assistant profile. Use an HTTPS server address.",
-        style = MaterialTheme.typography.bodySmall,
-      )
       error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-      Button(
-        onClick = { connect(url.trim(), token.trim()) },
-        enabled = !busy && validServerUrl(url) && token.isNotBlank(),
-      ) {
-        Text(if (busy) "Connecting…" else "Connect")
+      if (signIn == null || advanced) {
+        OutlinedTextField(
+          token,
+          { token = it },
+          label = { Text("Long-lived access token") },
+          visualTransformation = PasswordVisualTransformation(),
+          singleLine = true,
+          enabled = !busy,
+          modifier = Modifier.fillMaxWidth(),
+        )
+        Text(
+          "Create a long-lived access token in your Home Assistant profile. Use an HTTPS server address.",
+          style = MaterialTheme.typography.bodySmall,
+        )
+        Button(
+          onClick = { connect(url.trim(), token.trim()) },
+          enabled = !busy && validServerUrl(url) && token.isNotBlank(),
+        ) {
+          Text(if (busy) "Connecting…" else "Connect")
+        }
       }
       ReportFeedbackButton()
     }

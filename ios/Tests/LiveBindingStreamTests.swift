@@ -68,11 +68,14 @@ actor TestBackoff {
 func eventually(
   file: StaticString = #filePath, line: UInt = #line,
   _ condition: () async -> Bool
-) async {
+) async throws {
   let deadline = Date().addingTimeInterval(3)
   while !(await condition()) {
-    if Date() > deadline { XCTFail("Timed out waiting for condition", file: file, line: line); return }
-    try? await Task.sleep(nanoseconds: 1_000_000)
+    if Date() > deadline {
+      XCTFail("Timed out waiting for condition", file: file, line: line)
+      throw URLError(.timedOut)
+    }
+    try await Task.sleep(nanoseconds: 1_000_000)
   }
 }
 
@@ -88,12 +91,12 @@ func json(_ message: URLSessionWebSocketTask.Message) throws -> [String: Any] {
 final class LiveBindingStreamTests: XCTestCase {
   func testTextSubscriptionAndNestedServicePayloadRoundTrip() async throws {
     let sockets = TestSockets()
-    let stream = LiveBindingStream(makeSocket: sockets.make)
+    let stream = LiveBindingStream(makeSocket: { sockets.make($0) })
     var bindings: [String: BindingValue] = [:]
     await stream.connect(url: URL(string: "wss://example.test/stream")!, authorization: "Bearer test", entities: ["light.b", "light.a"]) {
       if case .bindings(let values) = $0 { bindings = values }
     }
-    await eventually { sockets.all.first?.1.sent.count == 1 }
+    try await eventually { sockets.all.first?.1.sent.count == 1 }
     let socket = try XCTUnwrap(sockets.all.first?.1)
     let subscription = try json(socket.sent[0])
     XCTAssertEqual(subscription["type"] as? String, "subscribe")
@@ -101,7 +104,7 @@ final class LiveBindingStreamTests: XCTestCase {
     XCTAssertEqual(sockets.all[0].0.value(forHTTPHeaderField: "Authorization"), "Bearer test")
     // Hydration response, as emitted by StreamRoute after a text subscription.
     socket.deliver(.success(.string(#"{"type":"state","bindings":{"light.a.is_on":true}}"#)))
-    await eventually { bindings["light.a.is_on"] == .integer(1) }
+    try await eventually { bindings["light.a.is_on"] == .integer(1) }
 
     let metadata = #"{"type":"callService","domain":"light","service":"turn_on","entityId":"light.a","serviceData":{"rgb_color":[255,0,0],"brightness":128,"enabled":true,"transition":1.5,"name":"Kitchen","nested":{"values":[false,null,{"x":2}]}}}"#
     let call = try XCTUnwrap(ServiceCall(metadata: metadata + "\n--RC-METADATA-V1--\nextra"))
@@ -122,18 +125,18 @@ final class LiveBindingStreamTests: XCTestCase {
   func testReconnectResubscribesAndBackoffIsBounded() async throws {
     let sockets = TestSockets()
     let backoff = TestBackoff()
-    let stream = LiveBindingStream(makeSocket: sockets.make, sleep: { await backoff.sleep($0) })
+    let stream = LiveBindingStream(makeSocket: { sockets.make($0) }, sleep: { await backoff.sleep($0) })
     await stream.connect(url: URL(string: "wss://example.test/stream")!, authorization: "Bearer test", entities: ["sensor.a"]) { _ in }
     for attempt in 0..<7 {
-      await eventually { sockets.all.count == attempt + 1 && sockets.all[attempt].1.sent.count == 1 }
+      try await eventually { sockets.all.count == attempt + 1 && sockets.all[attempt].1.sent.count == 1 }
       XCTAssertEqual(try json(sockets.all[attempt].1.sent[0])["entities"] as? [String], ["sensor.a"])
       XCTAssertEqual(sockets.all[attempt].0.value(forHTTPHeaderField: "Authorization"), "Bearer test")
       sockets.all[attempt].1.deliver(.failure(URLError(.networkConnectionLost)))
-      await eventually { await backoff.delays.count == attempt + 1 }
+      try await eventually { await backoff.delays.count == attempt + 1 }
       XCTAssertTrue(sockets.all[attempt].1.cancelled)
       await backoff.release()
     }
-    await eventually { sockets.all.count == 8 }
+    try await eventually { sockets.all.count == 8 }
     let delays = await backoff.delays
     XCTAssertEqual(delays, [1, 2, 4, 8, 16, 30, 30].map { UInt64($0) * 1_000_000_000 })
     await stream.disconnect()
@@ -142,40 +145,40 @@ final class LiveBindingStreamTests: XCTestCase {
   func testFeedSwitchCancelsOldBackoffAndEntityFreeFeedReceivesInvalidations() async throws {
     let sockets = TestSockets()
     let backoff = TestBackoff()
-    let stream = LiveBindingStream(makeSocket: sockets.make, sleep: { await backoff.sleep($0) })
+    let stream = LiveBindingStream(makeSocket: { sockets.make($0) }, sleep: { await backoff.sleep($0) })
     var oldEvents = 0
     var dashboardChanged = false
     var documentsChanged = false
     await stream.connect(url: URL(string: "ws://old.test/stream")!, authorization: nil, entities: ["light.old"]) { _ in oldEvents += 1 }
-    await eventually { sockets.all.first?.1.sent.count == 1 }
+    try await eventually { sockets.all.first?.1.sent.count == 1 }
     sockets.all[0].1.deliver(.failure(URLError(.networkConnectionLost)))
-    await eventually { await backoff.delays.count == 1 }
+    try await eventually { await backoff.delays.count == 1 }
     let eventsBeforeSwitch = oldEvents
     await stream.connect(url: URL(string: "wss://new.test/stream")!, authorization: nil, entities: []) {
       if case .dashboardChanged = $0 { dashboardChanged = true }
       if case .documentsChanged(let ids) = $0 { documentsChanged = ids == ["static"] }
     }
-    await eventually { sockets.all.count == 2 && sockets.all[1].1.sent.count == 1 }
+    try await eventually { sockets.all.count == 2 && sockets.all[1].1.sent.count == 1 }
     await backoff.release()
     let socket = sockets.all[1].1
     XCTAssertEqual(try json(socket.sent[0])["entities"] as? [String], [])
     socket.deliver(.success(.string(#"{"type":"lovelace_updated"}"#)))
     socket.deliver(.success(.string(#"{"type":"documents_changed","card_ids":["static"]}"#)))
-    await eventually { dashboardChanged && documentsChanged }
+    try await eventually { dashboardChanged && documentsChanged }
     XCTAssertEqual(oldEvents, eventsBeforeSwitch)
     XCTAssertEqual(sockets.all.count, 2)
     XCTAssertEqual(sockets.all[1].0.url?.host, "new.test")
     await stream.disconnect()
   }
 
-  func testExplicitDisconnectCancelsPendingReconnect() async {
+  func testExplicitDisconnectCancelsPendingReconnect() async throws {
     let sockets = TestSockets()
     let backoff = TestBackoff()
-    let stream = LiveBindingStream(makeSocket: sockets.make, sleep: { await backoff.sleep($0) })
+    let stream = LiveBindingStream(makeSocket: { sockets.make($0) }, sleep: { await backoff.sleep($0) })
     await stream.connect(url: URL(string: "ws://example.test/stream")!, authorization: nil, entities: []) { _ in }
-    await eventually { sockets.all.first?.1.sent.count == 1 }
+    try await eventually { sockets.all.first?.1.sent.count == 1 }
     sockets.all[0].1.deliver(.failure(URLError(.networkConnectionLost)))
-    await eventually { await backoff.delays.count == 1 }
+    try await eventually { await backoff.delays.count == 1 }
     await stream.disconnect()
     await backoff.release()
     // Drain the old task, then verify no replacement socket can be created.

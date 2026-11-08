@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import ee.schimke.terrazzo.shared.DesktopAgentGrants
 import ee.schimke.terrazzo.shared.DesktopCommands
-import ee.schimke.terrazzo.shared.TerrazzoMultiplatformApp
 import java.awt.Desktop
 import java.awt.Dimension
 import java.awt.Toolkit
@@ -121,7 +120,7 @@ fun main() {
           }
         }
       }
-      TerrazzoMultiplatformApp(
+      DesktopApp(
         desktopCommands = commands,
         isFullScreen = state.placement == WindowPlacement.Fullscreen,
         onToggleFullScreen = ::toggleFullscreen,

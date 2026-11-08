@@ -40,7 +40,7 @@ allprojects {
 }
 ```
 
-Run `./gradlew -I /tmp/terrazzo-demo.init.gradle :app-ui:run` and connect to
+Run `./gradlew -I /tmp/terrazzo-demo.init.gradle :app-ui:run`, open **Advanced options**, and connect to
 `https://localhost:18124` with the fixture token `desktop-demo-token`.
 The fixture accepts reads and subscriptions; dashboard writes are unsupported.
 

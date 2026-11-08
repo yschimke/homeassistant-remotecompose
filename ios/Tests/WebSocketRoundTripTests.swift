@@ -30,10 +30,10 @@ final class WebSocketRoundTripTests: XCTestCase {
         if case .string(let value) = values["echo"] { echo = value }
       }
     }
-    await eventually { hydrated }
+    try await eventually { hydrated }
     let call = try XCTUnwrap(ServiceCall(metadata: #"{"type":"callService","domain":"light","service":"turn_on","serviceData":{"rgb_color":[255,0,0],"enabled":true,"nested":{"value":null},"brightness":128}}"#))
     try await stream.callService(call)
-    await eventually { echo != nil }
+    try await eventually { echo != nil }
     let echoed = try XCTUnwrap(echo)
     XCTAssertEqual(
       try JSONSerialization.jsonObject(with: Data(echoed.utf8)) as? NSDictionary,
