@@ -2,8 +2,12 @@ import Foundation
 import Security
 
 struct CredentialStore {
-  private let service = "ee.schimke.terrazzo.ios"
+  private let service: String
   private let account = "gateway-bearer-token"
+
+  init(service: String = "ee.schimke.terrazzo.ios") {
+    self.service = service
+  }
 
   func loadToken() -> String {
     let query: [String: Any] = [

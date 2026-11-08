@@ -20,8 +20,9 @@ final class DashboardStore: ObservableObject {
   @Published private(set) var isDemo = false
   @Published private(set) var streamMessage: String?
 
-  private let cache = CardCache()
-  private let credentialStore = CredentialStore()
+  private let cache: CardCache
+  private let credentialStore: CredentialStore
+  private let defaults: UserDefaults
   private let liveStream: LiveBindingStream
   private let makeService: (ServerConfiguration) -> RemoteComposeService
   private var connectionRevision = 0
@@ -40,11 +41,17 @@ final class DashboardStore: ObservableObject {
   init(
     liveStream: LiveBindingStream = LiveBindingStream(),
     restoreOnLaunch: Bool = true,
+    cache: CardCache = CardCache(),
+    credentialStore: CredentialStore = CredentialStore(),
+    defaults: UserDefaults = .standard,
     makeService: @escaping (ServerConfiguration) -> RemoteComposeService = {
       RemoteComposeService(configuration: $0)
     }
   ) {
     self.liveStream = liveStream
+    self.cache = cache
+    self.credentialStore = credentialStore
+    self.defaults = defaults
     self.makeService = makeService
     guard restoreOnLaunch else { return }
     if ProcessInfo.processInfo.arguments.contains("--demo") {
@@ -59,7 +66,7 @@ final class DashboardStore: ObservableObject {
       phase = .failed("Enter a valid http or https URL.")
       return
     }
-    UserDefaults.standard.set(baseURL, forKey: "serverURL")
+    defaults.set(baseURL, forKey: "serverURL")
     credentialStore.saveToken(token)
     isDemo = false
     phase = .loading
@@ -152,7 +159,7 @@ final class DashboardStore: ObservableObject {
   func signOut() {
     stopLiveUpdates()
     Task { try? await cache.clear() }
-    UserDefaults.standard.removeObject(forKey: "serverURL")
+    defaults.removeObject(forKey: "serverURL")
     credentialStore.clearToken()
     service = nil
     isDemo = false
@@ -188,7 +195,6 @@ final class DashboardStore: ObservableObject {
   }
 
   private func restore() async {
-    let defaults = UserDefaults.standard
     guard let baseURL = defaults.string(forKey: "serverURL") else { return }
     connect(baseURL: baseURL, token: credentialStore.loadToken())
   }
