@@ -1,7 +1,5 @@
 package ee.schimke.ha.designserver
 
-import androidx.compose.ui.InternalComposeUiApi
-import androidx.compose.ui.platform.registerSkikoComposeImplementation
 import ee.schimke.composeai.rcplayer.compose.RcComposeTextRasterizer
 import ee.schimke.composeai.rcplayer.edit.RcDisplay
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
@@ -9,6 +7,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.CachedFontFace
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.CardFontManifest
+import ee.schimke.ha.designs.JvmComposeGraphics
 import ee.schimke.ha.rc.HaFontLibrary
 import ee.schimke.ha.rc.LiveText
 import ee.schimke.ha.rc.WidgetBitmapFonts
@@ -40,8 +39,7 @@ import kotlinx.serialization.json.jsonPrimitive
 internal class WidgetFilters(fonts: CardFonts) {
   private val rasterizer = run {
     // Compose's desktop text registers itself when a scene starts, and this server starts none.
-    // Internal API, but the jars it binds are pinned to the one Compose version this build uses.
-    @OptIn(InternalComposeUiApi::class) registerSkikoComposeImplementation()
+    JvmComposeGraphics.ensureRegistered()
     val manifest = CardFontManifest.decode(fonts.manifest.decodeToString())
     val faces =
       manifest.faces.mapNotNull { (family, face) ->
