@@ -183,9 +183,10 @@ object CardDesignTemplates {
     return CardTemplatePlayback(
       bytes = bytes,
       bindings = { snapshot, clock ->
-        // A design may also read the values every home shares (`HA:sun.sun.elevation`).
+        // A design may also read the values every home shares (`HA:sun.sun.elevation`), its times
+        // in the clock's zone, the one `time.minuteOfDay` and the slots' timestamps read in.
         val slots =
-          HaSharedValues.bindings(snapshot) +
+          HaSharedValues.bindings(snapshot, clock.zone()) +
             CardDesignSlots.slotBindings(card, snapshot, clock.zone())
         converter?.designBindings(card, snapshot, clock)?.let { slots + it } ?: slots
       },

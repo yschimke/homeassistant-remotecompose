@@ -123,6 +123,14 @@ class LayoutTest(unittest.TestCase):
         self.assertEqual(422, raised.exception.status)
 
 
+class SharedValuesTest(unittest.TestCase):
+    def test_a_card_reads_shared_values_when_its_values_carry_one(self):
+        self.assertEqual(('sun.sun',), wall.SHARED_ENTITIES)
+        self.assertTrue(wall.reads_shared({'light.s0.is_on': True, 'HA:sun.sun.elevation': -12.5}))
+        self.assertFalse(wall.reads_shared({'light.s0.is_on': True}))
+        self.assertFalse(wall.reads_shared({}))
+
+
 class SlotTest(unittest.TestCase):
     def test_slots_follow_card_design_slots(self):
         stack = {'type': 'vertical-stack', 'cards': [

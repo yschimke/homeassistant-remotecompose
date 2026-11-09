@@ -107,6 +107,17 @@ def _readable(hass, user, card):
     return out
 
 
+def _resolve_states(hass, user, card):
+    """[card]'s readable states plus the shared entities' ([wall_api.SHARED_ENTITIES]) the user may
+    read: what a resolve sends, so a design's `HA:sun.sun.*` values are this home's sun."""
+    out = _readable(hass, user, card)
+    for entity in wall_api.SHARED_ENTITIES:
+        if entity not in out and user.permissions.check_entity(entity, POLICY_READ):
+            if (state := hass.states.get(entity)) is not None:
+                out[entity] = state
+    return out
+
+
 def _pictures(hass, user, card):
     """entity id → `entity_picture` for [card]'s entities [user] may read."""
     return {
@@ -123,9 +134,12 @@ async def _resolve(hass, user, base, authorization, card, look):
     style, dark, palette = look
     states = {
         entity: {"state": state.state, "attributes": dict(state.attributes)}
-        for entity, state in _readable(hass, user, card).items()
+        for entity, state in _resolve_states(hass, user, card).items()
     }
     body = {"card": card, "states": states, "cardStyle": style, "dark": dark}
+    # The home's zone, not the add-on's: the sun's times are minutes of the home's local day.
+    if time_zone := getattr(hass.config, "time_zone", None):
+        body["timeZone"] = time_zone
     if palette:
         body["palette"] = palette
     try:
@@ -166,6 +180,9 @@ class Hub:
         for cid, card in self.cards.items():
             for entity in wall_api.entity_ids(card):
                 self.by_entity.setdefault(entity, set()).add(cid)
+        # Cards whose last resolve carried a shared value (`HA:sun.sun.*`): a shared entity's change
+        # changes them, and only them.
+        self.shared_readers = set()
         self.store = wall_api.ValueStore(epoch=int(time.time() * 1000))
         self.dirty = set(self.cards)
         self.retry = set()
@@ -175,7 +192,10 @@ class Hub:
         self.used = time.monotonic()
 
     def entity_changed(self, entity):
-        if cids := self.by_entity.get(entity):
+        cids = set(self.by_entity.get(entity, ()))
+        if entity in wall_api.SHARED_ENTITIES:
+            cids |= self.shared_readers
+        if cids:
             self.dirty |= cids
             self.wake.set()
 
@@ -200,6 +220,10 @@ class Hub:
                     if failure.status == 502:
                         self.retry.add(cid)  # Again on the next poll, not in a loop in this one.
                     return
+                if wall_api.reads_shared(values):
+                    self.shared_readers.add(cid)
+                else:
+                    self.shared_readers.discard(cid)
                 values.update(
                     wall_api.picture_values(
                         self.url_path, cid, self.cards[cid], _pictures(hass, self.user, self.cards[cid])
