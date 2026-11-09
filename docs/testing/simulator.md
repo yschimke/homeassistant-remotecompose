@@ -16,7 +16,8 @@ compose-preview launch app/build/outputs/apk/debug/app-debug.apk \
 
 - The simulator needs Java 21 (`--java`), and an Android SDK platform (`ANDROID_HOME`).
 - `--form-factor phone`: the APK carries the Android XR libraries, so it is otherwise launched as XR.
-- `--sdk 37`: the watch's Glance Wear widgets render from API 37 only (`WEAR_WIDGETS_MIN_SDK`).
+- `--sdk 37`: the Glance Wear native widget binder (push updates); older SDKs reach the same
+  widgets through the tile-provider compat binder.
 - Commands with `"device":"watch"` go to the watch.
 
 ## Signing in without a browser

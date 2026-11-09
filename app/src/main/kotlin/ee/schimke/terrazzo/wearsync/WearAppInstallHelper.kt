@@ -101,9 +101,9 @@ class WearAppInstallHelper(private val context: Context, scope: CoroutineScope) 
 
   private companion object {
     /**
-     * The watch app's Wear widgets capability, declared statically in its `values-v37/wear.xml`.
-     * Read here only to recognise watch builds older than the Horologist capability as installed:
-     * the phone no longer sets up Wear widgets, so nothing else reads it.
+     * The watch app's Wear widgets capability, declared statically in its `values/wear.xml`. Read
+     * here only to recognise watch builds older than the Horologist capability as installed: the
+     * phone no longer sets up Wear widgets, so nothing else reads it.
      */
     const val LEGACY_WIDGETS_CAPABILITY = "terrazzo_wear_widgets"
 
