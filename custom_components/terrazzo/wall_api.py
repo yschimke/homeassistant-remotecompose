@@ -184,6 +184,19 @@ def entity_ids(card):
     return seen
 
 
+# Shared values: what every design may read besides its own slots, `HA:<entity_id>.<value>`
+# (`HA:sun.sun.elevation`). A port of `HaSharedValues`: its domain and the entities it reads, which
+# every resolve sends beside the card's own so those values are the home's, not their daytime stubs.
+SHARED_PREFIX = "HA:"
+SHARED_ENTITIES = ("sun.sun",)
+
+
+def reads_shared(values):
+    """Whether a card's resolved [values] carry a shared value: its design reads one, so a change
+    to a shared entity changes the card."""
+    return any(isinstance(name, str) and name.startswith(SHARED_PREFIX) for name in values)
+
+
 def domain_of(entity_id):
     return entity_id.split(".", 1)[0] if "." in entity_id else ""
 

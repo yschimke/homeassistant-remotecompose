@@ -137,6 +137,11 @@ One endpoint does both the initial load and the updates, for many cards at once:
   pushes them into the player as they are. Types are JSON's: `true`/`false` booleans, integers
   without a point, floats with one, strings; `null` is a number with no JSON form (an
   unavailable reading, NaN).
+- A design may also read the values every home shares, `HA:sun.sun.*` (elevation, azimuth, the
+  sun's times as minutes of the local day). Only a card whose document declares one carries them.
+  Each resolve sends `sun.sun`'s state (when the user may read it) and Home Assistant's
+  `time_zone` beside the card's own, so they are this home's sun, not the daytime stubs a design
+  reads without the data; a change to `sun.sun` re-resolves only the cards that read it.
 - `<slot>.picture_url` is where to fetch a slot's picture (see [pictures](#get-picturesurl_pathcard_idslotwhfitformat)).
 - **`reset: true`** means the cursor is from before a restart or a dashboard edit: the answer is
   full again, and if `etag` differs from the layout the device holds, it fetches the layout.

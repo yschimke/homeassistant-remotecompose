@@ -163,4 +163,47 @@ class DesignGeneratorTest {
     assertEquals(JsonPrimitive("Kitchen"), match.bindings["light.s0.name"], "${match.bindings}")
     assertNotNull(client.get(match.blob).takeIf { it.status == HttpStatusCode.OK })
   }
+
+  @Test
+  fun aResolveCarriesOnlyTheSharedValuesItsDocumentReads() = testApplication {
+    application { designServer(LibraryHolder(libraryDir())) }
+    // As the wall API sends it: the card's states, the sun's beside them, and the home's zone.
+    val body = buildJsonObject {
+      put("card", kitchen)
+      put(
+        "states",
+        buildJsonObject {
+          put("light.kitchen", buildJsonObject { put("state", "on") })
+          put(
+            "sun.sun",
+            buildJsonObject {
+              put("state", "below_horizon")
+              put("attributes", buildJsonObject { put("elevation", -12.5) })
+            },
+          )
+        },
+      )
+      put("timeZone", "Europe/Tallinn")
+    }
+    val response = client.post("/api/cards/resolve") { setBody(body.toString()) }
+    assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+    val match = json.decodeFromString(CardMatch.serializer(), response.bodyAsText())
+    assertTrue(match.exact)
+    // A light tile reads no `HA:` value: none is pushed, so no host stores daytime stubs for it.
+    assertTrue(match.bindings.keys.none { it.startsWith("HA:") }, "${match.bindings.keys}")
+  }
+
+  @Test
+  fun aResolveRequestReadsTheHomesTimeZone() {
+    fun parse(zone: String?) =
+      ResolveRequest.parse(
+        buildJsonObject {
+          put("card", kitchen)
+          if (zone != null) put("timeZone", zone)
+        },
+      )
+    assertEquals("Europe/Tallinn", parse("Europe/Tallinn").clock.zone().id)
+    assertEquals(ee.schimke.ha.rc.SystemHaClock, parse(null).clock)
+    assertEquals(ee.schimke.ha.rc.SystemHaClock, parse("Not/AZone").clock)
+  }
 }

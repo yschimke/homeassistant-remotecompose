@@ -1,17 +1,24 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.composeai.rcplayer.edit.namedVariables
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.HaClock
 import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -75,10 +82,29 @@ data class ResolveRequest(
    * names, instead of the first of the shapes its slots fit. Empty when none was sent.
    */
   val shapeHint: Map<String, String> = emptyMap(),
+  /**
+   * The home's IANA time zone (Home Assistant's `time_zone`): the zone the card's times and the
+   * shared sun times ([HaSharedValues]) read in. Null, or one this JVM doesn't know, is the
+   * server's own.
+   */
+  val timeZone: String? = null,
 ) {
+  /** The clock values are computed with: now, in [timeZone]. */
+  val clock: HaClock
+    get() {
+      val zone =
+        timeZone?.let { runCatching { TimeZone.of(it) }.getOrNull() } ?: return SystemHaClock
+      return object : HaClock {
+        override fun now(): Instant = SystemHaClock.now()
+
+        override fun zone(): TimeZone = zone
+      }
+    }
+
   companion object {
     /**
-     * [CardSchema.parseRequest]'s body, plus optional `cardStyle`, `dark`, `palette`, `shapeHint`.
+     * [CardSchema.parseRequest]'s body, plus optional `cardStyle`, `dark`, `palette`, `shapeHint`,
+     * `timeZone`.
      */
     fun parse(body: JsonElement): ResolveRequest {
       val (card, states) = CardSchema.parseRequest(body)
@@ -98,6 +124,7 @@ data class ResolveRequest(
         dark = (obj["dark"] as? JsonPrimitive)?.booleanOrNull ?: false,
         palette = text("palette"),
         shapeHint = shapeHint,
+        timeZone = text("timeZone"),
       )
     }
   }
@@ -156,7 +183,8 @@ object CardResolve {
     val bytes = generator.bytes(design) ?: return null
     val bindings =
       CardDesignTemplates.playback(CardDesignTemplates.designCard(card, snapshot), bytes)
-        .bindings(snapshot, SystemHaClock)
+        .bindings(snapshot, request.clock)
+        .withoutUndeclaredShared(declaredShared(bytes))
     return CardMatch(
       design = DesignLibrary.idOf(key),
       sha256 = design.sha256,
@@ -168,6 +196,29 @@ object CardResolve {
         if (design.generated) listOf("Captured on request: the library has no such design.")
         else emptyList(),
     )
+  }
+
+  /**
+   * The shared names (`HA:sun.sun.elevation`) [bytes] declares, or null when it can't be decoded. A
+   * playback computes every shared value; only the ones the document reads are worth pushing, and a
+   * host that keeps a card's values (the wall API) then knows which cards read the sun.
+   */
+  private fun declaredShared(bytes: ByteArray): Set<String>? = runCatching {
+    RcDocumentCodec.decode(bytes, RcWireLimits())
+      .namedVariables
+      .map { it.name }
+      .filter(HaSharedValues::isShared)
+      .toSet()
+  }
+    .getOrNull()
+
+  /** These bindings without the shared names outside [declared]; all of them when it's null. */
+  private fun CardSnapshotBindings.withoutUndeclaredShared(
+    declared: Set<String>?,
+  ): CardSnapshotBindings {
+    if (declared == null) return this
+    fun <V> Map<String, V>.keep() = filterKeys { !HaSharedValues.isShared(it) || it in declared }
+    return CardSnapshotBindings(strings.keep(), booleans.keep(), ints.keep(), floats.keep())
   }
 
   /** Every binding as JSON; a number with no JSON form (NaN, an unavailable reading) is null. */
@@ -226,8 +277,15 @@ object CardResolve {
     val chosen = variant.first()
 
     val example = chosen.catalog?.example?.bindings.orEmpty()
+    // The shared values (`HA:sun.sun.*`) are the home's, from the states sent, never the example's.
+    val shared =
+      HaSharedValues.bindings(HaSnapshot(states = request.states), request.clock.zone()).toJson()
     val bindings =
-      pushedValues(library.decode(chosen).bindings.map { it.name }, schema.bindings, example)
+      pushedValues(
+        library.decode(chosen).bindings.map { it.name },
+        schema.bindings,
+        example + shared,
+      )
     return CardMatch(
       design = chosen.id,
       sha256 = chosen.entry.sha256,
