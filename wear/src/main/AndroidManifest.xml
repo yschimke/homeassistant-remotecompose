@@ -298,10 +298,10 @@
           wearwidget-provider XML declares one container type, so the system widget picker
           offers both sizes. Every placed widget shows its own card, chosen on the phone.
 
-          Both start `android:enabled="false"`; WearWidgetsController enables them on API 37+
-          while the phone shows any card on the watch. Each service binds via the Glance Wear
-          native action plus the tile-provider compat action so older watch faces still see the
-          same provider.
+          Both start `android:enabled="false"`; WearWidgetsController enables them on every Wear
+          OS version while the phone shows any card on the watch. Each service binds via the
+          Glance Wear native action (API 37+ hosts) plus the tile-provider compat action, which
+          serves the same widget to older Wear OS hosts.
 
           Exported for the system's widget / tile host only: each one requires
           BIND_TILE_PROVIDER, the system permission Wear OS holds when it binds a widget or tile

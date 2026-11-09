@@ -3,7 +3,6 @@ package ee.schimke.terrazzo.wear.sync
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
 import ee.schimke.terrazzo.wear.widget.CardLargeWidgetService
 import ee.schimke.terrazzo.wear.widget.CardSmallWidgetService
@@ -32,14 +31,13 @@ import kotlinx.coroutines.launch
  * - **Refreshed** when the pins, sections, phone appearance or selected Wear designs change: a
  *   placed widget may show any of them.
  *
- * Below [WEAR_WIDGETS_MIN_SDK] both components stay disabled; the alpha library short-circuits its
- * own bind path on older Wear OS versions, and an enabled-but-broken component would only confuse
- * the picker.
+ * Every supported Wear OS version gets the providers: Glance Wear serves API 37+ hosts through its
+ * widget binder (push updates) and older ones through the tile-provider compat binder (pull
+ * updates), so nothing here gates on SDK level.
  *
  * Capability advertisement: the `terrazzo_wear_widgets` capability is declared statically
- * (`res/values-v37/wear.xml`, the same API floor as [WEAR_WIDGETS_MIN_SDK]). The phone no longer
- * sets up Wear widgets; it reads the capability only to recognise watch builds older than the
- * Horologist install marker as having the app.
+ * (`res/values/wear.xml`). The phone no longer sets up Wear widgets; it reads the capability only
+ * to recognise watch builds older than the Horologist install marker as having the app.
  */
 class WearWidgetsController(
   private val context: Context,
@@ -49,10 +47,6 @@ class WearWidgetsController(
   fun start() {
     // An older build kept the phone's widget slot assignments: nothing reads them now.
     WearOfflineStore(context.applicationContext).forgetLegacySlots()
-    if (!supportsWearWidgets()) {
-      disableAll()
-      return
-    }
     scope.launch(Dispatchers.IO) { publishPlacedWidgets(context.applicationContext) }
     scope.launch {
       combine(repo.pinned, repo.sections) { pinned, sections ->
@@ -89,26 +83,11 @@ class WearWidgetsController(
       .onFailure { Log.w(TAG, "setComponentEnabledSetting failed for $component", it) }
   }
 
-  private fun disableAll() = applyEnabled(false)
-
   companion object {
     private const val TAG = "WearWidgets"
 
-    /**
-     * Capability advertised when the runtime supports Glance Wear widgets, declared in
-     * `res/values-v37/wear.xml`.
-     */
+    /** Capability advertised by the watch app, declared in `res/values/wear.xml`. */
     const val CAPABILITY: String = "terrazzo_wear_widgets"
-
-    /**
-     * Minimum SDK_INT where Glance Wear widgets actually render. Inferred from the alpha lib's
-     * `forceIsAtLeast37ForTesting` static field: production code branches on `>= 37`. Bump if the
-     * lib's gate moves.
-     */
-    const val WEAR_WIDGETS_MIN_SDK: Int = 37
-
-    /** Whether this watch can show Glance Wear widgets: see [WEAR_WIDGETS_MIN_SDK]. */
-    fun supportsWearWidgets(): Boolean = Build.VERSION.SDK_INT >= WEAR_WIDGETS_MIN_SDK
 
     private val COMPONENTS: List<Class<*>> =
       listOf(CardSmallWidgetService::class.java, CardLargeWidgetService::class.java)

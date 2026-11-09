@@ -8,7 +8,6 @@ import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
-import ee.schimke.terrazzo.wear.sync.WearWidgetsController
 import ee.schimke.terrazzo.wearsync.proto.WearPlacedWidget
 import ee.schimke.terrazzo.wearsync.proto.WearPlacedWidgets
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
@@ -29,12 +28,11 @@ import ee.schimke.terrazzo.wearsync.proto.putProtoPayload
 data class PlacedWidget(val instanceId: Int, val provider: ComponentName, val large: Boolean)
 
 /**
- * The Terrazzo widgets placed on the watch, or null when the system can't say (an older Wear OS, no
- * widget host, or the query failed): an unknown answer is not an empty one, so nothing is forgotten
- * or reported on a failed query.
+ * The Terrazzo widgets placed on the watch, or null when the system can't say (no widget host, or
+ * the query failed): an unknown answer is not an empty one, so nothing is forgotten or reported on
+ * a failed query.
  */
 suspend fun placedCardWidgetsOrNull(context: Context): List<PlacedWidget>? {
-  if (!WearWidgetsController.supportsWearWidgets()) return null
   val small = CardSmallWidgetService::class.java.name
   val large = CardLargeWidgetService::class.java.name
   val active =

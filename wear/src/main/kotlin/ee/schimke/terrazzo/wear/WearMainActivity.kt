@@ -204,11 +204,7 @@ private fun WearApp(
     openingOnPhone = true
     scope.launch { repo.openOnPhone() }
   }
-  // Glance Wear widgets render from API 37 only.
-  val openWidgets: (() -> Unit)? =
-    if (WearWidgetsController.supportsWearWidgets()) {
-      { screen = WearScreen.Widgets }
-    } else null
+  val openWidgets: () -> Unit = { screen = WearScreen.Widgets }
   var openedDashboard by rememberSaveable { mutableStateOf<String?>(null) }
   var openedSectionKey by rememberSaveable { mutableStateOf<String?>(null) }
   // The full-screen card: its deck (a pinned section's key, or null for the pinned list) and the

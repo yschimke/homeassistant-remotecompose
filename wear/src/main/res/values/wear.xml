@@ -6,9 +6,14 @@
 
       `data_layer_app_helper_device_watch` is Horologist's marker that the watch app is installed:
       the phone's WearAppInstallHelper offers to install it on any connected watch without it.
-      `values-v37/wear.xml` replaces this array on API 37+, so it repeats the item.
+
+      `terrazzo_wear_widgets` says this watch shows Terrazzo's Glance Wear widgets, which it does on
+      every supported Wear OS version. The phone no longer sets up widgets (they are chosen on the
+      watch); it reads this only to recognise watch builds older than Horologist's install marker
+      as having the app (WearAppInstallHelper).
     -->
     <string-array name="android_wear_capabilities" translatable="false" tools:ignore="UnusedResources">
         <item>data_layer_app_helper_device_watch</item>
+        <item>terrazzo_wear_widgets</item>
     </string-array>
 </resources>
