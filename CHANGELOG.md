@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.92](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.91...v0.1.92) (2026-11-09)
+
+
+### Bug Fixes
+
+* push the home's sun to wall display cards, not daytime stubs ([#1535](https://github.com/yschimke/homeassistant-remotecompose/issues/1535)) ([9aa2fd7](https://github.com/yschimke/homeassistant-remotecompose/commit/9aa2fd7cf074caadd00bbc9d02f79bb7d1aa49b7))
+* register Compose graphics on the JVM before cards are captured ([#1538](https://github.com/yschimke/homeassistant-remotecompose/issues/1538)) ([b46bcfe](https://github.com/yschimke/homeassistant-remotecompose/commit/b46bcfeb54a96d45fd6efdb7c456ae448fd22282))
+* **wear:** enable widget providers below API 37 ([#1540](https://github.com/yschimke/homeassistant-remotecompose/issues/1540)) ([fe5e479](https://github.com/yschimke/homeassistant-remotecompose/commit/fe5e479835b43f9dd808cf39134721c22edec0c3))
+
 ## [0.1.91](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.90...v0.1.91) (2026-11-08)
 
 
