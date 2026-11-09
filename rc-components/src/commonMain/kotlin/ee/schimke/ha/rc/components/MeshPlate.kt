@@ -32,7 +32,7 @@ private fun meshStripes(dark: Boolean): RemoteBrush {
 /**
  * The face plate's texture over a card ([HaSurfaceMaterial.MeshPlate]): fine stripes at the mesh's
  * pitch, one gradient fill. Not a tiled image: the Compose player can't yet play an image shader
- * (it asks for a shader matrix the document never declares), and a design baked on the JVM must
- * draw what Android captures, which only a plain gradient does on every host.
+ * (it asks for a shader matrix the document never declares, #1466). The JVM generator can now draw
+ * the tile's `ImageBitmap` (`JvmComposeGraphics`, #1464), so that player bug is the only reason.
  */
 internal fun meshPlateBrush(dark: Boolean): RemoteBrush = meshStripes(dark)

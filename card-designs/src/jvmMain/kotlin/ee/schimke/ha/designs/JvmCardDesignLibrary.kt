@@ -31,6 +31,8 @@ import org.jetbrains.skia.EncodedImageFormat
  * <shards>`, this same main), as Compose scenes can only draw on one thread of a process.
  */
 fun main(args: Array<String>) {
+  // Before any capture: card code may draw an ImageBitmap, as in the app and previews.
+  JvmComposeGraphics.ensureRegistered()
   if (args.size == 4 && args[0] == PREVIEWS_ARG) {
     CardDesignLibrary.drawPreviews(
       File(args[1]),
@@ -96,6 +98,10 @@ private const val WORKER_HEAP = "1g"
 
 /** Previews drawn by the Compose Multiplatform player, as the web app plays a design. */
 class JvmCardPreviewRenderer(private val density: Float = 2f) : CardPreviewRenderer {
+  init {
+    JvmComposeGraphics.ensureRegistered()
+  }
+
   override fun render(
     playback: CardTemplatePlayback,
     card: CardConfig?,

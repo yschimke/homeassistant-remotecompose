@@ -7,6 +7,7 @@ import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.GeneratedDesign
 import ee.schimke.ha.designs.CheckedInCardDesigns
+import ee.schimke.ha.designs.JvmComposeGraphics
 import ee.schimke.ha.designs.LibraryCaptureProfile
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CommonCaptureHost
@@ -36,6 +37,12 @@ class DesignGenerator(
    * One capture at a time: each is a composition, and a burst of them shouldn't starve requests.
    */
   private val captures = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+
+  init {
+    // Card code may draw an ImageBitmap in a capture, before any Compose scene has started.
+    JvmComposeGraphics.ensureRegistered()
+  }
+
   private val host = CommonCaptureHost(LibraryCaptureProfile.OPERATIONS)
   private val registry = defaultRegistry()
 
