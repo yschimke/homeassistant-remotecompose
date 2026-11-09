@@ -9,9 +9,9 @@
   Schema is parsed by androidx.glance.wear.core.WearWidgetProviderInfoXmlParser;
   attribute / tag names match its TAG_PROVIDER and ATTR_* constants.
 
-  previewImage is a placeholder vector for now — a follow-up renders
-  the wear @Preview functions to PNG and wires the rendered drawables
-  in here.
+  previewImage (drawable-nodpi/wear_slot_preview_small.png) is the
+  WearEntitySmall @Preview (CardSlotWidgetPreviews.kt), rendered with
+  compose-preview (the :wear module) and cropped to the widget on a transparent background.
 -->
 <wearwidget-provider
     label="Terrazzo"

@@ -6,9 +6,9 @@
   from the cards the phone shows on the watch, and resolved at render time
   from WearWidgetCardStore by the widget's instance id.
 
-  previewImage is a placeholder vector for now — a follow-up renders
-  the wear @Preview functions to PNG and wires the rendered drawables
-  in here.
+  previewImage (drawable-nodpi/wear_slot_preview_large.png) is the
+  WearEntityLarge @Preview (CardSlotWidgetPreviews.kt), rendered with
+  compose-preview (the :wear module) and cropped to the widget on a transparent background.
 -->
 <wearwidget-provider
     label="Terrazzo"
