@@ -88,8 +88,13 @@ internal fun Route.libraryProtocolRoutes(
     val sha = BLOB_NAME.matchEntire(call.parameters["name"].orEmpty())?.groupValues?.get(1)
     // Blobs are content-addressed: a published design's hash is as good as a key to it.
     val bytes =
-      sha?.let { holder.current().blob(it) ?: generator.blob(it) ?: userDesigns?.blob(it) }
-        ?: return@get call.notFound()
+      sha?.let {
+        holder.current().blob(it)
+          ?: generator.blob(it)
+          ?: userDesigns?.blob(it)
+          // A design made for a small player (POST /api/cards/resolve with `player`).
+          ?: PlayerFolding.blob(it)
+      } ?: return@get call.notFound()
     (holder.current().entry(sha!!) ?: userDesigns?.entry(sha))?.let {
       usage?.blobFetched(
         it,

@@ -210,6 +210,32 @@ def slot_id(domain, index):
 # ---------------------------------------------------------------------------------------------
 
 
+def player(density, font_scale, width=None, height=None):
+    """The small player a `/values` request is for, `(density, font_scale, width, height)`, or None
+    for a full one.
+
+    A device that can't evaluate a design's density and font-size expressions (an ESP32 panel)
+    passes `density=` (and `font_scale=`, default 1): the design server then makes each design for
+    that display, with its sizes as numbers, under its own sha. `width=` and `height=` (dp, both or
+    neither) also make each design's canvas the whole screen, for a device showing one card at a
+    time. A value that isn't a positive number in range is ignored, so a typo gets the full design,
+    not an error."""
+
+    def number(value, high):
+        try:
+            v = float(value)
+        except (TypeError, ValueError):
+            return None
+        return v if 0 < v <= high else None
+
+    d, f = number(density, 16), number(font_scale, 16)
+    w, h = number(width, 4096), number(height, 4096)
+    if d is None and f is None:
+        return None
+    size = (int(w), int(h)) if w is not None and h is not None else (None, None)
+    return (d or 1.0, f or 1.0) + size
+
+
 def _int(value, default):
     return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else default
 

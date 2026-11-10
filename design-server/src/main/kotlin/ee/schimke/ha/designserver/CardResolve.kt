@@ -26,6 +26,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.jsonObject
 
 /**
@@ -88,6 +89,12 @@ data class ResolveRequest(
    * server's own.
    */
   val timeZone: String? = null,
+  /**
+   * A small player the design is for (`{"density": 1, "fontScale": 1, "width": 800, "height":
+   * 480}`): the design served is [PlayerFolding]'s, made for it, under its own sha. Null for a full
+   * player.
+   */
+  val player: PlayerFolding.Player? = null,
 ) {
   /** The clock values are computed with: now, in [timeZone]. */
   val clock: HaClock
@@ -104,7 +111,7 @@ data class ResolveRequest(
   companion object {
     /**
      * [CardSchema.parseRequest]'s body, plus optional `cardStyle`, `dark`, `palette`, `shapeHint`,
-     * `timeZone`.
+     * `timeZone`, `player`.
      */
     fun parse(body: JsonElement): ResolveRequest {
       val (card, states) = CardSchema.parseRequest(body)
@@ -125,6 +132,16 @@ data class ResolveRequest(
         palette = text("palette"),
         shapeHint = shapeHint,
         timeZone = text("timeZone"),
+        player =
+          (obj["player"] as? JsonObject)?.let { player ->
+            fun number(name: String) = (player[name] as? JsonPrimitive)?.floatOrNull
+            PlayerFolding.Player(
+              density = number("density") ?: 1f,
+              fontScale = number("fontScale") ?: 1f,
+              width = number("width")?.toInt(),
+              height = number("height")?.toInt(),
+            )
+          },
       )
     }
   }

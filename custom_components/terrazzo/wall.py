@@ -61,12 +61,17 @@ def _error(failure):
 
 
 def _look(request):
-    """The card style, light or dark, and palette a request asks for."""
+    """The card style, light or dark, palette, and player a request asks for. The player is the
+    display a small device draws on, `(density, font_scale, width, height)` from those query names: the
+    design server makes each design for it, with its sizes as numbers (wall_api.player)."""
     query = request.query
     return (
         query.get("style") or "classic",
         query.get("dark", "").lower() in ("1", "true", "yes"),
         query.get("palette") or None,
+        wall_api.player(
+            query.get("density"), query.get("font_scale"), query.get("width"), query.get("height")
+        ),
     )
 
 
@@ -131,7 +136,7 @@ async def _resolve(hass, user, base, authorization, card, look):
     """The design add-on's resolve of [card] with the current states of its entities [user] may
     read: (sha, exact, values). An entity they may not read is sent as missing, so its values are
     the card's unavailable ones. Raises WallError."""
-    style, dark, palette = look
+    style, dark, palette, player = look
     states = {
         entity: {"state": state.state, "attributes": dict(state.attributes)}
         for entity, state in _resolve_states(hass, user, card).items()
@@ -142,6 +147,10 @@ async def _resolve(hass, user, base, authorization, card, look):
         body["timeZone"] = time_zone
     if palette:
         body["palette"] = palette
+    if player:
+        body["player"] = {"density": player[0], "fontScale": player[1]}
+        if player[2] is not None:
+            body["player"].update(width=player[2], height=player[3])
     try:
         async with async_get_clientsession(hass).post(
             f"{base}/api/cards/resolve",

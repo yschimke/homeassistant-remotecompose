@@ -354,8 +354,25 @@ fun Application.designServer(
             "no library design draws this card in ${request.cardStyle}",
             status = HttpStatusCode.NotFound,
           )
+      // A small player gets the design made for it (PlayerFolding), served under its own sha.
+      val served =
+        request.player?.let { player ->
+          val bytes = holder.current().blob(match.sha256) ?: generator.blob(match.sha256)
+          val folded = bytes?.let {
+            PlayerFolding.forPlayer(match.sha256, it, player, match.bindings.keys)
+          }
+          if (folded == null) {
+            match.copy(notes = match.notes + "Couldn't simplify this design for a small player.")
+          } else {
+            match.copy(
+              sha256 = folded.sha256,
+              blob = match.blob.replace(match.sha256, folded.sha256),
+              notes = match.notes + folded.notes,
+            )
+          }
+        } ?: match
       call.respondText(
-        json.encodeToString(CardMatch.serializer(), match),
+        json.encodeToString(CardMatch.serializer(), served),
         ContentType.Application.Json,
       )
     }

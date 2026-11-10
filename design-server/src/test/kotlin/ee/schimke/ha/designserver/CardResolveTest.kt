@@ -1,5 +1,8 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcFloatExpression
+import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.design.DesignCatalog
@@ -7,11 +10,13 @@ import ee.schimke.ha.design.DesignCatalogEntry
 import ee.schimke.ha.design.DesignExample
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.options
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readRawBytes
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
@@ -19,8 +24,10 @@ import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
@@ -197,5 +204,61 @@ class CardResolveTest {
       HttpStatusCode.NotFound,
       client.post("/api/cards/resolve") { setBody(braun.toString()) }.status,
     )
+  }
+
+  @Test
+  fun aSmallPlayerGetsTheDesignMadeForIt() = testApplication {
+    val dir = library().dir
+    application { designServer(LibraryHolder(dir)) }
+    fun resolve(player: Boolean): CardMatch {
+      val body = buildJsonObject {
+        put("card", kitchen)
+        if (player) {
+          put(
+            "player",
+            buildJsonObject {
+              put("density", 1)
+              put("fontScale", 1)
+            },
+          )
+        }
+      }
+      return runBlocking {
+        val response =
+          client.post("/api/cards/resolve") {
+            header(HttpHeaders.ContentType, "application/json")
+            setBody(body.toString())
+          }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+        Json.decodeFromString(CardMatch.serializer(), response.bodyAsText())
+      }
+    }
+    val full = resolve(player = false)
+    val small = resolve(player = true)
+    // Another document, under its own sha, served where the match says, with the same values.
+    assertNotEquals(full.sha256, small.sha256, small.notes.toString())
+    assertEquals("$API_BASE/blobs/${small.sha256}.rc", small.blob)
+    assertEquals(full.bindings, small.bindings)
+    val blob = client.get("/designs/v1/blobs/${small.sha256}.rc")
+    assertEquals(HttpStatusCode.OK, blob.status)
+    val bytes = blob.readRawBytes()
+    val folded = RcDocumentCodec.decode(bytes, RcWireLimits())
+    // Nothing reads the player's density or font size any more.
+    assertTrue(
+      folded.operations.none { it is RcFloatExpression && it.readsDisplay() },
+      "${folded.operations}",
+    )
+    System.getenv("PLAYER_FOLDING_TILE_OUT")?.let { File(it).writeBytes(bytes) }
+  }
+
+  /** Whether this expression reads the density (27) or font size (33) system variable. */
+  private fun RcFloatExpression.readsDisplay(): Boolean = expression.any {
+    it.referencedId == DENSITY || it.referencedId == FONT_SIZE
+  }
+
+  private companion object {
+    /** AndroidX's system variable ids: the display's density and default text size. */
+    const val DENSITY = 27
+    const val FONT_SIZE = 33
   }
 }
