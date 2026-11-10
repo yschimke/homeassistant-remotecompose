@@ -303,5 +303,28 @@ class QueryTest(unittest.TestCase):
         self.assertEqual(['b'], wall.parse_card_ids('b,zzz,', ['a', 'b']))
 
 
+
+class PlayerTest(unittest.TestCase):
+    def test_no_display_is_a_full_player(self):
+        self.assertIsNone(wall.player(None, None))
+        self.assertIsNone(wall.player('', ''))
+
+    def test_a_display_is_density_and_font_scale(self):
+        self.assertEqual((1.0, 1.0, None, None), wall.player('1', None))
+        self.assertEqual((2.0, 1.3, None, None), wall.player('2', '1.3'))
+        self.assertEqual((1.0, 1.5, None, None), wall.player(None, '1.5'))
+
+    def test_nonsense_is_ignored_not_an_error(self):
+        self.assertIsNone(wall.player('abc', '-1'))
+        self.assertEqual((1.0, 1.0, None, None), wall.player('0', '1'))
+        self.assertEqual((3.0, 1.0, None, None), wall.player('3', '99'))
+
+    def test_a_whole_screen_is_both_sides_or_neither(self):
+        self.assertEqual((1.0, 1.0, 800, 480), wall.player('1', '1', '800', '480'))
+        self.assertEqual((1.0, 1.0, None, None), wall.player('1', '1', '800', None))
+        self.assertEqual((1.0, 1.0, None, None), wall.player('1', '1', '0', '480'))
+        # A size alone doesn't make a small player.
+        self.assertIsNone(wall.player(None, None, '800', '480'))
+
 if __name__ == '__main__':
     unittest.main()

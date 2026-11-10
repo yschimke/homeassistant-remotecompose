@@ -115,6 +115,7 @@ One endpoint does both the initial load and the updates, for many cards at once:
 | `since` | The `cursor` from the last answer; empty the first time. |
 | `wait` | Seconds to hold the request when nothing changed (default 25, max 55, 0 answers at once). |
 | `style`, `dark`, `palette` | The look: an `HaUberTheme` id (`classic` default), `dark=1`, a `ThemeStyle` palette. |
+| `density`, `font_scale`, `width`, `height` | A small player's display (either alone is enough; the other is 1). Each design is then made for it on the design server (`PlayerFolding`): sizes written as numbers instead of expressions over the player's density and font size, `CoreText` as `TextLayout`, values the device won't push frozen, so a player that can't evaluate those (an ESP32 panel's rccore) draws it. Served under its own sha. `width` and `height` (dp, both or neither) also make each design's canvas the whole screen, for a device that shows one card at a time. An ESPHome panel whose player lays out in dp sends `density=1&font_scale=1` and its screen's size in dp. |
 
 ```json
 {
