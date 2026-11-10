@@ -121,10 +121,14 @@ object PlayerFolding {
     bound: Set<String> = emptySet(),
   ): Folded? {
     val key = Source(sha256, player, bound)
-    synchronized(this) { bySource[key] }
-      ?.let {
+    synchronized(this) {
+      bySource[key]?.let {
+        // The two caches age apart: a design resolved again is advertised again, so its bytes
+        // must be fetchable again, however long ago a player last downloaded them.
+        blobs[it.sha256] = it.bytes
         return it
       }
+    }
     val folded = fold(design, player, bound) ?: return null
     synchronized(this) {
       bySource[key] = folded

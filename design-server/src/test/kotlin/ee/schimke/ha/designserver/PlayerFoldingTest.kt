@@ -60,4 +60,23 @@ class PlayerFoldingTest {
     // Once per design and player.
     assertTrue(PlayerFolding.forPlayer("heading", heading, PlayerFolding.Player()) === folded)
   }
+
+  @Test
+  fun aDesignStillResolvedKeepsItsBlob() {
+    // One design resolved again and again while many others are folded: its blob must still be
+    // there to fetch, however long ago a player last downloaded it.
+    val hot = PlayerFolding.Player(width = 800, height = 480)
+    val first = assertNotNull(PlayerFolding.forPlayer("hot", heading, hot))
+    for (width in 1..600) {
+      assertNotNull(
+        PlayerFolding.forPlayer(
+          "other",
+          heading,
+          PlayerFolding.Player(width = width, height = 480),
+        ),
+      )
+      assertNotNull(PlayerFolding.forPlayer("hot", heading, hot))
+    }
+    assertContentEquals(first.bytes, PlayerFolding.blob(first.sha256))
+  }
 }
