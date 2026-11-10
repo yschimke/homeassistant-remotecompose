@@ -24,7 +24,6 @@ import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -235,8 +234,9 @@ class CardResolveTest {
     }
     val full = resolve(player = false)
     val small = resolve(player = true)
-    // Another document, under its own sha, served where the match says, with the same values.
-    assertNotEquals(full.sha256, small.sha256, small.notes.toString())
+    // Served where the match says, with the same values, and playable on the panel's player. This
+    // tile reads nothing of the display, so made for the panel it may be the same document.
+    assertTrue(small.notes.none { it.startsWith("Not playable") }, small.notes.toString())
     assertEquals("$API_BASE/blobs/${small.sha256}.rc", small.blob)
     assertEquals(full.bindings, small.bindings)
     val blob = client.get("/designs/v1/blobs/${small.sha256}.rc")
