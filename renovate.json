@@ -43,29 +43,48 @@
       "enabled": false
     },
     {
-      "description": "compose-ai-tools ships the preview CLI, the ee.schimke.composeai Gradle plugin (tracked via the compose-preview-plugin catalog key), and the reusable CI composite actions as a single release. Track it aggressively so CI always runs the latest renderer: group the pinned action refs and the Gradle plugin marker into ONE PR so the CLI catalog pin never skews apart from the action code ref, skip the weekly window, and automerge as soon as CI is green — the release moves several times a day and the pin is only useful if it keeps up. Regenerating the published catalog against the new renderer no longer depends on WHO merges: design-artifacts.yml has a push trigger on main covering the pins this PR touches, so a Renovate merge (app token — raises `push`) republishes on its own, and scheduled-merge.yml still dispatches design-artifacts.yml explicitly for the merges it makes itself (GITHUB_TOKEN merges raise no `push` event).",
-      "matchPackageNames": [
-        "yschimke/compose-ai-tools",
-        "/^ee\\.schimke\\.composeai($|[.:])/"
-      ],
-      "groupName": "compose-ai-tools",
-      "schedule": ["at any time"],
-      "automerge": true,
-      "automergeSchedule": ["at any time"]
+      "description": "Published ee.schimke.composeai modules are versionless and resolve through their release-train BOMs. Keep module-level and synthetic source-composite coordinates disabled; the BOM rules below re-enable each train's BOM on its own release line.",
+      "matchPackageNames": ["/^ee\\.schimke\\.composeai:/"],
+      "enabled": false
     },
     {
-      "description": "The contracts artifacts — the `*-core` data products, the `*-protocol` wire formats, `common-io` and the daemon transports — are released on their OWN 2.x line, independently of the 1.x plugin/CLI/actions release above, and are pinned here by the `composeai-contracts` catalog key. The rule above matches every `ee.schimke.composeai` coordinate, so without this one they get swept into the `compose-ai-tools` group PR, whose premise — 'these ship as a single release, move them together' — is simply false for them. Keeping them in their own PR means a contracts bump succeeds or fails on its own. #618 is why that matters: while `data-render-core` shared the plugin's version key, bumping the plugin dragged it to a 1.70.0 that was never published, and the resulting `Could not find ee.schimke.composeai:data-render-core:1.70.0` failed five checks at once and held the whole toolchain at 1.47.0 for weeks. #625 split the catalog key; this splits the Renovate group, so the two lines cannot be bundled back together by a matcher that predates the distinction.",
+      "description": "compose-ai-tools ships the preview CLI, the ee.schimke.composeai.preview Gradle plugin, compose-ai-tools-bom and the reusable CI composite actions as a single release. Track it aggressively so CI always runs the latest renderer: group the pinned action refs, the Gradle plugin marker and compose-ai-tools-bom into ONE PR so the CLI catalog pin never skews apart from the action code ref, and skip the weekly window. Non-tools trains (daemon, contracts, ui-builder, rc-players) are deliberately NOT matched here so their BOMs update on their own release lines.",
       "matchPackageNames": [
-        "/^ee\\.schimke\\.composeai:.*-core$/",
-        "/^ee\\.schimke\\.composeai:.*-protocol$/",
-        "ee.schimke.composeai:common-io",
-        "ee.schimke.composeai:daemon-devices",
-        "ee.schimke.composeai:daemon-bta"
+        "yschimke/compose-ai-tools",
+        "/^ee\\.schimke\\.composeai\\.preview($|[.:])/",
+        "ee.schimke.composeai:compose-ai-tools-bom"
       ],
-      "groupName": "composeai-contracts",
-      "schedule": ["at any time"],
-      "automerge": true,
-      "automergeSchedule": ["at any time"]
+      "groupName": "compose-ai-tools",
+      "enabled": true,
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Update compose-preview-daemon-bom on its own 3.x release line; preview-annotations and data-preview-overrides-runtime take their versions from its constraints.",
+      "matchPackageNames": ["ee.schimke.composeai:compose-preview-daemon-bom"],
+      "groupName": "compose-preview-daemon",
+      "enabled": true,
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Update compose-preview-contracts-bom on its own 3.x release line; data-render-core takes its version from its constraints.",
+      "matchPackageNames": ["ee.schimke.composeai:compose-preview-contracts-bom"],
+      "groupName": "compose-preview-contracts",
+      "enabled": true,
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Update compose-preview-ui-builder-bom on its own 3.x release line; compose-preview-ui-builder-runtime takes its version from its constraints.",
+      "matchPackageNames": ["ee.schimke.composeai:compose-preview-ui-builder-bom"],
+      "groupName": "compose-ui-builder",
+      "enabled": true,
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Update rc-players-bom on its own 3.x release line; player modules take their versions from its constraints.",
+      "matchPackageNames": ["ee.schimke.composeai:rc-players-bom"],
+      "groupName": "rc-players",
+      "enabled": true,
+      "schedule": ["at any time"]
     },
     {
       "description": "The Compose Multiplatform creation fork under its old coordinates is held at the last release whose API is AndroidX 1.0.0-alpha23's (the `rc-creation-fork` catalog key): the cards are one source compiled against it and, on Android, against AndroidX. Its later releases follow androidx-main, ahead of that alpha (why the catalog stayed on 2.29), and from rc-players 3.0.0 it is `rc-creation-compose` in another package. Moving off it is a migration, not a version bump: docs/architecture/rc-creation-migration.md.",

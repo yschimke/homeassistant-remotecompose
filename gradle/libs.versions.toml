@@ -69,14 +69,17 @@ indriya = "2.2.4"
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
 compose-preview-plugin = "2.90.0"
-# The `ee.schimke.composeai:*-core` protocol artifacts are versioned on their
-# own 2.x line, NOT with the plugin. Tying `data-render-core` to
+# The compose-ai-tools release BOM can advance independently on partial releases where the plugin
+# marker itself is unchanged; modules such as preview-discovery resolve versionless through it.
+compose-ai-tools = "2.90.0"
+# The `ee.schimke.composeai:*-core` / `*-protocol` wire contracts are versioned on their
+# own 3.x line, NOT with the plugin, and partial releases publish only changed modules while
+# updating `compose-preview-contracts-bom`. Tying `data-render-core` to
 # `compose-preview-plugin` is what pinned this repo at 1.47.0: that is the last
 # version at which the artifact was published on the 1.x line, so every
 # Renovate bump past it failed to resolve
 # (`Could not find ee.schimke.composeai:data-render-core:1.70.0`) and could
-# never merge. compose-ai-tools declares the same artifact against its own
-# `composeai-contracts` key, which is what this mirrors.
+# never merge. Resolve contracts versionless through `composeai-contracts-bom`.
 composeai-contracts = "3.40.0"
 # `preview-annotations` (and the rest of the preview runtime) ships from
 # yschimke/compose-preview-daemon, not compose-ai-tools, on its own 3.x line.
@@ -86,6 +89,9 @@ composeai-contracts = "3.40.0"
 # daemon BOM 3.15.0 carries preview-annotations 3.13.2). Resolve it versionless
 # through the BOM. It must not predate the daemon baked into the preview plugin.
 compose-preview-daemon = "3.27.5"
+# `compose-preview-ui-builder-bom` from yschimke/compose-ui-builder, constraining the typed-catalog
+# consumer runtime on its own 3.x release line.
+compose-ui-builder = "3.130.0"
 tapmoc = "0.5.0"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
@@ -187,13 +193,19 @@ remote-foundation = { module = "androidx.compose.remote.foundation:foundation", 
 # Remote Compose data tier the public preview server plays in-browser. Pure JVM
 # (raw `ByteArray`s, no alpha `compose-remote` types), so `:previews` can offer
 # documents captured against its own `remote-compose` version without the
-# renderer and the app agreeing on that version. Versioned with the rest of the
-# compose-ai-tools release train.
-composeai-data-render-core = { module = "ee.schimke.composeai:data-render-core", version.ref = "composeai-contracts" }
+# renderer and the app agreeing on that version. Versionless: resolved through
+# `composeai-contracts-bom`. Never add a version here.
+composeai-contracts-bom = { module = "ee.schimke.composeai:compose-preview-contracts-bom", version.ref = "composeai-contracts" }
+composeai-data-render-core = { module = "ee.schimke.composeai:data-render-core" }
 composeai-daemon-bom = { module = "ee.schimke.composeai:compose-preview-daemon-bom", version.ref = "compose-preview-daemon" }
 # Debug-only: @AnimatedPreview drives the compose-preview GIF capture.
 # Versionless: resolved through composeai-daemon-bom. Never add a version here.
 composeai-preview-annotations = { module = "ee.schimke.composeai:preview-annotations" }
+composeai-preview-overrides = { module = "ee.schimke.composeai:data-preview-overrides-runtime" }
+composeai-tools-bom = { module = "ee.schimke.composeai:compose-ai-tools-bom", version.ref = "compose-ai-tools" }
+composeai-preview-discovery = { module = "ee.schimke.composeai:preview-discovery" }
+composeai-ui-builder-bom = { module = "ee.schimke.composeai:compose-preview-ui-builder-bom", version.ref = "compose-ui-builder" }
+composeai-ui-builder-runtime = { module = "ee.schimke.composeai:compose-preview-ui-builder-runtime" }
 
 # Compose
 compose-bom = { module = "androidx.compose:compose-bom-alpha", version.ref = "compose-bom" }

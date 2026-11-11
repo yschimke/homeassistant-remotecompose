@@ -46,7 +46,8 @@ dependencies {
   // The catalog's closed icon set resolves keys to the Material glyphs the cards draw.
   implementation(libs.compose.material.icons.extended)
   implementation(libs.kotlinx.serialization.json)
-  testImplementation("ee.schimke.composeai:preview-discovery:2.90.0")
+  testImplementation(platform(libs.composeai.tools.bom))
+  testImplementation(libs.composeai.preview.discovery)
   testImplementation(libs.kotlin.test.junit)
   testImplementation("org.robolectric:robolectric:4.17")
   testImplementation(libs.compose.ui.test.junit4)
