@@ -111,8 +111,9 @@ dependencies {
   implementation(project(":ha-cards-catalog"))
   implementation(project(":rc-converter"))
   implementation(project(":rc-components"))
-  // Decodes templates for the browser: their bindings, size and op-set validation.
-  implementation(libs.rc.player.edit)
+  // Decodes templates for the browser: their bindings, size and op-set validation; and makes a
+  // design for a player's profile (`PlayerFolding`). Ahead of the BOM, for its player features.
+  implementation(libs.rc.player.edit.profiles)
 
   implementation(libs.ktor.server.core)
   implementation(libs.ktor.server.cio)
