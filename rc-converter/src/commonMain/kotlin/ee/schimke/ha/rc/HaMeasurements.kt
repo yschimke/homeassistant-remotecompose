@@ -2,14 +2,15 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -97,9 +98,9 @@ fun RemoteHaAdaptiveMeasurement(
       // Centre the wrap-height compact row with weighted spacers: a wrapper's contentAlignment is a
       // no-op for a fillMaxWidth child in alpha010 (adaptive-card-layouts.md, Known gaps #6).
       RemoteColumn(modifier = RemoteModifier.fillMaxSize().padding(horizontal = HaSpace.M.rdp)) {
-        RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f))
+        RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f.rf))
         RemoteHaMeasurement(reading, HaPresentation.Compact, RemoteModifier.fillMaxWidth())
-        RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f))
+        RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f.rf))
       }
     }
   }

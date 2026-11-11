@@ -10,8 +10,7 @@ import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.remote.player.view.RemoteComposePlayer
 import androidx.compose.ui.test.junit4.createAndroidComposeRule

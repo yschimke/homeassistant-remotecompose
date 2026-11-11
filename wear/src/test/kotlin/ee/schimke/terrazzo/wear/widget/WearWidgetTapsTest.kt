@@ -4,15 +4,15 @@ package ee.schimke.terrazzo.wear.widget
 
 import android.app.PendingIntent
 import android.os.Bundle
-import androidx.compose.remote.creation.compose.action.PendingIntentAction
-import androidx.compose.remote.creation.compose.action.pendingIntentAction
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.action.PendingIntentAction
+import ee.schimke.composeai.rccreation.compose.action.pendingIntentAction
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.ha.rc.captureSingleRemoteDocument
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.ContainerInfo

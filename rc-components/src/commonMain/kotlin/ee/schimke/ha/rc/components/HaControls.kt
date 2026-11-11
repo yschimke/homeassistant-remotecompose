@@ -2,30 +2,30 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.drawWithContent
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shaders.RemoteBrush
-import androidx.compose.remote.creation.compose.shaders.verticalGradient
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.asRemoteDp
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.tween
-import androidx.compose.remote.foundation.icon.RemoteBasicIcon
+import ee.schimke.composeai.rccreation.compose.capture.toRemoteImageVector
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.border
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.drawWithContent
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.shaders.RemoteBrush
+import ee.schimke.composeai.rccreation.compose.shaders.verticalGradient
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteCircleShape
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
+import ee.schimke.composeai.rccreation.compose.state.asRemoteDp
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.lerp
+import ee.schimke.composeai.rccreation.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -124,10 +124,10 @@ internal object TokenSwitch : HaSwitchRenderer {
     val metal = shape.material == HaSurfaceMaterial.PaintedMetal
     val trackColor: RemoteColor =
       when {
-        ink != null -> tween(ink.copy(alpha = 0.35f).rc, ink.rc, spec.colorProgress)
+        ink != null -> lerp(ink.copy(alpha = 0.35f).rc, ink.rc, spec.colorProgress)
         // Painted metal: off is the bare recessed slot, on lights it in the accent.
-        metal -> tween(ConsoleSlot.rc, spec.activeAccent, spec.colorProgress)
-        else -> tween(spec.inactiveAccent, spec.activeAccent, spec.colorProgress)
+        metal -> lerp(ConsoleSlot.rc, spec.activeAccent, spec.colorProgress)
+        else -> lerp(spec.inactiveAccent, spec.activeAccent, spec.colorProgress)
       }
     // Ambient (a low-power display): the track's outline in place of its fill, and the knob lit
     // in the track's colour, so the switch still reads on black with few pixels lit.
@@ -207,7 +207,7 @@ internal object FamilyControls {
       @Composable
       override fun Switch(spec: HaSwitchSpec) {
         IkeaControlFace(
-          tween(spec.inactiveAccent, spec.activeAccent, spec.progress),
+          lerp(spec.inactiveAccent, spec.activeAccent, spec.progress),
           spec.progress,
           spec.sized(),
         )
@@ -220,7 +220,7 @@ internal object FamilyControls {
       @Composable
       override fun Switch(spec: HaSwitchSpec) {
         ConsoleControlFace(
-          tween(ConsoleSlot.rc, spec.activeAccent, spec.colorProgress),
+          lerp(ConsoleSlot.rc, spec.activeAccent, spec.colorProgress),
           spec.sized(),
           spec.progress,
         )

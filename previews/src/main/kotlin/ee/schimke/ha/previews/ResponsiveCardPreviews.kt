@@ -2,8 +2,8 @@
 
 package ee.schimke.ha.previews
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.rc.RenderChild

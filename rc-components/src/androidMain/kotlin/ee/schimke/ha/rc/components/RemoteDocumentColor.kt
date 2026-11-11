@@ -2,9 +2,9 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.RemoteComposeCreationState
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteConstantCacheKey
+import ee.schimke.composeai.rccreation.compose.capture.RemoteComposeCreationState
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteConstantCacheKey
 
 /**
  * A [RemoteColor] whose value is **written into the document** by [writeId] and referenced by id,

@@ -1,41 +1,42 @@
 package ee.schimke.ha.rc.components
 
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.ha.rc.captureRemoteDocument
+import kotlinx.coroutines.runBlocking
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.creation.Rc
-import androidx.compose.remote.creation.RemoteComposeWriter
-import androidx.compose.remote.creation.compose.capture.RemoteComposeCreationState
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.ha.rc.androidX
 import androidx.compose.ui.graphics.toArgb
 import java.io.ByteArrayInputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class SystemRemoteHaThemeTest {
 
   @Test
   fun cardBackground_encodesAndroidLightAndDarkResources() {
-    val writer = RemoteComposeWriter.obtain(100, 100, RcPlatformProfiles.ANDROIDX)
-    val creationState =
-      RemoteComposeCreationState(
-        RemoteCreationDisplayInfo(100, 100, 160),
-        RcPlatformProfiles.ANDROIDX,
-        writer,
-      )
-
-    val colorId = SystemRemoteHaTheme.cardBackground.writeToDocument(creationState)
+    val bytes = runBlocking {
+      captureRemoteDocument(RemoteCreationDisplayInfo(100, 100, 160), androidX) {
+        RemoteBox(RemoteModifier.fillMaxSize().background(SystemRemoteHaTheme.cardBackground))
+      }
+    }
     val document =
       CoreDocument().apply {
-        initFromBuffer(
-          RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(writer.encodeToByteArray())),
-        )
+        initFromBuffer(RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(bytes)))
       }
     val color = requireNotNull(document.themedColors).single()
 
-    assertNotEquals(0, colorId)
     assertEquals(Rc.AndroidColors.SYSTEM_SURFACE_CONTAINER_HIGH_LIGHT, color.mLightModeIndex)
     assertEquals(Rc.AndroidColors.SYSTEM_SURFACE_CONTAINER_HIGH_DARK, color.mDarkModeIndex)
     assertEquals(HaTheme.Light.cardBackground.toArgb(), color.mLightModeFallback)

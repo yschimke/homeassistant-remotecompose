@@ -1,6 +1,6 @@
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.design.CardBindingRecipe
@@ -29,7 +29,7 @@ interface CardConverter {
 
   /**
    * Invoked inside a RemoteCompose capture scope. Implementations emit `Remote*` composables from
-   * [androidx.compose.remote.creation.compose].
+   * [ee.schimke.composeai.rccreation.compose].
    *
    * @param modifier applied to the card's top-level composable. Lets the caller set
    *   `fillMaxWidth()` when the card is rendered as a standalone dashboard tile, or leave it

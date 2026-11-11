@@ -3,16 +3,17 @@
 package ee.schimke.terrazzo.wear.widget
 
 import android.content.Context
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.RemoteDensity
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteDp
-import androidx.compose.remote.creation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.capture.RemoteDensity
+import ee.schimke.ha.rc.CaptureProfile
+import ee.schimke.ha.rc.captureSingleRemoteDocument
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteDp
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.WearWidgetBrush
@@ -100,18 +101,22 @@ internal object WearWidgetTemplate {
    * as the named fill's default, its layers and edge over it, all clipped to the named corner
    * radius, so the host's own radius shapes the style's surface. A [level] fills the container with
    * its reading, in the style's [wearLevelLook] ([RemoteWearContainer]).
+   *
+   * [profile] names the operations the content's components may use: the app's own player's for a
+   * template, the Wear widget renderer's for a card captured for one widget.
    */
   suspend fun capture(
     context: Context,
     cardStyle: HaUberTheme = HaUberTheme.Classic,
     level: HaWearLevel? = null,
+    profile: CaptureProfile = androidXExperimentalWrap,
     content: @Composable () -> Unit,
   ): ByteArray =
     captureSingleRemoteDocument(
         context = context,
         creationDisplayInfo = CANVAS,
         remoteDensity = RemoteDensity.Host,
-        profile = androidXExperimentalWrap,
+        profile = profile,
       ) {
         // Expressions named in composition order, so a card drawn by its converter or by a card
         // design wrapping it names them alike.

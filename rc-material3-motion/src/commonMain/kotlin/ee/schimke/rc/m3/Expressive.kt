@@ -2,33 +2,34 @@
 
 package ee.schimke.rc.m3
 
-import androidx.compose.remote.creation.compose.action.valueChange
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.onTouchCancel
-import androidx.compose.remote.creation.compose.modifier.onTouchDown
-import androidx.compose.remote.creation.compose.modifier.onTouchUp
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.RemoteTimeVariables
-import androidx.compose.remote.creation.compose.state.clamp
-import androidx.compose.remote.creation.compose.state.cos
-import androidx.compose.remote.creation.compose.state.max
-import androidx.compose.remote.creation.compose.state.min
-import androidx.compose.remote.creation.compose.state.rememberMutableRemoteFloat
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.sin
+import androidx.compose.runtime.remember
+import ee.schimke.composeai.rccreation.compose.state.MutableRemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteStrokeCap
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
+import ee.schimke.composeai.rccreation.compose.action.valueChangeAction
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.onTouchCancel
+import ee.schimke.composeai.rccreation.compose.modifier.onTouchDown
+import ee.schimke.composeai.rccreation.compose.modifier.onTouchUp
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.RemoteTimeVariables
+import ee.schimke.composeai.rccreation.compose.state.clamp
+import ee.schimke.composeai.rccreation.compose.state.cos
+import ee.schimke.composeai.rccreation.compose.state.max
+import ee.schimke.composeai.rccreation.compose.state.min
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.sin
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.StrokeCap
 
 // Material 3 Expressive building blocks beyond the switch (RemoteM3Switch.kt): press feedback, the
 // shape morph of a selected container, the wavy progress indicator and the loading indicator. Each
@@ -51,10 +52,10 @@ class RcPress internal constructor(val modifier: RemoteModifier, val fraction: R
 @Composable
 fun rememberRcPress(motion: RcMotionScheme = currentRcMotion()): RcPress {
   if (!LocalRcInteractivePlayer.current) return RcPress.None
-  val pressed = rememberMutableRemoteFloat(0f)
-  val up = valueChange(pressed, 0f.rf)
+  val pressed = remember { MutableRemoteFloat(0f) }
+  val up = valueChangeAction(pressed, 0f.rf)
   val modifier =
-    RemoteModifier.onTouchDown(valueChange(pressed, 1f.rf)).onTouchUp(up).onTouchCancel(up)
+    RemoteModifier.onTouchDown(valueChangeAction(pressed, 1f.rf)).onTouchUp(up).onTouchCancel(up)
   return RcPress(modifier, pressed.animate(motion.spatialFast))
 }
 
@@ -313,15 +314,15 @@ fun RemoteM3LoadingIndicator(color: RemoteColor, modifier: RemoteModifier = Remo
 
 private fun fill(color: RemoteColor) = RemotePaint {
   isAntiAlias = true
-  style = PaintingStyle.Fill
+  style = RemotePaintingStyle.Fill
 }
   .apply { this.color = color }
 
 private fun stroke(color: RemoteColor, width: RemoteFloat) = RemotePaint {
   isAntiAlias = true
-  style = PaintingStyle.Stroke
+  style = RemotePaintingStyle.Stroke
   strokeWidth = width
-  strokeCap = StrokeCap.Round
+  strokeCap = RemoteStrokeCap.Round
 }
   .apply { this.color = color }
 
@@ -435,7 +436,7 @@ private fun RemoteDrawScope.trackSegment(
   // anti-aliased diameter by a hair: otherwise the seam where they meet shows as a faint line.
   val body = RemotePaint {
     isAntiAlias = false
-    style = PaintingStyle.Fill
+    style = RemotePaintingStyle.Fill
   }
     .apply { this.color = color }
   val capSize = RemoteSize(radius * 2f.rf, height)

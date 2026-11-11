@@ -5,11 +5,10 @@ package ee.schimke.ha.rc
 import android.content.Context
 import android.util.Log
 import androidx.compose.remote.core.CoreDocument
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.RemoteDensity
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.runtime.Composable
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.capture.RemoteDensity
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 
 actual typealias CaptureHost = Context
 

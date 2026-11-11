@@ -2,38 +2,39 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.action.valueChange
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.contentDescription
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.onTouchDown
-import androidx.compose.remote.creation.compose.modifier.onTouchUp
-import androidx.compose.remote.creation.compose.modifier.semantics
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.max
-import androidx.compose.remote.creation.compose.state.min
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.ri
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.selectIfGt
-import androidx.compose.remote.creation.compose.state.tween
+import androidx.compose.runtime.remember
+import ee.schimke.composeai.rccreation.compose.state.MutableRemoteInt
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
+import ee.schimke.composeai.rccreation.compose.action.valueChangeAction
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.contentDescription
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.onTouchDown
+import ee.schimke.composeai.rccreation.compose.modifier.onTouchUp
+import ee.schimke.composeai.rccreation.compose.modifier.semantics
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
+import ee.schimke.composeai.rccreation.compose.state.max
+import ee.schimke.composeai.rccreation.compose.state.min
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.ri
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.state.selectIfGt
+import ee.schimke.composeai.rccreation.compose.state.lerp
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.PaintingStyle
 import ee.schimke.rc.m3.RcM3SliderColors
 import ee.schimke.rc.m3.RcPress
 import ee.schimke.rc.m3.drawM3Slider
@@ -111,7 +112,7 @@ fun RemoteHaSlider(
       sliderRemoteAction(action, ticks.toPaddedRemoteString(1), payloadSlot)
     // A touch-down handler makes the canvas the component that takes the touch, so its release
     // runs; on a locked card it also shows the unlock strip.
-    val down = lock?.touched ?: valueChange(rememberMutableRemoteInt(0), 1.ri)
+    val down = lock?.touched ?: valueChangeAction(remember { MutableRemoteInt(0) }, 1.ri)
     // The press rides beside the drag's own touch handlers, as handlers of its own: this canvas
     // already takes touch down and up.
     canvasModifier =
@@ -162,7 +163,7 @@ fun RemoteHaSlider(
               active = fill,
               // The same tint as HA's track, mixed onto the card so it is opaque: a track drawn
               // in pieces shows no overlap.
-              inactive = tween(theme.cardBackground, theme.secondaryText, 0.18f.rf),
+              inactive = lerp(theme.cardBackground, theme.secondaryText, 0.18f.rf),
             ),
             ambient,
           )
@@ -183,7 +184,7 @@ fun RemoteHaSlider(
             width - pillWidth / 2f.rf,
           )
         drawRoundRect(
-          RemotePaint { style = PaintingStyle.Fill }
+          RemotePaint { style = RemotePaintingStyle.Fill }
             .apply {
               color =
                 theme.cardBackground.copy(alpha = theme.cardBackground.alpha * (1f.rf - inInactive))
@@ -197,7 +198,7 @@ fun RemoteHaSlider(
           x,
           layout.middle,
           RemotePaint {
-            style = PaintingStyle.Fill
+            style = RemotePaintingStyle.Fill
             textSize = HaType.Body.toPx()
           }
             .apply { color = valueColor },
@@ -220,7 +221,7 @@ fun RemoteHaSlider(
       define?.invoke(this)
       val edge = width * fraction
       drawRect(
-        RemotePaint { style = PaintingStyle.Fill }.apply { color = fill },
+        RemotePaint { style = RemotePaintingStyle.Fill }.apply { color = fill },
         RemoteOffset(0f.rf, 0f.rf),
         RemoteSize(edge, height),
       )
@@ -232,7 +233,7 @@ fun RemoteHaSlider(
       val half = bubbleWidth / 2f.rf
       val centre = min(max(edge, inset + half), width - inset - half)
       drawRoundRect(
-        RemotePaint { style = PaintingStyle.Fill }.apply { color = theme.cardBackground },
+        RemotePaint { style = RemotePaintingStyle.Fill }.apply { color = theme.cardBackground },
         RemoteOffset(centre - half, inset),
         RemoteSize(bubbleWidth, bubbleHeight),
         RemoteOffset(bubbleHeight / 2f.rf, bubbleHeight / 2f.rf),
@@ -242,7 +243,7 @@ fun RemoteHaSlider(
         centre,
         height / 2f.rf,
         RemotePaint {
-          style = PaintingStyle.Fill
+          style = RemotePaintingStyle.Fill
           // The value reads as a row's state does: the type scale's body role.
           textSize = HaType.Body.toPx()
         }

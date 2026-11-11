@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.widget
 
+import ee.schimke.composeai.rcplayer.protocol.RcOpcodes
 import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -17,10 +18,10 @@ import android.widget.LinearLayout
 import android.widget.RemoteViews
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.ha.rc.captureSingleRemoteDocument
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asImageBitmap
 import ee.schimke.ha.model.CardConfig
@@ -110,7 +111,8 @@ class WidgetPreviewActivity : Activity() {
           CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
             ProvideCardRegistry(registry) {
               ProvideSystemHaTheme(
-                profile = captureProfile,
+                supportsColorTheme =
+                  RcOpcodes.COLOR_THEME in captureProfile.supportedOperations,
                 fallbackTheme =
                   if (
                     resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==

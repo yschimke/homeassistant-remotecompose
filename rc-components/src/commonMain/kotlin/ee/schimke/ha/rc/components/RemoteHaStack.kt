@@ -2,21 +2,23 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.width
+import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -53,22 +55,24 @@ fun RemoteHaHorizontalStack(
 ) {
   val columns = cellCount.coerceAtLeast(1)
   val name = rememberExpressionName(GridWidthExpressionPrefix)
-  val stackWidthPx =
-    RemoteFloat.createNamedRemoteFloatExpression(name = name, domain = RemoteState.Domain.User) {
-      componentWidth()
-    }
-  // Each column's width, from the stack's own width as [RemoteHaGrid] computes its cells': a
-  // picture sizes its height from it rather than from what a player reports for a weighted child.
-  val cellWidthPx =
-    (stackWidthPx - HORIZONTAL_STACK_GAP_DP.rdp.toPx() * (columns - 1).toFloat()) /
-      columns.toFloat()
   RemoteBox(modifier = modifier.fillMaxWidth()) {
+    val stackWidthPx =
+      RemoteFloat.createNamedRemoteFloat(
+        name = name,
+        defaultValue = remoteComponent().width,
+        domain = RemoteState.Domain.User,
+      )
+    // Each column's width, from the stack's own width as [RemoteHaGrid] computes its cells': a
+    // picture sizes its height from it rather than from what a player reports for a weighted child.
+    val cellWidthPx =
+      (stackWidthPx - HORIZONTAL_STACK_GAP_DP.rdp.toPx() * (columns - 1).toFloat()) /
+        columns.toFloat()
     RemoteText(text = stackWidthPx.toPaddedRemoteString(1), color = Color.Transparent.rc)
     RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
       CompositionLocalProvider(LocalGridCellWidthPx provides cellWidthPx) {
         for (index in 0 until cellCount) {
           if (index > 0) RemoteBox(modifier = RemoteModifier.width(HORIZONTAL_STACK_GAP_DP.rdp))
-          RemoteBox(modifier = RemoteModifier.weight(1f)) { cell(index) }
+          RemoteBox(modifier = RemoteModifier.weight(1f.rf)) { cell(index) }
         }
       }
     }
@@ -111,15 +115,17 @@ fun RemoteHaGrid(
 ) {
   val columns = perRow.coerceAtLeast(1)
   val name = rememberExpressionName(GridWidthExpressionPrefix)
-  val gridWidthPx =
-    RemoteFloat.createNamedRemoteFloatExpression(name = name, domain = RemoteState.Domain.User) {
-      componentWidth()
-    }
-  fun cellWidthPx(slots: Int) =
-    (gridWidthPx - HaGridLayout.GAP_DP.rdp.toPx() * (slots - 1).toFloat()) / slots.toFloat()
   RemoteBox(modifier = if (fillHeight) modifier.fillMaxSize() else modifier.fillMaxWidth()) {
-    // Writes the width expression while this box is the component being written, so it reads the
-    // grid's width (the same forcing text `RemoteSizeBreakpoint` uses; it draws nothing).
+    // This box's width: the grid's.
+    val gridWidthPx =
+      RemoteFloat.createNamedRemoteFloat(
+        name = name,
+        defaultValue = remoteComponent().width,
+        domain = RemoteState.Domain.User,
+      )
+    val gapPx = HaGridLayout.GAP_DP.rdp.toPx()
+    fun cellWidthPx(slots: Int) = (gridWidthPx - gapPx * (slots - 1).toFloat()) / slots.toFloat()
+    // Writes the width expression ahead of the cells that read it (it draws nothing).
     RemoteText(text = gridWidthPx.toPaddedRemoteString(1), color = Color.Transparent.rc)
     RemoteColumn(
       modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
@@ -138,7 +144,7 @@ fun RemoteHaGrid(
         // own size gate sees the room it really has.
         RemoteRow(
           modifier =
-            if (fillHeight) RemoteModifier.fillMaxWidth().weight(1f)
+            if (fillHeight) RemoteModifier.fillMaxWidth().weight(1f.rf)
             else RemoteModifier.fillMaxWidth(),
         ) {
           for (slot in 0 until slots) {
@@ -146,8 +152,8 @@ fun RemoteHaGrid(
             val index = row.getOrNull(slot)
             RemoteBox(
               modifier =
-                if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight()
-                else RemoteModifier.weight(1f),
+                if (fillHeight) RemoteModifier.weight(1f.rf).fillMaxHeight()
+                else RemoteModifier.weight(1f.rf),
             ) {
               if (index != null) {
                 CompositionLocalProvider(LocalGridCellWidthPx provides widthPx) { cell(index) }

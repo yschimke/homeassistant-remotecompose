@@ -2,13 +2,13 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.tween
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.lerp
 import androidx.compose.runtime.Composable
 
 internal val HaVisualFamily.isCommunity: Boolean
@@ -36,7 +36,7 @@ internal fun CommunitySwitch(
   modifier: RemoteModifier,
 ) {
   val family = visualFamily()
-  val look = meterLook(tween(inactive, active, progress), null)
+  val look = meterLook(lerp(inactive, active, progress), null)
   RemoteCanvas(modifier) {
     val pad = height * 0.12f.rf
     val side = height - pad * 2f.rf

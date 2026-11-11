@@ -14,7 +14,7 @@ import androidx.compose.remote.core.operations.layout.managers.BoxLayout
 import androidx.compose.remote.creation.Rc
 import androidx.compose.remote.creation.RemoteComposeWriter
 import androidx.compose.remote.creation.modifiers.RecordingModifier
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import ee.schimke.ha.rc.androidX
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
@@ -29,7 +29,7 @@ class SystemThemeRemoteViewsTest {
   @Test
   @SdkSuppress(minSdkVersion = 37)
   fun colorTheme_coldStart_lightTheme_resolvesSystemColors() {
-    val rcDoc = RemoteComposeWriter.obtain(100, 100, RcPlatformProfiles.ANDROIDX)
+    val rcDoc = RemoteComposeWriter.obtain(100, 100, androidX)
     val fallbackColor = 0xFFFF00FF.toInt()
     val colorId =
       rcDoc.addThemedColor(

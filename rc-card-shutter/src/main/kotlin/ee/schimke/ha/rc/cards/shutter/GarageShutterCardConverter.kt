@@ -1,6 +1,6 @@
 package ee.schimke.ha.rc.cards.shutter
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardBindingRecipes

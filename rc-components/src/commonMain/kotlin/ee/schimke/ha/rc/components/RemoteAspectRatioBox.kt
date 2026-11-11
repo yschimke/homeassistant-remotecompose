@@ -2,14 +2,15 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.toRemoteDp
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.toRemoteDp
 import androidx.compose.runtime.Composable
 
 /**
@@ -38,18 +39,18 @@ fun RemoteAspectRatioBox(
 ) {
   require(ratio > 0f && ratio.isFinite()) { "aspect ratio must be positive: $ratio" }
   val name = rememberExpressionName(AspectExpressionPrefix)
-  // In a grid cell, the cell's width as the grid computes it; anywhere else, this box's own.
-  val widthPx =
-    LocalGridCellWidthPx.current
-      ?: RemoteFloat.createNamedRemoteFloatExpression(
-        name = name,
-        domain = RemoteState.Domain.User,
-      ) {
-        componentWidth()
-      }
-  // Layout modifiers take dp; componentWidth() is px, so convert at playback density.
-  val height = (widthPx / ratio).toRemoteDp()
+  val gridCellWidthPx = LocalGridCellWidthPx.current
   RemoteBox(modifier = modifier.fillMaxWidth()) {
+    // In a grid cell, the cell's width as the grid computes it; anywhere else, this box's own.
+    val widthPx =
+      gridCellWidthPx
+        ?: RemoteFloat.createNamedRemoteFloat(
+          name = name,
+          defaultValue = remoteComponent().width,
+          domain = RemoteState.Domain.User,
+        )
+    // Layout modifiers take dp; a component's width is px, so convert at playback density.
+    val height = (widthPx / ratio).toRemoteDp()
     RemoteBox(modifier = RemoteModifier.fillMaxWidth().height(height)) { content() }
   }
 }

@@ -6,15 +6,14 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.capture.rememberRemoteDocument
-import androidx.compose.remote.creation.profile.Profile
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
 import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
@@ -58,9 +57,8 @@ data class CardDocument(val bytes: ByteArray, val widthPx: Int, val heightPx: In
  * since named-binding writes from the host carry value updates. Pass [forceRefresh] = true to
  * bypass the cache (e.g. when the YAML just changed but the cache key is hard to evict surgically).
  *
- * alpha09 collapses the public/V2 capture functions into a single `captureSingleRemoteDocument`
- * which is itself `@RestrictTo(LIBRARY_GROUP)` — suppressed here deliberately. It runs the
- * composition headlessly (no `VirtualDisplay`), so it's safe from a WorkManager worker.
+ * [captureSingleRemoteDocument] runs the composition headlessly (no `VirtualDisplay`), so it's safe
+ * from a WorkManager worker.
  */
 @Suppress("RestrictedApi")
 @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -74,7 +72,7 @@ suspend fun captureCardDocument(
   snapshot: HaSnapshot,
   cache: CardDocumentCache = defaultCardDocumentCache,
   forceRefresh: Boolean = false,
-  profile: Profile = RcPlatformProfiles.ANDROIDX,
+  profile: CaptureProfile = androidX,
 ): CardDocument {
   val converter =
     registry.get(card.type) ?: error("No converter registered for card type='${card.type}'")
@@ -97,7 +95,7 @@ suspend fun captureCardDocument(
 /**
  * Default cache key for the headless capture path. Includes the size inputs because the encoded
  * document bakes them into its header and recomputing layout for a different slot size produces
- * different bytes, plus [profile] so the widget (Glance / launcher) and embedded AndroidX captures
+ * different bytes, plus [profile] so the widget (Glance / launcher) and embedded-player captures
  * don't clobber each other in [defaultCardDocumentCache]. Theme isn't part of the key today: widget
  * capture uses the default theme; if widgets gain a theme picker, extend this key.
  */
@@ -106,7 +104,7 @@ private data class HeadlessCardCacheKey(
   val widthPx: Int,
   val heightPx: Int,
   val densityDpi: Int,
-  val profile: Profile,
+  val profile: CaptureProfile,
 )
 
 /**
@@ -133,16 +131,27 @@ fun CardPlayer(
   // ee.schimke.ha.rc.components.enableRemoteImageUrls.
   enableRemoteImageUrls()
   val converter = registry.get(card.type) ?: return
-  val doc =
-    rememberRemoteDocument(
-      creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
-    ) {
-      converter.Render(card, snapshot)
+  val context = LocalContext.current
+  val document by
+    produceState<CoreDocument?>(null, card, snapshot, widthPx, heightPx, densityDpi, converter) {
+      value =
+        CardDocument(
+            captureSingleRemoteDocument(
+                context = context,
+                creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+              ) {
+                converter.Render(card, snapshot)
+              }
+              .bytes,
+            widthPx,
+            heightPx,
+          )
+          .decode()
     }
-  val document = doc.value ?: return
+  val played = document ?: return
   val dispatcher = LocalHaActionDispatcher.current
   RemoteDocumentPlayer(
-    document = document,
+    document = played,
     documentWidth = widthPx,
     documentHeight = heightPx,
     modifier = modifier,

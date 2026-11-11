@@ -2,15 +2,15 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.LocalRemoteComposeCreationState
-import androidx.compose.remote.creation.compose.layout.RemoteCustomComponent
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.capture.LocalRemoteComposeCreationState
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCustomComponent
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.composeai.rcplayer.protocol.RcInput
 import ee.schimke.composeai.rcplayer.protocol.RcOpcodes
@@ -27,7 +27,7 @@ fun RemoteHaInput(
   chrome: String = "default",
 ) {
   if (!supportsInputComponents()) {
-    androidx.compose.remote.creation.compose.layout.RemoteText(
+    ee.schimke.composeai.rccreation.compose.layout.RemoteText(
       "$label · Open app to edit".rs,
       color = haTheme().primaryText,
       fontSize = HaType.Body,
@@ -63,18 +63,18 @@ fun RemoteHaInputForm(
 ) {
   val theme = haTheme()
   val showFallback = fallback || !supportsInputComponents()
-  androidx.compose.remote.creation.compose.layout.RemoteBox(
+  ee.schimke.composeai.rccreation.compose.layout.RemoteBox(
     modifier =
       modifier
         .fillMaxWidth()
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding((if (showFallback) 4 else 12).rdp),
   ) {
-    androidx.compose.remote.creation.compose.layout.RemoteColumn {
+    ee.schimke.composeai.rccreation.compose.layout.RemoteColumn {
       title
         ?.takeUnless { showFallback }
         ?.let {
-          androidx.compose.remote.creation.compose.layout.RemoteText(
+          ee.schimke.composeai.rccreation.compose.layout.RemoteText(
             it.rs,
             color = theme.primaryText,
             fontSize = HaType.Title,
@@ -82,7 +82,7 @@ fun RemoteHaInputForm(
         }
       if (showFallback) {
         val open = HaAction.Navigate("/lovelace").toRemoteAction()
-        androidx.compose.remote.creation.compose.layout.RemoteText(
+        ee.schimke.composeai.rccreation.compose.layout.RemoteText(
           "Open app to send a message".rs,
           color = theme.primaryText,
           fontSize = HaType.Body,

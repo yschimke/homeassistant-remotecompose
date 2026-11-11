@@ -2,7 +2,7 @@
 
 package ee.schimke.ha.rc.ui
 
-import androidx.compose.remote.creation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rc
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.rc.components.HaAction

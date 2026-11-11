@@ -2,10 +2,8 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.core.Operations
 import androidx.compose.remote.creation.Rc
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.profile.Profile
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -138,11 +136,11 @@ val SystemRemoteHaTheme: RemoteHaTheme =
 
 @Composable
 fun ProvideSystemHaTheme(
-  profile: Profile,
+  supportsColorTheme: Boolean,
   fallbackTheme: HaTheme,
   content: @Composable () -> Unit,
 ) {
-  if (Operations.COLOR_THEME in profile.supportedOperations) {
+  if (supportsColorTheme) {
     ProvideRemoteHaTheme(SystemRemoteHaTheme, content)
   } else {
     ProvideHaTheme(fallbackTheme, content)

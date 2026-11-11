@@ -2,16 +2,18 @@
 
 package ee.schimke.terrazzo.wear.widget
 
+import androidx.compose.runtime.remember
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.ha.rc.wearWidgets
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
@@ -22,15 +24,10 @@ import androidx.glance.wear.GlanceWearWidgetService
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
-import androidx.glance.wear.color
 import androidx.glance.wear.core.ActiveWearWidgetHandle
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
-import androidx.glance.wear.horizontalGradient
-import androidx.glance.wear.verticalGradient
-import androidx.wear.compose.remote.material3.RemoteColorScheme
-import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
@@ -284,15 +281,41 @@ internal suspend fun slotWidgetDataFromStore(
  * HA-specific semantic slots defined: tertiary is link text and secondary is the unknown-state
  * accent.
  */
-internal fun wearWidgetColors(style: ThemeStyle): RemoteColorScheme {
-  return wearWidgetColors(terrazzoWearColorScheme(style))
-}
+internal fun wearWidgetColors(style: ThemeStyle): WearWidgetColors =
+  wearWidgetColors(terrazzoWearColorScheme(style))
 
 internal fun wearWidgetColors(
   scheme: androidx.wear.compose.material3.ColorScheme,
-): RemoteColorScheme {
-  val wearColors = RemoteColorScheme(scheme)
-  return wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
+): WearWidgetColors = WearWidgetColors(scheme)
+
+/**
+ * A widget's colours: the watch's Wear Material 3 [scheme], as the named `WearM3.<role>` states
+ * Wear's Remote Material 3 carries a colour scheme in ([asHaTheme]). The cards are written with
+ * rc-players' creation API, which that library's `RemoteColorScheme` is not, so the names are
+ * written here.
+ */
+internal class WearWidgetColors(val scheme: androidx.wear.compose.material3.ColorScheme) {
+  /**
+   * The Wear palette as the card roles. Each is the `WearM3.<role>` named colour of the role it is
+   * drawn from, with the scheme's value as its default, so a host's updates to those names
+   * re-colour the card. Link text reads `primary` and the unknown-state accent `onSurfaceVariant`.
+   */
+  fun asHaTheme(): RemoteHaTheme =
+    RemoteHaTheme(
+      cardBackground = named("surfaceContainerHigh", scheme.surfaceContainerHigh),
+      dashboardBackground = named("background", scheme.background),
+      sectionBackground = named("surfaceContainer", scheme.surfaceContainer),
+      primaryText = named("onSurface", scheme.onSurface),
+      secondaryText = named("onSurfaceVariant", scheme.onSurfaceVariant),
+      linkText = named("primary", scheme.primary),
+      divider = named("outlineVariant", scheme.outlineVariant),
+      placeholderAccent = named("primary", scheme.primary),
+      placeholderBackground = named("primaryContainer", scheme.primaryContainer),
+      unknownAccent = named("onSurfaceVariant", scheme.onSurfaceVariant),
+    )
+
+  private fun named(role: String, color: Color): RemoteColor =
+    RemoteColor.createNamedRemoteColor("WearM3.$role", color.toArgb())
 }
 
 /** Unknown ids from a newer phone fall back to this watch's preference. */
@@ -311,7 +334,7 @@ internal fun wearWidgetCardStyle(override: String?, watchStyle: String): HaUberT
  */
 internal fun slotWidgetData(
   registry: CardRegistry,
-  colors: RemoteColorScheme,
+  colors: WearWidgetColors,
   themeKey: Any,
   card: CardConfig?,
   snapshot: HaSnapshot,
@@ -417,7 +440,7 @@ internal fun containerOf(containerType: Int): String? =
 /** The direct (not design) document for a widget: what [slotWidgetData] falls back to. */
 internal fun slotDirectDocument(
   registry: CardRegistry,
-  colors: RemoteColorScheme,
+  colors: WearWidgetColors,
   card: CardConfig?,
   snapshot: HaSnapshot,
 ): WearWidgetData = slotDocument(registry, colors, card, snapshot)
@@ -467,7 +490,7 @@ private val NO_PICTURES = PictureImageStrategy.Inline { null }
 internal suspend fun neutralWidgetTemplate(
   context: Context,
   registry: CardRegistry,
-  colors: RemoteColorScheme,
+  colors: WearWidgetColors,
   themeKey: Any,
   cardType: String,
   shape: String,
@@ -585,24 +608,41 @@ internal fun releaseWidgetTemplates() {
 
 /**
  * A widget's document: [card] under the Wear theme, Fixed size mode, without the card's own chrome,
- * in Glance Wear's container for the widget's params. With [template] it is captured as a design
+ * in the Wear container for the widget's params. With [template] it is captured as a design
  * template: names and titles bound, not baked.
  */
 internal fun slotDocument(
   registry: CardRegistry,
-  colors: RemoteColorScheme,
+  colors: WearWidgetColors,
   card: CardConfig?,
   snapshot: HaSnapshot,
   template: Boolean = false,
   cardStyle: HaUberTheme = HaUberTheme.Classic,
   tint: Int? = null,
-): WearWidgetDocument =
-  WearWidgetDocument(
-    background = wearWidgetBrush(tint, cardStyle.wearBackground()),
-    content = {
-      ForSystemRenderer { SlotContent(registry, colors, card, snapshot, template, cardStyle) }
-    },
-  )
+): WearWidgetData =
+  object : WearWidgetData {
+    override suspend fun captureRawContent(
+      context: Context,
+      params: WearWidgetParams,
+      isPreview: Boolean,
+    ): WearWidgetRawContent {
+      // The cards are written with rc-players' creation API, which Glance Wear's own capture
+      // (`WearWidgetDocument`, AndroidX's creation API) can't compose. So the card is captured
+      // here, for the Wear widget renderer's operations, in the container a template draws, and
+      // made this widget's document as a template is: Glance Wear's header and extras for
+      // [params], the watch's display folded in.
+      val captured =
+        WearWidgetTemplate.capture(context, cardStyle, profile = wearWidgets) {
+          ForSystemRenderer { SlotContent(registry, colors, card, snapshot, template, cardStyle) }
+        }
+      return WearWidgetTemplate.instantiate(context, captured, params, isPreview, tint)
+        ?: run {
+          Log.w("CardWidget", "The widget's card can't play as a Wear widget: an empty container")
+          WearWidgetDocument(WearWidgetBrush.Companion) {}
+            .captureRawContent(context, params, isPreview)
+        }
+    }
+  }
 
 /**
  * A document for the watch's system widget renderer, whose spring support is unverified: a style's
@@ -621,22 +661,6 @@ private fun ForSystemRenderer(content: @Composable () -> Unit) {
 }
 
 /**
- * The container brush for a widget filled with [fill] (ARGB, or null for Glance Wear's default
- * surface) under [background]'s straight gradients. The host draws each at its own corner radius.
- * Glance Wear's brush paints nothing else, so a glow, a band or an edge is the template's only.
- */
-internal fun wearWidgetBrush(fill: Int?, background: HaWearBackground?): WearWidgetBrush {
-  var brush =
-    (fill ?: background?.base?.toArgb())?.let { WearWidgetBrush.color(Color(it).rc) }
-      ?: WearWidgetBrush.Companion
-  for (layer in background?.layers.orEmpty().filterIsInstance<HaWearGradient>()) {
-    val stops = layer.colors.map { it.rc }
-    brush = if (layer.vertical) brush.verticalGradient(stops) else brush.horizontalGradient(stops)
-  }
-  return brush
-}
-
-/**
  * What a widget shows inside its container: see [slotDocument].
  *
  * [controlLock] is how its controls take a touch ([HaControlLockMode]): read-only on a widget,
@@ -647,7 +671,7 @@ internal fun wearWidgetBrush(fill: Int?, background: HaWearBackground?): WearWid
 @Composable
 internal fun SlotContent(
   registry: CardRegistry,
-  colors: RemoteColorScheme,
+  colors: WearWidgetColors,
   card: CardConfig?,
   snapshot: HaSnapshot,
   template: Boolean,
@@ -665,8 +689,8 @@ internal fun SlotContent(
       if (template) PictureImageStrategy.DefaultAppUrl else NO_PICTURES,
   ) {
     ProvideCardRegistry(registry) {
-      RemoteMaterialTheme(colorScheme = colors) {
-        val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
+      run {
+        val theme = remember(colors) { colors.asHaTheme() }
         ProvideRemoteHaTheme(theme) {
           // The user's card style brings its instruments, type and shapes. Classic keeps the
           // watch's own palette (the WearM3 colours the widget host updates); a style with a
@@ -795,21 +819,3 @@ class CardLargeWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = CardLargeWidget()
 }
 
-/**
- * Remote Material 3's colour roles as the smaller palette HA cards draw with: each HA role is read
- * from the `WearM3.<role>` slot `HaTheme.asNamedRemote` writes it to, so the widget host's updates
- * to those names re-colour the card.
- */
-internal fun RemoteColorScheme.asHaTheme(): RemoteHaTheme =
-  RemoteHaTheme(
-    cardBackground = surfaceContainerHigh,
-    dashboardBackground = background,
-    sectionBackground = surfaceContainer,
-    primaryText = onSurface,
-    secondaryText = onSurfaceVariant,
-    linkText = tertiary,
-    divider = outlineVariant,
-    placeholderAccent = primary,
-    placeholderBackground = primaryContainer,
-    unknownAccent = secondary,
-  )

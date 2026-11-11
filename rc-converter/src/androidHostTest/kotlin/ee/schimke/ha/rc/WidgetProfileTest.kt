@@ -1,18 +1,28 @@
 package ee.schimke.ha.rc
 
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.Operations
 import androidx.compose.remote.core.RemoteComposeBuffer
-import androidx.compose.remote.creation.RemoteComposeWriter
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class WidgetProfileTest {
+  private fun emptyDocument(profile: CaptureProfile): ByteArray = runBlocking {
+    captureRemoteDocument(RemoteCreationDisplayInfo(100, 100, 160), profile) {}
+  }
+
   @Test
   fun widgetHeaderIsAcceptedByAndroid16WireVersion() {
     for (profile in listOf(widgetsProfile, systemThemedWidgetsProfile)) {
-      val bytes = RemoteComposeWriter.obtain(100, 100, profile).encodeToByteArray()
+      val bytes = emptyDocument(profile)
       val document =
         CoreDocument().apply {
           initFromBuffer(
@@ -44,11 +54,11 @@ class WidgetProfileTest {
   fun onlyTheAndroid16DocumentDropsToWireVersion10() {
     // Header layout: the HEADER opcode, then the major and minor version as ints.
     fun minor(bytes: ByteArray) = java.nio.ByteBuffer.wrap(bytes, 5, 4).int
-    val android16 = RemoteComposeWriter.obtain(100, 100, widgetsProfile).encodeToByteArray()
+    val android16 = emptyDocument(widgetsProfile)
     assertTrue(minor(platformWidgetDocument(android16)) == 0)
     // An API 37 host reads 1.0 as document level 6, whose table has no ColorTheme (196).
     val themed =
-      RemoteComposeWriter.obtain(100, 100, systemThemedWidgetsProfile).encodeToByteArray()
+      emptyDocument(systemThemedWidgetsProfile)
     assertTrue(minor(platformWidgetDocument(themed, android16Wire = false)) == 1)
   }
 }

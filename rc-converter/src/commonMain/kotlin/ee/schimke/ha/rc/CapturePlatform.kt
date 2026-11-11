@@ -2,14 +2,14 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import androidx.compose.runtime.Composable
 
 /**
- * What a card design capture runs in: an Android `Context` on Android, where AndroidX's capture
- * needs one; elsewhere (the fork), a [CommonCaptureHost] naming the operations the documents may
- * use.
+ * What a card design capture runs in: an Android `Context` on Android, whose captures are for the
+ * app's own players ([androidXExperimentalWrap]); elsewhere, a [CommonCaptureHost] naming the
+ * operations the documents may use.
  */
 expect abstract class CaptureHost
 

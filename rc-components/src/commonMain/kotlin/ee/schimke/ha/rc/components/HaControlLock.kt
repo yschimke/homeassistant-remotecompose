@@ -2,51 +2,51 @@
 
 package ee.schimke.ha.rc.components
 
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextAlign
+import androidx.compose.runtime.remember
+import ee.schimke.composeai.rccreation.compose.state.RemoteStrokeCap
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.remote.creation.compose.action.RemoteAction
-import androidx.compose.remote.creation.compose.action.valueChange
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.onTouchDown
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.modifier.visibility
-import androidx.compose.remote.creation.compose.state.MutableRemoteInt
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteInt
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.max
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.ri
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.toRemoteDp
-import androidx.compose.remote.foundation.icon.RemoteBasicIcon
+import ee.schimke.composeai.rccreation.compose.action.RemoteAction
+import ee.schimke.composeai.rccreation.compose.action.valueChangeAction
+import ee.schimke.composeai.rccreation.compose.capture.toRemoteImageVector
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.border
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.onTouchDown
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.modifier.visibility
+import ee.schimke.composeai.rccreation.compose.state.MutableRemoteInt
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteInt
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
+import ee.schimke.composeai.rccreation.compose.state.max
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.ri
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.state.toRemoteDp
+import ee.schimke.composeai.rccreation.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 
 /**
  * How a card's controls (its buttons, toggles, steppers and sliders) take a touch on the surface it
@@ -112,11 +112,11 @@ internal constructor(val unlocked: RemoteFloat, private val hint: MutableRemoteI
   val touched: RemoteAction?
     get() = hint?.let {
       hasControls = true
-      valueChange(it, 1.ri)
+      valueChangeAction(it, 1.ri)
     }
 
   /** [unlocked] as a condition. */
-  val isUnlocked: androidx.compose.remote.creation.compose.state.RemoteBoolean
+  val isUnlocked: ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
     get() = unlocked.isGreaterThanOrEqualTo(0.5f.rf)
 
   /**
@@ -170,7 +170,7 @@ fun RemoteHaControlLockFrame(content: @Composable @RemoteComposable () -> Unit) 
   val knob = reservedFloat(knobSlot)
   // Unlocked from the moment the knob reaches the end: it is released there or eases there.
   val unlocked = knob.isGreaterThanOrEqualTo(UnlockAt.rf).select(1f.rf, 0f.rf)
-  val hint = rememberMutableRemoteInt(0)
+  val hint = remember { MutableRemoteInt(0) }
   val lock = HaControlLock(unlocked, hint)
   CompositionLocalProvider(LocalHaControlLock provides lock) { content() }
   if (lock.hasControls) {
@@ -263,9 +263,9 @@ private fun UnlockStrip(
         text = "Slide to unlock".rs,
         color = theme.secondaryText,
         fontSize = HaType.Label,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = haTextStyle(),
-        textAlign = TextAlign.Center,
+        textAlign = RemoteTextAlign.Center,
         maxLines = 1,
         modifier = RemoteModifier.padding(start = StripDp.rdp),
       )
@@ -275,7 +275,7 @@ private fun UnlockStrip(
         modifier =
           RemoteModifier.fillMaxSize()
             // A touch-down handler makes the strip the component that takes the touch.
-            .onTouchDown(valueChange(hint, 1.ri)),
+            .onTouchDown(valueChangeAction(hint, 1.ri)),
       ) {
         // Sized from the strip's height, so the knob scales with the capture density.
         val inset = height * 0.09f.rf
@@ -293,7 +293,7 @@ private fun UnlockStrip(
         val x = inset + knob * travel
         // The trail the knob has covered, in a wash of the accent.
         drawRoundRect(
-          RemotePaint { style = PaintingStyle.Fill }
+          RemotePaint { style = RemotePaintingStyle.Fill }
             .apply { color = accent.copy(alpha = 0.22f.rf) },
           RemoteOffset(inset, inset),
           RemoteSize(x + d - inset, d),
@@ -303,15 +303,15 @@ private fun UnlockStrip(
         val cx = x + r
         val cy = inset + r
         drawCircle(
-          RemotePaint { style = PaintingStyle.Fill }.apply { color = accent },
+          RemotePaint { style = RemotePaintingStyle.Fill }.apply { color = accent },
           r,
           RemoteOffset(cx, cy),
         )
         // A chevron in the knob: the way to slide.
         val chevron = RemotePaint {
-          style = PaintingStyle.Stroke
+          style = RemotePaintingStyle.Stroke
           strokeWidth = height * 0.06f.rf
-          strokeCap = StrokeCap.Round
+          strokeCap = RemoteStrokeCap.Round
         }
           .apply { color = theme.cardBackground }
         val s = r * 0.32f.rf

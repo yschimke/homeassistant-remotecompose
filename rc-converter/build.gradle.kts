@@ -57,11 +57,11 @@ val bundledCardDesigns by tasks.registering {
   }
 }
 
-// Converters, card designs and templates are written once, in commonMain, against AndroidX's
-// `remote-creation-compose` API, as `:rc-components` is. Android builds with AndroidX's own
-// library and owns playback (the players, widgets, the app's caches); the JVM, wasmJs and iOS
-// build with rc-players' Compose Multiplatform fork (`forkMain`), so a card design can be captured
-// without Android: on the design server, in a browser or on an iPhone.
+// Converters, card designs and templates are written once, in commonMain, against rc-players'
+// Compose Multiplatform creation API, as `:rc-components` is, and captured with it on every target:
+// in the app, on the design server, in a browser or on an iPhone. Android also owns playback (the
+// AndroidX players, widgets, the app's caches); a player takes a document's bytes, so it does not
+// need AndroidX's creation library.
 kotlin {
   jvmToolchain(libs.versions.java.get().toInt())
   android {
@@ -76,11 +76,11 @@ kotlin {
   @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
   iosArm64()
   iosSimulatorArm64()
-  // Every target but Android captures with the fork: `forkMain` holds those actuals once.
+  // Every target but Android: `nonAndroidMain` holds their actuals once.
   @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
   applyDefaultHierarchyTemplate {
     common {
-      group("fork") {
+      group("nonAndroid") {
         withJvm()
         // No JDK: the text and number formatting the JDK does elsewhere is written out here.
         group("klib") {
@@ -109,8 +109,6 @@ kotlin {
       // RcErrorBoundary: each player disables a document that throws, instead of the screen.
       implementation(project(":rc-player-ui"))
       implementation(libs.kotlinx.coroutines.core)
-      // Compile-only, so Android consumers never see the fork beside AndroidX's.
-      compileOnly(libs.rc.creation.compose)
       implementation(libs.cmp.runtime)
       implementation(libs.cmp.ui)
       implementation(libs.cmp.foundation)
@@ -128,20 +126,18 @@ kotlin {
       // @Preview annotation class, even when the module has no @Preview
       // composables of its own.
       implementation(libs.compose.ui.tooling.preview)
-      // RemoteCompose authoring + playback
-      implementation(libs.remote.creation.compose)
-      implementation(libs.remote.creation)
-      implementation(libs.remote.creation.core)
+      // AndroidX playback; documents are written with rc-players' creation API (commonMain).
       implementation(libs.remote.core)
       implementation(libs.remote.player.core)
       implementation(libs.remote.player.compose)
       implementation(libs.remote.player.view)
     }
-    getByName("forkMain").dependencies { implementation(libs.rc.creation.compose) }
     getByName("androidHostTest").dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlin.test.junit)
       implementation(libs.kotlinx.coroutines.test)
+      // `Rc.AndroidColors`, which SystemRemoteHaThemeTest reads a themed colour's resources by.
+      implementation(libs.remote.creation.core)
       implementation(libs.indriya)
       implementation(libs.ktor.client.mock)
       implementation("org.robolectric:robolectric:4.17")
@@ -152,27 +148,6 @@ kotlin {
       implementation(libs.compose.ui.test.junit4)
       implementation(libs.compose.ui.test.manifest)
     }
-  }
-}
-
-// The fork declares AndroidX's capabilities on Android, so the two can't both be on an Android
-// classpath. This module's own Android compilation sees both (the fork through commonMain); it
-// takes AndroidX's.
-configurations.configureEach {
-  resolutionStrategy.capabilitiesResolution {
-    listOf(
-        "androidx.compose.remote:remote-creation-compose",
-        "androidx.compose.remote.foundation:foundation",
-      )
-      .forEach { capability ->
-        withCapability(capability) {
-          candidates
-            .firstOrNull {
-              (it.id as? ModuleComponentIdentifier)?.group?.startsWith("androidx.") == true
-            }
-            ?.let { select(it) }
-        }
-      }
   }
 }
 

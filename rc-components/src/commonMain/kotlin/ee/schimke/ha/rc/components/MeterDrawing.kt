@@ -2,17 +2,17 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.RemoteStrokeCap
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
+import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rf
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.StrokeCap
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -217,15 +217,15 @@ internal fun RemoteDrawScope.outlineRect(
 
 internal fun strokePaint(widthPx: Float, color: RemoteColor, round: Boolean = true) = RemotePaint {
   isAntiAlias = true
-  style = PaintingStyle.Stroke
+  style = RemotePaintingStyle.Stroke
   strokeWidth = widthPx.rf
-  strokeCap = if (round) StrokeCap.Round else StrokeCap.Butt
+  strokeCap = if (round) RemoteStrokeCap.Round else RemoteStrokeCap.Butt
 }
   .apply { this.color = color }
 
 internal fun fillPaint(color: RemoteColor) = RemotePaint {
   isAntiAlias = true
-  style = PaintingStyle.Fill
+  style = RemotePaintingStyle.Fill
 }
   .apply { this.color = color }
 

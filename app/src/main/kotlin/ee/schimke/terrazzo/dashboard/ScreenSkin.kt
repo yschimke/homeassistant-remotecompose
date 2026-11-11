@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.rc.components.toFontWeight
 import ee.schimke.ha.rc.components.HaComponentGrammar
 import ee.schimke.ha.rc.components.HaLevelStyle
 import ee.schimke.ha.rc.components.HaReadoutStyle
@@ -243,7 +244,7 @@ private fun skinFor(
     ink = ink,
     hotInk = hotInk,
     readout = theme.readout,
-    valueWeight = theme.valueWeight,
+    valueWeight = theme.valueWeight.toFontWeight(),
     capsLabels = theme.readout == HaReadoutStyle.Plate || theme.visuals == HaVisualFamily.Lcars,
     chart =
       if (theme.extends != null) chartStyleFor(theme.grammar) else chartStyleFor(theme.visuals),

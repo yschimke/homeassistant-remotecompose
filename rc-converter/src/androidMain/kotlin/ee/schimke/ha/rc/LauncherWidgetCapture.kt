@@ -3,9 +3,7 @@
 package ee.schimke.ha.rc
 
 import android.content.Context
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.profile.Profile
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asImageBitmap
 import ee.schimke.composeai.rcplayer.edit.bitmapUrls
@@ -44,7 +42,7 @@ fun captureLauncherWidgetDocument(
   widthPx: Int,
   heightPx: Int,
   densityDpi: Int,
-  captureProfile: Profile,
+  captureProfile: CaptureProfile,
   dark: Boolean,
   look: LauncherLook = LauncherLook(),
   fontFilter: LauncherFontFilter? = null,
@@ -95,7 +93,7 @@ private fun captureDirect(
   widthPx: Int,
   heightPx: Int,
   densityDpi: Int,
-  captureProfile: Profile,
+  captureProfile: CaptureProfile,
   dark: Boolean,
   look: LauncherLook,
   cardFonts: Boolean,

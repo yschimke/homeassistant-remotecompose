@@ -1,6 +1,6 @@
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rc
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.model.ClimateMode

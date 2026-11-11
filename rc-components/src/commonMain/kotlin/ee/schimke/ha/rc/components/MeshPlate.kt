@@ -2,13 +2,13 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.shaders.RemoteBrush
-import androidx.compose.remote.creation.compose.shaders.linearGradient
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.RemoteTileMode
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.shaders.RemoteBrush
+import ee.schimke.composeai.rccreation.compose.shaders.linearGradient
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TileMode
 
 // The GShark face plate's fine mesh, as a fine stripe texture pressed into a card.
 
@@ -25,7 +25,7 @@ private fun meshStripes(dark: Boolean): RemoteBrush {
     listOf(clear, clear, shade, shade),
     start = RemoteOffset(0f.rf, 0f.rf),
     end = RemoteOffset(0f.rf, MeshPitch.toFloat().rf),
-    tileMode = TileMode.Repeated,
+    tileMode = RemoteTileMode.Repeated,
   )
 }
 

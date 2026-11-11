@@ -2,9 +2,9 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.text.RemoteFontFamily
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontFamily
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 
 /**
  * Original adaptations of community interface idioms; provenance in
@@ -21,7 +21,7 @@ internal object CommunityThemes {
       palette(true, 0xFF242D27, 0xFF151D18, 0xFFF0F4E8, 0xFFB6C6B7, 0xFFA5D6A7, 0xFF415044),
       HaCardShapeStyle(20, 0, 11),
       HaReadoutStyle.TonalPill,
-      FontWeight.SemiBold,
+      RemoteFontWeight.SemiBold,
     )
   val Bubble =
     family(
@@ -33,7 +33,7 @@ internal object CommunityThemes {
       palette(true, 0xFF332B43, 0xFF1B1725, 0xFFF7EFFC, 0xFFC8B9D8, 0xFFD1B3F3, 0xFF574465),
       HaCardShapeStyle(32, 0, 16),
       HaReadoutStyle.TonalPill,
-      FontWeight.Bold,
+      RemoteFontWeight.Bold,
     )
   val Minimalist =
     family(
@@ -45,7 +45,7 @@ internal object CommunityThemes {
       palette(true, 0xFF252A36, 0xFF151923, 0xFFF3F5FA, 0xFFBCC6D8, 0xFFA8C8FF, 0xFF454F64),
       HaCardShapeStyle(16, 0, 7, true),
       HaReadoutStyle.Plain,
-      FontWeight.Bold,
+      RemoteFontWeight.Bold,
     )
   val Cupertino =
     family(
@@ -57,7 +57,7 @@ internal object CommunityThemes {
       palette(true, 0xFF293443, 0xFF101925, 0xFFF5F8FF, 0xFFC1CDDF, 0xFF91C2FF, 0xFF52647B),
       HaCardShapeStyle(26, 1, 14),
       HaReadoutStyle.Plain,
-      FontWeight.Medium,
+      RemoteFontWeight.Medium,
     )
   val Catppuccin =
     family(
@@ -69,7 +69,7 @@ internal object CommunityThemes {
       palette(true, 0xFF1E1E2E, 0xFF11111B, 0xFFCDD6F4, 0xFFBAC2DE, 0xFFCBA6F7, 0xFF45475A),
       HaCardShapeStyle(14, 1, 8),
       HaReadoutStyle.Screen,
-      FontWeight.Medium,
+      RemoteFontWeight.Medium,
       RemoteFontFamily.Monospace,
       appTheme = true,
     )
@@ -83,7 +83,7 @@ internal object CommunityThemes {
       palette(true, 0xFF242320, 0xFF171614, 0xFFEDEAE3, 0xFFBBB5A8, 0xFFD6B5ED, 0xFF4E4A43),
       HaCardShapeStyle(5, 1, 3, true),
       HaReadoutStyle.Plate,
-      FontWeight.Normal,
+      RemoteFontWeight.Normal,
       RemoteFontFamily.Serif,
     )
   val Noctis =
@@ -96,7 +96,7 @@ internal object CommunityThemes {
       palette(true, 0xFF192D43, 0xFF0A1726, 0xFFE4EFFA, 0xFFA9C1D9, 0xFF76BBF3, 0xFF365572),
       HaCardShapeStyle(12, 1, 5),
       HaReadoutStyle.Plate,
-      FontWeight.Light,
+      RemoteFontWeight.Light,
     )
   val Lcars =
     family(
@@ -108,7 +108,7 @@ internal object CommunityThemes {
       palette(true, 0xFF161321, 0xFF07060C, 0xFFF6DFC0, 0xFFD3B5E6, 0xFFFFBE78, 0xFF594568),
       HaCardShapeStyle(24, 2, 10, true),
       HaReadoutStyle.Plate,
-      FontWeight.Bold,
+      RemoteFontWeight.Bold,
       RemoteFontFamily.SansSerif,
       0.6f,
       appTheme = true,
@@ -123,7 +123,7 @@ internal object CommunityThemes {
       palette(true, 0xFF192F39, 0xFF0C1E27, 0xFFEEF8FA, 0xFFB0CBD5, 0xFF8BD8EA, 0xFF3A5966),
       HaCardShapeStyle(3, 0, 2, true),
       HaReadoutStyle.Plain,
-      FontWeight.Light,
+      RemoteFontWeight.Light,
       RemoteFontFamily.SansSerif,
       0.4f,
     )
@@ -137,7 +137,7 @@ internal object CommunityThemes {
       palette(true, 0xFF28231E, 0xFF100E0C, 0xFFF7ECD6, 0xFFCDBE9D, 0xFFE4BE71, 0xFF5B4B32),
       HaCardShapeStyle(1, 2, 1, true),
       HaReadoutStyle.Screen,
-      FontWeight.Medium,
+      RemoteFontWeight.Medium,
       RemoteFontFamily.Serif,
       0.3f,
     )
@@ -151,7 +151,7 @@ internal object CommunityThemes {
     dark: HaTheme,
     shape: HaCardShapeStyle,
     readout: HaReadoutStyle,
-    weight: FontWeight,
+    weight: RemoteFontWeight,
     font: RemoteFontFamily = RemoteFontFamily.SansSerif,
     tracking: Float = 0f,
     appTheme: Boolean = false,

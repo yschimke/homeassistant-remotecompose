@@ -1,8 +1,8 @@
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.state.rs
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -161,10 +161,10 @@ class CardRebuildsTest {
       val bytes =
         kotlinx.coroutines
           .runBlocking {
-            androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument(
+            captureSingleRemoteDocument(
               context = context,
             ) {
-              androidx.compose.remote.creation.compose.layout.RemoteText(text = text.rs)
+              ee.schimke.composeai.rccreation.compose.layout.RemoteText(text = text.rs)
             }
           }
           .bytes

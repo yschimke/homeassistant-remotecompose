@@ -2,61 +2,62 @@
 
 package ee.schimke.ha.designs
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCollapsibleColumn
-import androidx.compose.remote.creation.compose.layout.RemoteCollapsibleRow
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteImage
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.graphicsLayer
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.offset
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteDp
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.RemoteTimeVariables
-import androidx.compose.remote.creation.compose.state.abs as rAbs
-import androidx.compose.remote.creation.compose.state.acos as rAcos
-import androidx.compose.remote.creation.compose.state.asRemoteDp
-import androidx.compose.remote.creation.compose.state.asin as rAsin
-import androidx.compose.remote.creation.compose.state.atan as rAtan
-import androidx.compose.remote.creation.compose.state.ceil as rCeil
-import androidx.compose.remote.creation.compose.state.cos as rCos
-import androidx.compose.remote.creation.compose.state.floor as rFloor
-import androidx.compose.remote.creation.compose.state.max as rMax
-import androidx.compose.remote.creation.compose.state.min as rMin
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.round as rRound
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.state.sin as rSin
-import androidx.compose.remote.creation.compose.state.sqrt as rSqrt
-import androidx.compose.remote.creation.compose.state.tan as rTan
-import androidx.compose.remote.creation.compose.state.toDeg
-import androidx.compose.remote.creation.compose.state.toRad
-import androidx.compose.remote.creation.compose.state.toRemoteDp
+import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
+import ee.schimke.composeai.rccreation.compose.layout.RemoteContentScale
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCollapsibleColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCollapsibleRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteImage
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.graphicsLayer
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.offset
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.modifier.width
+import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteDp
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
+import ee.schimke.composeai.rccreation.compose.state.RemoteTimeVariables
+import ee.schimke.composeai.rccreation.compose.state.abs as rAbs
+import ee.schimke.composeai.rccreation.compose.state.acos as rAcos
+import ee.schimke.composeai.rccreation.compose.state.asRemoteDp
+import ee.schimke.composeai.rccreation.compose.state.asin as rAsin
+import ee.schimke.composeai.rccreation.compose.state.atan as rAtan
+import ee.schimke.composeai.rccreation.compose.state.ceil as rCeil
+import ee.schimke.composeai.rccreation.compose.state.cos as rCos
+import ee.schimke.composeai.rccreation.compose.state.floor as rFloor
+import ee.schimke.composeai.rccreation.compose.state.max as rMax
+import ee.schimke.composeai.rccreation.compose.state.min as rMin
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.round as rRound
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.state.rsp
+import ee.schimke.composeai.rccreation.compose.state.sin as rSin
+import ee.schimke.composeai.rccreation.compose.state.sqrt as rSqrt
+import ee.schimke.composeai.rccreation.compose.state.tan as rTan
+import ee.schimke.composeai.rccreation.compose.state.toDeg
+import ee.schimke.composeai.rccreation.compose.state.toRad
+import ee.schimke.composeai.rccreation.compose.state.toRemoteDp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.HaSharedValues
@@ -314,16 +315,17 @@ class UiBuilderDesignCompiler(
         Node(roots.single(), modifier, null)
         return
       }
-      val widthPx =
-        LocalGridCellWidthPx.current
-          ?: RemoteFloat.createNamedRemoteFloatExpression(
-            name = rememberExpressionName("__terrazzo_scene_width_"),
-            domain = RemoteState.Domain.User,
-          ) {
-            componentWidth()
-          }
-      val scale = widthPx / scene.width.rdp.toPx()
+      val gridCellWidthPx = LocalGridCellWidthPx.current
+      val sceneWidthName = rememberExpressionName("__terrazzo_scene_width_")
       RemoteBox(modifier = modifier.fillMaxWidth()) {
+        val widthPx =
+          gridCellWidthPx
+            ?: RemoteFloat.createNamedRemoteFloat(
+              name = sceneWidthName,
+              defaultValue = remoteComponent().width,
+              domain = RemoteState.Domain.User,
+            )
+        val scale = widthPx / scene.width.rdp.toPx()
         RemoteBox(
           modifier =
             RemoteModifier.fillMaxWidth()
@@ -362,7 +364,7 @@ class UiBuilderDesignCompiler(
             verticalArrangement = verticalArrangement(properties),
             horizontalAlignment = horizontalAlignment(properties),
           ) {
-            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w) } }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w.rf) } }
           }
         COLLAPSIBLE_COLUMN ->
           RemoteCollapsibleColumn(
@@ -370,7 +372,7 @@ class UiBuilderDesignCompiler(
             verticalArrangement = verticalArrangement(properties),
             horizontalAlignment = horizontalAlignment(properties),
           ) {
-            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w) } }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w.rf) } }
           }
         COLLAPSIBLE_ROW ->
           RemoteCollapsibleRow(
@@ -378,7 +380,7 @@ class UiBuilderDesignCompiler(
             horizontalArrangement = horizontalArrangement(properties),
             verticalAlignment = verticalAlignment(properties),
           ) {
-            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w) } }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w.rf) } }
           }
         SWITCH -> Switch(id, properties, modifier, sceneScale)
         ROW ->
@@ -387,7 +389,7 @@ class UiBuilderDesignCompiler(
             horizontalArrangement = horizontalArrangement(properties),
             verticalAlignment = verticalAlignment(properties),
           ) {
-            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w) } }
+            children(id).forEach { Node(it, RemoteModifier, sceneScale) { m, w -> m.weight(w.rf) } }
           }
         IMAGE -> {
           val key = literal(properties["assetKey"])!!.content
@@ -1034,12 +1036,12 @@ class UiBuilderDesignCompiler(
         else -> RemoteAlignment.Top
       }
 
-    private fun contentScale(name: String?): ContentScale =
+    private fun contentScale(name: String?): RemoteContentScale =
       when (name) {
-        "crop" -> ContentScale.Crop
-        "fillBounds" -> ContentScale.FillBounds
-        "inside" -> ContentScale.Inside
-        else -> ContentScale.Fit
+        "crop" -> RemoteContentScale.Crop
+        "fillBounds" -> RemoteContentScale.FillBounds
+        "inside" -> RemoteContentScale.Inside
+        else -> RemoteContentScale.Fit
       }
 
     /** `#RRGGBB` or `#AARRGGBB`. */

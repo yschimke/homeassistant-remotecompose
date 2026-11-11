@@ -3,10 +3,10 @@ package ee.schimke.terrazzo.wear.widget
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.creation.RemoteComposeWriter
-import androidx.compose.remote.creation.compose.capture.RemoteComposeCreationState
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import ee.schimke.composeai.rccreation.compose.capture.RemoteComposeCreationState
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.ha.rc.androidX
 import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.remote.material3.RemoteColorScheme
 import java.io.ByteArrayInputStream
@@ -27,11 +27,11 @@ class WearHaThemeTest {
 
   @Test
   fun wearMaterialTheme_surfaceContainer_encodesNamedRemoteColor() {
-    val writer = RemoteComposeWriter.obtain(100, 100, RcPlatformProfiles.ANDROIDX)
+    val writer = RemoteComposeWriter.obtain(100, 100, androidX)
     val creationState =
       RemoteComposeCreationState(
         RemoteCreationDisplayInfo(100, 100, 160),
-        RcPlatformProfiles.ANDROIDX,
+        androidX,
         writer,
       )
 

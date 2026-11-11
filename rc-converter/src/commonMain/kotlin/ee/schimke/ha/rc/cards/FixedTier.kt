@@ -2,11 +2,12 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
@@ -36,9 +37,9 @@ import ee.schimke.ha.rc.components.HaHeroScale
 @Composable
 internal fun CenteredCell(content: @Composable () -> Unit) {
   RemoteColumn(modifier = RemoteModifier.fillMaxSize()) {
-    RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f))
+    RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f.rf))
     content()
-    RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f))
+    RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f.rf))
   }
 }
 

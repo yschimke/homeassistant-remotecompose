@@ -2,36 +2,36 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteFlowRow
-import androidx.compose.remote.creation.compose.layout.RemoteImage
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.contentDescription
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.semantics
-import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.RemoteTextUnit
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteFontFamily
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
+import ee.schimke.composeai.rccreation.compose.layout.RemoteContentScale
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteFlowRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteImage
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.contentDescription
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.semantics
+import ee.schimke.composeai.rccreation.compose.modifier.width
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
+import ee.schimke.composeai.rccreation.compose.state.RemoteTextUnit
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontFamily
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * HA `markdown` card — renders parsed markdown blocks inside the card chrome. Headings, bullets and
@@ -114,7 +114,7 @@ private fun MarkdownBlocks(data: HaMarkdownData, material: MarkdownMaterial, lar
             block = block,
             theme = theme,
             fontSize = size,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = RemoteFontWeight.SemiBold,
             material = material,
             marker = marker,
           )
@@ -201,20 +201,20 @@ fun RemoteHaMarkdownIdentity(
             text = cardTitle(data.title),
             color = theme.primaryText,
             fontSize = HaType.Label,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = RemoteFontWeight.SemiBold,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         else if (haReference)
           RemoteText(
             text = cardTitle(data.title),
             color = theme.primaryText,
             fontSize = HaType.Title,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = RemoteFontWeight.SemiBold,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         else textSurfaces().Title(cardTitle(data.title), HaType.Title, material.ink)
       }
@@ -224,11 +224,11 @@ fun RemoteHaMarkdownIdentity(
           text = firstLine.boundText ?: firstLine.text.rs,
           color = if (currentHaUberTheme().ink != null) material.ink else theme.secondaryText,
           fontSize = if (narrow) HaType.Caption else HaType.Body,
-          fontWeight = emphasis.weight(FontWeight.Normal),
+          fontWeight = emphasis.weight(RemoteFontWeight.Normal),
           fontFamily = emphasis.fontFamily,
           style = material.bodyStyle,
           maxLines = if (data.title != null) 2 else 3,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     }
@@ -246,7 +246,7 @@ private fun MarkdownLine(
   block: MarkdownBlock,
   theme: RemoteHaTheme,
   fontSize: RemoteTextUnit,
-  fontWeight: FontWeight,
+  fontWeight: RemoteFontWeight,
   material: MarkdownMaterial,
   marker: String? = null,
 ) {
@@ -403,7 +403,7 @@ private fun EmphasisText(
   emphasis: MarkdownStyle,
   color: RemoteColor,
   fontSize: RemoteTextUnit,
-  fontWeight: FontWeight,
+  fontWeight: RemoteFontWeight,
   style: RemoteTextStyle,
 ) {
   RemoteText(
@@ -424,7 +424,7 @@ private fun InlineSpan(
   theme: RemoteHaTheme,
   primary: RemoteColor,
   fontSize: RemoteTextUnit,
-  fontWeight: FontWeight,
+  fontWeight: RemoteFontWeight,
   style: RemoteTextStyle,
 ) {
   val link = theme.linkText
@@ -467,9 +467,11 @@ private fun InlineSpan(
 internal fun markdownLinkAction(url: String): HaAction =
   if (url.startsWith("/") && !url.startsWith("//")) HaAction.Navigate(url) else HaAction.Url(url)
 
-/** Bold emphasis lifts the block's weight to [FontWeight.Bold]; anything else keeps it. */
-private fun MarkdownStyle.weight(base: FontWeight): FontWeight =
-  if (bold && base < FontWeight.Bold) FontWeight.Bold else base
+private const val BOLD_WEIGHT = 700f
+
+/** Bold emphasis lifts the block's weight to [RemoteFontWeight.Bold]; anything else keeps it. */
+private fun MarkdownStyle.weight(base: RemoteFontWeight): RemoteFontWeight =
+  if (bold && (base.weight.constantValueOrNull ?: 0f) < BOLD_WEIGHT) RemoteFontWeight.Bold else base
 
 // No FontStyle is set for italic runs: rc-player-compose 2.12.0 decodes the text font-style field
 // as Typeface bits (1 = bold) while RemoteCompose writes 1 = italic, so FontStyle.Italic would draw
@@ -508,7 +510,7 @@ private fun MarkdownBadge(image: MarkdownInline.Image) {
       bitmap = rb,
       contentDescription = description,
       modifier = RemoteModifier.height(BADGE_HEIGHT_DP.rdp).width(BADGE_WIDTH_DP.rdp),
-      contentScale = ContentScale.Fit,
+      contentScale = RemoteContentScale.Fit,
     )
   }
   if (click == null) {

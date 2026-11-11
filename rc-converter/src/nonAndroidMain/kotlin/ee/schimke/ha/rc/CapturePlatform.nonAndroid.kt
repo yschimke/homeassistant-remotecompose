@@ -2,11 +2,11 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.common.CoreDocument
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.RemoteDensity
-import androidx.compose.remote.creation.compose.capture.captureCommonRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.common.CoreDocument
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.capture.RemoteDensity
+import ee.schimke.composeai.rccreation.compose.capture.captureCommonRemoteDocument
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import androidx.compose.runtime.Composable
 
 actual abstract class CaptureHost {

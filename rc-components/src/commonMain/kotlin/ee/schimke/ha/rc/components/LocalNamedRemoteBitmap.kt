@@ -2,14 +2,14 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.state.RemoteImageBitmap
-import androidx.compose.remote.creation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.RemoteImageBitmap
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 
 /**
- * Local replacements for `androidx.compose.remote.creation.compose.state.rememberNamedRemoteBitmap`
+ * Local replacements for `ee.schimke.composeai.rccreation.compose.state.rememberNamedRemoteBitmap`
  * (alpha010) that work around an upstream encoding bug.
  *
  * `RemoteComposeWriter.addNamedBitmapUrl(name, url)` delegates to

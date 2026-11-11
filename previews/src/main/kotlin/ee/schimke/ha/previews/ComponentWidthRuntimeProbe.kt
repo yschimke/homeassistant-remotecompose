@@ -2,6 +2,8 @@
 
 package ee.schimke.ha.previews
 
+import ee.schimke.ha.rc.components.toPaddedRemoteString
+import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,15 +15,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize as rcFillMaxSize
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.layout.RemoteStateLayout
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize as rcFillMaxSize
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -75,24 +77,21 @@ private fun InlineCell(widthDp: Int, heightDp: Int) {
     ProbeKey("in", widthDp, heightDp),
   ) {
     val width =
-      RemoteFloat.createNamedRemoteFloatExpression(
+      RemoteFloat.createNamedRemoteFloat(
         name = "__cw_probe_inline",
+        defaultValue = remoteComponent().width,
         domain = RemoteState.Domain.User,
-      ) {
-        componentWidth()
-      }
+      )
     val isLarge = width.isGreaterThanOrEqualTo(315f.rf) // 120 dp at 2.625 density
     // No modifier on the state-layout (matches v4 setup). Width
     // string drawn alongside as a sibling so the named expression
     // is materialized in the document.
-    RemoteText(text = width.toRemoteString(IntFormat), color = Color.White.rc)
+    RemoteText(text = width.toPaddedRemoteString(1), color = Color.White.rc)
     RemoteStateLayout(isLarge) { on ->
       RemoteText(text = if (on) "INLINE-ON".rs else "INLINE-OFF".rs, color = Color.White.rc)
     }
   }
 }
-
-private val IntFormat = java.text.DecimalFormat("0")
 
 @Composable
 private fun HelperCell(widthDp: Int, heightDp: Int) {

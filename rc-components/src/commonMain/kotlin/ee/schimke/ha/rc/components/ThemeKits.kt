@@ -2,9 +2,9 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.text.RemoteFontFamily
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontFamily
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import ee.schimke.rc.m3.RcMotionScheme
 
 // ---------------------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ internal object ThemeKits {
       shape = HaCardShapeStyle(cornerDp = 14, borderDp = 0, controlCornerDp = 10),
       visuals = HaVisualFamily.Classic,
       fontFamily = RemoteFontFamily.SansSerif,
-      valueWeight = FontWeight.Light,
+      valueWeight = RemoteFontWeight.Light,
       motion = RcMotionScheme.standard(),
       grammar = HaComponentGrammar(stroke = HaStrokeWeight.Light),
       components = HaComponentSlots.Grammar,
@@ -97,7 +97,7 @@ internal object ThemeKits {
       shape = HaCardShapeStyle(cornerDp = 24, borderDp = 0, controlCornerDp = 20),
       visuals = HaVisualFamily.Expressive,
       fontFamily = RemoteFontFamily.SansSerif,
-      valueWeight = FontWeight.Medium,
+      valueWeight = RemoteFontWeight.Medium,
       motion = RcMotionScheme.expressive(),
       grammar =
         HaComponentGrammar(
@@ -146,7 +146,7 @@ internal object ThemeKits {
       visuals = HaVisualFamily.Braun,
       fontFamily = RemoteFontFamily.SansSerif,
       letterSpacingSp = 0.3f,
-      valueWeight = FontWeight.Medium,
+      valueWeight = RemoteFontWeight.Medium,
       motion = HaMotion.Instrument,
       grammar =
         HaComponentGrammar(
@@ -185,7 +185,7 @@ internal object ThemeKits {
       visuals = HaVisualFamily.Trinitron,
       fontFamily = RemoteFontFamily.SansSerif,
       letterSpacingSp = 0.4f,
-      valueWeight = FontWeight.Normal,
+      valueWeight = RemoteFontWeight.Normal,
       motion = HaMotion.Instrument,
       grammar =
         HaComponentGrammar(
@@ -244,7 +244,7 @@ internal object ThemeKits {
       readout = HaReadoutStyle.Screen,
       fontFamily = RemoteFontFamily.SansSerif,
       headingFont = HaGSpotFont,
-      valueWeight = FontWeight.Bold,
+      valueWeight = RemoteFontWeight.Bold,
       motion = HaMotion.Instrument,
       grammar =
         HaComponentGrammar(

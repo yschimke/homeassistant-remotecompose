@@ -2,13 +2,13 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.*
-import androidx.compose.remote.creation.compose.modifier.*
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.*
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.*
+import ee.schimke.composeai.rccreation.compose.modifier.*
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.state.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 
 // ---------------------------------------------------------------------------------------------
 // The tile, designed per visual family (docs/design/everyday-cards.md §1 and §5). The tile is two
@@ -89,7 +89,7 @@ private fun TileName(
   data: HaTileData,
   look: HaEntityLook,
   size: RemoteTextUnit = HaType.Body,
-  weight: FontWeight = FontWeight.Medium,
+  weight: RemoteFontWeight = RemoteFontWeight.Medium,
   secondary: Boolean = false,
   modifier: RemoteModifier = RemoteModifier,
 ) {
@@ -102,7 +102,7 @@ private fun TileName(
     fontWeight = weight,
     style = haTextStyle(),
     maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    overflow = RemoteTextOverflow.Ellipsis,
   )
 }
 
@@ -111,7 +111,7 @@ private fun TileValue(
   data: HaTileData,
   look: HaEntityLook,
   size: RemoteTextUnit = HaType.Body,
-  weight: FontWeight = haValueWeight(),
+  weight: RemoteFontWeight = haValueWeight(),
   modifier: RemoteModifier = RemoteModifier,
 ) {
   val theme = haTheme()
@@ -123,7 +123,7 @@ private fun TileValue(
     fontWeight = weight,
     style = haTextStyle(),
     maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    overflow = RemoteTextOverflow.Ellipsis,
   )
 }
 
@@ -133,7 +133,7 @@ private fun ExpressiveTile(data: HaTileData, look: HaEntityLook, identity: @Comp
   val theme = haTheme()
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
     identity()
-    TileName(data, look, modifier = RemoteModifier.weight(1f).padding(horizontal = 10.rdp))
+    TileName(data, look, modifier = RemoteModifier.weight(1f.rf).padding(horizontal = 10.rdp))
     RemoteBox(
       modifier =
         RemoteModifier.clip(RemoteRoundedCornerShape(16.rdp))
@@ -151,8 +151,8 @@ private fun TrinitronTile(data: HaTileData, look: HaEntityLook, identity: @Compo
   val theme = haTheme()
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
     identity()
-    RemoteColumn(RemoteModifier.weight(1f).padding(start = 10.rdp)) {
-      TileName(data, look, HaType.Caption, FontWeight.Normal, secondary = true)
+    RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 10.rdp)) {
+      TileName(data, look, HaType.Caption, RemoteFontWeight.Normal, secondary = true)
       RemoteBox(
         RemoteModifier.padding(vertical = HaSpace.XXS.rdp)
           .fillMaxWidth()
@@ -182,14 +182,14 @@ private fun LcdTile(data: HaTileData, look: HaEntityLook, identity: @Composable 
         data,
         look,
         HaType.ValueSmall,
-        modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
+        modifier = RemoteModifier.weight(1f.rf).padding(start = 10.rdp),
       )
     }
     TileName(
       data,
       look,
       HaType.Caption,
-      FontWeight.Normal,
+      RemoteFontWeight.Normal,
       secondary = true,
       modifier = RemoteModifier.padding(top = HaSpace.XS.rdp),
     )
@@ -208,7 +208,7 @@ private fun BraunTile(data: HaTileData, look: HaEntityLook, identity: @Composabl
         .clip(RemoteRoundedCornerShape(4.rdp))
         .background(theme.linkText),
     )
-    TileName(data, look, HaType.Label, FontWeight.Normal, modifier = RemoteModifier.weight(1f))
+    TileName(data, look, HaType.Label, RemoteFontWeight.Normal, modifier = RemoteModifier.weight(1f.rf))
     // The reading at body-large, a step under title, so a narrow tile keeps room for the name.
     TileValue(
       data,
@@ -224,9 +224,9 @@ private fun BraunTile(data: HaTileData, look: HaEntityLook, identity: @Composabl
 private fun NixieTile(data: HaTileData, look: HaEntityLook, identity: @Composable () -> Unit) {
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
     identity()
-    RemoteColumn(RemoteModifier.weight(1f).padding(start = 12.rdp)) {
-      TileName(data, look, HaType.Caption, FontWeight.Normal, secondary = true)
-      TileValue(data, look, HaType.Value, FontWeight.Light)
+    RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 12.rdp)) {
+      TileName(data, look, HaType.Caption, RemoteFontWeight.Normal, secondary = true)
+      TileValue(data, look, HaType.Value, RemoteFontWeight.Light)
     }
   }
 }
@@ -237,7 +237,7 @@ private fun ConsoleTile(data: HaTileData, look: HaEntityLook, identity: @Composa
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
     identity()
     RemoteColumn(
-      RemoteModifier.weight(1f).padding(start = 10.rdp),
+      RemoteModifier.weight(1f.rf).padding(start = 10.rdp),
       verticalArrangement = RemoteArrangement.spacedBy(HaSpace.XS.rdp),
     ) {
       ConsoleTapeLabel(entityName(data.entityId, data.name), compact = true)
@@ -256,9 +256,9 @@ private fun ConsoleTile(data: HaTileData, look: HaEntityLook, identity: @Composa
 private fun IkeaTile(data: HaTileData, look: HaEntityLook, identity: @Composable () -> Unit) {
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
     identity()
-    RemoteColumn(RemoteModifier.weight(1f).padding(start = 12.rdp)) {
-      TileName(data, look, HaType.Label, FontWeight.Bold)
-      TileValue(data, look, HaType.Value, FontWeight.Bold)
+    RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 12.rdp)) {
+      TileName(data, look, HaType.Label, RemoteFontWeight.Bold)
+      TileValue(data, look, HaType.Value, RemoteFontWeight.Bold)
     }
   }
 }
@@ -275,9 +275,9 @@ private fun MushroomTile(data: HaTileData, look: HaEntityLook, identity: @Compos
     ) {
       identity()
     }
-    RemoteColumn(RemoteModifier.weight(1f).padding(start = 12.rdp)) {
-      TileName(data, look, HaType.Label, FontWeight.Normal, secondary = true)
-      TileValue(data, look, HaType.BodyLarge, FontWeight.Bold)
+    RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 12.rdp)) {
+      TileName(data, look, HaType.Label, RemoteFontWeight.Normal, secondary = true)
+      TileValue(data, look, HaType.BodyLarge, RemoteFontWeight.Bold)
     }
   }
 }
@@ -289,7 +289,7 @@ private fun CatppuccinTile(data: HaTileData, look: HaEntityLook, identity: @Comp
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
     identity()
     RemoteColumn(
-      RemoteModifier.weight(1f).padding(start = 10.rdp),
+      RemoteModifier.weight(1f.rf).padding(start = 10.rdp),
       verticalArrangement = RemoteArrangement.spacedBy(HaSpace.XS.rdp),
     ) {
       TileName(data, look, HaType.Label)
@@ -310,15 +310,15 @@ private fun ObsidianTile(data: HaTileData, look: HaEntityLook, identity: @Compos
   val theme = haTheme()
   RemoteRow(RemoteModifier.fillMaxWidth(), verticalAlignment = RemoteAlignment.CenterVertically) {
     identity()
-    RemoteColumn(RemoteModifier.weight(1f).padding(start = 12.rdp)) {
-      TileValue(data, look, HaType.Title, FontWeight.Normal)
+    RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 12.rdp)) {
+      TileValue(data, look, HaType.Title, RemoteFontWeight.Normal)
       RemoteBox(
         RemoteModifier.padding(vertical = HaSpace.XXS.rdp)
           .width(32.rdp)
           .height(HaSpace.Hairline.rdp)
           .background(theme.secondaryText),
       )
-      TileName(data, look, HaType.Caption, FontWeight.Normal, secondary = true)
+      TileName(data, look, HaType.Caption, RemoteFontWeight.Normal, secondary = true)
     }
   }
 }
@@ -336,8 +336,8 @@ private fun NoctisTile(data: HaTileData, look: HaEntityLook, identity: @Composab
         .background(theme.divider),
     )
     identity()
-    RemoteColumn(RemoteModifier.weight(1f).padding(start = 12.rdp)) {
-      TileName(data, look, HaType.Label, FontWeight.Normal, secondary = true)
+    RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 12.rdp)) {
+      TileName(data, look, HaType.Label, RemoteFontWeight.Normal, secondary = true)
       TileValue(data, look, HaType.BodyLarge)
     }
   }
@@ -358,8 +358,8 @@ private fun LcarsTile(data: HaTileData, look: HaEntityLook, identity: @Composabl
       data,
       look,
       HaType.Label,
-      FontWeight.Bold,
-      modifier = RemoteModifier.weight(1f).padding(horizontal = HaSpace.M.rdp),
+      RemoteFontWeight.Bold,
+      modifier = RemoteModifier.weight(1f.rf).padding(horizontal = HaSpace.M.rdp),
     )
     TileValue(data, look, HaType.Title)
   }
@@ -378,7 +378,7 @@ private fun AeonTile(data: HaTileData, look: HaEntityLook, identity: @Composable
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     identity()
-    RemoteColumn(RemoteModifier.weight(1f).padding(start = 10.rdp)) {
+    RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 10.rdp)) {
       RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
         RemoteText(
           "◆ ".rs,

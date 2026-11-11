@@ -8,7 +8,7 @@ import androidx.compose.remote.core.operations.layout.managers.BoxLayout
 import androidx.compose.remote.creation.Rc
 import androidx.compose.remote.creation.RemoteComposeWriter
 import androidx.compose.remote.creation.modifiers.RecordingModifier
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import ee.schimke.ha.rc.androidX
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -28,7 +28,7 @@ class EmbeddedSystemThemeTest {
   @Test
   fun systemThemeColor_resolvesInEmbeddedComposePlayer() {
     val fallbackColor = 0xFFFF00FF.toInt()
-    val writer = RemoteComposeWriter.obtain(100, 100, RcPlatformProfiles.ANDROIDX)
+    val writer = RemoteComposeWriter.obtain(100, 100, androidX)
     val colorId =
       writer.addThemedColor(
         Rc.AndroidColors.GROUP,

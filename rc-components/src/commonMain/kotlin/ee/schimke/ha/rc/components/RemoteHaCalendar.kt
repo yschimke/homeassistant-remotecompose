@@ -2,25 +2,26 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rs
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * `calendar` card — title + chronological list of upcoming events. Rendered as a list rather than a
@@ -49,11 +50,11 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
           text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = HaType.Title,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-          modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+          overflow = RemoteTextOverflow.Ellipsis,
+          modifier = RemoteModifier.weight(1f.rf).padding(end = 8.rdp),
         )
         RemoteText(
           text = cardText("range", data.rangeLabel),
@@ -111,10 +112,10 @@ fun RemoteHaCalendarIdentity(
         text = cardText("row.0.summary", next.summary),
         color = theme.primaryText,
         fontSize = HaType.Label,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = RemoteFontWeight.SemiBold,
         style = haTextStyle(),
         maxLines = 3,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     return
@@ -137,7 +138,7 @@ fun RemoteHaCalendarIdentity(
         fontSize = HaType.Caption,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       if (next != null) {
         RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
@@ -161,10 +162,10 @@ fun RemoteHaCalendarIdentity(
           text = cardText("row.0.summary", next.summary),
           color = theme.primaryText,
           fontSize = HaType.Title,
-          fontWeight = FontWeight.SemiBold,
+          fontWeight = RemoteFontWeight.SemiBold,
           style = haTextStyle(),
           maxLines = 2,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       } else {
         if (haLayouts().notes == HaNoteStyle.Tape)
@@ -204,10 +205,10 @@ private fun Event(index: Int, event: HaCalendarEvent, theme: RemoteHaTheme) {
         text = cardText("row.$index.summary", event.summary),
         color = theme.primaryText,
         fontSize = HaType.Body,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
   }

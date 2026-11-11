@@ -2,12 +2,11 @@
 
 package ee.schimke.ha.rc
 
+import ee.schimke.composeai.rcplayer.protocol.RcOpcodes
 import android.content.Context
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.profile.Profile
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.composeai.rcplayer.edit.RcHardcodedValue
@@ -106,7 +105,7 @@ data class LauncherLook(
 @Composable
 fun LauncherWidgetContent(
   registry: CardRegistry,
-  profile: Profile,
+  profile: CaptureProfile,
   dark: Boolean,
   widgetActions: WidgetActionRegistry,
   card: CardConfig,
@@ -125,12 +124,12 @@ fun LauncherWidgetContent(
     // constants: no ambient crossing on the theme provided below.
     ee.schimke.rc.m3.LocalRcAmbientAware provides false,
     ee.schimke.ha.rc.components.LocalSupportsFlowLayout provides
-      (androidx.compose.remote.core.Operations.LAYOUT_FLOW in profile.supportedOperations),
+      (RcOpcodes.LAYOUT_FLOW in profile.supportedOperations),
     ee.schimke.ha.rc.components.LocalWidgetCardFonts provides cardFonts,
   ) {
     ProvideCardRegistry(registry) {
       ProvideSystemHaTheme(
-        profile = profile,
+        supportsColorTheme = RcOpcodes.COLOR_THEME in profile.supportedOperations,
         fallbackTheme = if (dark) HaTheme.Dark else HaTheme.Light,
       ) {
         look.Provide(dark) {

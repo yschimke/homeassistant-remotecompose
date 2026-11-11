@@ -2,7 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.state.rsp
+import ee.schimke.composeai.rccreation.compose.state.rsp
 import androidx.compose.ui.graphics.Color
 
 // ---------------------------------------------------------------------------------------------

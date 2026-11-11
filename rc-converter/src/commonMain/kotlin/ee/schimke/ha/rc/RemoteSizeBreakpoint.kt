@@ -2,12 +2,13 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteStateLayout
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -86,18 +87,18 @@ fun RemoteSizeBreakpoint(
 
   // Each breakpoint registers its own expression (see rememberExpressionName).
   val uniqueName = rememberExpressionName(BreakpointExpressionPrefix)
-  val dimension =
-    RemoteFloat.createNamedRemoteFloatExpression(
-      name = uniqueName,
-      domain = RemoteState.Domain.User,
-    ) {
-      when (axis) {
-        BreakpointAxis.Width -> componentWidth()
-        BreakpointAxis.Height -> componentHeight()
-      }
-    }
-
   RemoteBox(modifier = modifier) {
+    val component = remoteComponent()
+    val dimension =
+      RemoteFloat.createNamedRemoteFloat(
+        name = uniqueName,
+        defaultValue =
+          when (axis) {
+            BreakpointAxis.Width -> component.width
+            BreakpointAxis.Height -> component.height
+          },
+        domain = RemoteState.Domain.User,
+      )
     BreakpointTier(
       dimension = dimension,
       thresholdsDp = thresholdsDp,

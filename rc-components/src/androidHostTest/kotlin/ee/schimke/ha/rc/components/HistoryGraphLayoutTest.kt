@@ -1,6 +1,6 @@
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.state.rs
 import androidx.compose.ui.graphics.Color
 import kotlin.test.Test
 import kotlin.test.assertFalse

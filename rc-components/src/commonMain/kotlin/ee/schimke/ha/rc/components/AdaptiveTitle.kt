@@ -2,7 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.state.RemoteTextUnit
+import ee.schimke.composeai.rccreation.compose.state.RemoteTextUnit
 
 /**
  * A card title's size: [HaType.Title], stepping down the scale for long titles so they fit one line

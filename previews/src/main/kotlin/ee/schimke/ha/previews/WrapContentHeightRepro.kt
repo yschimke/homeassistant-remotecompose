@@ -2,6 +2,10 @@
 
 package ee.schimke.ha.previews
 
+import androidx.compose.remote.core.CoreDocument
+import ee.schimke.ha.rc.androidXExperimentalWrap
+import androidx.compose.ui.text.font.FontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,26 +17,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.remote.core.CoreDocument
-import androidx.compose.remote.core.RcProfiles
 import androidx.compose.remote.core.RemoteComposeBuffer
-import androidx.compose.remote.core.operations.Header
-import androidx.compose.remote.creation.RemoteComposeWriter
-import androidx.compose.remote.creation.RemoteComposeWriterAndroid
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.border as rcBorder
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.padding as rcPadding
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.platform.AndroidxRcPlatformServices
-import androidx.compose.remote.creation.profile.Profile
+import ee.schimke.ha.rc.captureSingleRemoteDocument
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.border as rcBorder
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth as rcFillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding as rcPadding
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.ha.rc.CaptureProfile
 import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
 import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
@@ -41,7 +39,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.rc.HaRcComposePlayer
@@ -53,7 +50,7 @@ import kotlinx.coroutines.runBlocking
  *
  * **Setup**
  *
- * - One `Profile` ("wrapProfile") that bakes `Header.FEATURE_PAINT_MEASURE = 0` so the player runs
+ * - One `CaptureProfile` ("wrapProfile") that bakes `Header.FEATURE_PAINT_MEASURE = 0` so the player runs
  *   a real measure pass against the parent's max constraints.
  * - `RemoteComposePlayerFlags.shouldPlayerWrapContentSize = true`, so the player's modifier becomes
  *   `wrapContentSize()` instead of `Modifier.size(documentWidth.dp, documentHeight.dp)`.
@@ -90,21 +87,7 @@ import kotlinx.coroutines.runBlocking
  * outer `RemoteBox(fillMaxWidth)` that follows the document's intrinsic content height. When wrap
  * works, blue and red coincide; when it doesn't, blue sits inside a much taller red rectangle.
  */
-private val wrapProfile: Profile =
-  Profile(
-    CoreDocument.DOCUMENT_API_LEVEL,
-    RcProfiles.PROFILE_ANDROIDX or RcProfiles.PROFILE_EXPERIMENTAL,
-    AndroidxRcPlatformServices(),
-  ) { creationDisplayInfo, profile, _ ->
-    RemoteComposeWriterAndroid(
-      profile,
-      RemoteComposeWriter.hTag(Header.DOC_WIDTH, creationDisplayInfo.width),
-      RemoteComposeWriter.hTag(Header.DOC_HEIGHT, creationDisplayInfo.height),
-      RemoteComposeWriter.hTag(Header.DOC_CONTENT_DESCRIPTION, ""),
-      RemoteComposeWriter.hTag(Header.DOC_PROFILES, profile.operationsProfiles),
-      RemoteComposeWriter.hTag(Header.FEATURE_PAINT_MEASURE, 0),
-    )
-  }
+private val wrapProfile: CaptureProfile = androidXExperimentalWrap
 
 @Preview(
   name = "wrap-content height repro · alpha010",
