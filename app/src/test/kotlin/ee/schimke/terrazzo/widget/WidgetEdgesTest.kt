@@ -47,5 +47,11 @@ class WidgetEdgesTest {
     )
     // Only some domains move: a sensor reading "opening" is just a state.
     assertFalse(WidgetEdges.isMoving(state("sensor.door", "opening")))
+    assertTrue(WidgetEdges.movesDomain("cover.garage"))
+    assertTrue(WidgetEdges.movesDomain("lock.front_door"))
+    assertTrue(WidgetEdges.movesDomain("valve.garden"))
+    assertTrue(WidgetEdges.movesDomain("alarm_control_panel.home"))
+    assertFalse(WidgetEdges.movesDomain("light.porch"))
+    assertFalse(WidgetEdges.movesDomain("sensor.door"))
   }
 }

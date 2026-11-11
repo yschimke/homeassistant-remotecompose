@@ -173,16 +173,10 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   }
 
   // The launcher and watch widgets follow this session's states, holding the Terrazzo
-  // integration's lease so it sends no state wakes meanwhile.
+  // integration's lease once registered so it sends no state wakes meanwhile.
   LaunchedEffect(session) {
     val s = session ?: return@LaunchedEffect
-    // A fresh sign-in registers with mobile_app after handing the session over: wait for it.
-    var webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId
-    while (webhookId == null) {
-      kotlinx.coroutines.delay(5_000)
-      webhookId = graph.mobileAppStore.get(s.baseUrl)?.webhookId
-    }
-    ee.schimke.terrazzo.widget.LiveWidgetUpdates.follow(appContext, s, webhookId)
+    ee.schimke.terrazzo.widget.LiveWidgetUpdates.follow(appContext, s)
   }
 
   // Once a live session has finished connecting, ask HA for its
@@ -629,10 +623,12 @@ private fun DashboardsRoot(
           if (session.connectionStatus.value == SessionConnectionStatus.Connected) backoff.reset()
         }
       } finally {
-        // repeatOnLifecycle has cancelled us; close the socket
-        // outside the cancelled scope so the suspend call runs.
+        // repeatOnLifecycle has cancelled us; release the widget lease while the socket is still
+        // open, park it cleanly, and keep following in the background if a widget entity is moving.
         if (activity?.isChangingConfigurations != true) {
-          withContext(NonCancellable) { runCatching { session.disconnect() } }
+          withContext(NonCancellable) {
+            ee.schimke.terrazzo.widget.LiveWidgetUpdates.parkAndHandOff(context, session)
+          }
         }
       }
     }

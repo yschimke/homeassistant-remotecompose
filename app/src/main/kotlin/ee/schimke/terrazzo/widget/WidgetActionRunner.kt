@@ -110,6 +110,20 @@ internal object WidgetActionRunner {
         }
     if (shown) redraw(context, widgetId)
     val result = runCatching { withTimeout(CALL_TIMEOUT_MS) { call(graph, entry.baseUrl, action) } }
+    if (result.isSuccess) {
+      // A cover, lock, valve or alarm passes through a moving state (`closing` → `closed`), and any
+      // other non-on/off call only shows once Home Assistant reports it: keep following in the
+      // background when the app's own session isn't already connected.
+      val needsFollow = !shown || (entityId != null && WidgetEdges.movesDomain(entityId))
+      if (needsFollow && connectedAppSession(entry.baseUrl) == null) {
+        WidgetStateWorker.ensureFollowing(
+          context.applicationContext,
+          entry.baseUrl,
+          resetCooldown = true,
+        )
+      }
+      return
+    }
     result.exceptionOrNull()?.let { failure ->
       Log.w(TAG, "Widget $widgetId action on $entityId failed", failure)
       graph.logStore.recordLocalAction("Widget action failed", entityId)
@@ -134,6 +148,9 @@ internal object WidgetActionRunner {
    * auth round trips; it is the signed-in session by definition (signing out clears it).
    */
   @Volatile private var appSession: HaSession? = null
+
+  /** Test hook for supplying a controllable background [HaSession] without OAuth token exchange. */
+  @Volatile internal var newSessionFactory: ((String) -> HaSession)? = null
 
   fun setAppSession(session: HaSession?) {
     appSession = session
@@ -226,7 +243,9 @@ internal object WidgetActionRunner {
     baseUrl: String,
     block: suspend (HaSession) -> Unit,
   ) {
-    val session = graph.sessionFactory.create(baseUrl, accessToken(graph, baseUrl))
+    val session =
+      newSessionFactory?.invoke(baseUrl)
+        ?: graph.sessionFactory.createLive(baseUrl, accessToken(graph, baseUrl))
     try {
       session.connect()
       block(session)

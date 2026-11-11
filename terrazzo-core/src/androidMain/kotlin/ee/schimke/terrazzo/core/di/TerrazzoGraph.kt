@@ -89,18 +89,22 @@ class HaSessionFactory(
    * stored refresh token; until it does, the cache supplies what the UI draws.
    */
   fun create(baseUrl: String, accessToken: String?, lifetime: Duration? = null): HaSession =
-    CachedHaSession(
-      LiveHaSession(
-        baseUrl = baseUrl,
-        tokens =
-          HaAccessTokens(
-            initialToken = accessToken,
-            initialLifetime = lifetime,
-            mint = { mintAccessToken(baseUrl) },
-          ),
-        engine = httpEngineFactory.engine,
-      ),
-      cache,
+    CachedHaSession(createLive(baseUrl, accessToken, lifetime), cache)
+
+  /**
+   * A live session without [CachedHaSession]: background widget workers and action calls must see a
+   * failed connect or read as a failure rather than falling back to stale cached states.
+   */
+  fun createLive(baseUrl: String, accessToken: String?, lifetime: Duration? = null): HaSession =
+    LiveHaSession(
+      baseUrl = baseUrl,
+      tokens =
+        HaAccessTokens(
+          initialToken = accessToken,
+          initialLifetime = lifetime,
+          mint = { mintAccessToken(baseUrl) },
+        ),
+      engine = httpEngineFactory.engine,
     )
 
   /**

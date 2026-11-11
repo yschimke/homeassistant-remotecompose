@@ -206,6 +206,23 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
             },
       ) ?: return
     appWidgetManager.updateAppWidget(widgetId, remoteViews)
+    followIfMoving(context, entry, snapshot)
+  }
+
+  internal fun followIfMoving(
+    context: Context,
+    entry: ee.schimke.terrazzo.core.widget.WidgetStore.Entry,
+    snapshot: HaSnapshot,
+  ) {
+    if (
+      !DemoData.isDemo(entry.baseUrl) &&
+        WidgetActionRunner.connectedAppSession(entry.baseUrl) == null &&
+        ee.schimke.terrazzo.core.logs.referencedEntities(entry.card).any {
+          WidgetEdges.isMoving(snapshot.states[it])
+        }
+    ) {
+      WidgetStateWorker.ensureFollowing(context.applicationContext, entry.baseUrl)
+    }
   }
 
   /**
