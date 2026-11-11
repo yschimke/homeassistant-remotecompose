@@ -112,13 +112,15 @@ cmp-navigation3-runtime = "1.2.1"
 cmp-icons = "1.7.3"
 cmp-adaptive = "1.3.0"
 # The BOM is the release coordinate; each module can retain an older version on a partial release.
-# 2.19.0: the Compose Multiplatform creation fork writes borders, component-sized shapes and
-# padded drawWithContent as AndroidX does, so a JVM capture renders like an Android one.
-rc-players = "2.29.0"
-# The design server's own rc-player-edit: 2.32's profiles without a player feature
-# (`RcTargetProfile.without(RcPlayerFeature…)`), over the BOM's 2.29 protocol and runtime (its POM
-# asks for no more). The rest stays on 2.29 until the creation fork's API reaches Android.
-design-server-rc-player-edit = "2.32.1"
+rc-players = "3.0.0"
+# The Compose Multiplatform creation fork the JVM, wasmJs and iOS capture with, under the
+# coordinates and in the package (AndroidX's own) it had before rc-players 3.0.0. From 3.0.0 it is
+# `rc-creation-compose` in `ee.schimke.composeai.rccreation`, tracking androidx-main, which the BOM
+# pins; cards are one source compiled against this fork and, on Android, AndroidX's alpha, so they
+# stay on the last release whose API matches that alpha until Android can capture with rc-players'
+# own writer too. docs/architecture/rc-creation-migration.md has what blocks that. Nothing else
+# depends on it: its POM asks only for its own writer.
+rc-creation-fork = "2.29.0"
 compose-webview = "2.0.3"
 keyring = "1.0.4"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
@@ -145,10 +147,10 @@ rc-players-bom = { module = "ee.schimke.composeai:rc-players-bom", version.ref =
 rc-player-protocol = { module = "ee.schimke.composeai:rc-player-protocol" }
 # The Compose Multiplatform fork of AndroidX remote-creation-compose, in AndroidX's own package.
 # Android builds keep AndroidX's (see rc-components/build.gradle.kts); this is what JVM captures with.
-rc-creation-compose = { module = "ee.schimke.composeai:third-party-remote-creation-compose" }
+# Not in the BOM from rc-players 3.0.0: see `rc-creation-fork`.
+rc-creation-compose = { module = "ee.schimke.composeai:third-party-remote-creation-compose", version.ref = "rc-creation-fork" }
 rc-player-compose = { module = "ee.schimke.composeai:rc-player-compose" }
 rc-player-edit = { module = "ee.schimke.composeai:rc-player-edit" }
-design-server-rc-player-edit = { module = "ee.schimke.composeai:rc-player-edit", version.ref = "design-server-rc-player-edit" }
 rc-player-js-dist = { module = "ee.schimke.composeai:remote-compose-player-js-dist" }
 cmp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 cmp-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }

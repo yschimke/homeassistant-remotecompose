@@ -66,6 +66,11 @@
       "schedule": ["at any time"],
       "automerge": true,
       "automergeSchedule": ["at any time"]
+    },
+    {
+      "description": "The Compose Multiplatform creation fork under its old coordinates is held at the last release whose API is AndroidX 1.0.0-alpha23's (the `rc-creation-fork` catalog key): the cards are one source compiled against it and, on Android, against AndroidX. Its later releases follow androidx-main, ahead of that alpha (why the catalog stayed on 2.29), and from rc-players 3.0.0 it is `rc-creation-compose` in another package. Moving off it is a migration, not a version bump: docs/architecture/rc-creation-migration.md.",
+      "matchPackageNames": ["ee.schimke.composeai:third-party-remote-creation-compose"],
+      "enabled": false
     }
   ]
 }
