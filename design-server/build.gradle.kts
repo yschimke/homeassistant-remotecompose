@@ -112,8 +112,8 @@ dependencies {
   implementation(project(":rc-converter"))
   implementation(project(":rc-components"))
   // Decodes templates for the browser: their bindings, size and op-set validation; and makes a
-  // design for a player's profile (`PlayerFolding`). Ahead of the BOM, for its player features.
-  implementation(libs.design.server.rc.player.edit)
+  // design for a player's profile (`PlayerFolding`).
+  implementation(libs.rc.player.edit)
 
   implementation(libs.ktor.server.core)
   implementation(libs.ktor.server.cio)
