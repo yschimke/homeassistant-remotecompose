@@ -66,6 +66,15 @@
       "schedule": ["at any time"],
       "automerge": true,
       "automergeSchedule": ["at any time"]
+    },
+    {
+      "description": "rc-players >= 2.30.0 refactors the remote creation fork (tween, valueChange, rememberMutableRemoteFloat, RemotePaintingStyle) breaking rc-material3-motion compilation against androidx.compose.remote 1.0.0-alpha23. Skipped from https://github.com/yschimke/homeassistant-remotecompose/pull/1537. Remove when rc-material3-motion is migrated to the new remote creation API.",
+      "matchPackageNames": [
+        "ee.schimke.composeai:rc-players-bom",
+        "/^ee\\.schimke\\.composeai:rc-(player|widget|creation)/",
+        "ee.schimke.composeai:third-party-rc-embedded-player"
+      ],
+      "allowedVersions": "/^2\\.(2[0-9]|[0-1][0-9])\\.[0-9]+$/"
     }
   ]
 }
