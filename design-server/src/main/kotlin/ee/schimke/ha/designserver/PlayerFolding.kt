@@ -2,52 +2,51 @@ package ee.schimke.ha.designserver
 
 import ee.schimke.composeai.rcplayer.edit.RcApproximation
 import ee.schimke.composeai.rcplayer.edit.RcDisplay
+import ee.schimke.composeai.rcplayer.edit.RcPlayerFeature
+import ee.schimke.composeai.rcplayer.edit.RcTargetProfile
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.adaptTo
 import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.hardcodeUnboundNamedValues
 import ee.schimke.composeai.rcplayer.edit.optimize
-import ee.schimke.composeai.rcplayer.protocol.RcColorConstant
-import ee.schimke.composeai.rcplayer.protocol.RcColorExpression
-import ee.schimke.composeai.rcplayer.protocol.RcColorTheme
 import ee.schimke.composeai.rcplayer.protocol.RcDocument
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcHeader
 import ee.schimke.composeai.rcplayer.protocol.RcHeaderProperty
 import ee.schimke.composeai.rcplayer.protocol.RcHeaderValue
-import ee.schimke.composeai.rcplayer.protocol.RcOperation
-import ee.schimke.composeai.rcplayer.protocol.RcTextLayout
+import ee.schimke.composeai.rcplayer.protocol.RcOpcodes
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
+import java.lang.reflect.Modifier
 import java.security.MessageDigest
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.floatOrNull
 
 /**
- * A design made simple for a small player: one that shows a card on one display and can't follow a
- * phone's density and font scale. The wall display API asks for it (`POST /api/cards/resolve` with
- * `player`), so an ESP32 panel gets literals rather than expressions to evaluate.
+ * A design made for one player: a display it draws on, and what it can play. The wall display API
+ * asks for it (`POST /api/cards/resolve` with `player`), so an ESP32 panel gets a document it can
+ * draw rather than one written for a phone.
  *
  * A `RemoteDensity.Host` design writes its sizes as expressions over the player's density and font
- * size, and its text and padding read them by variable. A microcontroller player (Kobento's rccore)
- * leaves a padding nested in a layout that reads a variable unresolved, so such a card lays out as
- * NaN and draws nothing. The fix is the one AndroidX's launcher widgets need for the same reason:
- * bake the display in ([hardcodeDensity]), then adapt the document to the level 6 profile
- * ([adaptTo], [RcTargetProfiles.WIDGETS_V6]), which folds every constant size into the literal
- * field and writes `CoreText` as the older `TextLayout`, then [optimize] what's left.
+ * size. The display is baked in ([hardcodeDensity]), every named value the host won't push is
+ * frozen at the document's own value (`host.ambient`: a wall panel is never in a watch's always-on
+ * mode), and the document is adapted to the player's [Profile] ([adaptTo]): operations it lacks
+ * rewritten where they can be, and forms of operations it gets wrong ([RcPlayerFeature]) written
+ * another way, constant sizes and colours as literals. Then it is [optimize]d, and given the
+ * screen's size as its canvas when the player shows one card on the whole screen.
  *
- * Two more for the same player. Every named value the host won't push (`host.ambient`: a wall panel
- * is never in a watch's always-on mode) is frozen at the document's own value, so what it chooses
- * between — a text colour — folds too. And a `TextLayout` whose colour is a reference to a constant
- * gets the colour itself: rccore reads that field only as a literal ([literalTextColors]).
- *
- * The result is right only for [Player.density] and [Player.fontScale]: served under its own sha,
- * beside the design it was made from.
+ * The result is right only for that [Player]: served under its own sha, beside the design it was
+ * made from.
  */
 object PlayerFolding {
   /**
-   * What a request asks the design to be made for: the display's density and font scale, and its
-   * size in dp when it shows one card on the whole screen ([width] by [height]; null keeps the
-   * design's own canvas).
+   * The display a player draws on: its density and font scale, and its size in dp when it shows one
+   * card on the whole screen ([width] by [height]; null keeps the design's own canvas).
    */
-  data class Player(
+  data class Display(
     val density: Float = 1f,
     val fontScale: Float = 1f,
     val width: Int? = null,
@@ -58,10 +57,139 @@ object PlayerFolding {
       require(fontScale.isFinite() && fontScale > 0f) { "fontScale must be positive: $fontScale" }
       require(width == null || width in 1..MAX_SIDE) { "width out of range: $width" }
       require(height == null || height in 1..MAX_SIDE) { "height out of range: $height" }
+      require((width == null) == (height == null)) { "width and height go together" }
     }
   }
 
-  /** A folded design: its bytes and sha256, and what the adaptation couldn't make playable. */
+  /**
+   * What a player can play: a [base] profile (a name in [BASES]) without some of its operations
+   * ([withoutOpcodes]) and some forms of them ([withoutFeatures]).
+   */
+  data class Profile(
+    val base: String,
+    val withoutOpcodes: Set<Int> = emptySet(),
+    val withoutFeatures: Set<RcPlayerFeature> = emptySet(),
+  ) {
+    init {
+      require(base in BASES) { "unknown profile $base: ${(BASES.keys + NAMED.keys).sorted()}" }
+    }
+
+    /** The rc-players profile [adaptTo] writes for. */
+    val target: RcTargetProfile
+      get() =
+        BASES.getValue(base)
+          .let { if (withoutOpcodes.isEmpty()) it else it.without(*withoutOpcodes.toIntArray()) }
+          .let {
+            if (withoutFeatures.isEmpty()) it else it.without(*withoutFeatures.toTypedArray())
+          }
+
+    companion object {
+      /** The players rc-players models, by the name a request gives them. */
+      val BASES: Map<String, RcTargetProfile> =
+        mapOf(
+          "widgets-v6" to RcTargetProfiles.WIDGETS_V6,
+          "widgets-v7" to RcTargetProfiles.WIDGETS_V7,
+          "androidx" to RcTargetProfiles.ANDROIDX,
+          "androidx-experimental" to RcTargetProfiles.ANDROIDX_EXPERIMENTAL,
+          "wear-widgets" to RcTargetProfiles.WEAR_WIDGETS,
+        )
+
+      /**
+       * Kobento's MCU player (rccore): it decodes what AndroidX does, `CoreText` included, but
+       * never resolves a variable a padding nested in a layout reads (the card lays out as NaN) and
+       * reads a `TextLayout`'s colour only as a literal.
+       */
+      val KOBENTO_MCU: Profile =
+        Profile(
+          "androidx",
+          withoutFeatures =
+            setOf(RcPlayerFeature.VARIABLE_FLOAT_FIELDS, RcPlayerFeature.DYNAMIC_TEXT_COLOR),
+        )
+
+      /** Players known by name: each base as it is, and the families with their own gaps. */
+      val NAMED: Map<String, Profile> =
+        BASES.keys.associateWith { Profile(it) } + ("kobento-mcu" to KOBENTO_MCU)
+
+      /**
+       * A request's profile: a name (`"kobento-mcu"`), or `{"base": …, "without": […]}` where each
+       * entry is `op:<opcode name or number>` (`op:CORE_TEXT`, `op:239`) or `feature:<feature>`
+       * (`feature:variable-float-fields`). Null is [KOBENTO_MCU], the small player the wall display
+       * API was made for. Throws [IllegalArgumentException] on anything else.
+       */
+      fun parse(json: JsonElement?): Profile =
+        when (json) {
+          null -> KOBENTO_MCU
+          is JsonPrimitive -> {
+            val name = json.contentOrNull?.takeIf { json.isString }
+            requireNotNull(name?.let(NAMED::get)) {
+              "unknown profile ${json}: ${NAMED.keys.sorted()}"
+            }
+          }
+          is JsonObject -> {
+            val base = (json["base"] as? JsonPrimitive)?.contentOrNull ?: "androidx"
+            val named =
+              requireNotNull(NAMED[base]) { "unknown profile $base: ${NAMED.keys.sorted()}" }
+            val without =
+              when (val entries = json["without"]) {
+                null -> emptyList()
+                is JsonArray ->
+                  entries.map {
+                    (it as? JsonPrimitive)?.takeIf { it.isString }?.content
+                      ?: throw IllegalArgumentException("not a without entry: $it")
+                  }
+                else -> throw IllegalArgumentException("without must be a list: $entries")
+              }
+            named.without(without)
+          }
+          else -> throw IllegalArgumentException("not a profile: $json")
+        }
+
+      private val OPCODES: Map<String, Int> =
+        RcOpcodes::class
+          .java
+          .declaredFields
+          .filter { Modifier.isStatic(it.modifiers) && it.type == Int::class.javaPrimitiveType }
+          .associate { it.name to it.getInt(null) }
+
+      private fun opcode(name: String): Int =
+        name.toIntOrNull()
+          ?: OPCODES[name.uppercase().replace('-', '_')]
+          ?: throw IllegalArgumentException("unknown operation $name")
+
+      private fun feature(name: String): RcPlayerFeature =
+        RcPlayerFeature.entries.firstOrNull { it.name == name.uppercase().replace('-', '_') }
+          ?: throw IllegalArgumentException(
+            "unknown feature $name: ${RcPlayerFeature.entries.map { it.wireName }}",
+          )
+
+      private val RcPlayerFeature.wireName: String
+        get() = name.lowercase().replace('_', '-')
+    }
+
+    /** This profile also without each `op:` and `feature:` entry. */
+    fun without(entries: List<String>): Profile {
+      val opcodes = withoutOpcodes.toMutableSet()
+      val features = withoutFeatures.toMutableSet()
+      for (entry in entries) {
+        val kind = entry.substringBefore(':', "")
+        val name = entry.substringAfter(':')
+        when (kind) {
+          "op" -> opcodes += opcode(name)
+          "feature" -> features += feature(name)
+          else ->
+            throw IllegalArgumentException(
+              "$entry: an entry is op:<operation> or feature:<feature>",
+            )
+        }
+      }
+      return copy(withoutOpcodes = opcodes, withoutFeatures = features)
+    }
+  }
+
+  /** What a request asks a design to be made for. */
+  data class Player(val display: Display = Display(), val profile: Profile = Profile.KOBENTO_MCU)
+
+  /** A folded design: its bytes and sha256, and what [Player.profile] still can't play in it. */
   class Folded(val bytes: ByteArray, val sha256: String, val notes: List<String>)
 
   /**
@@ -70,21 +198,26 @@ object PlayerFolding {
    */
   fun fold(design: ByteArray, player: Player, bound: Set<String> = emptySet()): Folded? =
     runCatching {
-      val display = RcDisplay(player.density, player.fontScale)
+      val display = player.display
+      val target = player.profile.target
       val adaptation =
         RcDocumentCodec.decode(design, RcWireLimits())
           .hardcodeUnboundNamedValues(bound)
-          .hardcodeDensity(player.density, player.fontScale)
+          .hardcodeDensity(display.density, display.fontScale)
           .optimize()
-          .adaptTo(RcTargetProfiles.WIDGETS_V6, setOf(RcApproximation.TEXT), display)
+          .adaptTo(
+            target,
+            setOf(RcApproximation.TEXT),
+            RcDisplay(display.density, display.fontScale),
+          )
       val bytes =
         RcDocumentCodec.encode(
-          adaptation.document.optimize().literalTextColors().sized(player.width, player.height),
+          adaptation.document.optimize().sized(display.width, display.height),
         )
       Folded(
         bytes,
         sha256(bytes),
-        adaptation.violations.map { "Not simplified for a small player: $it" }.distinct(),
+        adaptation.violations.map { "Not playable on ${target.name}: ${it.message}" }.distinct(),
       )
     }
     .getOrNull()
@@ -141,28 +274,6 @@ object PlayerFolding {
   fun blob(sha256: String): ByteArray? = synchronized(this) { blobs[sha256] }
 
   /**
-   * This document with each `TextLayout` whose colour is a reference (`FLAG_DYNAMIC_COLOR`) to a
-   * colour nothing can change — one `ColorConstant` and no other writer of its id — drawing that
-   * colour as the literal. AndroidX reads either; rccore only the literal, so a reference there
-   * draws the id as a transparent colour.
-   */
-  internal fun RcDocument.literalTextColors(): RcDocument {
-    val constants =
-      operations.filterIsInstance<RcColorConstant>().groupBy { it.id }.filterValues { it.size == 1 }
-    val dynamic = RcTextLayout.FLAG_DYNAMIC_COLOR shl 16
-    var changed = false
-    val rewritten = operations.map { op ->
-      if (op !is RcTextLayout || op.textAlignAndFlags and dynamic == 0) return@map op
-      val constant = constants[op.color]?.single() ?: return@map op
-      // Only a colour no other operation writes.
-      if (operations.any { it !== constant && it.writesColorId(op.color) }) return@map op
-      changed = true
-      op.copy(color = constant.argb, textAlignAndFlags = op.textAlignAndFlags and dynamic.inv())
-    }
-    return if (changed) copy(operations = rewritten) else this
-  }
-
-  /**
    * This document declaring [width] by [height] (dp) as its canvas, so a player that fits a
    * document to its screen by the header's size lays it out at exactly the screen's: one card
    * filling the panel, nothing scaled. Unchanged when either is null.
@@ -181,14 +292,23 @@ object PlayerFolding {
     return copy(header = header.copy(properties = size + kept))
   }
 
-  /** Whether this operation writes colour [id]: a colour constant, expression or theme colour. */
-  private fun RcOperation.writesColorId(id: Int): Boolean =
-    when (this) {
-      is RcColorConstant -> this.id == id
-      is RcColorExpression -> outId == id
-      is RcColorTheme -> outId == id
-      else -> false
-    }
+  /**
+   * A request's `player`: `{"display": {...}, "profile": ...}`, or the first form's flat
+   * `{"density", "fontScale", "width", "height"}`, which is the display alone and
+   * [Profile.KOBENTO_MCU]. Throws [IllegalArgumentException] on a bad display or profile.
+   */
+  fun parsePlayer(json: JsonObject): Player {
+    val displayJson = json["display"] as? JsonObject ?: json
+    fun number(name: String) = (displayJson[name] as? JsonPrimitive)?.floatOrNull
+    val display =
+      Display(
+        density = number("density") ?: 1f,
+        fontScale = number("fontScale") ?: 1f,
+        width = number("width")?.toInt(),
+        height = number("height")?.toInt(),
+      )
+    return Player(display, Profile.parse(json["profile"]))
+  }
 
   private const val MAX_BLOBS = 512
 

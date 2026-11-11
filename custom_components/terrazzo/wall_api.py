@@ -30,6 +30,8 @@ DEFAULT_DASHBOARD = "lovelace"
 # Card ids: `v<view>.c<card>` (a masonry or panel view) or `v<view>.s<section>.c<card>`.
 CARD_ID = re.compile(r"^v(\d{1,4})(?:\.s(\d{1,4}))?\.c(\d{1,4})$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
+# A player profile's name, as the design server knows them (`kobento-mcu`, `widgets-v6`).
+PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 
 # Cards whose size HA's sections view gives as a default (`getGridOptions`), in grid units.
 # Anything else is full width; its height is estimated and marked `auto`.
@@ -210,16 +212,17 @@ def slot_id(domain, index):
 # ---------------------------------------------------------------------------------------------
 
 
-def player(density, font_scale, width=None, height=None):
-    """The small player a `/values` request is for, `(density, font_scale, width, height)`, or None
-    for a full one.
+def player(density, font_scale, width=None, height=None, profile=None):
+    """The small player a `/values` request is for, `(density, font_scale, width, height, profile)`,
+    or None for a full one.
 
     A device that can't evaluate a design's density and font-size expressions (an ESP32 panel)
     passes `density=` (and `font_scale=`, default 1): the design server then makes each design for
     that display, with its sizes as numbers, under its own sha. `width=` and `height=` (dp, both or
     neither) also make each design's canvas the whole screen, for a device showing one card at a
-    time. A value that isn't a positive number in range is ignored, so a typo gets the full design,
-    not an error."""
+    time. `profile=` names what the player can play (a name the design server knows, such as
+    `kobento-mcu`, its default); a name that isn't one is ignored. A value that isn't a positive
+    number in range is ignored, so a typo gets the full design, not an error."""
 
     def number(value, high):
         try:
@@ -233,7 +236,8 @@ def player(density, font_scale, width=None, height=None):
     if d is None and f is None:
         return None
     size = (int(w), int(h)) if w is not None and h is not None else (None, None)
-    return (d or 1.0, f or 1.0) + size
+    name = profile if isinstance(profile, str) and PROFILE_NAME.match(profile) else None
+    return (d or 1.0, f or 1.0) + size + (name,)
 
 
 def _int(value, default):

@@ -115,6 +115,10 @@ cmp-adaptive = "1.3.0"
 # 2.19.0: the Compose Multiplatform creation fork writes borders, component-sized shapes and
 # padded drawWithContent as AndroidX does, so a JVM capture renders like an Android one.
 rc-players = "2.29.0"
+# The design server's own rc-player-edit: 2.32's profiles without a player feature
+# (`RcTargetProfile.without(RcPlayerFeature…)`), over the BOM's 2.29 protocol and runtime (its POM
+# asks for no more). The rest stays on 2.29 until the creation fork's API reaches Android.
+design-server-rc-player-edit = "2.32.1"
 compose-webview = "2.0.3"
 keyring = "1.0.4"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
@@ -144,6 +148,7 @@ rc-player-protocol = { module = "ee.schimke.composeai:rc-player-protocol" }
 rc-creation-compose = { module = "ee.schimke.composeai:third-party-remote-creation-compose" }
 rc-player-compose = { module = "ee.schimke.composeai:rc-player-compose" }
 rc-player-edit = { module = "ee.schimke.composeai:rc-player-edit" }
+design-server-rc-player-edit = { module = "ee.schimke.composeai:rc-player-edit", version.ref = "design-server-rc-player-edit" }
 rc-player-js-dist = { module = "ee.schimke.composeai:remote-compose-player-js-dist" }
 cmp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 cmp-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }

@@ -62,15 +62,19 @@ def _error(failure):
 
 def _look(request):
     """The card style, light or dark, palette, and player a request asks for. The player is the
-    display a small device draws on, `(density, font_scale, width, height)` from those query names: the
-    design server makes each design for it, with its sizes as numbers (wall_api.player)."""
+    display a small device draws on and what it can play, `(density, font_scale, width, height,
+    profile)` from those query names: the design server makes each design for it (wall_api.player)."""
     query = request.query
     return (
         query.get("style") or "classic",
         query.get("dark", "").lower() in ("1", "true", "yes"),
         query.get("palette") or None,
         wall_api.player(
-            query.get("density"), query.get("font_scale"), query.get("width"), query.get("height")
+            query.get("density"),
+            query.get("font_scale"),
+            query.get("width"),
+            query.get("height"),
+            query.get("profile"),
         ),
     )
 
@@ -148,9 +152,12 @@ async def _resolve(hass, user, base, authorization, card, look):
     if palette:
         body["palette"] = palette
     if player:
-        body["player"] = {"density": player[0], "fontScale": player[1]}
+        display = {"density": player[0], "fontScale": player[1]}
         if player[2] is not None:
-            body["player"].update(width=player[2], height=player[3])
+            display.update(width=player[2], height=player[3])
+        body["player"] = {"display": display}
+        if player[4]:
+            body["player"]["profile"] = player[4]
     try:
         async with async_get_clientsession(hass).post(
             f"{base}/api/cards/resolve",
