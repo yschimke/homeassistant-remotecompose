@@ -42,7 +42,11 @@ import kotlinx.coroutines.plus
  * provider, the pin-confirmation receiver — gets the same bindings without having to re-create the
  * graph.
  */
-class TerrazzoApplication : Application() {
+interface TerrazzoGraphProvider {
+  val graph: TerrazzoGraph
+}
+
+class TerrazzoApplication : Application(), TerrazzoGraphProvider {
 
   /**
    * Phone-only wear sync deps held outside the graph because the wear-data layer stack
@@ -61,7 +65,7 @@ class TerrazzoApplication : Application() {
     )
   }
 
-  val graph: TerrazzoGraph by lazy {
+  override val graph: TerrazzoGraph by lazy {
     val cardMonitor = createMonitor(applicationContext)
     createGraphFactory<AppGraph.Factory>().create(applicationContext, cardMonitor, wearSync)
   }
@@ -306,7 +310,7 @@ class TerrazzoApplication : Application() {
  * Convenience accessor for non-Compose entry points (BroadcastReceiver, AppWidgetProvider) where we
  * only have a [Context].
  */
-fun Context.terrazzoGraph(): TerrazzoGraph = (applicationContext as TerrazzoApplication).graph
+fun Context.terrazzoGraph(): TerrazzoGraph = (applicationContext as TerrazzoGraphProvider).graph
 
 /**
  * CompositionLocal surfaced so Compose screens can pull bindings without walking the Application

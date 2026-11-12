@@ -40,6 +40,12 @@ class WidgetRoutineRefreshWorker(context: Context, params: WorkerParameters) :
           // The app's own session already follows its states: its latest copy is as fresh.
           val snapshot = session.liveStates.value ?: session.loadSnapshot()
           LiveWidgetUpdates.redraw(applicationContext, baseUrl, snapshot)
+          if (
+            WidgetActionRunner.connectedAppSession(baseUrl) == null &&
+              LiveWidgetUpdates.hasMovingEntity(applicationContext, baseUrl, snapshot)
+          ) {
+            WidgetStateWorker.ensureFollowing(applicationContext, baseUrl)
+          }
         }
       } catch (timedOut: TimeoutCancellationException) {
         Log.w(TAG, "Timed out refreshing the widgets on $baseUrl", timedOut)

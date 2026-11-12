@@ -57,23 +57,44 @@ those over its own authenticated websocket, as it does for notifications.
 
 ## Staying awake while something moves
 
-On a state wake the app runs an expedited job (`WidgetStateWorker`). It connects with the stored
-login and follows the states (`LiveWidgetUpdates.follow`), redrawing the widgets that read a
-changed entity and sending the watch its values:
+`WidgetStateWorker` is an expedited network-constrained job that keeps a background session open
+until a temporary state settles. It starts from four places:
+
+- **A state wake** (`WidgetStateWorker.enqueue`), replacing any ending window for that server;
+- **A widget tap** (`WidgetActionRunner`), after a service call on a moving domain (`cover`,
+  `valve`, `lock`, `alarm_control_panel`) or any non-on/off action, even when **Live updates** is
+  off;
+- **Backgrounding the app** (`LiveWidgetUpdates.parkAndHandOff`), when `MainActivity` leaves
+  `RESUMED` while any shown widget entity is moving;
+- **A widget render or routine refresh** (`TerrazzoWidgetProvider`, `WidgetRoutineRefreshWorker`),
+  when the snapshot drawn shows a moving entity and no foreground session is connected.
+
+It connects with a live uncached session (`HaSessionFactory.createLive`) and follows every shown
+widget entity (`LiveWidgetUpdates.follow`), redrawing the widgets that read a changed entity and
+sending the watch its values:
 
 - at once for a visible edge (one redraw a second at most);
 - once a minute at most for a number or an attribute.
 
-It stays while any watched entity is moving, and for 20 s after the last change, up to 2 minutes.
-A garage door that takes 15 s to open draws `opening` within seconds of the wake and `open` as it
-lands, from one wake.
+If the socket drops mid-window — for example, driving off home Wi-Fi onto cellular while a garage
+door is still `closing` — `follow` reconnects (immediately when `LanConnectionPolicy` sees the new
+network, otherwise with backoff) and re-takes the lease. The window stays open until at least one
+snapshot has arrived, no followed entity is moving, and 20 s have passed since the last visible
+change, up to 2 minutes. A garage door that takes 15 s to close draws `closing` and `closed` in one
+window instead of freezing on `closing`.
+
+If connecting fails, no snapshot arrives, or an entity is still moving at the 2-minute cap,
+WorkManager retries up to 4 times. After exhausting those attempts on a stuck entity, passive
+renders hold off for 15 minutes so a broken sensor cannot loop forever; a fresh widget tap,
+foreground handoff or push wake clears that cooldown at once.
 
 ## The lease
 
 While the app follows the states itself, from that window or from its own session while it is open,
 it holds a 90 s lease on the integration (`terrazzo/push/watch` with `lease_seconds`), renewed every
-45 s, and the integration sends no state wakes. Leaving the window releases it, so the next change
-wakes the app at once.
+45 s, and the integration sends no state wakes. Leaving the window — or parking the foreground
+session in `LiveWidgetUpdates.parkAndHandOff` before disconnecting the socket — sends
+`lease_seconds = 0` so the next change wakes the app at once.
 
 A change during a lease that is then not renewed (the process was frozen or killed) is woken for
 when the lease runs out.
