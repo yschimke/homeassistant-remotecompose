@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
 import ee.schimke.composeai.rccreation.compose.layout.RemoteStateLayout
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
@@ -76,19 +77,24 @@ private fun InlineCell(widthDp: Int, heightDp: Int) {
     heightDp,
     ProbeKey("in", widthDp, heightDp),
   ) {
-    val width =
-      RemoteFloat.createNamedRemoteFloat(
-        name = "__cw_probe_inline",
-        defaultValue = remoteComponent().width,
-        domain = RemoteState.Domain.User,
-      )
-    val isLarge = width.isGreaterThanOrEqualTo(315f.rf) // 120 dp at 2.625 density
-    // No modifier on the state-layout (matches v4 setup). Width
-    // string drawn alongside as a sibling so the named expression
-    // is materialized in the document.
-    RemoteText(text = width.toPaddedRemoteString(1), color = Color.White.rc)
-    RemoteStateLayout(isLarge) { on ->
-      RemoteText(text = if (on) "INLINE-ON".rs else "INLINE-OFF".rs, color = Color.White.rc)
+    // `remoteComponent()` names the enclosing layout component, and a document's root is not one:
+    // asked for there it throws, and `CachedCardPreview` then plays an empty document. The box
+    // fills the cell, so its width is the cell's.
+    RemoteBox(modifier = RemoteModifier.rcFillMaxSize()) {
+      val width =
+        RemoteFloat.createNamedRemoteFloat(
+          name = "__cw_probe_inline",
+          defaultValue = remoteComponent().width,
+          domain = RemoteState.Domain.User,
+        )
+      val isLarge = width.isGreaterThanOrEqualTo(315f.rf) // 120 dp at 2.625 density
+      // No modifier on the state-layout (matches v4 setup). Width
+      // string drawn alongside as a sibling so the named expression
+      // is materialized in the document.
+      RemoteText(text = width.toPaddedRemoteString(1), color = Color.White.rc)
+      RemoteStateLayout(isLarge) { on ->
+        RemoteText(text = if (on) "INLINE-ON".rs else "INLINE-OFF".rs, color = Color.White.rc)
+      }
     }
   }
 }
