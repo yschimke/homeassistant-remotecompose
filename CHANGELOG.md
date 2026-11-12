@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.93](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.92...v0.1.93) (2026-11-12)
+
+
+### Features
+
+* a small player's design is made for its profile, not level 6 ([#1547](https://github.com/yschimke/homeassistant-remotecompose/issues/1547)) ([1f1f6f4](https://github.com/yschimke/homeassistant-remotecompose/commit/1f1f6f4384bc356786af2a69f967180f5798bd46))
+* design server makes wall designs for small players ([#1545](https://github.com/yschimke/homeassistant-remotecompose/issues/1545)) ([1550b07](https://github.com/yschimke/homeassistant-remotecompose/commit/1550b0718cae4c6941ec26dd09ced43c5cc62ebb))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1562](https://github.com/yschimke/homeassistant-remotecompose/issues/1562)) ([7eb26a6](https://github.com/yschimke/homeassistant-remotecompose/commit/7eb26a62ed51bf94608a0989422e6753d7376aaf))
+* **deps:** update dependency com.google.firebase:firebase-bom to v35.2.0 ([#1559](https://github.com/yschimke/homeassistant-remotecompose/issues/1559)) ([70dad27](https://github.com/yschimke/homeassistant-remotecompose/commit/70dad27c4f1dfdcb7109fd12c34297e2d189a8c0))
+* **deps:** update dependency com.google.gms:google-services to v4.6.0 ([#1553](https://github.com/yschimke/homeassistant-remotecompose/issues/1553)) ([6d74599](https://github.com/yschimke/homeassistant-remotecompose/commit/6d745999e0f16abace5247cf5a3976becc810349))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-contracts-bom to v3.42.0 ([#1565](https://github.com/yschimke/homeassistant-remotecompose/issues/1565)) ([c83a7f9](https://github.com/yschimke/homeassistant-remotecompose/commit/c83a7f9fceeac4d0f1f9eb581aa3be4496f3c680))
+* **deps:** update dependency firebase-admin to v14.5.1 ([#1561](https://github.com/yschimke/homeassistant-remotecompose/issues/1561)) ([6c2b3f6](https://github.com/yschimke/homeassistant-remotecompose/commit/6c2b3f6bfb6846e294dce098859acef5e32fe42b))
+* **deps:** update kotlinx to v1.13.0 ([#1560](https://github.com/yschimke/homeassistant-remotecompose/issues/1560)) ([1085b61](https://github.com/yschimke/homeassistant-remotecompose/commit/1085b613ba56c67a5a1019630542535d40e15612))
+* **deps:** update rc-players to 3.0.0, with the creation fork held at 2.29.0 ([#1555](https://github.com/yschimke/homeassistant-remotecompose/issues/1555)) ([d910b71](https://github.com/yschimke/homeassistant-remotecompose/commit/d910b719c041e20ea8c9839b46caec3a68c98a12))
+* keep widgets following temporary moving states until settled ([#1552](https://github.com/yschimke/homeassistant-remotecompose/issues/1552)) ([8b9f42c](https://github.com/yschimke/homeassistant-remotecompose/commit/8b9f42c625f76ff294c14357044c657092bf3f97))
+
 ## [0.1.92](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.91...v0.1.92) (2026-11-09)
 
 
