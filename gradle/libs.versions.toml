@@ -48,7 +48,7 @@ android-targetSdk = "37"
 
 # Libraries
 ktor = "3.6.1"
-kotlinx-serialization = "1.12.0"
+kotlinx-serialization = "1.13.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 logback = "1.6.6"
