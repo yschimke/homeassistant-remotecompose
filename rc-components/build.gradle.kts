@@ -40,7 +40,7 @@ kotlin {
   }
   sourceSets {
     commonMain.dependencies {
-      implementation(project.dependencies.platform(libs.rc.players.bom))
+      api(project.dependencies.platform(libs.rc.players.bom))
       implementation(libs.rc.player.protocol)
       // The capture profiles (CaptureProfile.kt): rc-widget-creation's for the app's players and a
       // Wear widget, and a launcher's made from rc-player-edit's table of what it decodes.

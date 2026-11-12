@@ -27,7 +27,7 @@ kotlin {
   iosSimulatorArm64()
   sourceSets {
     commonMain.dependencies {
-      implementation(project.dependencies.platform(libs.rc.players.bom))
+      api(project.dependencies.platform(libs.rc.players.bom))
       api(libs.rc.creation.compose)
       implementation(libs.cmp.runtime)
       implementation(libs.cmp.ui)

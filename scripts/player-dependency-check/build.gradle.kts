@@ -152,11 +152,10 @@ tasks.named("check") {
         "ha-cards-catalog" to
           "implementation(project.dependencies.platform(libs.composeai.contracts.bom))",
         "previews" to "implementation(platform(libs.composeai.contracts.bom))",
-        "rc-components" to "implementation(project.dependencies.platform(libs.rc.players.bom))",
+        "rc-components" to "api(project.dependencies.platform(libs.rc.players.bom))",
         "rc-converter" to "api(project.dependencies.platform(libs.rc.players.bom))",
         "rc-image-coil" to "api(platform(libs.rc.players.bom))",
-        "rc-material3-motion" to
-          "implementation(project.dependencies.platform(libs.rc.players.bom))",
+        "rc-material3-motion" to "api(project.dependencies.platform(libs.rc.players.bom))",
         "rc-player-ui" to "api(project.dependencies.platform(libs.rc.players.bom))",
         "ui-builder-catalog" to "testImplementation(platform(libs.composeai.tools.bom))",
         "ui-builder-catalog-consumer" to "implementation(platform(libs.composeai.ui.builder.bom))",
