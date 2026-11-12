@@ -61,8 +61,19 @@ def capture(args):
         raise ValueError('Set the emulator display to at most 1800px on either side before capture')
     package = CONFIG['wearPackage'] if args.slot == 'wear-screenshots' else CONFIG['package']
     focus = command(*adb, 'shell', 'dumpsys', 'window')
-    current = next((line for line in focus.splitlines() if 'mCurrentFocus=' in line), '')
-    if f'{package}/' not in current:
+    if focus.startswith('{'):
+        window = json.loads(focus)
+        activity = str(window.get('activity') or '')
+        in_foreground = (
+            window.get('package') == package
+            and window.get('surface') == 'app'
+            and bool(activity)
+            and not activity.startswith('ee.schimke.composeai.simulator.')
+        )
+    else:
+        current = next((line for line in focus.splitlines() if 'mCurrentFocus=' in line), '')
+        in_foreground = f'{package}/' in current
+    if not in_foreground:
         raise ValueError(f'{package} is not the foreground app; refusing to capture another app or system UI')
     raw = subprocess.check_output([*adb, 'exec-out', 'screencap', '-p'])
     image = Image.open(io.BytesIO(raw)).convert('RGB')
