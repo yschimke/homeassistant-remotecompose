@@ -1,17 +1,26 @@
 package ee.schimke.ha.rc
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.composeai.rcplayer.protocol.RcAccessibilitySemantics
 import ee.schimke.composeai.rcplayer.protocol.RcClickModifier
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
@@ -24,6 +33,8 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
@@ -234,4 +245,114 @@ class CardTapTargetSemanticsTest {
     assertEquals(2, icons.size, "named state-icon targets")
     assertTrue(icons.all { (w, h) -> w >= 47.5f && h >= 47.5f }, "48dp targets, of $icons")
   }
+
+  // A Wear slot is narrower and shorter than the 360 × 180dp canvas a picture element's position
+  // is measured on, so some elements sit past its edge: `WearPictureElementsLarge`'s card, in the
+  // content area of each host's Large container (`WearWidgetHost`).
+
+  @Test
+  fun wearTargetsStayOnThePixelCard() {
+    assertTargetsOnCard(wearPictureElements, 200, 108)
+  }
+
+  @Test
+  fun wearTargetsStayOnTheGalaxyCard() {
+    assertTargetsOnCard(wearPictureElements, 160, 136)
+  }
+
+  @Test
+  @Config(qualifiers = "w420dp-h900dp-420dpi")
+  fun wearTargetsStayOnTheCardAtAFractionalDensity() {
+    assertTargetsOnCard(wearPictureElements, 200, 108)
+  }
+
+  /** An icon whose target would reach past the card's edge keeps the part of it on the card. */
+  @Test
+  fun aTargetAtTheCardsEdgeIsCutToTheCard() {
+    val nearEdge =
+      """{"type":"picture-elements","image":"/local/floorplan.png","elements":[
+        {"type":"state-icon","entity":"light.kitchen","style":{"left":"50%","top":"40%"}}]}"""
+    val targets = assertTargetsOnCard(nearEdge, 200, 108)
+    assertTrue(targets.single().width < 47.5f, "cut at the edge, of $targets")
+  }
+
+  /**
+   * Plays [json] as a Wear slot draws it, in a container whose content area is [widthDp] ×
+   * [heightDp], and checks its tap targets: one for each tappable element whose place is on the
+   * card, none of them empty or reaching outside the container. Returns them, in dp.
+   */
+  private fun assertTargetsOnCard(json: String, widthDp: Int, heightDp: Int): List<Rect> {
+    val card = card(json)
+    val theme = haThemeFor(ThemeStyle.TerrazzoHome, true)
+    val padding = 8
+    compose.setContent {
+      Box(Modifier.size((widthDp + 2 * padding).dp, (heightDp + 2 * padding).dp).testTag("card")) {
+        CachedCardPreview(
+          cacheKey = "wear-targets-$widthDp-$heightDp-${json.hashCode()}",
+          profile = wearWidgets,
+          card = card,
+          snapshot = snapshot,
+        ) {
+          ProvideCardRegistry(registry) {
+            ProvideHaTheme(theme) {
+              ProvideCardSizeMode(CardSizeMode.Fixed) {
+                ProvideCardChrome(enabled = false) {
+                  ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                    ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                      RemoteBox(
+                        modifier = RemoteModifier.fillMaxSize().padding(padding.rdp, padding.rdp),
+                      ) {
+                        RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    compose.waitForIdle()
+    val container = compose.onNodeWithTag("card").fetchSemanticsNode()
+    val density = container.layoutInfo.density.density
+    // Where the node is laid out, not `boundsInRoot`, which is already cut to what shows.
+    fun SemanticsNode.laidOut() =
+      Rect(positionInRoot / density, Size(size.width / density, size.height / density))
+    val bounds = container.laidOut()
+    val targets =
+      generateSequence(listOf(container)) { level ->
+          level.flatMap(SemanticsNode::children).ifEmpty { null }
+        }
+        .flatten()
+        .filter { it.config.getOrNull(SemanticsActions.OnClick) != null }
+        .map { it.laidOut() }
+        .toList()
+    // The elements whose place, on the 360 × 180dp canvas, is inside the card.
+    val onCard =
+      (card.raw["elements"] as JsonArray)
+        .map { it.jsonObject["style"]!!.jsonObject }
+        .count { style ->
+          fun percent(key: String) = (style[key] as JsonPrimitive).content.removeSuffix("%").toInt()
+          percent("left") * 360 / 100 < widthDp && percent("top") * 180 / 100 < heightDp
+        }
+    assertEquals(onCard, targets.size, "a target for each tappable element on the card: $targets")
+    for (target in targets) {
+      assertTrue(target.width > 0f && target.height > 0f, "a target with room, of $targets")
+      assertTrue(
+        target.left >= bounds.left - 0.5f &&
+          target.top >= bounds.top - 0.5f &&
+          target.right <= bounds.right + 0.5f &&
+          target.bottom <= bounds.bottom + 0.5f,
+        "$target inside the container $bounds",
+      )
+    }
+    return targets
+  }
+
+  private val wearPictureElements =
+    """{"type":"picture-elements","image":"/local/floorplan.png","elements":[
+      {"type":"state-icon","entity":"light.kitchen","style":{"left":"25%","top":"40%"}},
+      {"type":"state-icon","entity":"lock.front_door","style":{"left":"60%","top":"30%"}},
+      {"type":"state-icon","entity":"switch.coffee_maker","style":{"left":"75%","top":"70%"}}]}"""
 }
