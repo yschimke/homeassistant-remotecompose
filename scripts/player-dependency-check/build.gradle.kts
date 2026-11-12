@@ -78,28 +78,95 @@ dependencies {
   }
 }
 
+fun jvmRuntimeConfiguration(name: String, configure: Configuration.() -> Unit): Configuration =
+  configurations.create(name) {
+    isCanBeConsumed = false
+    attributes {
+      attribute(KotlinPlatformType.attribute, KotlinPlatformType.jvm)
+      attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+      attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+      attribute(
+        TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
+        objects.named(TargetJvmEnvironment.STANDARD_JVM),
+      )
+    }
+    configure()
+  }
+
+val nonPlayerBomConfigurations =
+  mapOf(
+    "compose-preview-contracts-bom" to
+      jvmRuntimeConfiguration("contractsBomCheck") {
+        dependencies.add(project.dependencies.platform(libs.composeai.contracts.bom.get()))
+        dependencies.add(libs.composeai.data.render.core.get())
+      },
+    "compose-preview-daemon-bom" to
+      jvmRuntimeConfiguration("daemonBomCheck") {
+        dependencies.add(project.dependencies.platform(libs.composeai.daemon.bom.get()))
+        dependencies.add(libs.composeai.preview.annotations.get())
+        dependencies.add(libs.composeai.preview.overrides.get())
+      },
+    "compose-ai-tools-bom" to
+      jvmRuntimeConfiguration("toolsBomCheck") {
+        dependencies.add(project.dependencies.platform(libs.composeai.tools.bom.get()))
+        dependencies.add(libs.composeai.preview.discovery.get())
+      },
+    "compose-preview-ui-builder-bom" to
+      jvmRuntimeConfiguration("uiBuilderBomCheck") {
+        dependencies.add(project.dependencies.platform(libs.composeai.ui.builder.bom.get()))
+        dependencies.add(libs.composeai.ui.builder.runtime.get())
+      },
+  )
+
 tasks.named("check") {
   doLast {
     val repository = rootDir.resolve("../..")
     val catalog = repository.resolve("gradle/libs.versions.toml").readText()
-    listOf("rc-player-compose", "rc-player-edit", "rc-player-protocol", "rc-player-js-dist")
-      .forEach { alias ->
-        val declaration = catalog.lineSequence().single { it.startsWith("$alias =") }
-        check(!declaration.contains("version")) { "$alias must take its version from the BOM" }
+    var inLibraries = false
+    catalog.lineSequence().forEachIndexed { index, raw ->
+      val line = raw.substringBefore('#').trim()
+      if (line.startsWith('[') && line.endsWith(']')) {
+        inLibraries = line == "[libraries]"
+        return@forEachIndexed
       }
+      if (!inLibraries || !line.contains("\"ee.schimke.")) return@forEachIndexed
+      val alias = line.substringBefore('=').trim()
+      val rhs = line.substringAfter('=').trim()
+      if (
+        rhs.contains("-bom\"") ||
+          rhs.contains("\"ee.schimke.composeai:third-party-remote-creation-compose\"")
+      ) {
+        check(rhs.contains("version")) {
+          "gradle/libs.versions.toml:${index + 1}: $alias must declare a version"
+        }
+      } else {
+        check(!rhs.contains("version")) {
+          "gradle/libs.versions.toml:${index + 1}: $alias must take its version from a BOM"
+        }
+      }
+    }
     val consumers =
       mapOf(
+        "app" to "debugImplementation(platform(libs.composeai.daemon.bom))",
+        "card-designs" to "implementation(project.dependencies.platform(libs.rc.players.bom))",
+        "ha-cards-catalog" to
+          "implementation(project.dependencies.platform(libs.composeai.contracts.bom))",
+        "previews" to "implementation(platform(libs.composeai.contracts.bom))",
         "rc-components" to "implementation(project.dependencies.platform(libs.rc.players.bom))",
         "rc-converter" to "api(project.dependencies.platform(libs.rc.players.bom))",
         "rc-image-coil" to "api(platform(libs.rc.players.bom))",
+        "rc-material3-motion" to
+          "implementation(project.dependencies.platform(libs.rc.players.bom))",
         "rc-player-ui" to "api(project.dependencies.platform(libs.rc.players.bom))",
+        "ui-builder-catalog" to "testImplementation(platform(libs.composeai.tools.bom))",
+        "ui-builder-catalog-consumer" to "implementation(platform(libs.composeai.ui.builder.bom))",
         "ui-builder-catalog-host" to "implementation(platform(libs.rc.players.bom))",
         "design-server" to "implementation(platform(libs.rc.players.bom))",
         "wear" to "implementation(platform(libs.rc.players.bom))",
       )
     consumers.forEach { (module, binding) ->
       check(repository.resolve("$module/build.gradle.kts").readText().contains(binding)) {
-        "$module must import the player platform in its consuming scope"
+        "$module must import its platform BOM in its consuming scope"
       }
     }
     check(
@@ -111,14 +178,18 @@ tasks.named("check") {
       "The standalone ZIP configuration must import the platform"
     }
 
-    (players + listOf(embedPlayer)).forEach { configuration ->
+    val bomChecks =
+      (players + listOf(embedPlayer)).map { "rc-players-bom" to it } +
+        nonPlayerBomConfigurations.map { (bomModule, config) -> bomModule to config }
+
+    bomChecks.forEach { (bomModule, configuration) ->
       val result = configuration.incoming.resolutionResult
       val failures = result.allDependencies.filterIsInstance<UnresolvedDependencyResult>()
       check(failures.isEmpty()) { failures.joinToString("\n") { it.failure.message.orEmpty() } }
       val modules = result.allComponents.mapNotNull { it.id as? ModuleComponentIdentifier }
       val bom =
         result.allComponents.single {
-          (it.id as? ModuleComponentIdentifier)?.module == "rc-players-bom"
+          (it.id as? ModuleComponentIdentifier)?.module == bomModule
         }
       val constraints =
         bom.dependencies
@@ -130,9 +201,9 @@ tasks.named("check") {
       val managed = modules.filter {
         it.group == "ee.schimke.composeai" && it.module in constraints
       }
-      check(managed.isNotEmpty()) { "No player constraints were exercised" }
+      check(managed.isNotEmpty()) { "No $bomModule constraints were exercised" }
       check(managed.all { it.version == constraints.getValue(it.module) }) {
-        "${configuration.name}: selected player versions differ from the BOM: $managed"
+        "${configuration.name}: selected versions differ from $bomModule: $managed"
       }
       println("${configuration.name}: ${modules.filter { it.group == "ee.schimke.composeai" }}")
     }

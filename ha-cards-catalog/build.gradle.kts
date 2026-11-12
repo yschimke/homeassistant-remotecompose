@@ -96,6 +96,7 @@ kotlin {
       implementation(project.dependencies.platform(libs.composeai.daemon.bom))
       implementation(libs.composeai.preview.annotations)
       // The `.rc` sidecar seam, so the published catalog carries each sticker's RemoteDocument.
+      implementation(project.dependencies.platform(libs.composeai.contracts.bom))
       implementation(libs.composeai.data.render.core)
     }
     getByName("forkMain").dependencies { implementation(libs.rc.creation.compose) }
