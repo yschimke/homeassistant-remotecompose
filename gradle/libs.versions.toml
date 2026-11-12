@@ -68,10 +68,10 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "2.90.0"
+compose-preview-plugin = "2.90.1"
 # The compose-ai-tools release BOM can advance independently on partial releases where the plugin
 # marker itself is unchanged; modules such as preview-discovery resolve versionless through it.
-compose-ai-tools = "2.90.0"
+compose-ai-tools = "2.90.1"
 # The `ee.schimke.composeai:*-core` / `*-protocol` wire contracts are versioned on their
 # own 3.x line, NOT with the plugin, and partial releases publish only changed modules while
 # updating `compose-preview-contracts-bom`. Tying `data-render-core` to
