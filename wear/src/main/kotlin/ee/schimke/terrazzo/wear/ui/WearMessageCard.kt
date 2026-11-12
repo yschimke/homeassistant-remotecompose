@@ -20,9 +20,10 @@ internal fun WearMessageCard(
   rawJson: String,
   values: WearValues,
   onSend: (suspend (String, Map<String, String>) -> Unit)?,
+  modifier: Modifier = Modifier,
 ) {
   // Only this card's entities are read: a delta for another card's entity leaves this one alone.
-  WearMessageCardContent(rawJson, rememberCardValues(rawJson, values), onSend)
+  WearMessageCardContent(rawJson, rememberCardValues(rawJson, values), onSend, modifier)
 }
 
 @Composable
@@ -30,6 +31,7 @@ private fun WearMessageCardContent(
   rawJson: String,
   values: Map<String, EntityValue>,
   onSend: (suspend (String, Map<String, String>) -> Unit)?,
+  modifier: Modifier,
 ) {
   val drafts = remember(rawJson) { RcInputDrafts() }
   val scope = rememberCoroutineScope()
@@ -57,56 +59,61 @@ private fun WearMessageCardContent(
         messageInputs(CardConfig(MESSAGE_CARD_TYPE, raw), snapshot)
       }
     }
-  fields.getOrNull()?.let { inputs ->
-    val document =
-      remember(inputs) {
-        rcInputDocument(
-          inputs.mapIndexed { index, field ->
-            RcInputField(
-              field.key,
-              field.label,
-              field.value,
-              field.options,
-              field.multiline,
-              if (index == inputs.lastIndex) MESSAGE_SUBMIT else "",
-            )
-          },
-          width = 180,
-        )
-      }
-    // A message form that throws while it plays is disabled, not the watch's screen.
-    RcErrorBoundary(
-      "message:${rawJson.hashCode().toUInt().toString(16)}",
-      Modifier.fillMaxWidth(),
-    ) {
-      RcComposePlayer(
-        document,
-        Modifier,
-        customComponents =
-          rcInputComponents(
-            drafts,
-            editable = onSend != null,
-            onSubmit = { action, edited ->
-              if (action == MESSAGE_SUBMIT && !pending && onSend != null) {
-                pending = true
-                status = "Sending…"
-                scope.launch {
-                  try {
-                    onSend(rawJson, edited)
-                    status = "Message sent"
-                  } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                    throw cancelled
-                  } catch (_: Exception) {
-                    status = "Could not confirm sending. Check the phone before retrying."
-                  } finally {
-                    pending = false
+  androidx.compose.foundation.layout.Column(
+    modifier = modifier.fillMaxWidth(),
+    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+  ) {
+    fields.getOrNull()?.let { inputs ->
+      val document =
+        remember(inputs) {
+          rcInputDocument(
+            inputs.mapIndexed { index, field ->
+              RcInputField(
+                field.key,
+                field.label,
+                field.value,
+                field.options,
+                field.multiline,
+                if (index == inputs.lastIndex) MESSAGE_SUBMIT else "",
+              )
+            },
+            width = 180,
+          )
+        }
+      // A message form that throws while it plays is disabled, not the watch's screen.
+      RcErrorBoundary(
+        "message:${rawJson.hashCode().toUInt().toString(16)}",
+        Modifier.fillMaxWidth(),
+      ) {
+        RcComposePlayer(
+          document,
+          Modifier,
+          customComponents =
+            rcInputComponents(
+              drafts,
+              editable = onSend != null,
+              onSubmit = { action, edited ->
+                if (action == MESSAGE_SUBMIT && !pending && onSend != null) {
+                  pending = true
+                  status = "Sending…"
+                  scope.launch {
+                    try {
+                      onSend(rawJson, edited)
+                      status = "Message sent"
+                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                      throw cancelled
+                    } catch (_: Exception) {
+                      status = "Could not confirm sending. Check the phone before retrying."
+                    } finally {
+                      pending = false
+                    }
                   }
                 }
-              }
-            },
-          ),
-      )
-    }
-  } ?: Text("Open Home Assistant on the phone to configure this message card")
-  status?.let { Text(it) }
+              },
+            ),
+        )
+      }
+    } ?: Text("Open Home Assistant on the phone to configure this message card")
+    status?.let { Text(it) }
+  }
 }

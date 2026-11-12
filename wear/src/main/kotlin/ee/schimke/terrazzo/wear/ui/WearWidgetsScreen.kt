@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import ee.schimke.terrazzo.wear.widget.PlacedWidget
 import ee.schimke.terrazzo.wear.widget.WearWidgetCardStore
@@ -69,8 +70,15 @@ internal fun WearWidgetsContent(
   modifier: Modifier = Modifier,
   onOpenOnPhone: (() -> Unit)? = null,
 ) {
-  WearListScreen(modifier = modifier, spacing = 6.dp) {
-    item { ListHeader { Text("Widgets") } }
+  WearListScreen(modifier = modifier, spacing = 6.dp) { spec ->
+    item {
+      ListHeader(
+        modifier = wearHeaderModifier(spec),
+        transformation = SurfaceTransformation(spec),
+      ) {
+        Text("Widgets")
+      }
+    }
     when {
       rows == null -> Unit
       rows.isEmpty() ->
@@ -80,12 +88,16 @@ internal fun WearWidgetsContent(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier =
+              wearTextModifier(spec).fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
           )
         }
       else ->
         items(rows, key = { it.widget.instanceId }) { row ->
-          Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
+          Column(
+            modifier =
+              wearTextModifier(spec).fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+          ) {
             Text(
               text = if (row.widget.large) "Large widget" else "Small widget",
               style = MaterialTheme.typography.titleSmall,
@@ -106,11 +118,20 @@ internal fun WearWidgetsContent(
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
           textAlign = TextAlign.Center,
-          modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+          modifier =
+            wearTextModifier(spec).fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
         )
       }
     }
-    onOpenOnPhone?.let { open -> item { OpenOnPhoneButton(open) } }
+    onOpenOnPhone?.let { open ->
+      item {
+        OpenOnPhoneButton(
+          open,
+          modifier = wearButtonModifier(spec),
+          transformation = SurfaceTransformation(spec),
+        )
+      }
+    }
   }
 }
 

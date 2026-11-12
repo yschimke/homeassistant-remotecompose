@@ -3,9 +3,7 @@ package ee.schimke.terrazzo.wear.ui
 import androidx.activity.compose.ReportDrawn
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -20,6 +18,7 @@ import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.PinnedCard
@@ -84,15 +83,30 @@ fun WearTopLevelScreen(
         }
       }
     }
-  WearListScreen(modifier = modifier, spacing = 6.dp, gestureScroll = true) {
-    item { ListHeader { Text("Pinned") } }
+  WearListScreen(modifier = modifier, spacing = 6.dp, gestureScroll = true) { spec ->
+    item {
+      ListHeader(
+        modifier = wearHeaderModifier(spec),
+        transformation = SurfaceTransformation(spec),
+      ) {
+        Text("Pinned")
+      }
+    }
     if (settings.demoMode) {
-      item { DemoBanner() }
+      item { DemoBanner(modifier = wearTextModifier(spec)) }
     }
 
     if (items.isEmpty()) {
-      item { EmptyPinned() }
-      onOpenOnPhone?.let { open -> item { OpenOnPhoneButton(open) } }
+      item { EmptyPinned(modifier = wearTextModifier(spec)) }
+      onOpenOnPhone?.let { open ->
+        item {
+          OpenOnPhoneButton(
+            open,
+            modifier = wearButtonModifier(spec),
+            transformation = SurfaceTransformation(spec),
+          )
+        }
+      }
     } else {
       items(rows, key = { it.key }) { row ->
         when (row) {
@@ -101,11 +115,12 @@ fun WearTopLevelScreen(
               is TopLevelEntry.Card -> {
                 val card = entry.card.card
                 if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
-                  WearMessageCard(card.rawJson, values, onInputSend)
+                  WearMessageCard(card.rawJson, values, onInputSend, wearCardModifier(spec))
                 } else {
                   WearRemoteCard(
                     card,
                     values,
+                    modifier = wearCardModifier(spec),
                     onOpen = { onOpenCard(null, card) },
                     onNavigate = onNavigate,
                   )
@@ -117,6 +132,8 @@ fun WearTopLevelScreen(
                 PinnedSectionRow(
                   section = section,
                   expanded = expanded,
+                  modifier = wearButtonModifier(spec),
+                  transformation = SurfaceTransformation(spec),
                   onClick = {
                     if (expanded) expandedSections.remove(section.sectionKey)
                     else expandedSections += section.sectionKey
@@ -127,11 +144,12 @@ fun WearTopLevelScreen(
           is HomeRow.SectionCard -> {
             val card = row.card
             if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
-              WearMessageCard(card.rawJson, values, onInputSend)
+              WearMessageCard(card.rawJson, values, onInputSend, wearCardModifier(spec))
             } else {
               WearRemoteCard(
                 card,
                 values,
+                modifier = wearCardModifier(spec),
                 onOpen = { onOpenCard(row.section.sectionKey, card) },
                 onNavigate = onNavigate,
               )
@@ -141,11 +159,11 @@ fun WearTopLevelScreen(
       }
     }
 
-    item { Spacer(Modifier.height(4.dp)) }
     item {
       Button(
         onClick = onBrowseDashboards,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = wearButtonModifier(spec),
+        transformation = SurfaceTransformation(spec),
         colors = ButtonDefaults.filledTonalButtonColors(),
       ) {
         Text("Browse dashboards")
@@ -155,7 +173,8 @@ fun WearTopLevelScreen(
       item {
         Button(
           onClick = open,
-          modifier = Modifier.fillMaxWidth(),
+          modifier = wearButtonModifier(spec),
+          transformation = SurfaceTransformation(spec),
           colors = ButtonDefaults.filledTonalButtonColors(),
         ) {
           Text("Widgets")
@@ -165,7 +184,8 @@ fun WearTopLevelScreen(
     item {
       Button(
         onClick = onOpenSettings,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = wearButtonModifier(spec),
+        transformation = SurfaceTransformation(spec),
         colors = ButtonDefaults.filledTonalButtonColors(),
       ) {
         Text("Settings")
@@ -223,9 +243,9 @@ private sealed interface HomeRow {
 }
 
 @Composable
-private fun DemoBanner() {
+private fun DemoBanner(modifier: Modifier = Modifier) {
   Box(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp),
     contentAlignment = Alignment.Center,
   ) {
     Text(
@@ -238,9 +258,9 @@ private fun DemoBanner() {
 }
 
 @Composable
-private fun EmptyPinned() {
+private fun EmptyPinned(modifier: Modifier = Modifier) {
   Box(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
+    modifier = modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
     contentAlignment = Alignment.Center,
   ) {
     Text(
@@ -256,10 +276,15 @@ private fun EmptyPinned() {
  * Opens Terrazzo on the phone, where everything the watch shows is chosen: the watch only views.
  */
 @Composable
-internal fun OpenOnPhoneButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun OpenOnPhoneButton(
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  transformation: SurfaceTransformation? = null,
+) {
   Button(
     onClick = onClick,
     modifier = modifier.fillMaxWidth(),
+    transformation = transformation,
     colors = ButtonDefaults.filledTonalButtonColors(),
   ) {
     Text("Open on phone")
@@ -272,12 +297,19 @@ internal const val WEAR_EMPTY_PINNED =
     "tap a section's pin."
 
 @Composable
-private fun PinnedSectionRow(section: PinnedSection, expanded: Boolean, onClick: () -> Unit) {
+private fun PinnedSectionRow(
+  section: PinnedSection,
+  expanded: Boolean,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+  transformation: SurfaceTransformation? = null,
+) {
   val title = section.title.ifEmpty { "Section" }
   val cardCount = section.cards.size
   Button(
     onClick = onClick,
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier.fillMaxWidth(),
+    transformation = transformation,
     colors = ButtonDefaults.filledTonalButtonColors(),
   ) {
     Column {

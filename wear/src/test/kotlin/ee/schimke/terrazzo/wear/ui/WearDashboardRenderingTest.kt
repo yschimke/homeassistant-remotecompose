@@ -376,6 +376,52 @@ class WearDashboardRenderingTest {
     save("wear-settings-mobile-appearance", screenshot())
   }
 
+  @Test
+  fun leadingHomeCardAndHeaderRespectMinimumVerticalPadding() {
+    val homeHeading =
+      CardSummary(
+        type = "heading",
+        title = "Home",
+        rawJson = """{"type":"heading","heading":"Home"}""",
+      )
+    var showHeader by mutableStateOf(false)
+    compose.setContent {
+      MaterialTheme {
+        Box(Modifier.size(240.dp).background(MaterialTheme.colorScheme.background)) {
+          if (showHeader) {
+            WearDashboardScreen(
+              DashboardData(title = "Home", cards = listOf(grid)),
+              values("65"),
+              {},
+            )
+          } else {
+            WearListScreen { spec ->
+              item {
+                WearRemoteCard(
+                  homeHeading,
+                  WearValues(),
+                  modifier = wearCardModifier(spec).testTag("home-card"),
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+    val cardBounds = compose.onNodeWithTag("home-card").fetchSemanticsNode().boundsInRoot
+    assertTrue(
+      cardBounds.top >= 50f,
+      "Leading Home card must apply CardDefaults.minimumVerticalListContentPadding (got top=${cardBounds.top})",
+    )
+    compose.runOnIdle { showHeader = true }
+    compose.waitForIdle()
+    val headerBounds = compose.onNodeWithText("Home").fetchSemanticsNode().boundsInRoot
+    assertTrue(
+      headerBounds.top >= 24f && headerBounds.bottom <= 120f,
+      "Initial Home header must sit cleanly below TimeText near the top of the list (got $headerBounds)",
+    )
+  }
+
   private fun screenshot(): Bitmap {
     compose.waitForIdle()
     return compose.onNodeWithTag("screen").captureToImage().asAndroidBitmap()

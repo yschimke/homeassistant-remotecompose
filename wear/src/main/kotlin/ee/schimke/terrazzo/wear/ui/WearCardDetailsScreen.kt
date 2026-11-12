@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.ListSubHeader
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
@@ -50,19 +51,35 @@ internal fun WearCardDetailsScreen(
     }
   val openedAt = remember { now() }
   val main = entityIds.firstOrNull()
-  WearListScreen(modifier = modifier) {
-    item { ListHeader { Text(detailsTitle(summary, main, main?.let { values[it] })) } }
-    item { WearRemoteCard(summary, values, fullScreen = true) }
+  WearListScreen(modifier = modifier) { spec ->
+    item {
+      ListHeader(
+        modifier = wearHeaderModifier(spec),
+        transformation = SurfaceTransformation(spec),
+      ) {
+        Text(detailsTitle(summary, main, main?.let { values[it] }))
+      }
+    }
+    item { WearRemoteCard(summary, values, modifier = wearCardModifier(spec), fullScreen = true) }
     entityIds.forEach { id ->
       val value = values[id]
       val state = live?.get(id)
       if (entityIds.size > 1) {
-        item(key = "name:$id") { ListSubHeader { Text(entityName(id, value, state)) } }
+        item(key = "name:$id") {
+          ListSubHeader(
+            modifier = wearHeaderModifier(spec),
+            transformation = SurfaceTransformation(spec),
+          ) {
+            Text(entityName(id, value, state))
+          }
+        }
       }
-      item(key = "history:$id") { HistorySection(id, value?.unit.orEmpty(), loadHistory, now) }
+      item(key = "history:$id") {
+        HistorySection(id, value?.unit.orEmpty(), loadHistory, now, wearTextModifier(spec))
+      }
       val facts = entityFacts(id, value, state, openedAt)
       items(facts.size, key = { "fact:$id:$it" }) { i ->
-        AttributeRow(facts[i].first, facts[i].second)
+        AttributeRow(facts[i].first, facts[i].second, wearTextModifier(spec))
       }
     }
   }
@@ -89,6 +106,7 @@ private fun HistorySection(
   unit: String,
   loadHistory: suspend (String) -> List<HistoryPoint>?,
   now: () -> Instant,
+  modifier: Modifier = Modifier,
 ) {
   val load by
     produceState<HistoryLoad>(HistoryLoad.Loading, entityId) {
@@ -98,7 +116,7 @@ private fun HistorySection(
         loadHistory(entityId)?.let { HistoryLoad.Loaded(historyChart(it, start, end)) }
           ?: HistoryLoad.Unavailable
     }
-  Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp)) {
+  Column(modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp)) {
     Text("Last 24 hours", style = MaterialTheme.typography.titleSmall)
     when (val current = load) {
       HistoryLoad.Loading -> Muted("Loading…")
@@ -110,8 +128,8 @@ private fun HistorySection(
 }
 
 @Composable
-private fun AttributeRow(label: String, text: String) {
-  Column(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+private fun AttributeRow(label: String, text: String, modifier: Modifier = Modifier) {
+  Column(modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
     Text(
       label,
       style = MaterialTheme.typography.labelSmall,

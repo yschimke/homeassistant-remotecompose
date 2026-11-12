@@ -14,6 +14,7 @@ import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 
@@ -28,13 +29,21 @@ fun WearDashboardsScreen(
   onBack: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  WearListScreen(modifier = modifier) {
-    item { ListHeader { Text("Dashboards") } }
+  WearListScreen(modifier = modifier) { spec ->
+    item {
+      ListHeader(
+        modifier = wearHeaderModifier(spec),
+        transformation = SurfaceTransformation(spec),
+      ) {
+        Text("Dashboards")
+      }
+    }
 
     if (dashboards.isEmpty()) {
       item {
         Box(
-          modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
+          modifier =
+            wearTextModifier(spec).fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
           contentAlignment = Alignment.Center,
         ) {
           Text(
@@ -48,7 +57,8 @@ fun WearDashboardsScreen(
       items(dashboards) { dashboard ->
         Button(
           onClick = { onDashboardPicked(dashboard) },
-          modifier = Modifier.fillMaxWidth(),
+          modifier = wearButtonModifier(spec),
+          transformation = SurfaceTransformation(spec),
           colors = ButtonDefaults.filledTonalButtonColors(),
         ) {
           Column {
@@ -79,8 +89,15 @@ fun WearDashboardScreen(
   onInputSend: (suspend (String, Map<String, String>) -> Unit)? = null,
   onNavigate: (String) -> Unit = {},
 ) {
-  WearListScreen(modifier = modifier) {
-    item { ListHeader { Text(dashboard.title.ifEmpty { "Dashboard" }) } }
+  WearListScreen(modifier = modifier) { spec ->
+    item {
+      ListHeader(
+        modifier = wearHeaderModifier(spec),
+        transformation = SurfaceTransformation(spec),
+      ) {
+        Text(dashboard.title.ifEmpty { "Dashboard" })
+      }
+    }
 
     if (dashboard.cards.isEmpty()) {
       item {
@@ -88,15 +105,20 @@ fun WearDashboardScreen(
           text = "Empty dashboard",
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
-          modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+          modifier = wearTextModifier(spec).padding(horizontal = 8.dp, vertical = 8.dp),
         )
       }
     } else {
       items(dashboard.cards) { card ->
         if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
-          WearMessageCard(card.rawJson, values, onInputSend)
+          WearMessageCard(card.rawJson, values, onInputSend, wearCardModifier(spec))
         } else {
-          WearRemoteCard(card, values, onNavigate = onNavigate)
+          WearRemoteCard(
+            card,
+            values,
+            modifier = wearCardModifier(spec),
+            onNavigate = onNavigate,
+          )
         }
       }
     }

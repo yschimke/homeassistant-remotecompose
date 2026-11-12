@@ -328,7 +328,12 @@ object DemoData {
               else -> originalNumber * 0.05 + 0.5
             }
           val drifted =
-            clampForDeviceClass(deviceClass, originalNumber + amplitude * sin(seed * 0.7))
+            clampForDeviceClass(
+              deviceClass = deviceClass,
+              unit = unit,
+              originalNumber = originalNumber,
+              value = originalNumber + amplitude * sin(seed * 0.7),
+            )
           formatLikeOriginal(base.state, drifted)
         }
         base.state == "on" || base.state == "off" -> {
@@ -376,17 +381,22 @@ object DemoData {
 
   private fun flipBinary(state: String): String = if (state == "on") "off" else "on"
 
-  private fun clampForDeviceClass(deviceClass: String?, value: Double): Double =
-    when (deviceClass) {
-      "battery",
-      "humidity",
-      "moisture" -> value.coerceIn(0.0, 100.0)
-      "illuminance",
-      "power",
-      "energy",
-      "current",
-      "voltage" -> value.coerceAtLeast(0.0)
-      "pressure" -> value.coerceAtLeast(900.0)
+  private fun clampForDeviceClass(
+    deviceClass: String?,
+    unit: String?,
+    originalNumber: Double,
+    value: Double,
+  ): Double =
+    when {
+      deviceClass == "battery" || deviceClass == "humidity" || deviceClass == "moisture" ->
+        value.coerceIn(0.0, 100.0)
+      unit == "%" && originalNumber in 0.0..100.0 -> value.coerceIn(0.0, 100.0)
+      deviceClass == "illuminance" ||
+        deviceClass == "power" ||
+        deviceClass == "energy" ||
+        deviceClass == "current" ||
+        deviceClass == "voltage" -> value.coerceAtLeast(0.0)
+      deviceClass == "pressure" -> value.coerceAtLeast(900.0)
       else -> value
     }
 

@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
@@ -29,9 +30,16 @@ fun WearSectionScreen(
   onOpenCard: (CardSummary) -> Unit = {},
   onNavigate: (String) -> Unit = {},
 ) {
-  WearListScreen(modifier = modifier, gestureScroll = true) {
+  WearListScreen(modifier = modifier, gestureScroll = true) { spec ->
     val title = section?.title?.ifEmpty { null } ?: "Section"
-    item { ListHeader { Text(title) } }
+    item {
+      ListHeader(
+        modifier = wearHeaderModifier(spec),
+        transformation = SurfaceTransformation(spec),
+      ) {
+        Text(title)
+      }
+    }
 
     val cards = withoutRepeatedHeading(section?.cards.orEmpty(), title)
     if (cards.isEmpty()) {
@@ -40,15 +48,21 @@ fun WearSectionScreen(
           text = "No cards in this section.",
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
-          modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+          modifier = wearTextModifier(spec).padding(horizontal = 8.dp, vertical = 8.dp),
         )
       }
     } else {
       items(cards) { card ->
         if (card.type == ee.schimke.ha.model.MESSAGE_CARD_TYPE) {
-          WearMessageCard(card.rawJson, values, onInputSend)
+          WearMessageCard(card.rawJson, values, onInputSend, wearCardModifier(spec))
         } else {
-          WearRemoteCard(card, values, onOpen = { onOpenCard(card) }, onNavigate = onNavigate)
+          WearRemoteCard(
+            card,
+            values,
+            modifier = wearCardModifier(spec),
+            onOpen = { onOpenCard(card) },
+            onNavigate = onNavigate,
+          )
         }
       }
     }
