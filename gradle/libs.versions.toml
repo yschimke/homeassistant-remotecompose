@@ -104,7 +104,7 @@ play-app-update = "2.1.0"
 
 # Firebase Crashlytics (opt-in — only resolved when a google-services.json
 # key is configured; see app/build.gradle.kts `crashlyticsEnabled`).
-firebase-bom = "35.1.0"
+firebase-bom = "35.2.0"
 
 
 cmp-navigation3 = "1.2.0"
