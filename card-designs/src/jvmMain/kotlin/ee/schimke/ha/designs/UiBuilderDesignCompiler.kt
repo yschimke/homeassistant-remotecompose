@@ -19,7 +19,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
@@ -72,6 +71,7 @@ import ee.schimke.ha.rc.components.LocalGridCellWidthPx
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
 import ee.schimke.ha.rc.components.animateRemoteFloat
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.components.haClickable
 import ee.schimke.ha.rc.components.haNeutralAccent
 import ee.schimke.ha.rc.components.rememberExpressionName
 import ee.schimke.ha.rc.components.rememberLocalNamedRemoteBitmap
@@ -441,7 +441,7 @@ class UiBuilderDesignCompiler(
       fun slot(name: String) =
         (slots[name] as? JsonArray).orEmpty().map { it.jsonPrimitive.content }
       RemoteRow(
-        modifier = if (tap != null) modifier.clickable(tap) else modifier,
+        modifier = if (tap != null) modifier.haClickable(tap) else modifier,
         horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {

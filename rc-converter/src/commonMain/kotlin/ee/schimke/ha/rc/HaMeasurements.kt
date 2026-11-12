@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
 import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.padding
@@ -20,6 +19,7 @@ import ee.schimke.ha.rc.components.HaPresentation
 import ee.schimke.ha.rc.components.HaReading
 import ee.schimke.ha.rc.components.HaSpace
 import ee.schimke.ha.rc.components.RemoteHaMeasurement
+import ee.schimke.ha.rc.components.haClickable
 import ee.schimke.ha.rc.components.toRemoteAction
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -86,7 +86,8 @@ fun RemoteHaAdaptiveMeasurement(
 ) {
   // The tap target sits on the gate, outside both tiers: the same RemoteAction captured in two
   // breakpoint branches blanks the larger one (adaptive-card-layouts.md, Known gaps #9).
-  val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val clickable =
+    tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   RemoteMinSizeGate(
     minWidthDp = MeasurementExpandedMinWidthDp,
     minHeightDp = MeasurementExpandedMinHeightDp,

@@ -11,7 +11,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.padding
 import ee.schimke.composeai.rccreation.compose.modifier.size
@@ -106,7 +105,7 @@ private fun IkeaRemoteKey(
   color: RemoteColor,
   selectedAccent: RemoteColor? = null,
 ) {
-  val click = action.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val click = action.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   RemoteBox(
     RemoteModifier.size(48.rdp).then(click).then(ikeaKeyChrome(selectedAccent)),
     contentAlignment = RemoteAlignment.Center,

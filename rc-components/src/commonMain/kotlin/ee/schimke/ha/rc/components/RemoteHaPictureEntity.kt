@@ -14,7 +14,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.height
@@ -81,8 +80,15 @@ fun RemoteHaPictureEntity(
   val accent =
     isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
       ?: data.accent.themed().activeAccent
+  // With the name hidden nothing inside the target says what it is: `RemoteImage` writes no
+  // description for a loaded picture. The target carries the name then, and the glyph that stands
+  // in for a missing picture stops repeating it.
+  val action = data.tapAction.toRemoteAction()
+  val targetNamed = action != null && !data.showName
+  val name = entityName(data.entityId, data.name)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    action?.let { RemoteModifier.haClickable(it, name.takeIf { targetNamed }) } ?: RemoteModifier
+  val glyphName = name.takeUnless { targetNamed }
   val showStrip = data.showName || data.showState
 
   // Fill: the whole cell (Fixed) or the aspect box (Wrap with a ratio), so the
@@ -122,7 +128,7 @@ fun RemoteHaPictureEntity(
           if (rb != null) {
             RemoteImage(
               bitmap = rb,
-              contentDescription = entityName(data.entityId, data.name),
+              contentDescription = glyphName,
               modifier = RemoteModifier.fillMaxSize(),
               // Fill-crop, not letterbox: the image owns the
               // whole cell at any aspect (HA's `cover`).
@@ -142,7 +148,7 @@ fun RemoteHaPictureEntity(
                 initiallyAvailable = data.accent.initiallyAvailable,
                 isAvailable = isAvailable,
                 tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
-                contentDescription = entityName(data.entityId, data.name),
+                contentDescription = glyphName,
                 modifier = RemoteModifier.size(40.rdp),
               )
           }
@@ -157,7 +163,7 @@ fun RemoteHaPictureEntity(
               initiallyAvailable = data.accent.initiallyAvailable,
               isAvailable = isAvailable,
               tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
-              contentDescription = entityName(data.entityId, data.name),
+              contentDescription = glyphName,
               modifier = RemoteModifier.size(40.rdp),
             )
         }
@@ -197,7 +203,7 @@ fun RemoteHaPictureEntity(
           horizontalArrangement = RemoteArrangement.SpaceBetween,
         ) {
           RemoteText(
-            text = if (data.showName) entityName(data.entityId, data.name) else "".rs,
+            text = if (data.showName) name else "".rs,
             // The name takes what the state leaves: unweighted, a narrow strip (a Wear Large
             // slot on a Galaxy watch) dropped it whole.
             modifier = RemoteModifier.weight(1f.rf),

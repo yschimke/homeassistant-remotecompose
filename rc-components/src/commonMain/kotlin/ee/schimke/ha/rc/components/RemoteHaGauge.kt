@@ -11,7 +11,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
@@ -48,7 +47,7 @@ import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
 
   // Live numeric value from the entity binding, animated so each host
   // update tweens between successive values instead of snapping.
@@ -191,7 +190,7 @@ fun RemoteHaGaugeStacked(
   val fraction = animatedGaugeFraction(data)
   val severityColor = gaugeSeverityColor(data)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
 
   // A cell much taller than it is wide ([arcHeightDp], a one-column launcher widget): the backdrop
   // arc is as wide as the cell and would float in its middle over text pinned to the bottom edge,
@@ -315,7 +314,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
   val fraction = animatedGaugeFraction(data)
   val severityColor = gaugeSeverityColor(data)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
 
   RemoteRow(
     modifier =

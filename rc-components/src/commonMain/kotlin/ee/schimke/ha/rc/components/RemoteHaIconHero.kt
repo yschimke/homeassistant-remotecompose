@@ -11,7 +11,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.padding
 import ee.schimke.composeai.rccreation.compose.modifier.size
@@ -86,7 +85,7 @@ fun RemoteHaIconHero(
 ) {
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent, live = true)
 
   RemoteColumn(
@@ -157,7 +156,7 @@ fun RemoteHaWideHero(
   val stateSize = scale.state
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent, live = live)
   RemoteRow(
     modifier = modifier.then(clickable).fillMaxSize().padding(horizontal = HaSpace.M.rdp),

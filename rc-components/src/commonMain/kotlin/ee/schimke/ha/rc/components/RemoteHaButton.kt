@@ -10,7 +10,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.padding
 import ee.schimke.composeai.rccreation.compose.modifier.size
@@ -116,7 +115,7 @@ fun RemoteHaButtonRow(data: HaButtonData, modifier: RemoteModifier = RemoteModif
   val accent = if (data.accent.toggleable) toggleAccent(data, look) else look.accent
   val press = expressivePress(data)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { press.modifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
       modifier
@@ -181,7 +180,7 @@ fun RemoteHaButtonIcon(
   val accent = look.accent
   val press = expressivePress(data)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { press.modifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
       modifier
@@ -239,7 +238,7 @@ private fun ButtonBody(
   val theme = haTheme()
   val press = expressivePress(data)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { press.modifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
   val chipDp =
     when {
       dense -> RowChipDp

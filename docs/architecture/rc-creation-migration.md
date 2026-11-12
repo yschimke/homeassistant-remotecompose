@@ -9,7 +9,7 @@ checked on a device.
 
 | What | Version | Why |
 | --- | --- | --- |
-| `rc-player-*`, `rc-creation-*`, `rc-widget-creation`, `remote-compose-player-js-dist` (the BOM) | 3.1.0 | One BOM pins the players and the creation API. 3.1.0 is the first release whose writer keeps a declaration where it is made and whose capture takes a `Profile`. |
+| `rc-player-*`, `rc-creation-*`, `rc-widget-creation`, `remote-compose-player-js-dist` (the BOM) | 3.1.1 | One BOM pins the players and the creation API. 3.1.0 is the first release whose writer keeps a declaration where it is made and whose capture takes a `Profile`. |
 | AndroidX `remote-creation-compose` | 1.0.0-alpha23 | For the libraries compiled against it: see "What stays on AndroidX". |
 
 `rc-material3-motion`, `rc-components`, `rc-converter`, `ha-cards-catalog` and `card-designs` are one

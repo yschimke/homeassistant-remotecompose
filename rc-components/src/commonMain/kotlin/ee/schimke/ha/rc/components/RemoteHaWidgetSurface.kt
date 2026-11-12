@@ -7,7 +7,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
 import ee.schimke.composeai.rccreation.compose.modifier.border
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
@@ -48,7 +47,7 @@ fun RemoteHaWidgetSurface(
     modifier =
       modifier
         .fillMaxSize()
-        .let { if (openApp != null) it.clickable(openApp) else it }
+        .let { if (openApp != null) it.haClickable(openApp) else it }
         .clip(shape)
         .background(theme.cardBackground)
         .border(borderWidthDp.rdp, theme.divider, shape),

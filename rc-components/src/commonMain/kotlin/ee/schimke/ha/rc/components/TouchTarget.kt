@@ -6,9 +6,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
 import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
 import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
-import ee.schimke.composeai.rccreation.compose.modifier.contentDescription
-import ee.schimke.composeai.rccreation.compose.modifier.semantics
 import ee.schimke.composeai.rccreation.compose.modifier.size
 import ee.schimke.composeai.rccreation.compose.state.RemoteString
 import ee.schimke.composeai.rccreation.compose.state.rdp
@@ -33,12 +30,7 @@ fun RemoteHaTouchTarget(
   modifier: RemoteModifier = RemoteModifier,
   content: @Composable @RemoteComposable () -> Unit,
 ) {
-  val tap =
-    action?.let { a ->
-      RemoteModifier.clickable(a).let {
-        if (label != null) it.semantics { contentDescription = label } else it
-      }
-    } ?: RemoteModifier
+  val tap = action?.let { RemoteModifier.haClickable(it, label) } ?: RemoteModifier
   RemoteBox(
     modifier =
       modifier

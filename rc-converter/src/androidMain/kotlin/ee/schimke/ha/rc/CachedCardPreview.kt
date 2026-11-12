@@ -3,6 +3,7 @@
 package ee.schimke.ha.rc
 
 import android.animation.ValueAnimator
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.remote.core.Operation
@@ -40,6 +41,7 @@ import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.rc.m3.LocalRcReduceMotion
 import ee.schimke.rc.m3.RcAmbientValue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -678,13 +680,26 @@ private suspend fun captureCardDocument(
   content: @RemoteComposable @Composable () -> Unit,
 ): CardDocument =
   harcTraceSuspend(HarcTraceSections.CAPTURE_DOCUMENT) {
+    // A card that can't be captured still gets a document, an empty one, so one bad card doesn't
+    // take the dashboard down. The failure is logged: unreported, it is a blank card nobody can
+    // trace to its cause. Cancellation is not a failure and goes on to the caller.
     val captured = runCatching {
       captureSingleRemoteDocument(context = context, profile = profile, content = content)
     }
+      .onFailure {
+        if (it is CancellationException) throw it
+        Log.e(CAPTURE_TAG, "Card capture failed; showing an empty card", it)
+      }
       .recoverCatching { captureSingleRemoteDocument(context = context, profile = profile) {} }
+      .onFailure {
+        if (it is CancellationException) throw it
+        Log.e(CAPTURE_TAG, "Empty capture failed with the card's profile", it)
+      }
       .getOrElse { captureSingleRemoteDocument(context = context, profile = androidX) {} }
     CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
   }
+
+private const val CAPTURE_TAG = "CardCapture"
 
 /**
  * A template's image loader: each slot picture (`rc-slot://…`) resolved through the card's current

@@ -18,7 +18,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
 import ee.schimke.composeai.rccreation.compose.modifier.border
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
@@ -253,7 +252,7 @@ private fun ActionPill(
   horizontalPaddingDp: Int = 14,
 ) {
   val click =
-    action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    action.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val accent = haInk(action.accent)
   RemoteBox(
     modifier =
@@ -429,7 +428,7 @@ private fun KeypadKey(
       null
     }
   val action = localAction ?: entityId?.let { HaAction.AlarmKey(it, key).toRemoteAction() }
-  val click = action?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val click = action?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
       RemoteModifier.then(click)

@@ -13,10 +13,10 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteContentScale
 import ee.schimke.composeai.rccreation.compose.layout.RemoteImage
 import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
 import ee.schimke.composeai.rccreation.compose.modifier.border
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
@@ -24,10 +24,14 @@ import ee.schimke.composeai.rccreation.compose.modifier.height
 import ee.schimke.composeai.rccreation.compose.modifier.offset
 import ee.schimke.composeai.rccreation.compose.modifier.padding
 import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.modifier.visibility
 import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
 import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
 import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.ri
 import ee.schimke.composeai.rccreation.compose.state.rs
 import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
 import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
@@ -58,7 +62,7 @@ fun RemoteHaPicture(
   }
   val theme = haTheme()
   val click =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   // Wrap: fixed natural band. Fixed: fill the whole cell so the image
   // (placeholder until a host wires an image channel) is the identity
   // edge-to-edge with the name as a bottom scrim.
@@ -354,16 +358,51 @@ fun RemoteHaPictureElements(
           tint = theme.placeholderAccent,
         )
     }
+    // The canvas the positions are measured on is 360 × 180dp whatever room the card is given, so
+    // an element can sit past the edge of a narrower or shorter card (a Wear slot). Its place is
+    // then a box with no room: nothing is drawn there, but a tap target would still be played
+    // there, outside the card. So a target is gone unless its icon's corner is on the card, by the
+    // card's own size as it is played.
+    val card = remoteComponent()
+    val cardWidthPx = namedPx(rememberExpressionName(CanvasWidthPrefix), card.width)
+    val cardHeightPx = namedPx(rememberExpressionName(CanvasHeightPrefix), card.height)
     positioned.forEach { element ->
       val pos = element.position!!
       val leftDp = (pos.leftFraction * PICTURE_ELEMENTS_CANVAS_W_DP).toInt().coerceAtLeast(0)
       val topDp = (pos.topFraction * PICTURE_ELEMENTS_CANVAS_H_DP).toInt().coerceAtLeast(0)
-      Element(
-        index = data.elements.indexOf(element),
-        element = element,
-        theme = theme,
-        modifier = RemoteModifier.padding(start = leftDp.rdp, top = topDp.rdp),
-      )
+      // The position is its own box: on the element it would be part of what the element's tap
+      // covers, a target reaching from the card's corner to the icon.
+      RemoteBox(modifier = RemoteModifier.padding(start = leftDp.rdp, top = topDp.rdp)) {
+        Element(data.elements.indexOf(element), element, theme, ownTapTarget = false)
+      }
+      // A state icon is drawn smaller than a touch target, so its target is a box of its own over
+      // it, not one around it: the icon stays where the element says, to the pixel (centred in a
+      // target, it lands a pixel off where the two sizes round apart), the target reaches past it
+      // on each side, and RemoteCompose clamps the target to the card where the icon is near an
+      // edge. The visibility is on the target alone: on a box that draws, or one around it, the
+      // Compose player loses that box's clip.
+      val action = (element as? HaPictureElement.StateIcon)?.tapAction?.toRemoteAction()
+      if (action != null) {
+        // Visible where the card is both wider than the icon's left and taller than its top.
+        val onCard =
+          cardWidthPx
+            .isGreaterThan(leftDp.rdp.toPx())
+            .select(cardHeightPx.isGreaterThan(topDp.rdp.toPx()).select(Visible, Gone), Gone)
+        RemoteBox(
+          modifier =
+            RemoteModifier.padding(
+              start = (leftDp - StateIconTargetInsetDp).coerceAtLeast(0).rdp,
+              top = (topDp - StateIconTargetInsetDp).coerceAtLeast(0).rdp,
+            ),
+        ) {
+          RemoteBox(
+            modifier =
+              RemoteModifier.visibility(onCard)
+                .haClickable(action, StateIconLabel.rs)
+                .size(MinTouchTargetDp.rdp),
+          ) {}
+        }
+      }
     }
     if (unpositioned.isNotEmpty()) {
       RemoteRow(
@@ -387,11 +426,14 @@ private fun Element(
   element: HaPictureElement,
   theme: RemoteHaTheme,
   modifier: RemoteModifier = RemoteModifier,
+  ownTapTarget: Boolean = true,
 ) {
   when (element) {
     is HaPictureElement.StateIcon -> {
-      val click =
-        element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+      // The tap target is named; the glyph inside it is decorative then. A positioned icon's
+      // target is a box over it ([ownTapTarget] false), so the icon itself takes no tap.
+      val action = element.tapAction.toRemoteAction()
+      val label = StateIconLabel.rs
       val accent = haInk(element.accent)
       val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
       val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
@@ -406,11 +448,14 @@ private fun Element(
         isActive?.select(accent, theme.secondaryText)
           ?: if (element.initiallyActive) accent else theme.secondaryText
 
+      val click =
+        action?.takeIf { ownTapTarget }?.let { RemoteModifier.haClickable(it, label) }
+          ?: RemoteModifier
       RemoteBox(
         modifier =
           modifier
             .then(click)
-            .size(28.rdp)
+            .size(StateIconDp.rdp)
             .clip(haControlShape(14, round = true))
             .background(bg)
             .then(haKeyChrome(tint)),
@@ -430,7 +475,7 @@ private fun Element(
               element.initiallyAvailable,
             ),
           tint = tint,
-          contentDescription = "element".rs,
+          contentDescription = label.takeIf { action == null },
           modifier = RemoteModifier.size(16.rdp),
         )
       }
@@ -448,7 +493,7 @@ private fun Element(
     }
     is HaPictureElement.ServiceButton -> {
       val click =
-        element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+        element.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
       val accent = haInk(element.accent)
       RemoteBox(
         modifier =
@@ -471,3 +516,26 @@ private fun Element(
     }
   }
 }
+
+/** A picture element's state icon, as drawn. */
+private const val StateIconDp = 28
+
+/** How far a state icon's touch target reaches past the icon on each side. */
+private const val StateIconTargetInsetDp = (MinTouchTargetDp - StateIconDp) / 2
+
+/** What a state icon's tap target is called: the glyph says nothing of its own. */
+private const val StateIconLabel = "element"
+
+private const val CanvasWidthPrefix = "__terrazzo_picture_elements_w_"
+private const val CanvasHeightPrefix = "__terrazzo_picture_elements_h_"
+
+/** A component dimension, named so it stays this component's wherever it is read. */
+private fun namedPx(name: String, px: RemoteFloat): RemoteFloat =
+  RemoteFloat.createNamedRemoteFloat(
+    name = name,
+    defaultValue = px,
+    domain = RemoteState.Domain.User,
+  )
+
+private val Visible = 1.ri
+private val Gone = 0.ri
