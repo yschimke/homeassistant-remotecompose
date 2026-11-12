@@ -57,6 +57,12 @@ dependencies {
   implementation(libs.remote.tooling.preview)
   // The Compose Multiplatform Remote Compose engine the packaged card players render through.
   implementation(libs.rc.player.compose)
+  // The creation API the packaged cards are written against and captured with.
+  implementation(libs.rc.creation.compose)
+  implementation(libs.rc.creation.foundation)
+  implementation(libs.rc.widget.creation)
+  implementation(libs.rc.player.edit)
+  implementation(libs.rc.player.protocol)
   implementation(libs.materialkolor)
   testImplementation(libs.kotlin.test.junit)
   testImplementation("org.robolectric:robolectric:4.17")

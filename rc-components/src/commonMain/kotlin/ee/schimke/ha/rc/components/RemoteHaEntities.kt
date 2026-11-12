@@ -2,27 +2,27 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.modifier.width
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 
 /**
  * HA `entities` card — stacked list of [RemoteHaEntityRow]s with an optional title header. Matches
@@ -52,10 +52,10 @@ fun RemoteHaEntities(
           text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = adaptiveTitleSize(data.title),
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
       }
@@ -63,9 +63,9 @@ fun RemoteHaEntities(
         data.rows.chunked(2).forEach { pair ->
           RemoteRow(RemoteModifier.fillMaxWidth()) {
             pair.forEach { row ->
-              CommunityAccessory(row, RemoteModifier.weight(1f).padding(3.rdp))
+              CommunityAccessory(row, RemoteModifier.weight(1f.rf).padding(3.rdp))
             }
-            if (pair.size == 1) RemoteBox(RemoteModifier.weight(1f))
+            if (pair.size == 1) RemoteBox(RemoteModifier.weight(1f.rf))
           }
         }
       } else {
@@ -155,10 +155,10 @@ fun RemoteHaEntitiesFitted(
               HaEntitiesFit.Compact -> HaType.Body
               HaEntitiesFit.Expanded -> adaptiveTitleSize(data.title)
             },
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
       data.rows.forEachIndexed { i, row ->
@@ -167,7 +167,7 @@ fun RemoteHaEntitiesFitted(
           looks?.looks?.getOrNull(i) ?: entityLook(row.entityId, row.accent, live = false),
           fit,
           largeText,
-          RemoteModifier.fillMaxWidth().weight(1f),
+          RemoteModifier.fillMaxWidth().weight(1f.rf),
           bigRows,
         )
       }
@@ -218,7 +218,7 @@ private fun FittedEntityRow(
     )
     RemoteBox(
       modifier =
-        RemoteModifier.weight(1f).padding(start = (if (expanded) 12 else 8).rdp, end = 8.rdp),
+        RemoteModifier.weight(1f.rf).padding(start = (if (expanded) 12 else 8).rdp, end = 8.rdp),
     ) {
       RemoteText(
         text = entityName(data.entityId, data.name),
@@ -226,7 +226,7 @@ private fun FittedEntityRow(
         fontSize = nameSize,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     val stateText: @Composable @RemoteComposable (RemoteModifier) -> Unit = { stateModifier ->
@@ -242,7 +242,7 @@ private fun FittedEntityRow(
           },
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     if (!expanded) {
@@ -304,7 +304,7 @@ private fun CommunityAccessory(data: HaEntityRowData, modifier: RemoteModifier) 
     RemoteRow(
       RemoteModifier.fillMaxWidth(),
       horizontalArrangement =
-        androidx.compose.remote.creation.compose.layout.RemoteArrangement.SpaceBetween,
+        ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement.SpaceBetween,
       verticalAlignment = RemoteAlignment.CenterVertically,
     ) {
       RemoteBox(RemoteModifier.width(0.rdp).height(32.rdp))
@@ -323,7 +323,7 @@ private fun CommunityAccessory(data: HaEntityRowData, modifier: RemoteModifier) 
             fontSize = HaType.Label,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         },
       )
@@ -334,7 +334,7 @@ private fun CommunityAccessory(data: HaEntityRowData, modifier: RemoteModifier) 
       fontSize = HaType.Label,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
 }

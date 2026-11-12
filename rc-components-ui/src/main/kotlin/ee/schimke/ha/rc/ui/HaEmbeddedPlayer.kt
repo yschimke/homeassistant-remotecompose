@@ -4,18 +4,18 @@ package ee.schimke.ha.rc.ui
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.ha.rc.CaptureProfile
 import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
+import ee.schimke.ha.rc.captureSingleRemoteDocument
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import kotlinx.coroutines.runBlocking
 
@@ -42,7 +42,7 @@ import kotlinx.coroutines.runBlocking
  */
 @Composable
 fun HaEmbeddedPlayer(
-  profile: Profile,
+  profile: CaptureProfile,
   modifier: Modifier = Modifier,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
   content: @Composable @RemoteComposable () -> Unit,

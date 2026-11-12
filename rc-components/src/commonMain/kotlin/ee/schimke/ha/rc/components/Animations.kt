@@ -2,9 +2,9 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.max
 import androidx.compose.runtime.Composable
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.max
 import ee.schimke.rc.m3.LocalRcAnimationsEnabled
 import ee.schimke.rc.m3.RcMotionSpec
 import ee.schimke.rc.m3.animate

@@ -2,28 +2,29 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteTextUnit
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteTextUnit
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 
 /**
  * HA `history-graph` card — title, range label, then one sparkline row per entity.
@@ -86,10 +87,10 @@ fun RemoteHaHistoryGraph(
           text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = HaType.Title,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
       if (empty) {
@@ -152,7 +153,7 @@ fun RemoteHaSensorHero(
         fontSize = HaType.Body,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       RemoteText(
         text = LiveValues.state(data.entityId, data.valueLabel),
@@ -161,7 +162,7 @@ fun RemoteHaSensorHero(
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       if (data.rangeLabel != null) {
         RemoteText(
@@ -224,7 +225,7 @@ fun RemoteHaHistoryGraphIdentity(
         fontSize = HaType.Caption,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       if (row != null) {
         // A launcher cell too narrow for the summary at value size sets it smaller, or (one column)
@@ -237,7 +238,7 @@ fun RemoteHaHistoryGraphIdentity(
             fontWeight = haValueWeight(),
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         if (row.points.size >= 2) {
           Sparkline(row.entityId, row.points, row.accent, theme, plotHeightDp)
@@ -257,7 +258,7 @@ fun RemoteHaHistoryGraphIdentity(
             fontSize = HaType.Label,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
       }
     }
@@ -279,7 +280,7 @@ private fun EmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
       fontSize = HaType.Body,
       style = haTextStyle(),
       maxLines = 2,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   RemoteText(
     text = legend(data),
@@ -287,7 +288,7 @@ private fun EmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
     fontSize = HaType.Caption,
     style = haTextStyle(),
     maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    overflow = RemoteTextOverflow.Ellipsis,
   )
 }
 
@@ -307,11 +308,11 @@ private fun CompactEmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
       text = if (data.title != null) cardTitle(data.title) else legend(data),
       color = theme.primaryText,
       fontSize = HaType.Label,
-      fontWeight = FontWeight.Medium,
+      fontWeight = RemoteFontWeight.Medium,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+      overflow = RemoteTextOverflow.Ellipsis,
+      modifier = RemoteModifier.weight(1f.rf).padding(end = 8.rdp),
     )
     if (haLayouts().notes == HaNoteStyle.Tape)
       ConsoleTapeLabel(COMPACT_EMPTY_LABEL.rs, compact = true)
@@ -348,11 +349,11 @@ private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme, plotHeightDp: Int)
       text = entityName(row.entityId, row.name),
       color = theme.primaryText,
       fontSize = HaType.Label,
-      fontWeight = FontWeight.Medium,
+      fontWeight = RemoteFontWeight.Medium,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+      overflow = RemoteTextOverflow.Ellipsis,
+      modifier = RemoteModifier.weight(1f.rf).padding(end = 8.rdp),
     )
     RemoteText(
       text = row.summary,

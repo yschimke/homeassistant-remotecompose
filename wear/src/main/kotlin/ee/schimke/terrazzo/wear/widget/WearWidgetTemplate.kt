@@ -3,22 +3,21 @@
 package ee.schimke.terrazzo.wear.widget
 
 import android.content.Context
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.RemoteDensity
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteDp
-import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.toArgb
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.capture.RemoteDensity
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteDp
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
 import ee.schimke.composeai.rcplayer.edit.RcApproximation
 import ee.schimke.composeai.rcplayer.edit.RcDisplay
 import ee.schimke.composeai.rcplayer.edit.RcHardcodedValue
@@ -28,12 +27,24 @@ import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.hardcodeNamedValues
 import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.protocol.RcBoxLayout
+import ee.schimke.composeai.rcplayer.protocol.RcColorConstant
+import ee.schimke.composeai.rcplayer.protocol.RcColorExpression
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcFloatConstant
+import ee.schimke.composeai.rcplayer.protocol.RcFloatExpression
 import ee.schimke.composeai.rcplayer.protocol.RcFloatWord
+import ee.schimke.composeai.rcplayer.protocol.RcIntegerConstant
+import ee.schimke.composeai.rcplayer.protocol.RcIntegerExpression
+import ee.schimke.composeai.rcplayer.protocol.RcLayoutContent
+import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
+import ee.schimke.composeai.rcplayer.protocol.RcOperation
 import ee.schimke.composeai.rcplayer.protocol.RcRootLayout
 import ee.schimke.composeai.rcplayer.protocol.RcRoundedClipRectModifier
+import ee.schimke.composeai.rcplayer.protocol.RcTextData
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
+import ee.schimke.ha.rc.CaptureProfile
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.captureSingleRemoteDocument
 import ee.schimke.ha.rc.components.CLASSIC_WEAR_SURFACE
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.HaWearLevel
@@ -61,24 +72,45 @@ internal object WearWidgetTemplate {
   const val VERTICAL_PADDING = "wear.container.vertical_padding"
   const val CORNER_RADIUS = "wear.container.corner_radius"
 
-  /** Clip a captured Glance frame, including an exported design, to this host's rounded shape. */
+  /**
+   * Clip a captured Glance frame, including an exported design, to this host's rounded shape. A
+   * frame that already clips its container is returned as it is; null for any other structure.
+   */
   fun clipFrame(context: Context, bytes: ByteArray, params: WearWidgetParams): ByteArray? =
     runCatching {
       val document = RcDocumentCodec.decode(bytes, RcWireLimits())
-      // Glance captures the full container as the root's first box. Do not apply a host clip to a
-      // different document structure: it could clip a card inside a multi-card composition.
-      require(document.operations.firstOrNull() is RcRootLayout)
-      require(document.operations.getOrNull(1) is RcBoxLayout)
+      // The full container is the root's first box. Do not apply a host clip to a different
+      // document structure: it could clip a card inside a multi-card composition. Values may be
+      // declared ahead of the root and of the box (rc-players' writer declares a named value and
+      // a constant before the root, and an expression where it is made).
+      val operations = document.operations
+      val root = operations.indexOfFirst { !it.declaresAValue() }
+      require(operations.getOrNull(root) is RcRootLayout)
+      val box = (root + 1..operations.lastIndex).first { !operations[it].declaresAValue() }
+      require(operations[box] is RcBoxLayout)
+      // A container this app captured ([capture]) clips itself to the same radius; a second clip
+      // would only antialias its edge twice.
+      val ownModifiers = operations.drop(box + 1).takeWhile { it !is RcLayoutContent }
+      if (ownModifiers.any { it is RcRoundedClipRectModifier }) return@runCatching bytes
       val radius =
         RcFloatWord.literal(params.cornerRadiusDp * context.resources.displayMetrics.density)
       val clip = RcRoundedClipRectModifier(radius, radius, radius, radius)
       RcDocumentCodec.encode(
-        document.copy(
-          operations = document.operations.take(2) + clip + document.operations.drop(2),
-        ),
+        document.copy(operations = operations.take(box + 1) + clip + operations.drop(box + 1)),
       )
     }
     .getOrNull()
+
+  /** Whether this only gives an id a value: no layout, modifier or drawing. */
+  private fun RcOperation.declaresAValue(): Boolean =
+    this is RcNamedVariable ||
+      this is RcTextData ||
+      this is RcFloatConstant ||
+      this is RcFloatExpression ||
+      this is RcIntegerConstant ||
+      this is RcIntegerExpression ||
+      this is RcColorConstant ||
+      this is RcColorExpression
 
   /** The container's fill, which the watch writes from the card's state ([ContainerTint]). */
   const val CONTAINER_COLOR = "wear.container.color"
@@ -100,18 +132,22 @@ internal object WearWidgetTemplate {
    * as the named fill's default, its layers and edge over it, all clipped to the named corner
    * radius, so the host's own radius shapes the style's surface. A [level] fills the container with
    * its reading, in the style's [wearLevelLook] ([RemoteWearContainer]).
+   *
+   * [profile] names the operations the content's components may use: the app's own player's for a
+   * template, the Wear widget renderer's for a card captured for one widget.
    */
   suspend fun capture(
     context: Context,
     cardStyle: HaUberTheme = HaUberTheme.Classic,
     level: HaWearLevel? = null,
+    profile: CaptureProfile = androidXExperimentalWrap,
     content: @Composable () -> Unit,
   ): ByteArray =
     captureSingleRemoteDocument(
         context = context,
         creationDisplayInfo = CANVAS,
         remoteDensity = RemoteDensity.Host,
-        profile = androidXExperimentalWrap,
+        profile = profile,
       ) {
         // Expressions named in composition order, so a card drawn by its converter or by a card
         // design wrapping it names them alike.

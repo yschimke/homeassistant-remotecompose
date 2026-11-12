@@ -2,29 +2,30 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.capture.toRemoteImageVector
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.modifier.width
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.foundation.icon.RemoteBasicIcon
 
 /**
  * HA `weather-forecast` card. Top row shows the current condition icon
@@ -75,7 +76,7 @@ fun RemoteHaWeatherForecast(
           ForecastStrip(
             data.days,
             theme,
-            modifier = RemoteModifier.fillMaxWidth().weight(1f),
+            modifier = RemoteModifier.fillMaxWidth().weight(1f.rf),
             fill = true,
           )
         } else {
@@ -103,7 +104,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme, showCo
     // The condition takes what the temperature leaves: in a narrow card it is the words that
     // shorten, never the reading.
     RemoteRow(
-      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+      modifier = RemoteModifier.weight(1f.rf).padding(end = 8.rdp),
       verticalAlignment = RemoteAlignment.CenterVertically,
     ) {
       RemoteBasicIcon(
@@ -120,10 +121,10 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme, showCo
             text = data.condition,
             color = theme.primaryText,
             fontSize = HaType.Title,
-            fontWeight = FontWeight.Medium,
+            fontWeight = RemoteFontWeight.Medium,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
           if (data.supportingLine != null) {
             RemoteText(
@@ -132,7 +133,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme, showCo
               fontSize = HaType.Label,
               style = haTextStyle(),
               maxLines = 1,
-              overflow = TextOverflow.Ellipsis,
+              overflow = RemoteTextOverflow.Ellipsis,
             )
           } else {
             RemoteText(
@@ -141,7 +142,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme, showCo
               fontSize = HaType.Label,
               style = haTextStyle(),
               maxLines = 1,
-              overflow = TextOverflow.Ellipsis,
+              overflow = RemoteTextOverflow.Ellipsis,
             )
           }
         }
@@ -154,7 +155,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme, showCo
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       if (data.highLow != null) {
         RemoteText(
@@ -163,7 +164,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme, showCo
           fontSize = HaType.Body,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     }
@@ -191,7 +192,7 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: RemoteHaTheme) {
   ) {
     extras.forEachIndexed { i, extra ->
       if (i > 0) RemoteBox(modifier = RemoteModifier.width(ChipGapDp.rdp))
-      ExtraChip(i, extra, theme, RemoteModifier.weight(1f))
+      ExtraChip(i, extra, theme, RemoteModifier.weight(1f.rf))
     }
   }
 }
@@ -225,10 +226,10 @@ private fun ExtraChip(
       text = cardText("extra.$i", extra.value),
       color = theme.primaryText,
       fontSize = HaType.Body,
-      fontWeight = FontWeight.Medium,
+      fontWeight = RemoteFontWeight.Medium,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
     RemoteText(
       text = extra.label.rs,
@@ -236,7 +237,7 @@ private fun ExtraChip(
       fontSize = HaType.Micro,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
 }
@@ -270,17 +271,17 @@ fun RemoteHaWeatherForecastWide(
     // the RemoteCompose row doesn't subtract `spacedBy` gaps from the weighted share, which pushed
     // the temperature 16 dp past the slot's edge (clipped on Wear and the 4×1 widget).
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f).padding(horizontal = 8.rdp),
+      modifier = RemoteModifier.weight(1f.rf).padding(horizontal = 8.rdp),
       verticalArrangement = RemoteArrangement.Center,
     ) {
       RemoteText(
         text = data.condition,
         color = theme.primaryText,
         fontSize = HaType.Body,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       RemoteText(
         text = data.supportingLine?.rs ?: entityName(data.entityId, data.name),
@@ -288,7 +289,7 @@ fun RemoteHaWeatherForecastWide(
         fontSize = HaType.Caption,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     RemoteText(
@@ -298,7 +299,7 @@ fun RemoteHaWeatherForecastWide(
       fontWeight = haValueWeight(),
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
 }
@@ -365,17 +366,17 @@ fun RemoteHaWeatherForecastWear(
       tint = theme.primaryText,
     )
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
+      modifier = RemoteModifier.weight(1f.rf).padding(start = 10.rdp),
       verticalArrangement = RemoteArrangement.Center,
     ) {
       RemoteText(
         text = data.condition,
         color = theme.primaryText,
         fontSize = if (large) HaType.Body else HaType.Label,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       RemoteText(
         text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
@@ -392,7 +393,7 @@ fun RemoteHaWeatherForecastWear(
           fontSize = HaType.Caption,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
     }
   }
@@ -414,7 +415,7 @@ private fun ForecastStrip(
       val label = cardText("day.$i.label", day.label)
       RemoteColumn(
         modifier =
-          if (fill) RemoteModifier.weight(1f).fillMaxHeight() else RemoteModifier.weight(1f),
+          if (fill) RemoteModifier.weight(1f.rf).fillMaxHeight() else RemoteModifier.weight(1f.rf),
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
         verticalArrangement =
           if (fill) RemoteArrangement.SpaceEvenly else RemoteArrangement.spacedBy(2.rdp),
@@ -436,7 +437,7 @@ private fun ForecastStrip(
           text = cardText("day.$i.high", day.high),
           color = theme.primaryText,
           fontSize = if (fill) HaType.BodyLarge else HaType.Label,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
         )

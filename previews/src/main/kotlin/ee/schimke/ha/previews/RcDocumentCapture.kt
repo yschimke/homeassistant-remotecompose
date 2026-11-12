@@ -2,13 +2,13 @@
 
 package ee.schimke.ha.previews
 
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import ee.schimke.composeai.data.render.IrSidecarChannel
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.ha.rc.CaptureProfile
 
 /**
  * Capturing the encoded RemoteCompose document for a preview, so the published catalog carries the
@@ -36,7 +36,7 @@ import ee.schimke.composeai.data.render.IrSidecarChannel
  */
 @Composable
 internal fun CapturingRemoteContentPreview(
-  profile: Profile,
+  profile: CaptureProfile,
   modifier: Modifier = Modifier,
   content: @Composable @RemoteComposable () -> Unit,
 ) {

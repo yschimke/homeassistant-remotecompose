@@ -53,7 +53,7 @@ sealed interface MarkdownInline {
    */
   data class Text(
     override val text: String,
-    val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
+    val boundText: ee.schimke.composeai.rccreation.compose.state.RemoteString? = null,
     val style: MarkdownStyle = MarkdownStyle.Plain,
   ) : MarkdownInline
 
@@ -65,7 +65,7 @@ sealed interface MarkdownInline {
   data class Link(
     override val text: String,
     val url: String,
-    val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
+    val boundText: ee.schimke.composeai.rccreation.compose.state.RemoteString? = null,
     val style: MarkdownStyle = MarkdownStyle.Plain,
   ) : MarkdownInline
 
@@ -90,7 +90,7 @@ sealed interface MarkdownInline {
 data class MarkdownBlock(
   val kind: Kind,
   val text: String,
-  val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
+  val boundText: ee.schimke.composeai.rccreation.compose.state.RemoteString? = null,
   val level: Int = 0,
   val inlines: List<MarkdownInline> = listOf(MarkdownInline.Text(text)),
 ) {
@@ -104,7 +104,7 @@ data class MarkdownBlock(
   /**
    * True when the block carries links, images, or text runs drawn in more than one style (see
    * [MarkdownStyle.drawn]) — these need the inline flow-row path in [RemoteHaMarkdown]. Any other
-   * block renders as one [androidx.compose.remote.creation.compose.layout.RemoteText] in
+   * block renders as one [ee.schimke.composeai.rccreation.compose.layout.RemoteText] in
    * [drawnStyle].
    */
   val hasInlineMarkup: Boolean

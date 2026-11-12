@@ -5,41 +5,41 @@ package ee.schimke.ha.rc.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.drawWithContent
-import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.ri
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.capture.toRemoteImageVector
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteStateLayout
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.border
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.drawWithContent
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.modifier.width
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.ri
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.foundation.icon.RemoteBasicIcon
 
 /**
  * 270° arc dial used by thermostat / humidifier / light cards.
@@ -90,17 +90,17 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
         text = entityName(data.entityId, data.name),
         color = theme.primaryText,
         fontSize = HaType.BodyLarge,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       if (dialLayout().sideSteppers) {
         RemoteRow(
           RemoteModifier.fillMaxWidth(),
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
-          RemoteBox(RemoteModifier.weight(1f)) { DialBody(data, theme) }
+          RemoteBox(RemoteModifier.weight(1f.rf)) { DialBody(data, theme) }
           if (data.showSteppers) {
             RemoteColumn(RemoteModifier.width(120.rdp).padding(start = 6.rdp)) {
               Steppers(dialAccent(data), data.incrementAction, data.decrementAction, theme)
@@ -191,7 +191,7 @@ fun RemoteHaArcDialWide(
       }
     }
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
+      modifier = RemoteModifier.weight(1f.rf).padding(start = 10.rdp),
       verticalArrangement = RemoteArrangement.Center,
       horizontalAlignment = RemoteAlignment.Start,
     ) {
@@ -200,10 +200,10 @@ fun RemoteHaArcDialWide(
           text = entityName(data.entityId, data.name),
           color = theme.primaryText,
           fontSize = if (compact) HaType.Label else HaType.Body,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       if (showMode) ModeChip(data, dialAccent(data))
       RemoteText(
@@ -213,7 +213,7 @@ fun RemoteHaArcDialWide(
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       if (!compact)
         supportingText(data)?.let { supporting ->
@@ -223,7 +223,7 @@ fun RemoteHaArcDialWide(
             fontSize = HaType.Label,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         }
     }
@@ -276,17 +276,17 @@ fun RemoteHaArcDialFill(
         text = entityName(data.entityId, data.name),
         color = theme.primaryText,
         fontSize = HaType.BodyLarge,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     // A cell taller than it is wide ([dialHeightDp]) sizes the dial's box to the dial, so the name
     // and dial centre together rather than the name sitting on the top edge above a gap.
     RemoteBox(
       modifier =
         if (dialHeightDp != null) RemoteModifier.fillMaxWidth().height(dialHeightDp.rdp)
-        else RemoteModifier.fillMaxWidth().weight(1f),
+        else RemoteModifier.fillMaxWidth().weight(1f.rf),
       contentAlignment = RemoteAlignment.Center,
     ) {
       ArcCanvas(
@@ -396,7 +396,7 @@ fun RemoteHaArcDialNarrow(
         fontSize = HaType.Caption,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
   }
 }
@@ -462,7 +462,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
         fontSize = HaType.ValueLarge,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       supportingText(data)?.let {
         RemoteText(
@@ -471,7 +471,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
           fontSize = HaType.Label,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     }
@@ -505,7 +505,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       supportingText(data)?.let { supporting ->
         RemoteText(
@@ -564,7 +564,7 @@ private fun ConsoleThermostatBody(data: HaArcDialData, theme: RemoteHaTheme) {
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     RemoteRow(
@@ -628,11 +628,11 @@ private fun ChipText(text: RemoteString, accent: RemoteColor) {
     text = text,
     color = accent,
     fontSize = HaType.Label,
-    fontWeight = FontWeight.Medium,
+    fontWeight = RemoteFontWeight.Medium,
     style = haTextStyle(),
     maxLines = 1,
     // A long mode ("Humidifying") in a narrow text column ellipsises rather than being cut.
-    overflow = TextOverflow.Ellipsis,
+    overflow = RemoteTextOverflow.Ellipsis,
   )
 }
 

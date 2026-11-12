@@ -2,19 +2,19 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.*
-import androidx.compose.remote.creation.compose.modifier.*
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.*
-import androidx.compose.remote.creation.compose.state.asRemoteTextUnit
-import androidx.compose.remote.creation.compose.text.RemoteFontFamily
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import ee.schimke.composeai.rccreation.compose.layout.*
+import ee.schimke.composeai.rccreation.compose.modifier.*
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteCircleShape
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.state.*
+import ee.schimke.composeai.rccreation.compose.state.asRemoteTextUnit
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontFamily
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextStyle
 
 // ---------------------------------------------------------------------------------------------
 // The everyday text cards per visual family (docs/design/everyday-cards.md §3 and §4): a heading's
@@ -70,7 +70,7 @@ private fun inkOrPrimary(): RemoteColor = currentHaUberTheme().ink?.rc ?: haThem
 internal fun EverydayHeading(
   text: RemoteString,
   size: RemoteTextUnit,
-  weight: FontWeight,
+  weight: RemoteFontWeight,
   modifier: RemoteModifier,
 ) {
   val theme = haTheme()
@@ -84,7 +84,7 @@ internal fun EverydayHeading(
       fontWeight = weight,
       style = haHeadingTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
   val row: @Composable (@Composable RemoteRowScope.() -> Unit) -> Unit = { content ->
@@ -116,7 +116,7 @@ internal fun EverydayHeading(
         fontWeight = weight,
         style = haHeadingTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     // A vertical tonal capsule leading a heavy headline: M3 Expressive's section marker.
     HaVisualFamily.Expressive ->
@@ -124,7 +124,7 @@ internal fun EverydayHeading(
         RemoteBox(
           RemoteModifier.size(6.rdp, 24.rdp).clip(RemoteCircleShape).background(familyAccent()),
         )
-        plain(RemoteModifier.weight(1f))
+        plain(RemoteModifier.weight(1f.rf))
       }
     // A tracked label, a red power LED before it and a hairline rule running to the edge.
     HaVisualFamily.Trinitron ->
@@ -138,12 +138,14 @@ internal fun EverydayHeading(
           text = text,
           color = theme.primaryText,
           fontSize = HaType.Title,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = trackedTextStyle(2.4f, headingFamily()),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
-        RemoteBox(RemoteModifier.weight(1f).height(HaSpace.Hairline.rdp).background(theme.divider))
+        RemoteBox(
+          RemoteModifier.weight(1f.rf).height(HaSpace.Hairline.rdp).background(theme.divider),
+        )
       }
     // The title in a recessed screen strip, a block cursor after it.
     HaVisualFamily.Lcd ->
@@ -163,7 +165,7 @@ internal fun EverydayHeading(
           fontSize = size,
           style = haHeadingTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         RemoteBox(RemoteModifier.size(9.rdp, 18.rdp).background(inkOrPrimary()))
       }
@@ -175,10 +177,10 @@ internal fun EverydayHeading(
           text = text,
           color = theme.primaryText,
           fontSize = HaType.Title,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = trackedTextStyle(1.6f, headingFamily()),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     // Glowing numerals: a heavy halo pass in the faded ink under the lit text.
@@ -192,7 +194,7 @@ internal fun EverydayHeading(
           text = text,
           color = ink?.copy(alpha = 0.35f)?.rc ?: theme.secondaryText,
           fontSize = size,
-          fontWeight = FontWeight.Black,
+          fontWeight = RemoteFontWeight.Black,
           style = trackedTextStyle(1.2f, headingFamily()),
           maxLines = 1,
         )
@@ -200,7 +202,7 @@ internal fun EverydayHeading(
           text = text,
           color = inkOrPrimary(),
           fontSize = size,
-          fontWeight = FontWeight.Normal,
+          fontWeight = RemoteFontWeight.Normal,
           style = trackedTextStyle(1.2f, headingFamily()),
           maxLines = 1,
         )
@@ -220,7 +222,7 @@ internal fun EverydayHeading(
             text = "→".rs,
             color = theme.cardBackground,
             fontSize = HaType.Body,
-            fontWeight = FontWeight.Bold,
+            fontWeight = RemoteFontWeight.Bold,
             style = haHeadingTextStyle(),
           )
         }
@@ -228,10 +230,10 @@ internal fun EverydayHeading(
           text = text,
           color = theme.primaryText,
           fontSize = size,
-          fontWeight = FontWeight.Bold,
+          fontWeight = RemoteFontWeight.Bold,
           style = haHeadingTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     // A big friendly title over a rounded accent underline.
@@ -241,10 +243,10 @@ internal fun EverydayHeading(
           text = text,
           color = theme.primaryText,
           fontSize = HaType.Headline,
-          fontWeight = FontWeight.Bold,
+          fontWeight = RemoteFontWeight.Bold,
           style = haHeadingTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         RemoteBox(
           RemoteModifier.size(36.rdp, 5.rdp).clip(RemoteCircleShape).background(familyAccent()),
@@ -262,10 +264,10 @@ internal fun EverydayHeading(
             text = text,
             color = theme.primaryText,
             fontSize = HaType.Title,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = RemoteFontWeight.SemiBold,
             style = haHeadingTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         }
       }
@@ -276,10 +278,10 @@ internal fun EverydayHeading(
         modifier = modifier.padding(top = 12.rdp, bottom = 4.rdp),
         color = theme.secondaryText,
         fontSize = HaType.Label,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = RemoteFontWeight.SemiBold,
         style = trackedTextStyle(2.4f, headingFamily()),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     // iOS Large Title: big, heavy, tight.
     HaVisualFamily.Cupertino ->
@@ -288,10 +290,10 @@ internal fun EverydayHeading(
         modifier = modifier.padding(top = 10.rdp, bottom = 4.rdp),
         color = theme.primaryText,
         fontSize = if (size == HaType.Title) HaType.ValueSmall else HaType.Value,
-        fontWeight = FontWeight.Bold,
+        fontWeight = RemoteFontWeight.Bold,
         style = trackedTextStyle(-0.4f),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     // The title on a pastel lozenge chip.
     HaVisualFamily.Catppuccin ->
@@ -305,10 +307,10 @@ internal fun EverydayHeading(
             text = text,
             color = theme.primaryText,
             fontSize = HaType.Title,
-            fontWeight = FontWeight.Medium,
+            fontWeight = RemoteFontWeight.Medium,
             style = haHeadingTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         }
       }
@@ -326,10 +328,10 @@ internal fun EverydayHeading(
             text = text,
             color = theme.primaryText,
             fontSize = size,
-            fontWeight = FontWeight.Normal,
+            fontWeight = RemoteFontWeight.Normal,
             style = trackedTextStyle(0f, RemoteFontFamily.Serif),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         }
         RemoteBox(
@@ -340,13 +342,13 @@ internal fun EverydayHeading(
     HaVisualFamily.Noctis ->
       row {
         TwinRails(familyAccent(), 20)
-        plain(RemoteModifier.weight(1f))
+        plain(RemoteModifier.weight(1f.rf))
       }
     // An LCARS elbow band: a coloured bar rounded at the left, the title at its right end.
     HaVisualFamily.Lcars ->
       row {
         RemoteBox(
-          RemoteModifier.weight(1f)
+          RemoteModifier.weight(1f.rf)
             .height(22.rdp)
             .clip(RemoteRoundedCornerShape(11.rdp, 0.rdp, 0.rdp, 11.rdp))
             .background(familyAccent()),
@@ -355,10 +357,10 @@ internal fun EverydayHeading(
           text = text,
           color = theme.primaryText,
           fontSize = HaType.Title,
-          fontWeight = FontWeight.Bold,
+          fontWeight = RemoteFontWeight.Bold,
           style = trackedTextStyle(1.8f, headingFamily()),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     // Thin, widely tracked type over a short ice rule.
@@ -368,10 +370,10 @@ internal fun EverydayHeading(
           text = text,
           color = theme.primaryText,
           fontSize = size,
-          fontWeight = FontWeight.Light,
+          fontWeight = RemoteFontWeight.Light,
           style = trackedTextStyle(3f, headingFamily()),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         RemoteBox(RemoteModifier.size(56.rdp, 2.rdp).background(familyAccent()))
       }
@@ -399,7 +401,7 @@ internal fun EverydayHeading(
             fontSize = HaType.Title,
             style = trackedTextStyle(2f, headingFamily()),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
           RemoteText(
             "◆".rs,
@@ -446,7 +448,7 @@ internal class MarkdownMaterial(
   /** The body ink. */
   val ink: RemoteColor,
   /** Body weight for paragraphs and bullets. */
-  val bodyWeight: FontWeight,
+  val bodyWeight: RemoteFontWeight,
   /** The body's text style (Obsidian's serif, the theme's own otherwise). */
   val bodyStyle: RemoteTextStyle,
   /** Obsidian keeps the source markers (`#`, `-`) visible, muted. */
@@ -474,7 +476,7 @@ internal fun markdownMaterial(): MarkdownMaterial {
     padding: RemoteModifier = standardPadding,
     screen: RemoteModifier? = null,
     ink: RemoteColor = theme.primaryText,
-    bodyWeight: FontWeight = FontWeight.Normal,
+    bodyWeight: RemoteFontWeight = RemoteFontWeight.Normal,
     bodyStyle: RemoteTextStyle? = null,
     showsMarkers: Boolean = false,
     numbersHeadings: Boolean = false,
@@ -537,7 +539,7 @@ internal fun markdownMaterial(): MarkdownMaterial {
     HaVisualFamily.Console -> material(screen = screenPanel(ConsoleSlot.rc), bodyStyle = haStyle)
     // An assembly leaflet: bold, numbered steps.
     HaVisualFamily.Ikea ->
-      material(bodyWeight = FontWeight.Medium, bodyStyle = haStyle, numbersHeadings = true)
+      material(bodyWeight = RemoteFontWeight.Medium, bodyStyle = haStyle, numbersHeadings = true)
     // A soft card with a coloured bar leading the note.
     HaVisualFamily.Mushroom ->
       material(
@@ -602,7 +604,7 @@ internal fun markdownMaterial(): MarkdownMaterial {
     HaVisualFamily.Arctic ->
       material(
         surface = cardChrome(theme.cardBackground.copy(alpha = 0.55f.rf), theme.divider, null, 0),
-        bodyWeight = FontWeight.Light,
+        bodyWeight = RemoteFontWeight.Light,
         bodyStyle = haStyle,
       )
     // A double-ruled frame.
@@ -696,10 +698,10 @@ internal fun MarkdownTitle(title: RemoteString, size: RemoteTextUnit, ink: Remot
           text = title,
           color = theme.secondaryText,
           fontSize = HaType.Label,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = trackedTextStyle(2.4f),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         RemoteBox(
           RemoteModifier.padding(top = HaSpace.XXS.rdp)
@@ -723,7 +725,7 @@ internal fun MarkdownTitle(title: RemoteString, size: RemoteTextUnit, ink: Remot
           fontSize = size,
           style = trackedTextStyle(0f, RemoteFontFamily.Serif),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     HaVisualFamily.Ikea,
@@ -732,10 +734,10 @@ internal fun MarkdownTitle(title: RemoteString, size: RemoteTextUnit, ink: Remot
         text = title,
         color = ink,
         fontSize = size,
-        fontWeight = FontWeight.Bold,
+        fontWeight = RemoteFontWeight.Bold,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     HaVisualFamily.Lcars,
     HaVisualFamily.Aeon,
@@ -745,20 +747,21 @@ internal fun MarkdownTitle(title: RemoteString, size: RemoteTextUnit, ink: Remot
         color = ink,
         fontSize = size,
         fontWeight =
-          if (visualFamily() == HaVisualFamily.Arctic) FontWeight.Light else FontWeight.Medium,
+          if (visualFamily() == HaVisualFamily.Arctic) RemoteFontWeight.Light
+          else RemoteFontWeight.Medium,
         style = trackedTextStyle(2f),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     else ->
       RemoteText(
         text = title,
         color = ink,
         fontSize = size,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
   }
 }
@@ -776,7 +779,7 @@ internal fun LeafletStep(number: Int) {
       text = number.toString().rs,
       color = theme.cardBackground,
       fontSize = HaType.Label,
-      fontWeight = FontWeight.Bold,
+      fontWeight = RemoteFontWeight.Bold,
       style = haTextStyle(),
     )
   }
@@ -814,7 +817,7 @@ internal interface HaTextSurfaceRenderer : HaSlotRenderer {
   fun Heading(
     text: RemoteString,
     size: RemoteTextUnit,
-    weight: FontWeight,
+    weight: RemoteFontWeight,
     modifier: RemoteModifier,
   )
 
@@ -834,7 +837,7 @@ internal object FamilyTextSurfaces : HaTextSurfaceRenderer {
   override fun Heading(
     text: RemoteString,
     size: RemoteTextUnit,
-    weight: FontWeight,
+    weight: RemoteFontWeight,
     modifier: RemoteModifier,
   ) = EverydayHeading(text, size, weight, modifier)
 
@@ -862,7 +865,7 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
   override fun Heading(
     text: RemoteString,
     size: RemoteTextUnit,
-    weight: FontWeight,
+    weight: RemoteFontWeight,
     modifier: RemoteModifier,
   ) {
     val theme = haTheme()
@@ -876,7 +879,7 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
         fontWeight = weight,
         style = style,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     val marked = g.glow || g.gradient != null
@@ -897,14 +900,14 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
         g.level == HaLevelStyle.Segmented -> {
           line(RemoteModifier, trackedTextStyle(1.2f, headingFamily()))
           RemoteBox(
-            RemoteModifier.weight(1f).height(HaSpace.Hairline.rdp).background(theme.divider),
+            RemoteModifier.weight(1f.rf).height(HaSpace.Hairline.rdp).background(theme.divider),
           )
         }
         else -> {
           RemoteBox(
             RemoteModifier.size(6.rdp, 24.rdp).clip(RemoteCircleShape).background(familyAccent()),
           )
-          line(RemoteModifier.weight(1f), haHeadingTextStyle())
+          line(RemoteModifier.weight(1f.rf), haHeadingTextStyle())
         }
       }
     }
@@ -923,7 +926,7 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
         else RemoteModifier.padding(horizontal = 12.rdp, vertical = 10.rdp),
       screen = null,
       ink = inkOrPrimary(),
-      bodyWeight = FontWeight.Normal,
+      bodyWeight = RemoteFontWeight.Normal,
       bodyStyle = haTextStyle(),
       showsMarkers = false,
       numbersHeadings = false,
@@ -940,10 +943,10 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
         text = title,
         color = ink,
         fontSize = size,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       return
     }
@@ -952,10 +955,10 @@ internal object GrammarTextSurfaces : HaTextSurfaceRenderer {
         text = title,
         color = theme.secondaryText,
         fontSize = HaType.Label,
-        fontWeight = FontWeight.Medium,
+        fontWeight = RemoteFontWeight.Medium,
         style = trackedTextStyle(2f),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       RemoteBox(
         RemoteModifier.padding(top = HaSpace.XXS.rdp)

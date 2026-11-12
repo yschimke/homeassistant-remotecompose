@@ -1,8 +1,6 @@
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -85,7 +83,7 @@ class HistoryEmptyStateCaptureTest {
             (heightDp * density).toInt(),
             context.resources.configuration.densityDpi,
           ),
-        profile = RcPlatformProfiles.ANDROIDX,
+        profile = androidX,
       ) {
         ProvideCardSizeMode(CardSizeMode.Fixed) {
           ProvideFixedCanvasAxis(axis) { converter.Render(card, snapshot) }

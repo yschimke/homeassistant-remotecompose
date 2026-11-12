@@ -2,9 +2,9 @@
 
 package ee.schimke.ha.rc.cards.shutter
 
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 
 /**
  * `custom:enhanced-shutter-card` card data: a list of cover rows. Each row draws a window shutter

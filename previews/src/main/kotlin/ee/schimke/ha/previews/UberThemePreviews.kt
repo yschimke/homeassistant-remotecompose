@@ -6,20 +6,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize as uiFillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
@@ -78,7 +79,7 @@ internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
               // weights out of its full width, so a spaced row overflows by the gap.
               RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
                 MeasurementCard(
-                  RemoteModifier.weight(1f).padding(end = HaSpace.M.rdp).height(196.rdp),
+                  RemoteModifier.weight(1f.rf).padding(end = HaSpace.M.rdp).height(196.rdp),
                 ) {
                   RemoteHaMeasurement(
                     HaReading.static("Living room", 21.5f, "°C", HaMeasureKind.Temperature),
@@ -86,7 +87,7 @@ internal fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
                   )
                 }
                 RemoteColumn(
-                  modifier = RemoteModifier.weight(1f),
+                  modifier = RemoteModifier.weight(1f.rf),
                   verticalArrangement = RemoteArrangement.spacedBy(HaSpace.M.rdp),
                 ) {
                   MeasurementCard(RemoteModifier.fillMaxWidth()) {

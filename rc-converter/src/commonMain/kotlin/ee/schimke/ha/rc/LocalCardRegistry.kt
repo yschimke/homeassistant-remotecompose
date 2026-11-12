@@ -1,9 +1,9 @@
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaLiveBindings

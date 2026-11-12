@@ -2,25 +2,26 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteFlowRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.toRemoteDp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteFlowRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.width
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.toRemoteDp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.SectionCardFlow
@@ -65,41 +66,43 @@ fun RemoteSectionCardFlow(
   val gapDp = SectionCardGrid.COLUMN_GAP_DP
   val splits = remember(items) { SectionCardFlow.splits(items, gapDp, MaxSectionWidthDp) }
   val name = rememberExpressionName(SectionWidthExpressionPrefix)
-  val sectionWidthPx =
-    RemoteFloat.createNamedRemoteFloatExpression(name = name, domain = RemoteState.Domain.User) {
-      componentWidth()
-    }
-  val gapPx = gapDp.rdp.toPx()
-  val rowGapPx = SectionCardGrid.ROW_GAP_DP.rdp.toPx()
-
-  /**
-   * The value for the split the played width falls in. [key] says what the value depends on, so
-   * neighbouring splits that give a card the same value share one branch.
-   */
-  fun <K> bySplit(
-    key: (SectionFlowSplit) -> K,
-    value: (SectionFlowSplit) -> RemoteFloat,
-  ): RemoteFloat {
-    // Each run of splits with one key, by the width it starts at.
-    val runs = mutableListOf<Pair<SectionFlowSplit, K>>()
-    for (split in splits) {
-      val k = key(split)
-      if (runs.lastOrNull()?.second != k) runs += split to k
-    }
-    // Widest first: each narrower run takes over below the start of the run after it.
-    var chosen = value(runs.last().first)
-    for (r in runs.lastIndex - 1 downTo 0) {
-      chosen =
-        sectionWidthPx
-          .isGreaterThanOrEqualTo(runs[r + 1].first.fromWidth.rdp.toPx())
-          .select(chosen, value(runs[r].first))
-    }
-    return chosen
-  }
-
   RemoteBox(modifier = modifier.fillMaxWidth()) {
-    // Writes the width expression while this box is the component being written, so it reads the
-    // section's width (the forcing text `RemoteHaGrid` uses; it draws nothing).
+    // This box's width: the section's.
+    val sectionWidthPx =
+      RemoteFloat.createNamedRemoteFloat(
+        name = name,
+        defaultValue = remoteComponent().width,
+        domain = RemoteState.Domain.User,
+      )
+    val gapPx = gapDp.rdp.toPx()
+    val rowGapPx = SectionCardGrid.ROW_GAP_DP.rdp.toPx()
+
+    /**
+     * The value for the split the played width falls in. [key] says what the value depends on, so
+     * neighbouring splits that give a card the same value share one branch.
+     */
+    fun <K> bySplit(
+      key: (SectionFlowSplit) -> K,
+      value: (SectionFlowSplit) -> RemoteFloat,
+    ): RemoteFloat {
+      // Each run of splits with one key, by the width it starts at.
+      val runs = mutableListOf<Pair<SectionFlowSplit, K>>()
+      for (split in splits) {
+        val k = key(split)
+        if (runs.lastOrNull()?.second != k) runs += split to k
+      }
+      // Widest first: each narrower run takes over below the start of the run after it.
+      var chosen = value(runs.last().first)
+      for (r in runs.lastIndex - 1 downTo 0) {
+        chosen =
+          sectionWidthPx
+            .isGreaterThanOrEqualTo(runs[r + 1].first.fromWidth.rdp.toPx())
+            .select(chosen, value(runs[r].first))
+      }
+      return chosen
+    }
+
+    // Writes the width expression ahead of the cards that read it (it draws nothing).
     RemoteText(text = sectionWidthPx.toPaddedRemoteString(1), color = Color.Transparent.rc)
     RemoteFlowRow(
       modifier = RemoteModifier.fillMaxWidth(),

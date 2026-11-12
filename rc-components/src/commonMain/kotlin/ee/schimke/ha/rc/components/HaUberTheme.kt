@@ -2,15 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.shapes.RemoteShape
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.asRemoteTextUnit
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.text.RemoteFontFamily
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -18,10 +9,19 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteCircleShape
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteShape
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.asRemoteTextUnit
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontFamily
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextStyle
 import ee.schimke.rc.m3.LocalRcMotionScheme
 import ee.schimke.rc.m3.RcMotionScheme
 
@@ -162,7 +162,7 @@ data class HaUberTheme(
    */
   val headingFont: String? = null,
   val letterSpacingSp: Float = 0f,
-  val valueWeight: FontWeight = FontWeight.SemiBold,
+  val valueWeight: RemoteFontWeight = RemoteFontWeight.SemiBold,
   val unavailable: HaUnavailableStyle = HaUnavailableStyle(),
   val description: String = "",
   val appTheme: Boolean = false,
@@ -228,7 +228,7 @@ data class HaUberTheme(
           ),
         visuals = HaVisualFamily.HomeAssistant,
         fontFamily = RemoteFontFamily.SansSerif,
-        valueWeight = FontWeight.Normal,
+        valueWeight = RemoteFontWeight.Normal,
       )
 
     /**
@@ -245,7 +245,7 @@ data class HaUberTheme(
         shape = HaCardShapeStyle(cornerDp = 28, borderDp = 0, controlCornerDp = 16),
         visuals = HaVisualFamily.Expressive,
         readout = HaReadoutStyle.TonalPill,
-        valueWeight = FontWeight.Bold,
+        valueWeight = RemoteFontWeight.Bold,
       )
 
     /**
@@ -277,7 +277,7 @@ data class HaUberTheme(
         readout = HaReadoutStyle.Plate,
         fontFamily = RemoteFontFamily.Monospace,
         letterSpacingSp = 1.2f,
-        valueWeight = FontWeight.Normal,
+        valueWeight = RemoteFontWeight.Normal,
         appTheme = true,
       )
 
@@ -327,7 +327,7 @@ data class HaUberTheme(
         hotInk = Color(0xFFB3261E),
         darkHotInk = Color(0xFFFF6B6B),
         fontFamily = RemoteFontFamily.Monospace,
-        valueWeight = FontWeight.Bold,
+        valueWeight = RemoteFontWeight.Bold,
         // An LCD with no reading shows dashes, in its own ink.
         unavailable = HaUnavailableStyle(label = "----", labelAlpha = 1f),
         appTheme = true,
@@ -372,13 +372,13 @@ data class HaUberTheme(
         shape = HaCardShapeStyle(cornerDp = 18, borderDp = 0),
         visuals = HaVisualFamily.Braun,
         fontFamily = RemoteFontFamily.SansSerif,
-        valueWeight = FontWeight.Medium,
+        valueWeight = RemoteFontWeight.Medium,
         // Rams' quiet type: the word in lowercase and a regular weight; the content recedes.
         unavailable =
           HaUnavailableStyle(
             label = "unavailable",
             labelAlpha = 0.7f,
-            labelWeight = FontWeight.Normal,
+            labelWeight = RemoteFontWeight.Normal,
           ),
       )
 
@@ -410,7 +410,7 @@ data class HaUberTheme(
         ink = Color(0xFFFF8A2A),
         fontFamily = RemoteFontFamily.SansSerif,
         letterSpacingSp = 0.4f,
-        valueWeight = FontWeight.Light,
+        valueWeight = RemoteFontWeight.Light,
         appTheme = true,
       )
 
@@ -451,7 +451,7 @@ data class HaUberTheme(
         readout = HaReadoutStyle.Plate,
         fontFamily = RemoteFontFamily.SansSerif,
         letterSpacingSp = 0.6f,
-        valueWeight = FontWeight.Medium,
+        valueWeight = RemoteFontWeight.Medium,
         appTheme = true,
       )
 
@@ -473,7 +473,7 @@ data class HaUberTheme(
         visuals = HaVisualFamily.Ikea,
         readout = HaReadoutStyle.Plate,
         fontFamily = RemoteFontFamily.SansSerif,
-        valueWeight = FontWeight.Bold,
+        valueWeight = RemoteFontWeight.Bold,
       )
 
     val Mushroom = CommunityThemes.Mushroom
@@ -655,7 +655,7 @@ fun haHeadingTextStyle(): RemoteTextStyle {
 /** The weight readings are set in under the active uber theme. */
 @Composable
 @ReadOnlyComposable
-fun haValueWeight(): FontWeight = LocalHaUberTheme.current.theme.valueWeight
+fun haValueWeight(): RemoteFontWeight = LocalHaUberTheme.current.theme.valueWeight
 
 /**
  * This accent under the active uber theme: unchanged for themes that keep semantic colours, and the

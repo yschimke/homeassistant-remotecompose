@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
-import androidx.wear.compose.remote.material3.RemoteColorScheme
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcFloatExpression
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
@@ -65,7 +64,7 @@ class CardDesignWearTemplateTest {
 
   private val registry = defaultRegistry()
   private val style = ThemeStyle.entries.first()
-  private val colors = RemoteColorScheme(terrazzoWearColorScheme(style))
+  private val colors = wearWidgetColors(terrazzoWearColorScheme(style))
   private val context = RuntimeEnvironment.getApplication()
 
   private fun entity(id: String, state: String, vararg attributes: Pair<String, String>) =

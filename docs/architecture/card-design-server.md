@@ -291,7 +291,7 @@ design:
 | One converter per card type, `Render(card, snapshot)` | `rc-converter/.../CardConverter.kt`, `cards/DefaultConverters.kt` |
 | Named bindings pushed by name, with no re-encode | `rc-components/.../LiveValues.kt`, `ha-model/.../rc/CardEntities.kt` (`cardSnapshotBindings`), `CachedCardPreview.pushSnapshotBindings` |
 | Named bitmaps (picture bindings) | `rc-components/.../LocalNamedRemoteBitmap.kt`, `PictureBindingName.kt` |
-| Profiles for each surface | `AndroidxExperimentalProfile.kt` and `WrapModeProfile.kt` (latest level), `WidgetProfile.kt` (level 7 widgets, with and without `COLOR_THEME`), plus the Glance Wear op set for wear widgets |
+| Profiles for each surface | `rc-components/.../CaptureProfile.kt`: rc-players capture profiles for the app's players (latest level), a launcher (level 7 widgets, with and without `COLOR_THEME`) and the Glance Wear op set for wear widgets |
 | Host-resolved colours | `SystemRemoteHaTheme` (`ColorTheme` op, API 37+ launcher), `WearM3.*` named colours (wear widget) |
 | Theme styles | `ThemeStyle` (Material3, Home, Mushroom, Minimalist, Kiosk) |
 | Fixed-mode tier ladders inside a single document | `docs/architecture/adaptive-card-layouts.md`, `RemoteSizeBreakpoint.kt` |

@@ -2,10 +2,10 @@
 
 package ee.schimke.ha.rc.ui
 
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import ee.schimke.composeai.rccreation.compose.state.rc
 import ee.schimke.ha.rc.components.RemoteHaMetric
 
 /** Compose UI preview of a metric block; the same Remote Compose component powers export. */

@@ -8,16 +8,15 @@ import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteImage
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.remote.player.view.RemoteComposePlayer
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.layout.RemoteContentScale
+import ee.schimke.composeai.rccreation.compose.layout.RemoteImage
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.ha.rc.components.rememberLocalNamedRemoteBitmap
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -71,7 +70,7 @@ class NamedBitmapOverrideTest {
             bitmap = bitmap,
             contentDescription = null,
             modifier = RemoteModifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds,
+            contentScale = RemoteContentScale.FillBounds,
           )
         }
         .bytes

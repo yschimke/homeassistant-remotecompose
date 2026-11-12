@@ -51,7 +51,7 @@ import kotlinx.coroutines.sync.withLock
  * Per-card home-screen widget. Extends [AppWidgetProvider] directly rather than RemoteCompose's
  * `RemoteComposeWidget` scaffolding so we can pin the capture to [widgetsProfile] — the launcher's
  * RemoteCompose runtime supports a stricter op set than the embedded AndroidX player, and
- * `RemoteComposeWidget` hard-codes `RcPlatformProfiles.ANDROIDX` inside its `RCWidget` capture.
+ * `RemoteComposeWidget` hard-codes `androidX` inside its `RCWidget` capture.
  *
  * Flow:
  * 1. Framework or our own broadcast triggers [onUpdate].
@@ -392,7 +392,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     widthPx: Int,
     heightPx: Int,
     densityDpi: Int,
-    captureProfile: androidx.compose.remote.creation.profile.Profile,
+    captureProfile: ee.schimke.ha.rc.CaptureProfile,
     dark: Boolean,
     look: LauncherLook,
     fontFilter: ee.schimke.ha.rc.LauncherFontFilter?,
@@ -544,7 +544,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
      * everything but [systemThemedWidgetsProfile], whose ColorTheme an API 37 host can only read at
      * the 1.1 header (see [platformWidgetDocument]).
      */
-    internal fun android16Wire(profile: androidx.compose.remote.creation.profile.Profile): Boolean =
+    internal fun android16Wire(profile: ee.schimke.ha.rc.CaptureProfile): Boolean =
       profile !== systemThemedWidgetsProfile
 
     val EMPTY_SNAPSHOT = HaSnapshot()

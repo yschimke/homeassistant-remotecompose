@@ -6,19 +6,23 @@ import android.app.PendingIntent
 import android.os.Bundle
 import androidx.compose.remote.creation.compose.action.PendingIntentAction
 import androidx.compose.remote.creation.compose.action.pendingIntentAction
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.layout.RemoteBox as AndroidxRemoteBox
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier as AndroidxRemoteModifier
+import androidx.compose.remote.creation.compose.modifier.clickable as androidxClickable
+import androidx.compose.remote.creation.compose.modifier.size as androidxSize
+import androidx.compose.remote.creation.compose.state.rdp as androidxRdp
 import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
 import androidx.glance.wear.core.WidgetInstanceId
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.composeai.rcplayer.protocol.RcDocument
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcHostNamedAction
@@ -27,6 +31,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcIntegerConstant
 import ee.schimke.composeai.rcplayer.protocol.RcTextData
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.captureSingleRemoteDocument
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.toNamedRemoteAction
@@ -120,8 +125,11 @@ class WearWidgetTapsTest {
     // and index, and the PendingIntent at that index in the extras, under the same key.
     val reference = runBlocking {
       WearWidgetDocument(WearWidgetBrush.Companion) {
+          // Glance Wear's capture is AndroidX's creation API, as `pendingIntentAction` is.
           val action = pendingIntentAction { openIntent() }
-          RemoteBox(RemoteModifier.size(80.rdp).clickable(action)) {}
+          AndroidxRemoteBox(
+            AndroidxRemoteModifier.androidxSize(80.androidxRdp).androidxClickable(action),
+          ) {}
         }
         .captureRawContent(context, params(1), false)
     }

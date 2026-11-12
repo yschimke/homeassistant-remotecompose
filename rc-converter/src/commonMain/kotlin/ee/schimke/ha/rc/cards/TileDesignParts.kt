@@ -2,8 +2,8 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp

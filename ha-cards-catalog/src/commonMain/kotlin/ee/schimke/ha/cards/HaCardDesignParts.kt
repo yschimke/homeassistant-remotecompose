@@ -2,10 +2,10 @@
 
 package ee.schimke.ha.cards
 
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.ha.rc.cards.AlarmDesignParts
 import ee.schimke.ha.rc.cards.ArcDialDesignParts
 import ee.schimke.ha.rc.cards.BambuDesignParts

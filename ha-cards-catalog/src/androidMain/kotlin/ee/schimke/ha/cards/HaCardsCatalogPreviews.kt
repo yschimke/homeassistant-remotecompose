@@ -5,25 +5,18 @@ package ee.schimke.ha.cards
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.remote.creation.compose.action.hostAction
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.state.rb
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.wear.compose.remote.material3.RemoteButton
-import androidx.wear.compose.remote.material3.RemoteCard
-import androidx.wear.compose.remote.material3.RemoteSwitchButton
-import androidx.wear.compose.remote.material3.RemoteText
 import ee.schimke.composeai.preview.CatalogComponent
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.state.rb
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaBambuControlButton
 import ee.schimke.ha.rc.components.HaBambuPrintControlData
@@ -279,67 +272,6 @@ fun HaDashboardSectionSticker() = HaCardSticker {
       HaCardSurface { HaCardThermometer(name = "Kitchen", value = 21.5f, presentation = "compact") }
     }
   }
-}
-
-@CatalogComponent(
-  id = "Remote/Card",
-  group = "Containment",
-  noReference = NO_KIT,
-  caption = "Remote Material 3's RemoteCard, as remote-m3 offers it.",
-)
-@Preview(widthDp = CARD_WIDTH_DP, heightDp = 96)
-@Composable
-fun RemoteCardSticker() = HaCardSticker {
-  RemoteCard(
-    onClick = hostAction("ha-cards.sticker".rs),
-    modifier = RemoteModifier.fillMaxWidth(),
-    content = { RemoteText("Good evening".rs) },
-  )
-}
-
-// ── Buttons and selection ──────────────────────────────────────────────────────────────────────
-
-@CatalogComponent(
-  id = "Remote/Button",
-  group = "Buttons",
-  noReference = NO_KIT,
-  caption = "Remote Material 3's RemoteButton, as remote-m3 offers it: here, running a scene.",
-)
-@Preview(widthDp = 216, heightDp = 76)
-@Composable
-fun RemoteButtonSticker() = HaCardSticker {
-  RemoteButton(onClick = hostAction("ha-cards.sticker".rs)) { RemoteText("Movie night".rs) }
-}
-
-@CatalogComponent(
-  id = "Remote/SwitchButton",
-  group = "Selection buttons",
-  noReference = NO_KIT,
-  caption = "Remote Material 3's RemoteSwitchButton: a labelled switch, checked.",
-)
-@Preview(widthDp = 216, heightDp = 76)
-@Composable
-fun RemoteSwitchButtonSticker() = HaCardSticker {
-  RemoteSwitchButton(
-    checked = true.rb,
-    onCheckedChange = hostAction("ha-cards.sticker".rs),
-    modifier = RemoteModifier.fillMaxWidth(),
-    label = { RemoteText("Porch light".rs, color = HaPrimaryText) },
-  )
-}
-
-// ── Text ───────────────────────────────────────────────────────────────────────────────────────
-
-@CatalogComponent(
-  id = "Remote/Text",
-  group = "Text",
-  noReference = NO_KIT,
-  caption = "Remote Material 3's RemoteText, set by size: the text every template binds.",
-)
-@Preview(widthDp = 216, heightDp = 56)
-@Composable
-fun RemoteTextSticker() = HaCardSticker {
-  RemoteText("Living room".rs, color = HaPrimaryText, fontSize = 18.rsp)
 }
 
 // ── Measurements ────────────────────────────────────────────────────────────────────────────────

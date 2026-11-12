@@ -3,10 +3,9 @@
 package ee.schimke.terrazzo.wearsync
 
 import android.content.Context
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardRegistry
@@ -15,6 +14,7 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.captureSingleRemoteDocument
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.ProvideExpressionNames
 import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry

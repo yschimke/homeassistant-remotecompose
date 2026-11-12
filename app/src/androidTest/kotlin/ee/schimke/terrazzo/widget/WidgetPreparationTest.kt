@@ -332,10 +332,10 @@ class WidgetPreparationTest {
     val legacyCapture: WidgetPreviewCapture = { ctx, _, cfg, state, size ->
       val profile = ee.schimke.ha.rc.widgetsProfile
       val captured = runBlocking {
-        androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument(
+        ee.schimke.ha.rc.captureSingleRemoteDocument(
           context = ctx,
           creationDisplayInfo =
-            androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo(
+            ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo(
               WidgetSizing.dpToPx(ctx, size.widthDp),
               WidgetSizing.dpToPx(ctx, size.heightDp),
               ctx.resources.configuration.densityDpi,

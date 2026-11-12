@@ -5,10 +5,9 @@ package ee.schimke.ha.rc
 import androidx.compose.remote.core.Operation
 import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.core.operations.FloatExpression
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.CompositionLocalProvider
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.state.rs
 import ee.schimke.ha.rc.components.HaGaugeData
 import ee.schimke.ha.rc.components.HaMotion
 import ee.schimke.ha.rc.components.HaTheme

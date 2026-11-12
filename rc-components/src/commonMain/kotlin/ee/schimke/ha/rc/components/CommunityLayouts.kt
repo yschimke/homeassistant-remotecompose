@@ -2,12 +2,12 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.*
-import androidx.compose.remote.creation.compose.modifier.*
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.*
+import ee.schimke.composeai.rccreation.compose.modifier.*
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.state.*
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 
 /** Family chrome travels with every card type, including cards without a numeric meter. */
 internal fun communityFrame(family: HaVisualFamily, ink: RemoteColor): RemoteModifier {
@@ -70,7 +70,7 @@ internal fun CommunityReadingLayout(
       fontSize = HaType.Label,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
   val reading: @Composable () -> Unit = {
@@ -81,7 +81,7 @@ internal fun CommunityReadingLayout(
       fontWeight = haValueWeight(),
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
   val foot: @Composable () -> Unit = {
@@ -92,7 +92,7 @@ internal fun CommunityReadingLayout(
         fontSize = HaType.Micro,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
   }
   val rule: @Composable () -> Unit = {
@@ -102,7 +102,7 @@ internal fun CommunityReadingLayout(
     when (family) {
       HaVisualFamily.Mushroom -> {
         RemoteRow(
-          RemoteModifier.fillMaxWidth().weight(1f),
+          RemoteModifier.fillMaxWidth().weight(1f.rf),
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
           RemoteBox(
@@ -113,7 +113,7 @@ internal fun CommunityReadingLayout(
           ) {
             meter(RemoteModifier.fillMaxSize())
           }
-          RemoteColumn(RemoteModifier.weight(1f).padding(start = 12.rdp)) {
+          RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 12.rdp)) {
             label()
             reading()
           }
@@ -123,7 +123,7 @@ internal fun CommunityReadingLayout(
       HaVisualFamily.Bubble -> {
         if (small) {
           RemoteColumn(
-            RemoteModifier.fillMaxWidth().weight(1f),
+            RemoteModifier.fillMaxWidth().weight(1f.rf),
             verticalArrangement = RemoteArrangement.Center,
           ) {
             label()
@@ -138,10 +138,10 @@ internal fun CommunityReadingLayout(
           }
         } else {
           RemoteRow(
-            RemoteModifier.fillMaxWidth().weight(1f),
+            RemoteModifier.fillMaxWidth().weight(1f.rf),
             verticalAlignment = RemoteAlignment.CenterVertically,
           ) {
-            RemoteColumn(RemoteModifier.weight(1f)) {
+            RemoteColumn(RemoteModifier.weight(1f.rf)) {
               label()
               foot()
             }
@@ -159,21 +159,21 @@ internal fun CommunityReadingLayout(
       HaVisualFamily.Minimalist -> {
         reading()
         label()
-        RemoteBox(RemoteModifier.weight(1f))
+        RemoteBox(RemoteModifier.weight(1f.rf))
         RemoteRow(
           RemoteModifier.fillMaxWidth(),
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
-          RemoteBox(RemoteModifier.weight(1f)) { foot() }
+          RemoteBox(RemoteModifier.weight(1f.rf)) { foot() }
           meter(RemoteModifier.size(48.rdp, 28.rdp))
         }
       }
       HaVisualFamily.Cupertino -> {
         RemoteRow(
-          RemoteModifier.fillMaxWidth().weight(1f),
+          RemoteModifier.fillMaxWidth().weight(1f.rf),
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
-          RemoteColumn(RemoteModifier.weight(1f).padding(end = 10.rdp)) {
+          RemoteColumn(RemoteModifier.weight(1f.rf).padding(end = 10.rdp)) {
             reading()
             label()
             foot()
@@ -198,10 +198,10 @@ internal fun CommunityReadingLayout(
           label()
         }
         RemoteRow(
-          RemoteModifier.fillMaxWidth().weight(1f),
+          RemoteModifier.fillMaxWidth().weight(1f.rf),
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
-          RemoteColumn(RemoteModifier.weight(1f)) {
+          RemoteColumn(RemoteModifier.weight(1f.rf)) {
             reading()
             foot()
           }
@@ -212,7 +212,7 @@ internal fun CommunityReadingLayout(
       HaVisualFamily.Obsidian -> {
         label()
         rule()
-        RemoteBox(RemoteModifier.weight(1f), contentAlignment = RemoteAlignment.CenterStart) {
+        RemoteBox(RemoteModifier.weight(1f.rf), contentAlignment = RemoteAlignment.CenterStart) {
           reading()
         }
         RemoteHaBarMeter(fraction, color, RemoteModifier.fillMaxWidth().height(8.rdp))
@@ -221,11 +221,11 @@ internal fun CommunityReadingLayout(
       HaVisualFamily.Noctis -> {
         label()
         RemoteRow(
-          RemoteModifier.fillMaxWidth().weight(1f),
+          RemoteModifier.fillMaxWidth().weight(1f.rf),
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
           meter(RemoteModifier.size((if (small) 40 else 72).rdp, (if (small) 48 else 64).rdp))
-          RemoteColumn(RemoteModifier.weight(1f).padding(start = 10.rdp)) {
+          RemoteColumn(RemoteModifier.weight(1f.rf).padding(start = 10.rdp)) {
             reading()
             foot()
           }
@@ -234,7 +234,7 @@ internal fun CommunityReadingLayout(
       HaVisualFamily.Lcars -> {
         RemoteHaBarMeter(fraction, color, RemoteModifier.fillMaxWidth().height(18.rdp))
         RemoteBox(
-          RemoteModifier.fillMaxWidth().weight(1f),
+          RemoteModifier.fillMaxWidth().weight(1f.rf),
           contentAlignment = RemoteAlignment.CenterEnd,
         ) {
           reading()
@@ -246,16 +246,16 @@ internal fun CommunityReadingLayout(
       HaVisualFamily.Arctic -> {
         label()
         reading()
-        RemoteBox(RemoteModifier.weight(1f))
+        RemoteBox(RemoteModifier.weight(1f.rf))
         RemoteHaBarMeter(fraction, color, RemoteModifier.fillMaxWidth().height(18.rdp))
         foot()
       }
       HaVisualFamily.Aeon -> {
         RemoteRow(
-          RemoteModifier.fillMaxWidth().weight(1f),
+          RemoteModifier.fillMaxWidth().weight(1f.rf),
           verticalAlignment = RemoteAlignment.CenterVertically,
         ) {
-          RemoteColumn(RemoteModifier.weight(1f).padding(end = 8.rdp)) {
+          RemoteColumn(RemoteModifier.weight(1f.rf).padding(end = 8.rdp)) {
             label()
             reading()
             foot()

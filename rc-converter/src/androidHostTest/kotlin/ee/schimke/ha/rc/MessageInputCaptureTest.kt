@@ -2,9 +2,7 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
 import ee.schimke.composeai.rcplayer.protocol.*
 import ee.schimke.ha.model.*
 import ee.schimke.ha.rc.cards.MessageCardConverter
@@ -31,7 +29,7 @@ class MessageInputCaptureTest {
     mode: CardSizeMode,
     width: Int,
     height: Int,
-    profile: androidx.compose.remote.creation.profile.Profile = androidXExperimental,
+    profile: CaptureProfile = androidXExperimental,
   ): RcDocument = runBlocking {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     val bytes =
@@ -64,7 +62,7 @@ class MessageInputCaptureTest {
   @Test
   fun wearAndLauncherCapturesContainAnOpenAppAlternativeWithoutEditors() {
     for ((width, height) in listOf(184 to 44, 160 to 80)) {
-      val document = capture(CardSizeMode.Fixed, width, height, RcPlatformProfiles.ANDROIDX)
+      val document = capture(CardSizeMode.Fixed, width, height, androidX)
       assertTrue(document.operations.none { it is RcCustomLayout })
       val text = document.operations.filterIsInstance<RcTextData>().map { it.text }
       assertTrue(text.contains("Open app to send a message"))
@@ -74,7 +72,7 @@ class MessageInputCaptureTest {
 
   @Test
   fun unsupportedStableWriterShowsAnAlternativeInsteadOfThrowing() {
-    val document = capture(CardSizeMode.Wrap, 360, 400, RcPlatformProfiles.ANDROIDX)
+    val document = capture(CardSizeMode.Wrap, 360, 400, androidX)
     assertTrue(document.operations.none { it is RcCustomLayout })
     assertTrue(
       document.operations.filterIsInstance<RcTextData>().any {

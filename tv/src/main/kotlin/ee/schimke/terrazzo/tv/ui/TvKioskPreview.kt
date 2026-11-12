@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.components.toFontWeight
 import kotlinx.coroutines.delay
 
 /**
@@ -56,7 +57,7 @@ fun TvKioskPreview(
   val cs = MaterialTheme.colorScheme.withCardStyle(cardStyle)
   val shape = if (cardStyle.id == HaUberTheme.Classic.id) null else cardStyle.shape
   val chipCorner = shape?.let { (it.cornerDp * 0.7f).dp } ?: 14.dp
-  val valueWeight = if (shape == null) null else cardStyle.valueWeight
+  val valueWeight = if (shape == null) null else cardStyle.valueWeight.toFontWeight()
   val ink = if (shape == null) null else cardStyle.inkFor(darkTheme = true)
 
   var nowMs by remember { mutableLongStateOf(frozenNowMs ?: System.currentTimeMillis()) }

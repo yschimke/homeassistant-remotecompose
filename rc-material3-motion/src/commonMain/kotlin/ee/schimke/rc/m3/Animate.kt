@@ -2,9 +2,9 @@
 
 package ee.schimke.rc.m3
 
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.max
 import androidx.compose.runtime.Composable
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.max
 
 /**
  * [this], moving by [spec] whenever the document state behind it changes (a host writing a new

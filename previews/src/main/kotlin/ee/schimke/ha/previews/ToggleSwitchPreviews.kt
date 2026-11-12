@@ -2,12 +2,12 @@
 
 package ee.schimke.ha.previews
 
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rf
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.HaUberTheme
