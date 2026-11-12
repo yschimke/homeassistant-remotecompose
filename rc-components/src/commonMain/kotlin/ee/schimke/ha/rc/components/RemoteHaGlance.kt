@@ -12,7 +12,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteFlowRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
@@ -149,7 +148,7 @@ fun RemoteHaGlanceCell(
 ) {
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent)
   val accent: RemoteColor = look.accent
   if (haLayouts().glanceComplication && !compact) {

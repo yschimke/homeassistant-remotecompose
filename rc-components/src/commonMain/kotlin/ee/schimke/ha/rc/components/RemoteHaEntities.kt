@@ -11,7 +11,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
@@ -192,7 +191,7 @@ private fun FittedEntityRow(
 ) {
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val expanded = fit == HaEntitiesFit.Expanded
   val nameSize =
     when {
@@ -293,7 +292,7 @@ private fun CommunityAccessory(data: HaEntityRowData, modifier: RemoteModifier) 
   val theme = haTheme()
   val look = entityLook(data.entityId, data.accent)
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   RemoteColumn(
     modifier
       .then(clickable)

@@ -11,7 +11,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.height
 import ee.schimke.composeai.rccreation.compose.modifier.padding
@@ -47,7 +46,7 @@ fun RemoteHaEntityRow(
 ) {
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent)
   val isOnBinding = look.isOn
   val accent: RemoteColor = look.accent
@@ -213,7 +212,7 @@ fun RemoteHaToggleSwitch(
     }
 
   val host: RemoteAction? = tapAction.toRemoteAction()
-  val clickable = if (host != null) RemoteModifier.clickable(host) else RemoteModifier
+  val clickable = if (host != null) RemoteModifier.haClickable(host) else RemoteModifier
 
   RemoteHaToggleSwitchByProgress(
     progress = progress,

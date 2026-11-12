@@ -16,7 +16,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
 import ee.schimke.composeai.rccreation.compose.modifier.border
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
@@ -58,7 +57,7 @@ fun RemoteHaPicture(
   }
   val theme = haTheme()
   val click =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   // Wrap: fixed natural band. Fixed: fill the whole cell so the image
   // (placeholder until a host wires an image channel) is the identity
   // edge-to-edge with the name as a bottom scrim.
@@ -358,12 +357,26 @@ fun RemoteHaPictureElements(
       val pos = element.position!!
       val leftDp = (pos.leftFraction * PICTURE_ELEMENTS_CANVAS_W_DP).toInt().coerceAtLeast(0)
       val topDp = (pos.topFraction * PICTURE_ELEMENTS_CANVAS_H_DP).toInt().coerceAtLeast(0)
-      Element(
-        index = data.elements.indexOf(element),
-        element = element,
-        theme = theme,
-        modifier = RemoteModifier.padding(start = leftDp.rdp, top = topDp.rdp),
-      )
+      // A tappable icon sits in a touch target wider than it is drawn, so it is placed by the
+      // target's corner: the drawn icon stays where the element says, unless that is closer to
+      // the card's top or left edge than the target reaches.
+      val inset = if (element.isTapTarget()) StateIconTargetInsetDp else 0
+      // The position is its own box: on the element it would be part of what the element's tap
+      // covers, a target reaching from the card's corner to the icon.
+      RemoteBox(
+        modifier =
+          RemoteModifier.padding(
+            start = (leftDp - inset).coerceAtLeast(0).rdp,
+            top = (topDp - inset).coerceAtLeast(0).rdp,
+          ),
+      ) {
+        Element(
+          index = data.elements.indexOf(element),
+          element = element,
+          theme = theme,
+          touchTarget = true,
+        )
+      }
     }
     if (unpositioned.isNotEmpty()) {
       RemoteRow(
@@ -387,11 +400,13 @@ private fun Element(
   element: HaPictureElement,
   theme: RemoteHaTheme,
   modifier: RemoteModifier = RemoteModifier,
+  touchTarget: Boolean = false,
 ) {
   when (element) {
     is HaPictureElement.StateIcon -> {
-      val click =
-        element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+      // The tap target is named; the glyph inside it is decorative then.
+      val action = element.tapAction.toRemoteAction()
+      val label = "element".rs
       val accent = haInk(element.accent)
       val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
       val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
@@ -406,33 +421,41 @@ private fun Element(
         isActive?.select(accent, theme.secondaryText)
           ?: if (element.initiallyActive) accent else theme.secondaryText
 
-      RemoteBox(
-        modifier =
-          modifier
-            .then(click)
-            .size(28.rdp)
-            .clip(haControlShape(14, round = true))
-            .background(bg)
-            .then(haKeyChrome(tint)),
-        contentAlignment = RemoteAlignment.Center,
-      ) {
-        HaStateIcon(
-          icon = element.icon,
-          activeIcon = element.activeIcon,
-          initiallyOn = element.initiallyActive,
-          isOn = isActive,
-          activeWhenUnavailable = element.activeIconWhenUnavailable,
-          initiallyAvailable = element.initiallyAvailable,
-          isAvailable =
-            pairAvailability(
-              element.entityId,
-              element.activeIconWhenUnavailable,
-              element.initiallyAvailable,
-            ),
-          tint = tint,
-          contentDescription = "element".rs,
-          modifier = RemoteModifier.size(16.rdp),
-        )
+      val icon: @Composable @RemoteComposable (RemoteModifier) -> Unit = { box ->
+        RemoteBox(
+          modifier =
+            box
+              .size(StateIconDp.rdp)
+              .clip(haControlShape(14, round = true))
+              .background(bg)
+              .then(haKeyChrome(tint)),
+          contentAlignment = RemoteAlignment.Center,
+        ) {
+          HaStateIcon(
+            icon = element.icon,
+            activeIcon = element.activeIcon,
+            initiallyOn = element.initiallyActive,
+            isOn = isActive,
+            activeWhenUnavailable = element.activeIconWhenUnavailable,
+            initiallyAvailable = element.initiallyAvailable,
+            isAvailable =
+              pairAvailability(
+                element.entityId,
+                element.activeIconWhenUnavailable,
+                element.initiallyAvailable,
+              ),
+            tint = tint,
+            contentDescription = label.takeIf { action == null },
+            modifier = RemoteModifier.size(16.rdp),
+          )
+        }
+      }
+      if (action != null && touchTarget) {
+        RemoteHaTouchTarget(StateIconDp, StateIconDp, action, label, modifier) {
+          icon(RemoteModifier)
+        }
+      } else {
+        icon(action?.let { modifier.haClickable(it, label) } ?: modifier)
       }
     }
     is HaPictureElement.StateLabel -> {
@@ -448,7 +471,7 @@ private fun Element(
     }
     is HaPictureElement.ServiceButton -> {
       val click =
-        element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+        element.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
       val accent = haInk(element.accent)
       RemoteBox(
         modifier =
@@ -471,3 +494,12 @@ private fun Element(
     }
   }
 }
+
+/** A picture element's state icon, as drawn. */
+private const val StateIconDp = 28
+
+/** How far a state icon's touch target reaches past the icon on each side. */
+private const val StateIconTargetInsetDp = (MinTouchTargetDp - StateIconDp) / 2
+
+private fun HaPictureElement.isTapTarget(): Boolean =
+  this is HaPictureElement.StateIcon && tapAction !is HaAction.None

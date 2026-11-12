@@ -12,7 +12,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
@@ -118,7 +117,8 @@ fun RemoteHaMeasurement(
    */
   chipShowsName: Boolean = false,
 ) {
-  val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val clickable =
+    tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   when (presentation) {
     HaPresentation.Glyph ->
       RemoteBox(modifier = modifier.then(clickable)) {

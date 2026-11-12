@@ -15,13 +15,10 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
-import ee.schimke.composeai.rccreation.compose.modifier.contentDescription
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.height
 import ee.schimke.composeai.rccreation.compose.modifier.padding
-import ee.schimke.composeai.rccreation.compose.modifier.semantics
 import ee.schimke.composeai.rccreation.compose.modifier.width
 import ee.schimke.composeai.rccreation.compose.state.RemoteColor
 import ee.schimke.composeai.rccreation.compose.state.RemoteString
@@ -280,7 +277,7 @@ private fun MarkdownLine(
       links
         .singleOrNull()
         ?.let { markdownLinkAction(it.url).toRemoteAction() }
-        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+        ?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
     val emphasis = block.drawnStyle
     val line: @Composable () -> Unit = {
       RemoteText(
@@ -453,7 +450,7 @@ private fun InlineSpan(
         fontWeight = emphasis.weight(fontWeight),
         fontFamily = emphasis.fontFamily,
         style = style,
-        modifier = click?.let { RemoteModifier.clickable(it) } ?: RemoteModifier,
+        modifier = click?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier,
       )
     }
     is MarkdownInline.Image -> MarkdownBadge(inline)
@@ -520,10 +517,7 @@ private fun MarkdownBadge(image: MarkdownInline.Image) {
     // description doesn't reach the clickable node) and is a full touch target tall, with the badge
     // centred in it.
     RemoteBox(
-      modifier =
-        RemoteModifier.clickable(click)
-          .semantics { contentDescription = label }
-          .height(MIN_TOUCH_TARGET_DP.rdp),
+      modifier = RemoteModifier.haClickable(click, label).height(MIN_TOUCH_TARGET_DP.rdp),
       contentAlignment = RemoteAlignment.Center,
     ) {
       badge(null)

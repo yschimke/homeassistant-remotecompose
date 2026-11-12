@@ -12,7 +12,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
@@ -40,7 +39,7 @@ import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent)
   val accent: RemoteColor = look.accent
   // Toggleable entities always get the chip (color varies with isOn);
@@ -212,7 +211,7 @@ private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) 
 fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent, live = false)
   val accent: RemoteColor = look.accent
 
@@ -324,7 +323,7 @@ fun RemoteHaIconChip(
 ) {
   val theme = haTheme()
   val clickable =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   val look = entityLook(data.entityId, data.accent, live = bindState)
   val accent: RemoteColor = look.accent
 

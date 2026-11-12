@@ -20,7 +20,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
 import ee.schimke.composeai.rccreation.compose.modifier.border
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.drawWithContent
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
@@ -71,7 +70,7 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
   }
   val theme = haTheme()
   val click =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
 
   RemoteBox(
     modifier =
@@ -148,7 +147,7 @@ fun RemoteHaArcDialWide(
 ) {
   val theme = haTheme()
   val click =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   // NB: on tall cells (e.g. 3×3) this row sits high with dead space
   // below — it can't self-centre. A `RemoteRow`/`RemoteColumn` doesn't
   // propagate fill-height through the Fixed-mode size breakpoint, and a
@@ -260,7 +259,7 @@ fun RemoteHaArcDialFill(
   }
   val theme = haTheme()
   val click =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   RemoteColumn(
     modifier =
       modifier
@@ -357,7 +356,7 @@ fun RemoteHaArcDialNarrow(
   }
   val theme = haTheme()
   val click =
-    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   RemoteColumn(
     modifier =
       modifier
@@ -767,7 +766,9 @@ private fun StepperButton(
   accent: RemoteColor,
   theme: RemoteHaTheme,
 ) {
-  val click = action.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  // The target carries the label: the glyph inside is two boxes down, and decorative.
+  val click =
+    action.toRemoteAction()?.let { RemoteModifier.haClickable(it, label.rs) } ?: RemoteModifier
   RemoteBox(
     modifier = RemoteModifier.then(click).size(StepperTargetDp.rdp),
     contentAlignment = RemoteAlignment.Center,
@@ -783,7 +784,7 @@ private fun StepperButton(
     ) {
       RemoteBasicIcon(
         imageVector = icon.toRemoteImageVector(),
-        contentDescription = label.rs,
+        contentDescription = if (action is HaAction.None) label.rs else null,
         modifier = RemoteModifier.size(20.rdp),
         tint = accent,
       )

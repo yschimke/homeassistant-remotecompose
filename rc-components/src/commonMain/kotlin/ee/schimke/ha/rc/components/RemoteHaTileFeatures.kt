@@ -17,7 +17,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.contentDescription
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
@@ -238,7 +237,7 @@ private fun StepButton(
   heightDp: Int,
 ) {
   val theme = haTheme()
-  val click = action.toRemoteAction()?.let { RemoteModifier.clickable(it) }
+  val click = action.toRemoteAction()?.let { RemoteModifier.haClickable(it) }
   RemoteBox(
     modifier =
       RemoteModifier.then(click ?: RemoteModifier)
@@ -278,7 +277,7 @@ private fun ModeSelect(
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     feature.options.forEach { option ->
-      val click = option.action.toRemoteAction()?.let { RemoteModifier.clickable(it) }
+      val click = option.action.toRemoteAction()?.let { RemoteModifier.haClickable(it) }
       val segment =
         RemoteModifier.weight(1f.rf).then(click ?: RemoteModifier).height(heightDp.rdp).let {
           if (option.selected) it.clip(haControlShape(FeatureCornerDp)).background(accent) else it

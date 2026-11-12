@@ -20,7 +20,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
 import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.height
 import ee.schimke.composeai.rccreation.compose.modifier.size
@@ -44,6 +43,7 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.MinTouchTargetDp
 import ee.schimke.ha.rc.components.animateRemoteFloat
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.components.haClickable
 import ee.schimke.ha.rc.components.haMotion
 import ee.schimke.ha.rc.components.toRemoteAction
 
@@ -244,7 +244,7 @@ private fun CoverButton(
   // and keeps no bounds to touch.
   val clickable =
     action.toRemoteAction(live.enabled.and(live.shown), now == CoverButtonState.Enabled)?.let {
-      RemoteModifier.clickable(it)
+      RemoteModifier.haClickable(it)
     } ?: RemoteModifier
   val edge = live.shown.select(ButtonFaceDp.rdp, 0.rdp)
   val target = live.shown.select(MinTouchTargetDp.rdp, 0.rdp)

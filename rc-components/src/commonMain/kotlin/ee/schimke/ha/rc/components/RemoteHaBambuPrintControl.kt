@@ -13,7 +13,6 @@ import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
 import ee.schimke.composeai.rccreation.compose.layout.RemoteText
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.background
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.clip
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.padding
@@ -82,7 +81,7 @@ private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
     button.tapAction
       .takeIf { button.enabled }
       ?.toRemoteAction()
-      ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+      ?.let { RemoteModifier.haClickable(it) } ?: RemoteModifier
   RemoteColumn(
     modifier = RemoteModifier.then(click),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,

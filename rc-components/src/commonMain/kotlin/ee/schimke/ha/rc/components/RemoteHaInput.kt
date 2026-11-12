@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import ee.schimke.composeai.rccreation.compose.capture.LocalRemoteComposeCreationState
 import ee.schimke.composeai.rccreation.compose.layout.RemoteCustomComponent
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
-import ee.schimke.composeai.rccreation.compose.modifier.clickable
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.height
 import ee.schimke.composeai.rccreation.compose.modifier.padding
@@ -86,7 +85,7 @@ fun RemoteHaInputForm(
           "Open app to send a message".rs,
           color = theme.primaryText,
           fontSize = HaType.Body,
-          modifier = if (open != null) RemoteModifier.clickable(open) else RemoteModifier,
+          modifier = if (open != null) RemoteModifier.haClickable(open) else RemoteModifier,
         )
       } else content()
     }
