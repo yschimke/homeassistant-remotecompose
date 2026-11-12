@@ -2,19 +2,19 @@
 
 package ee.schimke.rc.m3
 
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.PaintingStyle
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
+import ee.schimke.composeai.rccreation.compose.state.lerp
+import ee.schimke.composeai.rccreation.compose.state.rf
 
 /** The five colours of a Material 3 switch. */
 data class RcM3SwitchColors(
@@ -67,14 +67,13 @@ fun RemoteM3SwitchByProgress(
 ) {
   val ambient = rcAmbient()
   // Ambient: the track's outline only, in the colour the track would fill with, and the thumb.
-  val filled = tween(colors.uncheckedTrack, colors.checkedTrack, colorProgress)
+  val filled = lerp(colors.uncheckedTrack, colors.checkedTrack, colorProgress)
   val track = filled.copy(alpha = filled.alpha * ambient.fade)
   // The outline fades into the track as it fills, so a checked switch shows none.
-  val border = tween(colors.uncheckedBorder, colors.checkedTrack, colorProgress)
+  val border = lerp(colors.uncheckedBorder, colors.checkedTrack, colorProgress)
   // A checked thumb is drawn to sit on its filled track, so ambient lights it in the outline's
   // colour: a dark thumb on a black screen would hide which side it's on.
-  val thumb =
-    ambient.color(tween(colors.uncheckedThumb, colors.checkedThumb, colorProgress), border)
+  val thumb = ambient.color(lerp(colors.uncheckedThumb, colors.checkedThumb, colorProgress), border)
   RemoteCanvas(modifier) {
     val radius = height / 2f.rf
     // M3: a 2 dp outline on a 32 dp track.
@@ -100,13 +99,13 @@ fun RemoteM3SwitchByProgress(
 
 private fun fill(color: RemoteColor) = RemotePaint {
   isAntiAlias = true
-  style = PaintingStyle.Fill
+  style = RemotePaintingStyle.Fill
 }
   .apply { this.color = color }
 
 private fun outline(color: RemoteColor, width: RemoteFloat) = RemotePaint {
   isAntiAlias = true
-  style = PaintingStyle.Stroke
+  style = RemotePaintingStyle.Stroke
   strokeWidth = width
 }
   .apply { this.color = color }

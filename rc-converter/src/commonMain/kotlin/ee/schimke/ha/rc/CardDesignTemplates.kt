@@ -2,14 +2,14 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.drawWithContent
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.drawWithContent
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
 import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.optimize
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec

@@ -2,36 +2,36 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteImage
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.offset
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.capture.toRemoteImageVector
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteContentScale
+import ee.schimke.composeai.rccreation.compose.layout.RemoteImage
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.border
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.offset
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.foundation.icon.RemoteBasicIcon
 
 /**
  * `picture` card — a static image with optional name overlay. RC alpha08 has no channel for
@@ -84,7 +84,7 @@ fun RemoteHaPicture(
       // in the one box, the strip sat over the icon and the image path over the strip.
       RemoteColumn(modifier = RemoteModifier.fillMaxSize()) {
         RemoteBox(
-          modifier = RemoteModifier.fillMaxWidth().weight(1f),
+          modifier = RemoteModifier.fillMaxWidth().weight(1f.rf),
           contentAlignment = RemoteAlignment.Center,
         ) {
           RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
@@ -111,7 +111,7 @@ fun RemoteHaPicture(
                   fontSize = HaType.Micro,
                   style = haTextStyle(),
                   maxLines = 1,
-                  overflow = TextOverflow.Ellipsis,
+                  overflow = RemoteTextOverflow.Ellipsis,
                 )
               }
             }
@@ -130,10 +130,10 @@ fun RemoteHaPicture(
               text = cardText("name", data.name),
               color = theme.primaryText,
               fontSize = HaType.Body,
-              fontWeight = FontWeight.Medium,
+              fontWeight = RemoteFontWeight.Medium,
               style = haTextStyle(),
               maxLines = 1,
-              overflow = TextOverflow.Ellipsis,
+              overflow = RemoteTextOverflow.Ellipsis,
             )
           }
         }
@@ -171,7 +171,7 @@ fun RemoteHaPictureGlance(
       if (!showImage) {
         // The strip only.
       } else if (fillHeight) {
-        GlanceImage(data, theme, RemoteModifier.fillMaxWidth().weight(1f))
+        GlanceImage(data, theme, RemoteModifier.fillMaxWidth().weight(1f.rf))
       } else if (imageAspectRatio != null) {
         RemoteAspectRatioBox(imageAspectRatio) {
           GlanceImage(data, theme, RemoteModifier.fillMaxSize())
@@ -197,12 +197,12 @@ fun RemoteHaPictureGlance(
             text = cardTitle(data.title),
             color = theme.primaryText,
             fontSize = HaType.Body,
-            fontWeight = FontWeight.Medium,
+            fontWeight = RemoteFontWeight.Medium,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
             // The gap is the title's padding: spacedBy isn't taken out of a weighted share.
-            modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+            modifier = RemoteModifier.weight(1f.rf).padding(end = 8.rdp),
           )
         }
         if (data.cells.isNotEmpty()) {
@@ -256,7 +256,7 @@ private fun GlancePicture(data: HaPictureGlanceData, theme: RemoteHaTheme) {
         contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
         modifier = RemoteModifier.fillMaxSize(),
         // Fill-crop, as HA's picture cards cover their area.
-        contentScale = ContentScale.Crop,
+        contentScale = RemoteContentScale.Crop,
       )
     }
 }
@@ -442,7 +442,7 @@ private fun Element(
         fontSize = HaType.Label,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
         modifier = modifier,
       )
     }
@@ -463,7 +463,7 @@ private fun Element(
           text = cardText("el.$index.label", element.label),
           color = accent,
           fontSize = HaType.Caption,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
         )

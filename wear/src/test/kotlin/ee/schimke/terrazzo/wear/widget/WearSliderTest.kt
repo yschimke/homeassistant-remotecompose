@@ -9,15 +9,14 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.remote.player.view.RemoteComposePlayer
-import androidx.wear.compose.remote.material3.RemoteColorScheme
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.captureSingleRemoteDocument
 import ee.schimke.ha.rc.cardHasDragControls
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaAction
@@ -57,7 +56,7 @@ import org.robolectric.annotation.GraphicsMode
 class WearSliderTest {
   private val context = RuntimeEnvironment.getApplication()
   private val registry = defaultRegistry()
-  private val colors = RemoteColorScheme(terrazzoWearColorScheme(ThemeStyle.entries.first()))
+  private val colors = wearWidgetColors(terrazzoWearColorScheme(ThemeStyle.entries.first()))
 
   private val card =
     CardConfig(

@@ -311,8 +311,6 @@ dependencies {
   implementation(libs.okhttp)
   implementation(libs.okhttp.coroutines)
 
-  implementation(libs.remote.creation.compose)
-  implementation(libs.remote.creation.core)
   implementation(libs.remote.player.compose)
   implementation(libs.remote.tooling.preview)
 

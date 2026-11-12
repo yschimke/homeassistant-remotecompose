@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
-import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -23,8 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth as rcFillMaxWidth
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.CaptureProfile
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.LocalRcDebugBorders
@@ -249,7 +249,11 @@ private sealed interface SlotHeightStrategy {
 }
 
 @Composable
-private fun DebugStack(title: String, profile: Profile, slotHeightStrategy: SlotHeightStrategy) {
+private fun DebugStack(
+  title: String,
+  profile: CaptureProfile,
+  slotHeightStrategy: SlotHeightStrategy,
+) {
   val registry = defaultRegistry()
   val cards = experimentCards()
   CompositionLocalProvider(LocalRcDebugBorders provides true) {
@@ -285,7 +289,7 @@ private fun ExperimentRow(
   label: String,
   card: CardConfig,
   kind: CardKind,
-  profile: Profile,
+  profile: CaptureProfile,
   slotHeightStrategy: SlotHeightStrategy,
   registry: ee.schimke.ha.rc.CardRegistry,
 ) {
@@ -332,7 +336,7 @@ private fun ExperimentRow(
 private data class ExperimentCacheKey(
   val card: CardConfig,
   val kind: CardKind,
-  val profile: Profile,
+  val profile: CaptureProfile,
   val strategy: SlotHeightStrategy,
 )
 
@@ -424,7 +428,7 @@ private data class WidthOnlyKey(val card: CardConfig, val kind: CardKind, val wi
  * (host fills available width).
  */
 @Composable
-private fun ConstraintMatrix(title: String, profile: Profile) {
+private fun ConstraintMatrix(title: String, profile: CaptureProfile) {
   val registry = defaultRegistry()
   val cards =
     listOf(
@@ -504,7 +508,7 @@ private fun ConstraintRow(
   variant: Variant,
   card: CardConfig,
   kind: CardKind,
-  profile: Profile,
+  profile: CaptureProfile,
   registry: ee.schimke.ha.rc.CardRegistry,
 ) {
   val snapshot = Fixtures.mixed
@@ -549,7 +553,7 @@ private fun ConstraintRow(
 private data class ConstraintCacheKey(
   val card: CardConfig,
   val kind: CardKind,
-  val profile: Profile,
+  val profile: CaptureProfile,
   val variant: Variant,
 )
 

@@ -2,19 +2,19 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.shaders.RemoteBrush
-import androidx.compose.remote.creation.compose.shaders.linearGradient
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.selectIfGe
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.StrokeCap
+import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.shaders.RemoteBrush
+import ee.schimke.composeai.rccreation.compose.shaders.linearGradient
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
+import ee.schimke.composeai.rccreation.compose.state.RemoteStrokeCap
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.selectIfGe
 
 // ---------------------------------------------------------------------------------------------
 // Grammar drawings: one drawing of each visual, written against HaComponentGrammar's tokens
@@ -55,9 +55,9 @@ private val HaComponentGrammar.weight: Float
 /** A stroke paint whose width is a document expression, so it scales with the canvas. */
 private fun strokePaint(width: RemoteFloat, color: RemoteColor, round: Boolean) = RemotePaint {
   isAntiAlias = true
-  style = PaintingStyle.Stroke
+  style = RemotePaintingStyle.Stroke
   strokeWidth = width
-  strokeCap = if (round) StrokeCap.Round else StrokeCap.Butt
+  strokeCap = if (round) RemoteStrokeCap.Round else RemoteStrokeCap.Butt
 }
   .apply { this.color = color }
 

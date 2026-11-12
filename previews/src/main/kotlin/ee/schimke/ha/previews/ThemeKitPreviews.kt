@@ -6,27 +6,27 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize as uiFillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
@@ -83,14 +83,14 @@ private fun KitShowcase(theme: HaUberTheme, darkTheme: Boolean) {
                 RemoteModifier.fillMaxWidth(),
               )
               RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
-                KitCard(RemoteModifier.weight(1f).padding(end = HaSpace.M.rdp).height(176.rdp)) {
+                KitCard(RemoteModifier.weight(1f.rf).padding(end = HaSpace.M.rdp).height(176.rdp)) {
                   RemoteHaMeasurement(
                     HaReading.static("Cabin", 21.5f, "°C", HaMeasureKind.Temperature),
                     HaPresentation.Expanded,
                   )
                 }
                 RemoteColumn(
-                  modifier = RemoteModifier.weight(1f),
+                  modifier = RemoteModifier.weight(1f.rf),
                   verticalArrangement = RemoteArrangement.spacedBy(HaSpace.M.rdp),
                 ) {
                   KitCard(RemoteModifier.fillMaxWidth()) {
@@ -132,7 +132,7 @@ private fun CarDoorsCard() {
         fontSize = HaType.Title,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       RemoteHaLockRow(null, "Doors", "Locked", locked = true)
       RemoteHaLockRow(null, "Boot", "Unlocked", locked = false)
@@ -225,13 +225,13 @@ private fun RuggedWatch(darkTheme: Boolean) {
                 RemoteModifier.fillMaxWidth(),
               )
               RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
-                KitCard(RemoteModifier.weight(1f).padding(end = HaSpace.M.rdp)) {
+                KitCard(RemoteModifier.weight(1f.rf).padding(end = HaSpace.M.rdp)) {
                   RemoteHaMeasurement(
                     HaReading.static("Range", 12f, "%", HaMeasureKind.Battery),
                     HaPresentation.Compact,
                   )
                 }
-                KitCard(RemoteModifier.weight(1f)) {
+                KitCard(RemoteModifier.weight(1f.rf)) {
                   RemoteHaMeasurement(
                     HaReading.static("Humidity", 64f, "%", HaMeasureKind.Humidity),
                     HaPresentation.Compact,
@@ -276,11 +276,12 @@ fun Kit_LockEveryTheme() {
               ProvideHaUberTheme(theme, dark) {
                 LockCell(
                   theme,
-                  RemoteModifier.weight(1f).padding(end = if (index == 0) HaSpace.S.rdp else 0.rdp),
+                  RemoteModifier.weight(1f.rf)
+                    .padding(end = if (index == 0) HaSpace.S.rdp else 0.rdp),
                 )
               }
             }
-            if (row.size == 1) RemoteBox(RemoteModifier.weight(1f)) {}
+            if (row.size == 1) RemoteBox(RemoteModifier.weight(1f.rf)) {}
           }
         }
       }
@@ -319,7 +320,7 @@ private fun LockCell(theme: HaUberTheme, modifier: RemoteModifier) {
       fontSize = HaType.Micro,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
       modifier = RemoteModifier.padding(start = HaSpace.S.rdp),
     )
   }
@@ -394,7 +395,7 @@ private fun KitCardSheet(
                   ProvideHaUberTheme(theme, dark) {
                     RemoteColumn(
                       modifier =
-                        RemoteModifier.weight(1f)
+                        RemoteModifier.weight(1f.rf)
                           .padding(end = if (index < row.size - 1) HaSpace.S.rdp else 0.rdp),
                       verticalArrangement = RemoteArrangement.spacedBy(HaSpace.S.rdp),
                     ) {

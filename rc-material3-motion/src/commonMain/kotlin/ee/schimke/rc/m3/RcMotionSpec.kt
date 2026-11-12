@@ -2,14 +2,14 @@
 
 package ee.schimke.rc.m3
 
-import androidx.compose.remote.creation.compose.state.CUBIC_ACCELERATE
-import androidx.compose.remote.creation.compose.state.CUBIC_ANTICIPATE
-import androidx.compose.remote.creation.compose.state.CUBIC_DECELERATE
-import androidx.compose.remote.creation.compose.state.CUBIC_LINEAR
-import androidx.compose.remote.creation.compose.state.CUBIC_OVERSHOOT
-import androidx.compose.remote.creation.compose.state.CUBIC_STANDARD
-import androidx.compose.remote.creation.compose.state.EASE_OUT_BOUNCE
-import androidx.compose.remote.creation.compose.state.EASE_OUT_ELASTIC
+import ee.schimke.composeai.rccreation.compose.state.CUBIC_ACCELERATE
+import ee.schimke.composeai.rccreation.compose.state.CUBIC_ANTICIPATE
+import ee.schimke.composeai.rccreation.compose.state.CUBIC_DECELERATE
+import ee.schimke.composeai.rccreation.compose.state.CUBIC_LINEAR
+import ee.schimke.composeai.rccreation.compose.state.CUBIC_OVERSHOOT
+import ee.schimke.composeai.rccreation.compose.state.CUBIC_STANDARD
+import ee.schimke.composeai.rccreation.compose.state.EASE_OUT_BOUNCE
+import ee.schimke.composeai.rccreation.compose.state.EASE_OUT_ELASTIC
 import kotlin.math.sqrt
 
 /**

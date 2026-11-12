@@ -7,38 +7,38 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Print
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.RemoteTextUnit
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.foundation.icon.RemoteBasicIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.capture.toRemoteImageVector
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
+import ee.schimke.composeai.rccreation.compose.state.RemoteStrokeCap
+import ee.schimke.composeai.rccreation.compose.state.RemoteTextUnit
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.foundation.icon.RemoteBasicIcon
 import ee.schimke.rc.m3.RcM3ProgressColors
 import ee.schimke.rc.m3.RemoteM3WavyProgressRing
 
@@ -144,7 +144,7 @@ fun RemoteHaBambuPrintStatusWear(
           )
         else PhaseGlyph(data, theme, sizeDp = if (large) 44 else 36)
         RemoteColumn(
-          modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
+          modifier = RemoteModifier.weight(1f.rf).padding(start = 10.rdp),
           verticalArrangement = RemoteArrangement.spacedBy(0.rdp),
         ) {
           if (printing) {
@@ -189,7 +189,7 @@ private fun PrintingLayout(data: HaBambuPrintStatusData, wide: Boolean, theme: R
       verticalAlignment = RemoteAlignment.CenterVertically,
     ) {
       RemoteRow(
-        modifier = if (twoColumns) RemoteModifier.weight(1f) else RemoteModifier,
+        modifier = if (twoColumns) RemoteModifier.weight(1f.rf) else RemoteModifier,
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
         ProgressRing(
@@ -219,7 +219,7 @@ private fun PrintingLayout(data: HaBambuPrintStatusData, wide: Boolean, theme: R
         // Earn the canvas: the job's lines take the right half rather than stacking under the
         // ring and leaving it empty.
         RemoteColumn(
-          modifier = RemoteModifier.weight(1f).padding(start = 12.rdp),
+          modifier = RemoteModifier.weight(1f.rf).padding(start = 12.rdp),
           verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
         ) {
           RemainingText(data, HaType.Body, theme.primaryText)
@@ -251,7 +251,7 @@ private fun StandbyLayout(data: HaBambuPrintStatusData, wide: Boolean, theme: Re
     ) {
       PhaseGlyph(data, theme)
       RemoteColumn(
-        modifier = RemoteModifier.weight(1f).padding(start = 12.rdp),
+        modifier = RemoteModifier.weight(1f.rf).padding(start = 12.rdp),
         verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
       ) {
         PrinterName(data, theme, HaType.Body)
@@ -280,7 +280,7 @@ private fun PrinterName(data: HaBambuPrintStatusData, theme: RemoteHaTheme, size
     fontSize = size,
     style = haTextStyle(),
     maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    overflow = RemoteTextOverflow.Ellipsis,
   )
 }
 
@@ -289,7 +289,7 @@ private fun StageText(
   data: HaBambuPrintStatusData,
   size: RemoteTextUnit,
   color: RemoteColor,
-  weight: FontWeight? = null,
+  weight: RemoteFontWeight? = null,
 ) {
   RemoteText(
     text = LiveValues.attribute(data.stageEntityId, "stage_label", data.stage),
@@ -298,7 +298,7 @@ private fun StageText(
     fontWeight = weight,
     style = haTextStyle(),
     maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    overflow = RemoteTextOverflow.Ellipsis,
   )
 }
 
@@ -311,7 +311,7 @@ private fun RemainingText(data: HaBambuPrintStatusData, size: RemoteTextUnit, co
     fontSize = size,
     style = haTextStyle(),
     maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    overflow = RemoteTextOverflow.Ellipsis,
   )
 }
 
@@ -341,7 +341,7 @@ private fun LabelLine(text: RemoteString, theme: RemoteHaTheme) {
     fontSize = HaType.Label,
     style = haTextStyle(),
     maxLines = 1,
-    overflow = TextOverflow.Ellipsis,
+    overflow = RemoteTextOverflow.Ellipsis,
   )
 }
 
@@ -445,9 +445,9 @@ private fun ProgressRing(
 
       val track = RemotePaint {
         isAntiAlias = true
-        style = PaintingStyle.Stroke
+        style = RemotePaintingStyle.Stroke
         strokeWidth = strokePx.rf
-        strokeCap = StrokeCap.Round
+        strokeCap = RemoteStrokeCap.Round
       }
         .apply { color = theme.divider }
       drawArc(track, 0f.rf, 360f.rf, false, topLeft, arcSize)
@@ -455,9 +455,9 @@ private fun ProgressRing(
       if (sweep > 0.5f) {
         val progress = RemotePaint {
           isAntiAlias = true
-          style = PaintingStyle.Stroke
+          style = RemotePaintingStyle.Stroke
           strokeWidth = strokePx.rf
-          strokeCap = StrokeCap.Round
+          strokeCap = RemoteStrokeCap.Round
           color = accent.rc
         }
         // Start at 12 o'clock (Android draws 0° at 3 o'clock).

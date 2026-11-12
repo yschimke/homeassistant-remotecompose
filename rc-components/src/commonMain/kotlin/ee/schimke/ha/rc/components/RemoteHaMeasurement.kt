@@ -2,27 +2,28 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.RemoteTextUnit
-import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.state.RemoteTextUnit
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 
 // ---------------------------------------------------------------------------------------------
 // Layer 3 of the card data hierarchy: typed measurements. A measurement is a reading drawn the
@@ -176,7 +177,7 @@ private fun SideBySide(reading: HaReading, presentation: HaPresentation, modifie
     ) {
       RemoteHaMeasurementGlyph(reading, RemoteModifier.size(glyphW.rdp, glyphH.rdp))
       RemoteColumn(
-        modifier = RemoteModifier.weight(1f),
+        modifier = RemoteModifier.weight(1f.rf),
         verticalArrangement = RemoteArrangement.spacedBy(HaSpace.XXS.rdp),
       ) {
         if (plate) {
@@ -212,7 +213,7 @@ private fun Chip(reading: HaReading, modifier: RemoteModifier, showName: Boolean
       RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().height(30.rdp))
       NameLabel(reading, HaType.Caption)
     } else {
-      RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f))
+      RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f.rf))
     }
     ValueReadout(reading, HaType.Label)
   }
@@ -248,13 +249,13 @@ private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
     NameLabel(reading, HaType.Body, ruled = plate)
     if (reading.kind.visual == HaMeasureVisual.Bar) {
       // A bar keeps its thickness; the spare height centres it rather than fattening it.
-      RemoteColumn(modifier = RemoteModifier.fillMaxWidth().weight(1f)) {
-        RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f))
+      RemoteColumn(modifier = RemoteModifier.fillMaxWidth().weight(1f.rf)) {
+        RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f.rf))
         RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().height(12.rdp))
-        RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f))
+        RemoteBox(modifier = RemoteModifier.fillMaxWidth().weight(1f.rf))
       }
     } else {
-      RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f))
+      RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f.rf))
     }
     ValueReadout(reading, HaType.ValueLarge)
     RemoteText(
@@ -263,7 +264,7 @@ private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
       fontSize = HaType.Caption,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
 }
@@ -283,7 +284,7 @@ private fun ValueReadout(reading: HaReading, size: RemoteTextUnit) {
       fontWeight = haValueWeight(),
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
   when (currentHaUberTheme().theme.readout) {
@@ -318,7 +319,7 @@ private fun NameLabel(reading: HaReading, size: RemoteTextUnit, ruled: Boolean =
       fontSize = size,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
     if (ruled) {
       RemoteBox(

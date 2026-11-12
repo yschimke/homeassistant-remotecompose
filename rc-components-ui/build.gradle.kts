@@ -37,9 +37,6 @@ dependencies {
   implementation(libs.compose.ui.tooling.preview)
   implementation(libs.compose.foundation)
 
-  implementation(libs.remote.creation.compose)
-  implementation(libs.remote.creation)
-  implementation(libs.remote.creation.core)
   implementation(libs.remote.core)
   implementation(libs.remote.player.core)
   implementation(libs.remote.player.compose)

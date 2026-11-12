@@ -22,7 +22,6 @@ import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
-import androidx.wear.compose.remote.material3.RemoteColorScheme
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.bitmapUrls
 import ee.schimke.composeai.rcplayer.edit.namedVariables
@@ -72,7 +71,7 @@ class SlotWidgetDesignTest {
 
   private val registry = defaultRegistry()
   private val style = ThemeStyle.entries.first()
-  private val colors = RemoteColorScheme(terrazzoWearColorScheme(style))
+  private val colors = wearWidgetColors(terrazzoWearColorScheme(style))
 
   private val params =
     WearWidgetParams(

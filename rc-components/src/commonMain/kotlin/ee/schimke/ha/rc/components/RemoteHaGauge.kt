@@ -2,30 +2,30 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.selectIfGe
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.width
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.selectIfGe
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 
 /**
  * HA `gauge` card — half-circle dial.
@@ -99,7 +99,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
           fontWeight = haValueWeight(),
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         RemoteText(
           text = entityName(data.entityId, data.name),
@@ -107,7 +107,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
           fontSize = HaType.Body,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         if (data.unit != null) {
           RemoteText(
@@ -116,7 +116,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
             fontSize = HaType.Caption,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         }
       }
@@ -156,7 +156,7 @@ private fun HomeAssistantGaugeReading(
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     RemoteText(
@@ -165,7 +165,7 @@ private fun HomeAssistantGaugeReading(
       fontSize = HaType.Body,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
 }
@@ -228,7 +228,7 @@ fun RemoteHaGaugeStacked(
         fontSize = HaType.Caption,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     return
@@ -271,7 +271,7 @@ fun RemoteHaGaugeStacked(
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       // A narrow cell keeps the value whole at a smaller size, then the name a step below it
       // (ellipsised: a gauge's arc is generic, so the name stays at 1×1), and lets the range go
@@ -287,7 +287,7 @@ fun RemoteHaGaugeStacked(
           },
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       if (data.unit != null && !narrow) {
         RemoteText(
@@ -296,7 +296,7 @@ fun RemoteHaGaugeStacked(
           fontSize = HaType.Micro,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     }
@@ -340,7 +340,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
       strokeWidthPx = 6f,
     )
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f).padding(start = 8.rdp),
+      modifier = RemoteModifier.weight(1f.rf).padding(start = 8.rdp),
       verticalArrangement = RemoteArrangement.Center,
       horizontalAlignment = RemoteAlignment.Start,
     ) {
@@ -348,10 +348,10 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
         text = data.valueText,
         color = theme.primaryText,
         fontSize = HaType.Title,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = RemoteFontWeight.SemiBold,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
       RemoteText(
         text = entityName(data.entityId, data.name),
@@ -359,7 +359,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
         fontSize = HaType.Caption,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
   }

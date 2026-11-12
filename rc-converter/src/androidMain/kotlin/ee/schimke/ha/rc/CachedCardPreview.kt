@@ -9,10 +9,6 @@ import androidx.compose.remote.core.Operation
 import androidx.compose.remote.core.RemoteContext
 import androidx.compose.remote.core.VariableSupport
 import androidx.compose.remote.core.operations.layout.Container
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.profile.Profile
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
 import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
 import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
 import androidx.compose.remote.player.core.platform.BitmapLoader
@@ -34,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.composeai.rcplayer.compose.RcImageLoader
 import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
@@ -116,7 +113,7 @@ val LocalHostAmbient = staticCompositionLocalOf { NoHostAmbient }
 @Composable
 fun CachedCardPreview(
   cacheKey: Any,
-  profile: Profile = RcPlatformProfiles.ANDROIDX,
+  profile: CaptureProfile = androidX,
   modifier: Modifier = Modifier,
   card: CardConfig? = null,
   snapshot: HaSnapshot? = null,
@@ -677,7 +674,7 @@ private class PlannedDocument(val document: CardDocument, val pending: Boolean)
  */
 private suspend fun captureCardDocument(
   context: android.content.Context,
-  profile: Profile,
+  profile: CaptureProfile,
   content: @RemoteComposable @Composable () -> Unit,
 ): CardDocument =
   harcTraceSuspend(HarcTraceSections.CAPTURE_DOCUMENT) {
@@ -685,9 +682,7 @@ private suspend fun captureCardDocument(
       captureSingleRemoteDocument(context = context, profile = profile, content = content)
     }
       .recoverCatching { captureSingleRemoteDocument(context = context, profile = profile) {} }
-      .getOrElse {
-        captureSingleRemoteDocument(context = context, profile = RcPlatformProfiles.ANDROIDX) {}
-      }
+      .getOrElse { captureSingleRemoteDocument(context = context, profile = androidX) {} }
     CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
   }
 

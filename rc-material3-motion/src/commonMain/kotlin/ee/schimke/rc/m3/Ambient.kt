@@ -2,17 +2,17 @@
 
 package ee.schimke.rc.m3
 
-import androidx.compose.remote.creation.compose.state.AnimatedRemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.clamp
-import androidx.compose.remote.creation.compose.state.max
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import ee.schimke.composeai.rccreation.compose.state.AnimatedRemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.clamp
+import ee.schimke.composeai.rccreation.compose.state.lerp
+import ee.schimke.composeai.rccreation.compose.state.max
+import ee.schimke.composeai.rccreation.compose.state.rf
 
 /**
  * The host's ambient flag: a named float the host sets to `1` while its display is in a low-power
@@ -58,7 +58,7 @@ val LocalRcAmbientInitial = staticCompositionLocalOf { false }
 class RcAmbient internal constructor(val fraction: RemoteFloat) {
   /** [interactive] while interactive, [ambient] while ambient. */
   fun color(interactive: RemoteColor, ambient: RemoteColor): RemoteColor =
-    tween(interactive, ambient, fraction)
+    lerp(interactive, ambient, fraction)
 
   /** `1` while interactive, `0` while ambient: the alpha of something ambient leaves out. */
   val fade: RemoteFloat

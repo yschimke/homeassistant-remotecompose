@@ -2,30 +2,30 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteImage
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.RemoteImageBitmap
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteContentScale
+import ee.schimke.composeai.rccreation.compose.layout.RemoteImage
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.state.RemoteImageBitmap
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 
 /**
  * HA `picture-entity` card — modern image-with-overlay tile (`hui-picture-entity-card.ts`).
@@ -44,10 +44,10 @@ import androidx.compose.ui.text.style.TextOverflow
  * matches HA's standard `hui-image-overlay`.
  *
  * The image is the card's identity at every size: it **fills and crops** to the cell
- * ([ContentScale.Crop]) so it never letterboxes, with the name/state strip kept as a translucent
- * scrim along the bottom. In [fillHeight] mode (launcher / Wear Fixed cells) the card grows to the
- * full cell height — so the picture earns the whole canvas rather than letterboxing into a band
- * (see docs/architecture/adaptive-card-layouts.md §"Picture family").
+ * ([RemoteContentScale.Crop]) so it never letterboxes, with the name/state strip kept as a
+ * translucent scrim along the bottom. In [fillHeight] mode (launcher / Wear Fixed cells) the card
+ * grows to the full cell height — so the picture earns the whole canvas rather than letterboxing
+ * into a band (see docs/architecture/adaptive-card-layouts.md §"Picture family").
  *
  * Otherwise (the dashboard, Wrap) the card's height follows its live width at [aspectRatio] (width
  * ÷ height, HA's `aspect_ratio`), so it keeps its shape in a full-width slot and in a grid cell
@@ -97,7 +97,7 @@ fun RemoteHaPictureEntity(
     RemoteColumn(modifier = RemoteModifier.fillMaxSize()) {
       // The picture's area: under a kit with display windows a camera's feed is in one, as its
       // readouts are; else the area tinted in the accent, edge to edge.
-      val area = RemoteModifier.fillMaxWidth().weight(1f)
+      val area = RemoteModifier.fillMaxWidth().weight(1f.rf)
       val picture: @Composable @RemoteComposable () -> Unit = {
         if (haLayouts().notes == HaNoteStyle.Tape)
           ConsoleTapeLabel(
@@ -126,7 +126,7 @@ fun RemoteHaPictureEntity(
               modifier = RemoteModifier.fillMaxSize(),
               // Fill-crop, not letterbox: the image owns the
               // whole cell at any aspect (HA's `cover`).
-              contentScale = ContentScale.Crop,
+              contentScale = RemoteContentScale.Crop,
             )
           } else {
             // Inline strategy with no pre-fetched bytes for
@@ -200,13 +200,13 @@ fun RemoteHaPictureEntity(
             text = if (data.showName) entityName(data.entityId, data.name) else "".rs,
             // The name takes what the state leaves: unweighted, a narrow strip (a Wear Large
             // slot on a Galaxy watch) dropped it whole.
-            modifier = RemoteModifier.weight(1f),
+            modifier = RemoteModifier.weight(1f.rf),
             color = theme.primaryText,
             fontSize = HaType.Body,
-            fontWeight = FontWeight.Medium,
+            fontWeight = RemoteFontWeight.Medium,
             style = haTextStyle(),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
           if (data.showState) {
             RemoteText(
@@ -216,7 +216,7 @@ fun RemoteHaPictureEntity(
               fontSize = HaType.Label,
               style = haTextStyle(),
               maxLines = 1,
-              overflow = TextOverflow.Ellipsis,
+              overflow = RemoteTextOverflow.Ellipsis,
             )
           }
         }

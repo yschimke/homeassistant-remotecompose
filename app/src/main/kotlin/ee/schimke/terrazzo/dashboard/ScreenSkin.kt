@@ -32,6 +32,7 @@ import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.ha.rc.components.currentHaUberTheme
 import ee.schimke.ha.rc.components.haLegible
+import ee.schimke.ha.rc.components.toFontWeight
 import ee.schimke.terrazzo.ui.LocalCardStyle
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
@@ -243,7 +244,7 @@ private fun skinFor(
     ink = ink,
     hotInk = hotInk,
     readout = theme.readout,
-    valueWeight = theme.valueWeight,
+    valueWeight = theme.valueWeight.toFontWeight(),
     capsLabels = theme.readout == HaReadoutStyle.Plate || theme.visuals == HaVisualFamily.Lcars,
     chart =
       if (theme.extends != null) chartStyleFor(theme.grammar) else chartStyleFor(theme.visuals),

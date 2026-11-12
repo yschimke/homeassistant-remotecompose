@@ -2,11 +2,11 @@
 
 package ee.schimke.ha.rc.ui
 
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
+import ee.schimke.composeai.rccreation.compose.state.rc
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
 

@@ -2,9 +2,9 @@
 
 package ee.schimke.ha.rc.ui
 
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ProvideRemoteHaTheme
 import ee.schimke.ha.rc.components.RemoteHaTheme

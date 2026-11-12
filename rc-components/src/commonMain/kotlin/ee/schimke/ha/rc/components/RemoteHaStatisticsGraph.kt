@@ -2,34 +2,34 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.height
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteCanvas
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.height
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteRoundedCornerShape
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 
 /**
  * `statistics-graph` card. Three visual modes:
@@ -73,10 +73,10 @@ fun RemoteHaStatisticsGraph(
           text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = HaType.Title,
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
       RemoteText(
@@ -116,11 +116,11 @@ private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme, plotHeightDp: I
       text = entityName(row.entityId, row.name),
       color = theme.primaryText,
       fontSize = HaType.Label,
-      fontWeight = FontWeight.Medium,
+      fontWeight = RemoteFontWeight.Medium,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+      overflow = RemoteTextOverflow.Ellipsis,
+      modifier = RemoteModifier.weight(1f.rf).padding(end = 8.rdp),
     )
     RemoteText(
       text = row.summary,
@@ -153,7 +153,7 @@ private fun Legend(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
   ) {
     RemoteRow(
       verticalAlignment = RemoteAlignment.CenterVertically,
-      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+      modifier = RemoteModifier.weight(1f.rf).padding(end = 8.rdp),
     ) {
       RemoteBox(
         modifier =
@@ -168,8 +168,8 @@ private fun Legend(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
         fontSize = HaType.Caption,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = RemoteModifier.weight(1f).padding(start = 6.rdp),
+        overflow = RemoteTextOverflow.Ellipsis,
+        modifier = RemoteModifier.weight(1f.rf).padding(start = 6.rdp),
       )
     }
     RemoteText(
@@ -233,7 +233,7 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme, hei
 
     val baseline = RemotePaint {
       isAntiAlias = true
-      style = PaintingStyle.Stroke
+      style = RemotePaintingStyle.Stroke
       strokeWidth = 1f.rf
     }
       .apply { color = theme.divider }
@@ -252,7 +252,7 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme, hei
         val segHeight = drawH * (v / maxTotal)
         val fill = RemotePaint {
           isAntiAlias = true
-          style = PaintingStyle.Fill
+          style = RemotePaintingStyle.Fill
           color = rowColors[r].rc
         }
         drawRect(fill, RemoteOffset(x0, segTop), RemoteSize(barWidth, segHeight))

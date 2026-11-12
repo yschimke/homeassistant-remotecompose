@@ -17,12 +17,12 @@ import android.widget.LinearLayout
 import android.widget.RemoteViews
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asImageBitmap
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rcplayer.protocol.RcOpcodes
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -30,6 +30,7 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.captureSingleRemoteDocument
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
@@ -110,7 +111,7 @@ class WidgetPreviewActivity : Activity() {
           CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
             ProvideCardRegistry(registry) {
               ProvideSystemHaTheme(
-                profile = captureProfile,
+                supportsColorTheme = RcOpcodes.COLOR_THEME in captureProfile.supportedOperations,
                 fallbackTheme =
                   if (
                     resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==

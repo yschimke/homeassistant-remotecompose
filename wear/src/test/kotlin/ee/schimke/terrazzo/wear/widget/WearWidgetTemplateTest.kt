@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
-import androidx.wear.compose.remote.material3.RemoteColorScheme
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.edit.validateFor
@@ -66,7 +65,7 @@ class WearWidgetTemplateTest {
 
   private val context = RuntimeEnvironment.getApplication()
   private val registry = defaultRegistry()
-  private val colors = RemoteColorScheme(terrazzoWearColorScheme(ThemeStyle.entries.first()))
+  private val colors = wearWidgetColors(terrazzoWearColorScheme(ThemeStyle.entries.first()))
 
   private val card =
     CardConfig(

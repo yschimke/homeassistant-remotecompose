@@ -12,7 +12,10 @@ class HaUberThemeTest {
     assertEquals(HaUberTheme.HomeAssistant, theme)
     assertEquals(HaVisualFamily.HomeAssistant, theme.visuals)
     assertEquals(HaCardShapeStyle(cornerDp = 12, borderDp = 1), theme.shape)
-    assertEquals(androidx.compose.ui.text.font.FontWeight.Normal, theme.valueWeight)
+    assertEquals(
+      ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight.Normal,
+      theme.valueWeight,
+    )
     assertEquals(androidx.compose.ui.graphics.Color(0xFF5E5E5E), theme.light!!.secondaryText)
     assertEquals(androidx.compose.ui.graphics.Color(0xFF9B9B9B), theme.dark!!.secondaryText)
     assertEquals(androidx.compose.ui.graphics.Color(0xFF009AC7), theme.light!!.linkText)

@@ -12,9 +12,9 @@ plugins {
 // - `generateCardDesigns`, on the JVM with no Android: the Compose Multiplatform creation fork and
 //   player, into `build/card-designs/` (`-PcardDesignsOut=<dir>`). This is the library the design
 //   server publishes, captured as it captures a key its library lacks (DesignGenerator);
-// - `generateCardDesignsAndroid`, on Android: a Robolectric test capturing with AndroidX, as the
-//   app does, into `build/card-designs-android/` (`-PcardDesignsAndroidOut=<dir>`), to check the
-//   JVM's against (`checkCardDesignParity`).
+// - `generateCardDesignsAndroid`, on Android: a Robolectric test capturing as the app does, into
+//   `build/card-designs-android/` (`-PcardDesignsAndroidOut=<dir>`), to check the JVM's against
+//   (`checkCardDesignParity`).
 // JvmLibraryAndroidPlaybackTest plays a sample of the published library in the app's own player:
 // `./gradlew :card-designs:generateCardDesigns` then
 // `./gradlew :card-designs:testAndroidHostTest --tests '*JvmLibraryAndroidPlaybackTest'`.
@@ -46,8 +46,6 @@ kotlin {
       // Card designs authored in UI Builder (`ui-builder/designs/*.uid`), drawn by the catalog's
       // own components: CardDesignDocument.
       implementation(project(":ha-cards-catalog"))
-      // Compile-only, so Android consumers never see the fork beside AndroidX's.
-      compileOnly(libs.rc.creation.compose)
       implementation(libs.cmp.runtime)
       implementation(libs.kotlinx.serialization.json)
     }
@@ -77,27 +75,6 @@ kotlin {
       implementation(libs.kotlin.test.junit)
       implementation("org.robolectric:robolectric:4.17")
     }
-  }
-}
-
-// The fork declares AndroidX's capabilities on Android, so the two can't both be on an Android
-// classpath. This module's own Android compilation sees both (the fork through commonMain); it
-// takes AndroidX's.
-configurations.configureEach {
-  resolutionStrategy.capabilitiesResolution {
-    listOf(
-        "androidx.compose.remote:remote-creation-compose",
-        "androidx.compose.remote.foundation:foundation",
-      )
-      .forEach { capability ->
-        withCapability(capability) {
-          candidates
-            .firstOrNull {
-              (it.id as? ModuleComponentIdentifier)?.group?.startsWith("androidx.") == true
-            }
-            ?.let { select(it) }
-        }
-      }
   }
 }
 

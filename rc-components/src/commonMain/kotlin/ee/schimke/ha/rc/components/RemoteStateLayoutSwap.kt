@@ -2,8 +2,8 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.animationSpec
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.animationSpec
 
 /**
  * Pin a `RemoteStateLayout` branch's enter/exit animation to zero duration so the swap between

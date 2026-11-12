@@ -148,7 +148,7 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
    * The arc meter's track: Home Assistant's gauge sits on the dashboard colour, else the divider.
    */
   @Composable
-  fun arcTrack(): androidx.compose.remote.creation.compose.state.RemoteColor? =
+  fun arcTrack(): ee.schimke.composeai.rccreation.compose.state.RemoteColor? =
     if (family == HaVisualFamily.HomeAssistant) haTheme().dashboardBackground else null
 
   /** How the family draws a control dial's ring. */
@@ -167,7 +167,7 @@ internal class FamilyVisuals private constructor(val family: HaVisualFamily) {
   companion object {
     /** A hand drawing: [draw] with the spec as its argument. */
     private fun drawn(
-      draw: androidx.compose.remote.creation.compose.layout.RemoteDrawScope.(HaVisualSpec) -> Unit,
+      draw: ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope.(HaVisualSpec) -> Unit,
     ) = HaVisualRenderer { spec -> draw(spec) }
 
     private val byFamily = HaVisualFamily.entries.associateWith { FamilyVisuals(it) }

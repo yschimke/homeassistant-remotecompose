@@ -14,11 +14,9 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
-import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
-import androidx.wear.compose.remote.material3.RemoteColorScheme
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.validateFor
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
@@ -68,7 +66,7 @@ class SlotWidgetServerDesignTest {
 
   private val registry = defaultRegistry()
   private val style = ThemeStyle.entries.first()
-  private val colors = RemoteColorScheme(terrazzoWearColorScheme(style))
+  private val colors = wearWidgetColors(terrazzoWearColorScheme(style))
 
   private fun params(containerType: Int, heightDp: Float) =
     WearWidgetParams(
@@ -222,18 +220,16 @@ class SlotWidgetServerDesignTest {
         ),
       )
     return runBlocking {
-      HostFramedWearWidgetDocument(WearWidgetBrush) {
-          SlotContent(
-            registry,
-            colors,
-            input.card,
-            input.snapshot,
-            template = true,
-            cardStyle = HaUberTheme.Classic,
-          )
-        }
-        .captureRawContent(RuntimeEnvironment.getApplication(), params, false)
-        .rcDocument
+      HostFramedWearWidgetDocument.capture(RuntimeEnvironment.getApplication(), params) {
+        SlotContent(
+          registry,
+          colors,
+          input.card,
+          input.snapshot,
+          template = true,
+          cardStyle = HaUberTheme.Classic,
+        )
+      }
     }
   }
 

@@ -2,8 +2,8 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.ui.graphics.Color
+import ee.schimke.composeai.rccreation.compose.state.rsp
 
 // ---------------------------------------------------------------------------------------------
 // Design tokens every Home Assistant card part draws with. The rules, and why each one exists, are

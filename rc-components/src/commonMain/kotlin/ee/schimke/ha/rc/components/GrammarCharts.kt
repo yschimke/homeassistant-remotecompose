@@ -2,10 +2,10 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.rf
 
 // ---------------------------------------------------------------------------------------------
 // Graph rows as a slot (HaComponentSlot.Charts): a history sparkline and a statistics bar row. A
@@ -128,7 +128,7 @@ internal object GrammarCharts : HaChartRenderer {
         val spec = HaVisualSpec(look, 0f.rf, grammar)
         val halo =
           spec.gradient?.first()?.copy(alpha = 0.35f)?.let {
-            androidx.compose.remote.creation.compose.state.RemoteColor(it)
+            ee.schimke.composeai.rccreation.compose.state.RemoteColor(it)
           } ?: look.glow?.takeIf { grammar.glow }
         halo?.let { p.line(this, fractions, w * 3f, it, round = true) }
         p.line(this, fractions, w, look.value, grammar.roundCaps)

@@ -8,13 +8,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.offset
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.layout.RemoteBox as AndroidxRemoteBox
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier as AndroidxRemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background as androidxBackground
+import androidx.compose.remote.creation.compose.modifier.offset as androidxOffset
+import androidx.compose.remote.creation.compose.modifier.size as androidxSize
+import androidx.compose.remote.creation.compose.state.rc as androidxRc
+import androidx.compose.remote.creation.compose.state.rdp as androidxRdp
 import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.remote.player.view.RemoteComposePlayer
 import androidx.compose.runtime.getValue
@@ -32,7 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
-import androidx.wear.compose.remote.material3.RemoteColorScheme
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.offset
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.validateFor
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
@@ -77,7 +83,7 @@ class WearContainerStylesTest {
 
   private val context = RuntimeEnvironment.getApplication()
   private val registry = defaultRegistry()
-  private val colors = RemoteColorScheme(terrazzoWearColorScheme(ThemeStyle.entries.first()))
+  private val colors = wearWidgetColors(terrazzoWearColorScheme(ThemeStyle.entries.first()))
 
   private val card =
     CardConfig(
@@ -181,8 +187,11 @@ class WearContainerStylesTest {
     // This is the actual Glance capture path used for direct and server-provided widget frames.
     val direct =
       androidx.glance.wear.WearWidgetDocument(androidx.glance.wear.WearWidgetBrush.Companion) {
-        RemoteBox(
-          RemoteModifier.offset((-8).rdp, (-8).rdp).size(400.rdp, 400.rdp).background(Color.Red.rc),
+        // Glance Wear's capture is AndroidX's creation API.
+        AndroidxRemoteBox(
+          AndroidxRemoteModifier.androidxOffset((-8).androidxRdp, (-8).androidxRdp)
+            .androidxSize(400.androidxRdp, 400.androidxRdp)
+            .androidxBackground(Color.Red.androidxRc),
         ) {}
       }
     val raw = runBlocking { direct.captureRawContent(context, params, false) }

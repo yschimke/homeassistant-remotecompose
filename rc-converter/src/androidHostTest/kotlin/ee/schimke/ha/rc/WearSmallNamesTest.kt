@@ -1,8 +1,6 @@
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import ee.schimke.composeai.rccreation.compose.capture.RemoteCreationDisplayInfo
 import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
@@ -103,7 +101,7 @@ class WearSmallNamesTest {
             (heightDp * density).toInt(),
             context.resources.configuration.densityDpi,
           ),
-        profile = RcPlatformProfiles.ANDROIDX,
+        profile = androidX,
       ) {
         ProvideCardSizeMode(CardSizeMode.Fixed) {
           ProvideFixedCanvasAxis(BreakpointAxis.Height) {

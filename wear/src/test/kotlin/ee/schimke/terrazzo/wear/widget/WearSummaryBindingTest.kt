@@ -3,7 +3,6 @@ package ee.schimke.terrazzo.wear.widget
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
-import androidx.wear.compose.remote.material3.RemoteColorScheme
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -38,7 +37,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [35])
 class WearSummaryBindingTest {
   private val registry = defaultRegistry()
-  private val colors = RemoteColorScheme(terrazzoWearColorScheme(ThemeStyle.entries.first()))
+  private val colors = wearWidgetColors(terrazzoWearColorScheme(ThemeStyle.entries.first()))
 
   private val small =
     WearWidgetParams(

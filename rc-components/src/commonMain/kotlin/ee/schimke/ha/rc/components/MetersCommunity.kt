@@ -2,13 +2,13 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.ui.graphics.Color
+import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rf
 
 // These are original vector grammars, not upstream artwork. All filled geometry, cells and
 // pointers use the incoming RemoteFloat. The same grammar serves half gauges and control rings.
@@ -51,7 +51,7 @@ internal fun RemoteDrawScope.communityRing(
   fun arc(
     inset: Float,
     thickness: Float,
-    color: androidx.compose.remote.creation.compose.state.RemoteColor,
+    color: ee.schimke.composeai.rccreation.compose.state.RemoteColor,
     from: RemoteFloat = start.rf,
     length: RemoteFloat = sweep.rf,
     round: Boolean = true,
@@ -204,13 +204,13 @@ internal fun RemoteDrawScope.communityBar(
   val len = if (vertical) canvasHeight else canvasWidth
   val thick = if (vertical) canvasWidth else canvasHeight
   fun rect(
-    color: androidx.compose.remote.creation.compose.state.RemoteColor,
+    color: ee.schimke.composeai.rccreation.compose.state.RemoteColor,
     from: RemoteFloat,
     length: RemoteFloat,
     offset: RemoteFloat,
     breadth: RemoteFloat,
     round: Boolean = false,
-    visible: androidx.compose.remote.creation.compose.state.RemoteBoolean? = null,
+    visible: ee.schimke.composeai.rccreation.compose.state.RemoteBoolean? = null,
   ) {
     val x = if (vertical) offset else from
     val y = if (vertical) len - from - length else offset

@@ -5,36 +5,34 @@ package ee.schimke.ha.cards
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.wear.compose.remote.material3.RemoteColorScheme
-import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.composeai.data.render.IrSidecarChannel
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import ee.schimke.ha.rc.androidXExperimental
+import ee.schimke.ha.rc.captureSingleRemoteDocument
 import ee.schimke.ha.rc.components.ProvideNamedHaTheme
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import kotlinx.coroutines.runBlocking
 
 /**
  * The frame every `ha-cards` sticker is captured through: a real `RemoteDocument`, recorded under
- * the app's AndroidX + experimental profile inside [LocalHaCatalogTheme] (Home Assistant's light
- * theme unless a declared catalog theme, `HaThemeCatalogs.kt`, wraps the render), played back with
- * the Compose Multiplatform player `:previews` uses, and offered as the render's `.rc` sidecar so
- * the published catalog ships the document and not only its pixels.
+ * the app's AndroidX-player + experimental profile inside [LocalHaCatalogTheme] (Home Assistant's
+ * light theme unless a declared catalog theme, `HaThemeCatalogs.kt`, wraps the render), played back
+ * with the Compose Multiplatform player `:previews` uses, and offered as the render's `.rc` sidecar
+ * so the published catalog ships the document and not only its pixels.
  *
  * The same capture-and-play shape as `:previews`' `CapturingRemoteContentPreview` (see
  * `RcDocumentCapture.kt` there for why not upstream's `RemoteContentPreview`), kept here so this
@@ -47,28 +45,24 @@ import kotlinx.coroutines.runBlocking
 @Composable
 fun HaCardSticker(content: @Composable @RemoteComposable () -> Unit) {
   val context = LocalContext.current
-  val density = context.resources.displayMetrics.density
   val theme = LocalHaCatalogTheme.current
   val bytes: ByteArray? =
     remember(content, theme) {
       runCatching {
         runBlocking {
           captureSingleRemoteDocument(context = context, profile = androidXExperimental) {
-              // Remote Material 3 components in a sticker see the same named roles the HA ones do.
-              RemoteMaterialTheme(colorScheme = RemoteColorScheme(theme.asWearColorScheme())) {
-                ProvideNamedHaTheme(theme) {
-                  // The page backdrop is part of the document, as the named dashboard colour, so a
-                  // replay is drawn on it and a theme recolours it: chrome-less stickers (heading,
-                  // icon) otherwise replay over whatever the host draws.
-                  RemoteBox(
-                    modifier =
-                      RemoteModifier.fillMaxSize()
-                        .background(currentRemoteHaTheme().dashboardBackground)
-                        .padding(8.rdp),
-                    contentAlignment = RemoteAlignment.Center,
-                    content = content,
-                  )
-                }
+              ProvideNamedHaTheme(theme) {
+                // The page backdrop is part of the document, as the named dashboard colour, so a
+                // replay is drawn on it and a theme recolours it: chrome-less stickers (heading,
+                // icon) otherwise replay over whatever the host draws.
+                RemoteBox(
+                  modifier =
+                    RemoteModifier.fillMaxSize()
+                      .background(currentRemoteHaTheme().dashboardBackground)
+                      .padding(8.rdp),
+                  contentAlignment = RemoteAlignment.Center,
+                  content = content,
+                )
               }
             }
             .bytes
@@ -76,6 +70,17 @@ fun HaCardSticker(content: @Composable @RemoteComposable () -> Unit) {
       }
         .getOrNull()
     }
+  PlaySticker(bytes)
+}
+
+/**
+ * Plays a sticker's captured document ([bytes], or nothing when its capture failed) on the catalog
+ * theme's backdrop, and offers it as the render's `.rc` sidecar.
+ */
+@Composable
+internal fun PlaySticker(bytes: ByteArray?) {
+  val density = LocalContext.current.resources.displayMetrics.density
+  val theme = LocalHaCatalogTheme.current
   if (bytes != null) {
     SideEffect {
       IrSidecarChannel.offer(

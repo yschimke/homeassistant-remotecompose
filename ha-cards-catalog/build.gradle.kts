@@ -34,9 +34,9 @@ composePreview {
 }
 
 // The card design renderer (`.uid` → Remote Compose: CardDesignDocument and the HaCard* wrappers)
-// is written once, in commonMain, as `:rc-components` and `:rc-converter` are: Android builds with
-// AndroidX's creation library, every other target with rc-players' Compose Multiplatform fork
-// (`forkMain`). The builder palette itself, the stickers and their previews, stays Android-only.
+// is written once, in commonMain, as `:rc-components` and `:rc-converter` are, against rc-players'
+// Compose Multiplatform creation API on every target. The builder palette itself, the stickers and
+// their previews, stays Android-only.
 kotlin {
   jvmToolchain(libs.versions.java.get().toInt())
   android {
@@ -54,17 +54,6 @@ kotlin {
   @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
   iosArm64()
   iosSimulatorArm64()
-  @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
-  applyDefaultHierarchyTemplate {
-    common {
-      group("fork") {
-        withJvm()
-        withWasmJs()
-        withIosArm64()
-        withIosSimulatorArm64()
-      }
-    }
-  }
   sourceSets {
     commonMain.dependencies {
       implementation(project.dependencies.platform(libs.rc.players.bom))
@@ -75,8 +64,6 @@ kotlin {
       // `formatValueWithUnit`: the host's canonical state formatter, so a bound reading's seed is
       // what the first live `<id>.state` push writes.
       implementation(project(":ha-model"))
-      // Compile-only, so Android consumers never see the fork beside AndroidX's.
-      compileOnly(libs.rc.creation.compose)
       implementation(libs.cmp.runtime)
       implementation(libs.cmp.ui)
       implementation(libs.cmp.foundation)
@@ -99,33 +86,11 @@ kotlin {
       implementation(project.dependencies.platform(libs.composeai.contracts.bom))
       implementation(libs.composeai.data.render.core)
     }
-    getByName("forkMain").dependencies { implementation(libs.rc.creation.compose) }
     jvmTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlin.test.junit)
       implementation(libs.kotlinx.serialization.json)
     }
-  }
-}
-
-// The fork declares AndroidX's capabilities on Android, so the two can't both be on an Android
-// classpath. This module's own Android compilation sees both (the fork through commonMain); it
-// takes AndroidX's.
-configurations.configureEach {
-  resolutionStrategy.capabilitiesResolution {
-    listOf(
-        "androidx.compose.remote:remote-creation-compose",
-        "androidx.compose.remote.foundation:foundation",
-      )
-      .forEach { capability ->
-        withCapability(capability) {
-          candidates
-            .firstOrNull {
-              (it.id as? ModuleComponentIdentifier)?.group?.startsWith("androidx.") == true
-            }
-            ?.let { select(it) }
-        }
-      }
   }
 }
 

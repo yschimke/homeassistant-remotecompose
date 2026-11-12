@@ -2,28 +2,29 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteFlowRow
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.modifier.widthIn
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteFlowRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.clickable
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxHeight
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.modifier.widthIn
+import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 
 /**
  * Cells per compatible row. Compact Wear slots keep only this many cells; launcher widgets retain
@@ -78,10 +79,10 @@ fun RemoteHaGlance(
           text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = adaptiveTitleSize(data.title),
-          fontWeight = FontWeight.Medium,
+          fontWeight = RemoteFontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp))
       }
@@ -127,7 +128,7 @@ private fun CellGrid(
           // An equal share each, so a long name ellipsizes within its cell instead of running
           // into its neighbour's.
           row.forEach { cell ->
-            RemoteHaGlanceCell(cell, RemoteModifier.weight(1f), compact = compact)
+            RemoteHaGlanceCell(cell, RemoteModifier.weight(1f.rf), compact = compact)
           }
         }
       }
@@ -170,7 +171,7 @@ fun RemoteHaGlanceCell(
         fontSize = HaType.Label,
         style = haTextStyle(),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
+        overflow = RemoteTextOverflow.Ellipsis,
       )
     }
     RemoteBox(
@@ -194,7 +195,7 @@ fun RemoteHaGlanceCell(
       fontSize = HaType.Caption,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
   }
 }
@@ -230,7 +231,7 @@ private fun GlanceComplication(
       fontSize = HaType.Caption,
       style = haTextStyle(),
       maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
+      overflow = RemoteTextOverflow.Ellipsis,
     )
     // The window is the watch's: a fixed size at its own aspect (78 × 90 face units with its
     // edge), the icon and value centred in its floor.
@@ -255,10 +256,10 @@ private fun GlanceComplication(
           text = data.state,
           color = look.dim(ink),
           fontSize = HaType.Caption,
-          fontWeight = FontWeight.Bold,
+          fontWeight = RemoteFontWeight.Bold,
           style = haTextStyle(),
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
       }
     }

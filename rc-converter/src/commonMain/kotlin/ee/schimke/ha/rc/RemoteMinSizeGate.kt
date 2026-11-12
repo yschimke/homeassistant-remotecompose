@@ -2,17 +2,18 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteStateLayout
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.layout.remoteComponent
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
 import ee.schimke.ha.rc.components.rememberExpressionName
 import ee.schimke.ha.rc.components.toPaddedRemoteString
 
@@ -55,13 +56,15 @@ fun RemoteMinSizeGate(
   val gateName = rememberExpressionName("__min_size_gate_")
   // ratio = minW/minH, so `h · ratio ≥ minW` ⇔ `h ≥ minH`.
   val ratio = minWidthDp.toFloat() / minHeightDp.toFloat()
-  val gate =
-    RemoteFloat.createNamedRemoteFloatExpression(gateName, RemoteState.Domain.User) {
-      componentWidth().min(componentHeight() * ratio.rf)
-    }
-  val roomy = gate.isGreaterThanOrEqualTo(minWidthDp.rdp.toPx())
-
   RemoteBox(modifier = modifier) {
+    val component = remoteComponent()
+    val gate =
+      RemoteFloat.createNamedRemoteFloat(
+        gateName,
+        component.width.min(component.height * ratio.rf),
+        RemoteState.Domain.User,
+      )
+    val roomy = gate.isGreaterThanOrEqualTo(minWidthDp.rdp.toPx())
     // Materialise the gate expression in the document — the state layout reads it via a derived
     // boolean, which alone doesn't pull the named float into the capture (#224).
     RemoteText(text = gate.toPaddedRemoteString(1), color = Color.Transparent.rc)

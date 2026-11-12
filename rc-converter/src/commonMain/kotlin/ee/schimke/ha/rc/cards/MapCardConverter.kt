@@ -2,25 +2,26 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteArrangement
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteColumn
-import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
+import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
+import ee.schimke.composeai.rccreation.compose.layout.RemoteRow
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.background
+import ee.schimke.composeai.rccreation.compose.modifier.clip
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
+import ee.schimke.composeai.rccreation.compose.shapes.RemoteCircleShape
+import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
+import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
+import ee.schimke.composeai.rccreation.compose.text.RemoteTextStyle
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
@@ -177,7 +178,7 @@ class MapCardConverter : DesignedCardConverter() {
             text = cardTitle(title),
             color = theme.primaryText,
             fontSize = HaType.Title,
-            fontWeight = FontWeight.Medium,
+            fontWeight = RemoteFontWeight.Medium,
             style = RemoteTextStyle.Default,
           )
         }
@@ -213,7 +214,7 @@ class MapCardConverter : DesignedCardConverter() {
       // padding, not a `spacedBy` arrangement: the RemoteCompose row doesn't subtract `spacedBy`
       // gaps from the weighted share, so the column would run 8 dp past the card edge.
       RemoteColumn(
-        modifier = RemoteModifier.weight(1f).padding(start = (if (showDot) 8 else 0).rdp),
+        modifier = RemoteModifier.weight(1f.rf).padding(start = (if (showDot) 8 else 0).rdp),
       ) {
         RemoteText(
           text = cardText("row.$index.name", name),
@@ -221,7 +222,7 @@ class MapCardConverter : DesignedCardConverter() {
           fontSize = HaType.Body,
           style = RemoteTextStyle.Default,
           maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
+          overflow = RemoteTextOverflow.Ellipsis,
         )
         if (where != null) {
           RemoteText(
@@ -230,7 +231,7 @@ class MapCardConverter : DesignedCardConverter() {
             fontSize = HaType.Label,
             style = RemoteTextStyle.Default,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            overflow = RemoteTextOverflow.Ellipsis,
           )
         }
       }

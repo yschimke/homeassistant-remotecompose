@@ -2,22 +2,22 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
-import androidx.compose.remote.creation.compose.layout.RemoteSize
-import androidx.compose.remote.creation.compose.shaders.RemoteBrush
-import androidx.compose.remote.creation.compose.shaders.RemoteShaderBrush
-import androidx.compose.remote.creation.compose.shaders.linearGradient
-import androidx.compose.remote.creation.compose.shaders.radialGradient
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemotePaint
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.selectIfGe
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle
+import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.layout.RemoteOffset
+import ee.schimke.composeai.rccreation.compose.layout.RemoteSize
+import ee.schimke.composeai.rccreation.compose.shaders.RemoteBrush
+import ee.schimke.composeai.rccreation.compose.shaders.RemoteShaderBrush
+import ee.schimke.composeai.rccreation.compose.shaders.linearGradient
+import ee.schimke.composeai.rccreation.compose.shaders.radialGradient
+import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemotePaint
+import ee.schimke.composeai.rccreation.compose.state.RemotePaintingStyle
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.selectIfGe
 import kotlin.math.sin
 
 // Console: a 1970s broadcast desk, drawn skeuomorphically — light, depth and material, not flat
@@ -61,7 +61,7 @@ private fun shaderPaint(
   size: RemoteSize,
 ): RemotePaint = RemotePaint {
   isAntiAlias = true
-  style = PaintingStyle.Fill
+  style = RemotePaintingStyle.Fill
 }
   .also { paint -> with(brush) { scope.applyTo(paint, size) } }
 

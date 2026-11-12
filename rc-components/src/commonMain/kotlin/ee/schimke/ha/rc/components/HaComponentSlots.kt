@@ -2,12 +2,12 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
-import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.runtime.Composable
+import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
+import ee.schimke.composeai.rccreation.compose.state.RemoteColor
+import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
 
 // ---------------------------------------------------------------------------------------------
 // Component slots: the parts of a card a theme may draw its own way. A theme supplies drawings
@@ -216,7 +216,7 @@ internal interface HaTransportKeyRenderer : HaSlotRenderer {
   fun Glyph(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     accent: androidx.compose.ui.graphics.Color,
-    contentDescription: androidx.compose.remote.creation.compose.state.RemoteString,
+    contentDescription: ee.schimke.composeai.rccreation.compose.state.RemoteString,
   )
 }
 

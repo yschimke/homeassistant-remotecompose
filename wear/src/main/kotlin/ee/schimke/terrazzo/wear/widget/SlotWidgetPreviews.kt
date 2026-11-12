@@ -3,25 +3,22 @@
 package ee.schimke.terrazzo.wear.widget
 
 import android.content.Context
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteText
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.glance.wear.GlanceWearWidget
-import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
-import androidx.glance.wear.WearWidgetDocument
-import androidx.glance.wear.color
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
+import androidx.glance.wear.core.WearWidgetRawContent
 import androidx.glance.wear.tooling.preview.WearWidgetHostsPreview
 import androidx.glance.wear.tooling.preview.WearWidgetPreviewSnapshot
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.layout.RemoteText
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
+import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rs
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -42,6 +39,7 @@ import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.ha.rc.wearWidgets
 import java.time.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -51,8 +49,8 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 
 /**
- * Wear-specific @Preview fixtures that exercise the Glance Wear capture path end-to-end (via
- * [WearWidgetPreviewSnapshot] / [WearWidgetDocument]). [WearWidgetPreviewSnapshot] wraps the
+ * Wear-specific @Preview fixtures that exercise the Wear widget capture path end-to-end (via
+ * [WearWidgetPreviewSnapshot] / [WearWidgetTemplate]). [WearWidgetPreviewSnapshot] wraps the
  * captured widget in a simulated circular watch face so reviewers can eyeball how the card reads
  * against the watch chrome.
  *
@@ -72,27 +70,33 @@ internal class PreviewSlotWidget(
     val theme = haThemeFor(ThemeStyle.TerrazzoHome, darkTheme = true)
     val registry = defaultRegistry().withEnhancedShutter()
     val tint = ContainerTint.argbFor(card, snapshot)
-    return WearWidgetDocument(
-      background = tint?.let { WearWidgetBrush.color(Color(it).rc) } ?: WearWidgetBrush.Companion,
-      content = {
-        CompositionLocalProvider(LocalHaClock provides WearWidgetPreviewClock) {
-          ProvideCardRegistry(registry) {
-            ProvideHaTheme(theme) {
-              ProvideCardSizeMode(CardSizeMode.Fixed) {
-                // Match the runtime CardWidget: the wear
-                // container already paints the shape + brush, so
-                // skip the per-card chrome to avoid doubling up;
-                // and tell HA card components to use the
-                // non-wrapping fallback for `RemoteFlowRow`
-                // since Glance Wear's capture profile rejects
-                // FlowLayout (op 240).
-                ProvideCardChrome(enabled = false) {
-                  ProvideFixedCanvasAxis(BreakpointAxis.Height) {
-                    ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
-                      if (card != null) {
-                        RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                      } else {
-                        PreviewEmptyPlaceholder(theme)
+    return object : WearWidgetData {
+      override suspend fun captureRawContent(
+        context: Context,
+        params: WearWidgetParams,
+        isPreview: Boolean,
+      ): WearWidgetRawContent {
+        // As the runtime CardWidget's direct document (`slotDocument`): the card captured for the
+        // Wear widget renderer in the container a template draws, then made this widget's.
+        val captured =
+          WearWidgetTemplate.capture(context, profile = wearWidgets) {
+            CompositionLocalProvider(LocalHaClock provides WearWidgetPreviewClock) {
+              ProvideCardRegistry(registry) {
+                ProvideHaTheme(theme) {
+                  ProvideCardSizeMode(CardSizeMode.Fixed) {
+                    // Match the runtime CardWidget: the wear container already paints the shape
+                    // and fill, so skip the per-card chrome to avoid doubling up; and tell HA card
+                    // components to use the non-wrapping fallback for `RemoteFlowRow`, since the
+                    // Wear widget renderer has no FlowLayout (op 240).
+                    ProvideCardChrome(enabled = false) {
+                      ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                        ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                          if (card != null) {
+                            RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                          } else {
+                            PreviewEmptyPlaceholder(theme)
+                          }
+                        }
                       }
                     }
                   }
@@ -100,9 +104,13 @@ internal class PreviewSlotWidget(
               }
             }
           }
+        return checkNotNull(
+          WearWidgetTemplate.instantiate(context, captured, params, isPreview, tint),
+        ) {
+          "The preview's card can't play as a Wear widget"
         }
-      },
-    )
+      }
+    }
   }
 }
 

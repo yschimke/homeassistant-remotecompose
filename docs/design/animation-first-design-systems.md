@@ -150,9 +150,8 @@ about entities.
 
 A module, **`rc-material3-motion`**, package `ee.schimke.rc.m3`:
 
-- depends only on `remote-creation-compose` (the AndroidX artifact on Android, the
-  `third-party-remote-creation-compose` fork elsewhere, as `rc-components` already does) and the
-  Compose runtime;
+- depends only on rc-players' `rc-creation-compose` (the Compose Multiplatform creation API, on
+  every target, as `rc-components` does) and the Compose runtime;
 - **no** `ha-model`, `rc-converter` or `rc-components` dependency, so nothing Home Assistant leaks
   in (its build file says so; a hygiene check can enforce it once a second module depends on it);
 - holds the motion layer (§2) plus the M3 scheme and building blocks (§3); the Console scheme
