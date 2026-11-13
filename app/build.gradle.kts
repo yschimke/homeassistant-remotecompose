@@ -362,7 +362,7 @@ dependencies {
   debugImplementation(libs.compose.ui.test.manifest)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation("androidx.work:work-testing:2.12.0")
-  testImplementation("org.robolectric:robolectric:4.17")
+  testImplementation("org.robolectric:robolectric:4.18")
   robolectricSdk(libs.robolectric.sdk35)
   // Offline-first integration tests spin up real fake servers so the
   // round-trip through HaClient (WebSocket) and AddonClient (HTTP) is

@@ -49,7 +49,7 @@ dependencies {
   testImplementation(platform(libs.composeai.tools.bom))
   testImplementation(libs.composeai.preview.discovery)
   testImplementation(libs.kotlin.test.junit)
-  testImplementation("org.robolectric:robolectric:4.17")
+  testImplementation("org.robolectric:robolectric:4.18")
   testImplementation(libs.compose.ui.test.junit4)
   debugImplementation(libs.compose.ui.test.manifest)
 }

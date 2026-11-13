@@ -140,7 +140,7 @@ kotlin {
       implementation(libs.remote.creation.core)
       implementation(libs.indriya)
       implementation(libs.ktor.client.mock)
-      implementation("org.robolectric:robolectric:4.17")
+      implementation("org.robolectric:robolectric:4.18")
       implementation(
         "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework:4.1.1",
       )

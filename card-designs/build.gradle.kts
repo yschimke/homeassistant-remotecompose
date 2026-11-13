@@ -73,7 +73,7 @@ kotlin {
       implementation(libs.compose.ui.test.manifest)
       implementation(libs.kotlin.test)
       implementation(libs.kotlin.test.junit)
-      implementation("org.robolectric:robolectric:4.17")
+      implementation("org.robolectric:robolectric:4.18")
     }
   }
 }
