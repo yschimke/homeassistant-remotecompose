@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.94](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.93...v0.1.94) (2026-11-13)
+
+
+### Features
+
+* author cards with rc-players' Compose Multiplatform creation API ([#1568](https://github.com/yschimke/homeassistant-remotecompose/issues/1568)) ([17e4f41](https://github.com/yschimke/homeassistant-remotecompose/commit/17e4f418ff2ef29ed97d45e5c0a3cbc6a3820043))
+
+
+### Bug Fixes
+
+* **a11y:** write card tap targets as named buttons ([#1573](https://github.com/yschimke/homeassistant-remotecompose/issues/1573)) ([980e412](https://github.com/yschimke/homeassistant-remotecompose/commit/980e412b51fd9baa43ead16e71ce8994b8fe32e9))
+* **deps:** update compose-ai-tools ([#1574](https://github.com/yschimke/homeassistant-remotecompose/issues/1574)) ([46c3583](https://github.com/yschimke/homeassistant-remotecompose/commit/46c35837dd199158afd0ca8e236f0673eb0869b0))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-contracts-bom to v3.43.0 ([#1570](https://github.com/yschimke/homeassistant-remotecompose/issues/1570)) ([a7769b3](https://github.com/yschimke/homeassistant-remotecompose/commit/a7769b30059af29aaf9fc98354f1ddd51064f48c))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-daemon-bom to v3.27.6 ([#1564](https://github.com/yschimke/homeassistant-remotecompose/issues/1564)) ([ea19974](https://github.com/yschimke/homeassistant-remotecompose/commit/ea199749babcbe5a93f1df3bee5da0d1555ad63a))
+* **deps:** update dependency ee.schimke.composeai:rc-players-bom to v3.1.2 ([#1566](https://github.com/yschimke/homeassistant-remotecompose/issues/1566)) ([2c28b04](https://github.com/yschimke/homeassistant-remotecompose/commit/2c28b04f999e3f251f74c96e3b0866807ef565f0))
+
 ## [0.1.93](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.92...v0.1.93) (2026-11-12)
 
 
