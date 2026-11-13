@@ -51,7 +51,7 @@ jobs:
       (github.event.issue.pull_request != null &&
        github.event.comment.user.login == github.repository_owner &&
        (github.event.comment.body == '/audit' || startsWith(github.event.comment.body, '/audit ')))
-    uses: yschimke/compose-ai-tools/.github/workflows/preview-audit-reusable.yml@v2.90.1
+    uses: yschimke/compose-ai-tools/.github/workflows/preview-audit-reusable.yml@v2.91.0
     with:
       pr: ${{ inputs.pr }}
       release: ${{ inputs.release }}
