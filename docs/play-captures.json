@@ -56,33 +56,33 @@
       "source": "adb-screencap",
       "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
     },
-    "seven-inch-screenshots/02-lcd-weather.png": {
-      "capturedAt": "2026-10-27T21:18:55.514767+00:00",
-      "device": "sdk_gphone64_x86_64",
+    "seven-inch-screenshots/02-classic-climate.png": {
+      "capturedAt": "2026-11-12T17:50:27.754419+00:00",
+      "device": "Compose Preview Simulator",
       "dimensions": [
         1000,
         1600
       ],
       "package": "ee.schimke.harc",
-      "scenario": "Running Climate demo dashboard with installed LCD card designs and segment displays; native seven-inch tablet viewport, synthetic sample weather.",
+      "scenario": "Running Climate demo dashboard with Classic Material 3 card designs, outdoor weather, live camera views and indoor thermostats in native seven-inch tablet viewport.",
       "sdk": "35",
-      "sha256": "d72f97f76c14eddcc55cbb0a71598652b1276ddfca4774875c09a9235b92fd02",
+      "sha256": "af185cbab7866f289505427f10eebceee9f849dabdff0edff0db6ddd3019d554",
       "source": "adb-screencap",
-      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+      "sourceRevision": "bee07eeb997ffb45c3fcfaefccaac93bc4ba46b3"
     },
-    "ten-inch-screenshots/01-lcd-weather-landscape.png": {
-      "capturedAt": "2026-10-27T21:20:20.386035+00:00",
-      "device": "sdk_gphone64_x86_64",
+    "ten-inch-screenshots/01-classic-climate-landscape.png": {
+      "capturedAt": "2026-11-12T18:18:34.195426+00:00",
+      "device": "Compose Preview Simulator",
       "dimensions": [
         1792,
         1120
       ],
       "package": "ee.schimke.harc",
-      "scenario": "Running Climate demo dashboard with installed LCD designs in native ten-inch landscape layout; sample segment displays and meters.",
+      "scenario": "Running Climate demo dashboard with Classic Material 3 light card designs, outdoor weather, live camera feeds and indoor thermostats in native ten-inch landscape layout.",
       "sdk": "35",
-      "sha256": "0b3458404e2ae1cc51f166a967f229fae424e45197b6df5ba306768f73371d0d",
+      "sha256": "f95ec0e11fe4e3fdf9d4dae1ab87d228d5b1894e508b8a0e7971dc4c61ec6068",
       "source": "adb-screencap",
-      "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
+      "sourceRevision": "bee07eeb997ffb45c3fcfaefccaac93bc4ba46b3"
     },
     "ten-inch-screenshots/02-nixie-instruments-landscape.png": {
       "capturedAt": "2026-10-27T21:22:17.001453+00:00",
@@ -99,8 +99,8 @@
       "sourceRevision": "af2064ea22234d7eb75c13e02505f649a88df949"
     },
     "wear-screenshots/01-living-room.png": {
-      "capturedAt": "2026-10-27T20:47:08.553559+00:00",
-      "device": "sdk_gwear_x86_64",
+      "capturedAt": "2026-11-12T17:30:07.326863+00:00",
+      "device": "Compose Preview Watch",
       "dimensions": [
         480,
         480
@@ -108,23 +108,23 @@
       "package": "ee.schimke.harc",
       "scenario": "Running Wear pinned Living room section using the existing debug offline demo seed; no Home Assistant account or paired phone.",
       "sdk": "36",
-      "sha256": "f7f0830d404244bdceea7c78fd8f5e58c7ac25df173485b58df8d52e8b0d2682",
+      "sha256": "888666211117722fdf10e4083d24f6fedb718929916465a28cb9a2c507715640",
       "source": "adb-screencap",
-      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+      "sourceRevision": "bee07eeb997ffb45c3fcfaefccaac93bc4ba46b3"
     },
     "wear-screenshots/02-pinned-cards.png": {
-      "capturedAt": "2026-10-27T20:47:38.364740+00:00",
-      "device": "sdk_gwear_x86_64",
+      "capturedAt": "2026-11-12T17:30:00.330195+00:00",
+      "device": "Compose Preview Watch",
       "dimensions": [
         480,
         480
       ],
       "package": "ee.schimke.harc",
-      "scenario": "Running Wear pinned Home cards with Kitchen and Outside readings from the existing offline demo seed; no live Home Assistant account.",
+      "scenario": "Running Wear pinned Home list at launch with Living room section and Home heading from the offline demo seed; no Home Assistant account.",
       "sdk": "36",
-      "sha256": "355c1542a44df27ed82f1e50350286f513c3023eedb8f27e5b3e2cca4f1df406",
+      "sha256": "06084477055fdf33d2d1934785797f2a8732bc0e3d3ca3f387d2e936c05e96a5",
       "source": "adb-screencap",
-      "sourceRevision": "79c462ed9498dd489b67a1212a4b0d4d964813df"
+      "sourceRevision": "bee07eeb997ffb45c3fcfaefccaac93bc4ba46b3"
     }
   }
 }
