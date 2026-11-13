@@ -60,8 +60,9 @@ listing publication uses these checked-in files.
 
 Phone shows Trinitron needle gauges and instrument meters, Nixie weather cards,
 and the real installed-design chooser. The 7-inch tablet contrasts Trinitron
-instruments with LCD segment displays. The 10-inch tablet shows LCD weather
-and Nixie instruments in the actual landscape layout. All use the built-in
+instruments with the Classic Material 3 Climate dashboard (weather, live
+cameras, thermostats). The 10-inch tablet shows the Classic (light) Climate
+dashboard in the actual landscape layout. Wear shows the unclipped lists. All use the built-in
 offline demo data; no private Home Assistant account is involved.
 
 Enter the debug demo session with `--ez terrazzo.test.demo_mode true`, then

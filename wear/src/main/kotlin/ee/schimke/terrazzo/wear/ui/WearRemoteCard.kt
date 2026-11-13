@@ -114,6 +114,7 @@ internal val LocalWearCardLook = staticCompositionLocalOf { WearCardLook() }
 internal fun WearRemoteCard(
   summary: CardSummary,
   values: WearValues,
+  modifier: Modifier = Modifier,
   onOpen: (() -> Unit)? = null,
   onNavigate: ((String) -> Unit)? = null,
   fullScreen: Boolean = false,
@@ -123,6 +124,7 @@ internal fun WearRemoteCard(
   WearRemoteCardContent(
     summary,
     rememberCardValues(summary.rawJson, values),
+    modifier,
     onOpen,
     fullScreen,
     taps,
@@ -133,13 +135,14 @@ internal fun WearRemoteCard(
 private fun WearRemoteCardContent(
   summary: CardSummary,
   values: Map<String, EntityValue>,
+  modifier: Modifier,
   onOpen: (() -> Unit)?,
   fullScreen: Boolean,
   taps: WearCardTaps,
 ) {
   val card = remember(summary.rawJson) { decodeWearCard(summary.rawJson) }
   if (card == null) {
-    Column {
+    Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
       // Old or malformed offline records can still identify the card, but a container type is
       // never content. Keep this explicitly marked as a fallback rather than a selected design.
       summary.title.takeIf { it.isNotBlank() && it != summary.type }?.let { Text(it) }
@@ -224,7 +227,7 @@ private fun WearRemoteCardContent(
         },
         onUnhandledTap = onOpen,
       )
-  Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+  Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
       val scale =
         if (!fullScreen) 1f

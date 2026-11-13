@@ -9,11 +9,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.SurfaceTransformation
 import androidx.wear.compose.material3.Text
 import ee.schimke.terrazzo.shared.PUBLIC_FEEDBACK_WARNING
 import ee.schimke.terrazzo.shared.PUBLIC_ISSUE_TRACKER
@@ -42,26 +42,45 @@ fun WearSettingsScreen(
       }
     WearListScreen(
       modifier = modifier,
-      state = rememberScalingLazyListState(initialCenterItemIndex = 0),
       spacing = 8.dp,
-    ) {
-      item { ListHeader { Text("PUBLIC issue") } }
-      item { Text(PUBLIC_FEEDBACK_WARNING, style = MaterialTheme.typography.bodySmall) }
+    ) { spec ->
+      item {
+        ListHeader(
+          modifier = wearHeaderModifier(spec),
+          transformation = SurfaceTransformation(spec),
+        ) {
+          Text("PUBLIC issue")
+        }
+      }
+      item {
+        Text(
+          PUBLIC_FEEDBACK_WARNING,
+          style = MaterialTheme.typography.bodySmall,
+          modifier = wearTextModifier(spec),
+        )
+      }
       item {
         Text(
           "Included: app version $version; Wear OS. No Home Assistant data or attachments. Review, edit and explicitly submit on GitHub (account required).",
+          modifier = wearTextModifier(spec),
         )
       }
       if (failed) {
         item {
-          Text("Could not open GitHub. Open this address on your phone and choose New issue:")
+          Text(
+            "Could not open GitHub. Open this address on your phone and choose New issue:",
+            modifier = wearTextModifier(spec),
+          )
         }
-        item { SelectionContainer { Text(PUBLIC_ISSUE_TRACKER) } }
+        item {
+          SelectionContainer(modifier = wearTextModifier(spec)) { Text(PUBLIC_ISSUE_TRACKER) }
+        }
       }
       item {
         Text(
           "PUBLIC on GitHub. Never include credentials or private Home Assistant details.",
           style = MaterialTheme.typography.bodySmall,
+          modifier = wearTextModifier(spec),
         )
       }
       item {
@@ -71,28 +90,60 @@ fun WearSettingsScreen(
               runCatching { uriHandler.openUri(feedbackIssueUrl(version, "Wear OS")) }.isFailure
             if (!failed) reporting = false
           },
+          modifier = wearButtonModifier(spec),
+          transformation = SurfaceTransformation(spec),
         ) {
           Text(if (failed) "Retry PUBLIC draft" else "Review PUBLIC draft")
         }
       }
-      item { Button(onClick = { reporting = false }) { Text("Cancel") } }
+      item {
+        Button(
+          onClick = { reporting = false },
+          modifier = wearButtonModifier(spec),
+          transformation = SurfaceTransformation(spec),
+        ) {
+          Text("Cancel")
+        }
+      }
     }
     return
   }
-  WearListScreen(modifier = modifier) {
+  WearListScreen(modifier = modifier) { spec ->
     // The screen's title first; reporting a bug is a secondary action, so it sits at the end.
-    item { ListHeader { Text("Settings") } }
+    item {
+      ListHeader(
+        modifier = wearHeaderModifier(spec),
+        transformation = SurfaceTransformation(spec),
+      ) {
+        Text("Settings")
+      }
+    }
     item {
       Text(
         "What your watch shows, its theme and card designs are all chosen on your phone.",
         style = MaterialTheme.typography.bodySmall,
         textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+        modifier = wearTextModifier(spec).fillMaxWidth().padding(horizontal = 12.dp),
       )
     }
-    onOpenOnPhone?.let { open -> item { OpenOnPhoneButton(open) } }
+    onOpenOnPhone?.let { open ->
+      item {
+        OpenOnPhoneButton(
+          open,
+          modifier = wearButtonModifier(spec),
+          transformation = SurfaceTransformation(spec),
+        )
+      }
+    }
 
-    item { ListHeader { Text("Phone") } }
+    item {
+      ListHeader(
+        modifier = wearHeaderModifier(spec),
+        transformation = SurfaceTransformation(spec),
+      ) {
+        Text("Phone")
+      }
+    }
     item {
       Text(
         text =
@@ -105,7 +156,7 @@ fun WearSettingsScreen(
           },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = wearTextModifier(spec).padding(horizontal = 12.dp, vertical = 4.dp),
       )
     }
 
@@ -115,7 +166,8 @@ fun WearSettingsScreen(
           reporting = true
           failed = false
         },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = wearButtonModifier(spec),
+        transformation = SurfaceTransformation(spec),
         colors = ButtonDefaults.filledTonalButtonColors(),
       ) {
         Text("Report a bug")
