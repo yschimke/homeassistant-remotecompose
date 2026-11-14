@@ -440,11 +440,13 @@ class Wall:
                 del self.hubs[key]
                 hub.wake.set()  # Its polls answer `reset`.
 
-    def hub(self, user, url_path, look, config):
+    def hub(self, user, url_path, look, config, variant=None):
+        """[variant]: what else the dashboard was made from (the settings' home), so panels that
+        differ only in it keep hubs of their own."""
         now = time.monotonic()
         for key in [k for k, h in self.hubs.items() if now - h.used > IDLE]:
             del self.hubs[key]
-        key = (url_path, user.id, look)
+        key = (url_path, user.id, look, variant)
         hub = self.hubs.get(key)
         if hub is None or hub.etag != wall_api.config_etag(config):
             if hub is not None:
@@ -521,13 +523,15 @@ class WallCardView(HomeAssistantView):
             if base is None:
                 raise wall_api.WallError(503, "No card design server: install the Terrazzo Card Designs add-on.")
             look = _look(request)
+            # A settings theme's preview is drawn in that theme, as /values draws it.
+            theme, card = wall_api.theme_of(card)
             sha, exact, values = await _resolve(
                 self.hass,
                 request["hass_user"],
                 base,
                 request.headers.get("Authorization"),
                 wall_api.panel_card(card, look[3], look[4]) if look[3] is not None else card,
-                look,
+                look if theme is None else theme + look[2:],
             )
         except wall_api.WallError as failure:
             return _error(failure)
@@ -566,7 +570,8 @@ class WallValuesView(HomeAssistantView):
             base = await _design_server_url(self.hass)
             if base is None:
                 raise wall_api.WallError(503, "No card design server: install the Terrazzo Card Designs add-on.")
-            hub = _wall(self.hass).hub(request["hass_user"], key, _look(request), config)
+            variant = request.query.get("home") if key == wall_api.SETTINGS_DASHBOARD else None
+            hub = _wall(self.hass).hub(request["hass_user"], key, _look(request), config, variant)
         except wall_api.WallError as failure:
             return _error(failure)
         authorization = request.headers.get("Authorization")
