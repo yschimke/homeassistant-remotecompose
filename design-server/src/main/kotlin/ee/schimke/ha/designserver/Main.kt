@@ -125,6 +125,19 @@ fun main(args: Array<String>) {
         println("library mirror: main follows $upstream")
         LibraryMirror(channels, upstream, http)
       }
+  // Google Fonts for a `google:` family's glyphs, unless GOOGLE_FONTS=off; faces kept under
+  // GOOGLE_FONTS_DIR (or the state directory), else in memory only.
+  val googleFonts =
+    if (System.getenv("GOOGLE_FONTS") == "off") null
+    else
+      GoogleFonts(
+        HttpClient(io.ktor.client.engine.cio.CIO),
+        System.getenv("GOOGLE_FONTS_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
+          ?: System.getenv("UI_BUILDER_STATE_DIR")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { File(it, "google-fonts") },
+      )
+  println("google fonts: ${if (googleFonts == null) "off" else "on"}")
   embeddedServer(CIO, port = port, host = host) {
       install(CallLogging)
       designServer(
@@ -142,6 +155,7 @@ fun main(args: Array<String>) {
         mirror = mirror,
         mirrorPollMs =
           (System.getenv("LIBRARY_UPSTREAM_POLL_SECONDS")?.toLongOrNull() ?: 3_600L) * 1_000,
+        googleFonts = googleFonts,
       )
     }
     .start(wait = true)

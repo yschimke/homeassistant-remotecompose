@@ -613,10 +613,18 @@ GET /designs/v1/fonts/fonts.json      (ETag, no-cache)
 
 GET /designs/v1/fonts/<file>          (Cache-Control: max-age=86400)
 
-POST /designs/v1/filters/bitmap-fonts?host=wear-widgets|launcher-widgets&density=<1-4>
+POST /designs/v1/filters/bitmap-fonts?host=wear-widgets|launcher-widgets|wall&density=<1-4>
        [&locale=<bcp47>&chars=<extra>&values=<{"binding":["value",…]}>&maxLength=<n>]
   body: a .rc document   → the document with its card fonts as bitmap fonts
                            (X-Bitmap-Fonts: converted=<n>; skipped=<n>)
+
+GET /designs/v1/fonts/glyphs?family=<name>&size=<dp>&density=<1-4>&weight=<1-1000>&italic=<0|1>
+       &chars=<text>|ranges=<0x20-0x7e,…>[&bits=8|4|2|1][&kerning=1][&format=raster|font]
+                         → a face's glyphs as a glyph pack (application/vnd.ha.glyphs; ETag;
+                           format=font: the face cut to the characters, font/ttf;
+                           X-Glyphs: <n>), for a client that caches them; family is the
+                           server's own or google:<Family Name> from Google Fonts
+                           (glyph-range-fonts.md)
 
 ```
 

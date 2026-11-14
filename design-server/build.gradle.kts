@@ -126,6 +126,8 @@ dependencies {
   // Creates designs on UI Builder (`UiBuilderClient`).
   implementation(libs.ktor.client.core)
   implementation(libs.ktor.client.cio)
+  // Subsets a face to the characters a client asks for (GlyphRanges, format=font).
+  implementation(libs.fontbox)
 
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
@@ -146,4 +148,5 @@ dependencies {
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.ktor.server.test.host)
+  testImplementation(libs.ktor.client.mock)
 }

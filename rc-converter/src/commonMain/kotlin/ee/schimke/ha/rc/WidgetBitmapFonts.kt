@@ -30,7 +30,14 @@ enum class WidgetHost(val wire: String, val profile: RcTargetProfile) {
   Wear("wear-widgets", RcTargetProfiles.WEAR_WIDGETS),
 
   /** An Android 16 launcher widget. */
-  Launcher("launcher-widgets", RcTargetProfiles.WIDGETS_V6);
+  Launcher("launcher-widgets", RcTargetProfiles.WIDGETS_V6),
+
+  /**
+   * A wall panel on a microcontroller, whose player rasterises text slowly (some 6 ms a run on an
+   * ESP32-S3) and ships one face. Its text in the default family is drawn in
+   * [WidgetBitmapFonts.WALL_FAMILY] too, so the whole card comes from glyphs.
+   */
+  Wall("wall", RcTargetProfiles.ANDROIDX);
 
   companion object {
     fun of(wire: String?): WidgetHost? = entries.firstOrNull { it.wire == wire }
@@ -91,14 +98,61 @@ object WidgetBitmapFonts {
     rasterizer: RcTextRasterizer,
     display: RcDisplay = RcDisplay.DEFAULT,
     live: LiveText = LiveText(),
-  ): RcBitmapFontTexts =
-    document.coreTextAsBitmapFonts(
+  ): RcBitmapFontTexts {
+    val (named, families) =
+      if (host == WidgetHost.Wall) document.withDefaultFamily(WALL_FAMILY) to FAMILIES + WALL_FAMILY
+      else document to FAMILIES
+    return named.coreTextAsBitmapFonts(
       host.profile,
-      FAMILIES,
+      families,
       rasterizer,
       display,
-      glyphs = liveGlyphs(document, live),
+      glyphs = liveGlyphs(named, live),
     )
+  }
+
+  /** The face [WidgetHost.Wall] draws text in the default family with: what its player ships. */
+  const val WALL_FAMILY: String = "roboto"
+
+  /**
+   * The text id [withDefaultFamily] names the face with: high in the id space, which documents fill
+   * from 42 up, and below 2^22 so a float can still refer to it.
+   */
+  internal const val DEFAULT_FAMILY_TEXT_ID: Int = 0x3FF00
+
+  /**
+   * [this] with every `TextLayout` and `CoreText` in the default family set in [family] instead, so
+   * a filter that converts faces by name ([coreTextAsBitmapFonts]) converts them too.
+   */
+  internal fun RcDocument.withDefaultFamily(family: String): RcDocument {
+    val id = DEFAULT_FAMILY_TEXT_ID
+    if (operations.any { it is RcTextData && it.id == id }) return this
+    var named = false
+    val renamed = operations.map { op ->
+      when (op) {
+        is RcTextLayout ->
+          if (op.fontFamilyId == -1) op.copy(fontFamilyId = id).also { named = true } else op
+        is RcCoreText -> {
+          val current =
+            (op.properties.firstOrNull { it.id == FONT_FAMILY } as? RcTextStyleProperty.IntValue)
+              ?.value
+          if (current == null || current == -1) {
+            named = true
+            op.copy(
+              properties =
+                op.properties.filterNot { it.id == FONT_FAMILY } +
+                  RcTextStyleProperty.IntValue(FONT_FAMILY, id),
+            )
+          } else op
+        }
+        else -> op
+      }
+    }
+    return if (named) copy(operations = listOf(RcTextData(id, family)) + renamed) else this
+  }
+
+  /** `CoreText`'s font family property: a text id naming it. */
+  private const val FONT_FAMILY = 8
 
   /**
    * The glyphs a text the card fills in later can show, by its component id, or null to leave it as
@@ -120,7 +174,7 @@ object WidgetBitmapFonts {
         document.operations.filterIsInstance<RcTextLayout>().associate {
           it.componentId to it.textId
         }
-    val computed = ComputedTexts(document)
+    val computed = ComputedTexts(document) { id -> names[id]?.let { live.values[it] } }
     val locale = live.locale?.let { localeLetters(it) ?: return { null } }.orEmpty()
     val default = ALPHANUMERIC + locale + live.chars
     return glyphs@{ componentId ->
@@ -136,6 +190,14 @@ object WidgetBitmapFonts {
       // A text the document computes (a clock's time) says what it can show: exactly those.
       computed.shape(textId)?.let { (chars, length) ->
         return@glyphs RcBitmapFontGlyphs(chars, length.coerceAtLeast(1))
+      }
+      // A computed text with a part not known (a bound name joined to another): the default set
+      // with its constant parts' characters, such as the separator between the names.
+      computed.constantChars(textId)?.let { constants ->
+        return@glyphs RcBitmapFontGlyphs(
+          (default + constants).toSet().joinToString(""),
+          maxOf(live.maxLength, sample.length),
+        )
       }
       // A sample the set can't show says the values won't fit it either.
       if (sample.any { it !in default }) return@glyphs null
@@ -198,7 +260,19 @@ object WidgetBitmapFonts {
  * and a lookup among them. A clock's time is the case: `TextFromFloat` digits and `:` merged. Null
  * for a text whose length isn't bounded, or that isn't computed.
  */
-private class ComputedTexts(document: RcDocument) {
+/**
+ * What the texts a document computes can show. [bound] is a bound text's possible values, by its
+ * id, or null when they're unknown: a binding's template sample (a placeholder name) is not a
+ * value.
+ */
+private class ComputedTexts(document: RcDocument, private val bound: (Int) -> List<String>?) {
+  private val bindings =
+    document.operations
+      .filterIsInstance<RcNamedVariable>()
+      .filter { it.type == RcNamedVariable.STRING_TYPE }
+      .map { it.id }
+      .toSet()
+
   private val operations =
     document.operations
       .mapNotNull { operation ->
@@ -214,12 +288,34 @@ private class ComputedTexts(document: RcDocument) {
     document.operations.filterIsInstance<RcTextData>().associate { it.id to it.text }
   private val lists = document.operations.filterIsInstance<RcIdList>().associate { it.id to it.ids }
 
+  /** The characters of [textId]'s constant parts, if it is computed, or null. */
+  fun constantChars(textId: Int): String? =
+    if (textId !in operations) null else constantsOf(textId, depth = 0).toSet().joinToString("")
+
+  private fun constantsOf(textId: Int, depth: Int): String {
+    if (depth > MAX_DEPTH || textId in bindings) return ""
+    constants[textId]?.let { if (textId !in operations) return it }
+    return when (val operation = operations[textId]) {
+      is RcTextMerge ->
+        constantsOf(operation.leftId, depth + 1) + constantsOf(operation.rightId, depth + 1)
+      is RcTextLookupInt ->
+        lists[operation.listId].orEmpty().joinToString("") { constantsOf(it, depth + 1) }
+      is RcTextFromFloat -> NUMBER_CHARS
+      else -> ""
+    }
+  }
+
   /** [textId]'s characters and the most of them it shows at once, or null. */
   fun shape(textId: Int): Pair<String, Int>? =
     if (textId !in operations) null else shapeOf(textId, depth = 0)
 
   private fun shapeOf(textId: Int, depth: Int): Pair<String, Int>? {
     if (depth > MAX_DEPTH) return null
+    if (textId in bindings) {
+      // A bound part ("Home" of "Home · Garage"): its values when they're known, else nothing.
+      val values = bound(textId)?.takeIf { it.isNotEmpty() } ?: return null
+      return values.joinToString("").toSet().joinToString("") to values.maxOf { it.length }
+    }
     constants[textId]?.let { text ->
       // A merge's constant part, such as a clock's colon; a bound value is never one.
       return if (textId in operations) null else text to text.length

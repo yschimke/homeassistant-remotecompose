@@ -48,6 +48,7 @@ android-targetSdk = "37"
 
 # Libraries
 ktor = "3.6.1"
+fontbox = "3.0.8"
 kotlinx-serialization = "1.13.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
@@ -291,6 +292,7 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
+fontbox = { module = "org.apache.pdfbox:fontbox", version.ref = "fontbox" }
 
 # Ktor server (addon-server)
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
