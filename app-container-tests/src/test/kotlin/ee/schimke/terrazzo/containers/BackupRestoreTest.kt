@@ -76,14 +76,19 @@ class BackupRestoreTest {
 
   /** Backs [APP_PACKAGE] up with the local transport, flagged as end-to-end encrypted. */
   private fun backUp() {
-    // `disableIfNoEncryptionCapabilities` in the app's backup rules skips a transport that doesn't
-    // report client-side encryption. The local transport reports it when asked to.
-    adb.shell("settings put secure backup_local_transport_parameters fake_encryption_flag=true")
+    // `disableIfNoEncryptionCapabilities` in the app's backup rules leaves every file out unless
+    // the transport reports client-side encryption (`FLAG_CLIENT_SIDE_ENCRYPTION_ENABLED`). The
+    // local transport reports it for `is_encrypted`. Its `fake_encryption_flag` sets a different,
+    // test-only flag: with only that, the backup is empty and the transport rejects it (PFTBT
+    // error -1002).
+    adb.shell("settings put secure backup_local_transport_parameters is_encrypted=true")
     adb.shell("bmgr enable true")
     adb.shell("bmgr transport $LOCAL_TRANSPORT")
     runCatching { adb.shell("bmgr wipe $LOCAL_TRANSPORT $APP_PACKAGE") }
     val output = adb.shell("bmgr backupnow $APP_PACKAGE")
     if (!output.contains("Package $APP_PACKAGE with result: Success")) {
+      // "Transport rejected package" here means the backup was empty: the local transport declines
+      // zero-size full backups, which is what the backup rules make of an unencrypted transport.
       fail("Backup of $APP_PACKAGE did not succeed:\n$output")
     }
   }
