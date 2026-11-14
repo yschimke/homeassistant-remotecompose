@@ -59,8 +59,7 @@ class TokenVault(private val context: Context) {
     val (iv, ciphertext) = encrypt(refreshToken.toByteArray(Charsets.UTF_8))
     updateVault { entries ->
       val current = entries[instanceId] ?: VaultEntry()
-      entries[instanceId] =
-        current.copy(ciphertext = ciphertext.base64(), iv = iv.base64())
+      entries[instanceId] = current.copy(ciphertext = ciphertext.base64(), iv = iv.base64())
     }
   }
 
@@ -93,9 +92,7 @@ class TokenVault(private val context: Context) {
     readVault().entries[instanceId]?.clientId ?: HaAuthService.CLIENT_ID
 
   private suspend fun readVault(): VaultData =
-    mutex.withLock {
-      withContext(Dispatchers.IO) { readVaultLocked() }
-    }
+    mutex.withLock { withContext(Dispatchers.IO) { readVaultLocked() } }
 
   private suspend fun updateVault(transform: (MutableMap<String, VaultEntry>) -> Unit) {
     mutex.withLock {
@@ -112,9 +109,10 @@ class TokenVault(private val context: Context) {
     val file = vaultFile
     if (file.exists()) {
       return runCatching {
-        val text = AtomicFile(file).readFully().toString(Charsets.UTF_8)
-        json.decodeFromString(VaultData.serializer(), text)
-      }.getOrDefault(VaultData())
+          val text = AtomicFile(file).readFully().toString(Charsets.UTF_8)
+          json.decodeFromString(VaultData.serializer(), text)
+        }
+        .getOrDefault(VaultData())
     }
     val legacy = legacyDataStoreFile
     if (!legacy.exists()) return VaultData()
@@ -164,8 +162,6 @@ class TokenVault(private val context: Context) {
         }
       }
       VaultData(entries)
-    } catch (_: Throwable) {
-      VaultData()
     } finally {
       scope.cancel()
     }
