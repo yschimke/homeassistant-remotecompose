@@ -80,7 +80,7 @@ jobs:
         run: |
           git fetch origin 71d69df516e9ed74f2bccdd2188b3dc107bf34b2
           git restore --source=FETCH_HEAD -- app/src/main app-ui/src/commonMain
-      - uses: actions/setup-java@v6.2.0
+      - uses: actions/setup-java@v6.3.0
         with:
           distribution: temurin
           java-version: 21.0.13+9.0.LTS
