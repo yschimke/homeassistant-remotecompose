@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.96](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.95...v0.1.96) (2026-11-14)
+
+
+### Features
+
+* a settings dashboard a wall panel plays to choose its home, mode and theme ([#1617](https://github.com/yschimke/homeassistant-remotecompose/issues/1617)) ([9433744](https://github.com/yschimke/homeassistant-remotecompose/commit/943374407edf2cd8ea39d7d5d58a673b1a1ed46a))
+
+
+### Bug Fixes
+
+* library designs play as the app's own captures, rugged headings included ([#1612](https://github.com/yschimke/homeassistant-remotecompose/issues/1612)) ([c976571](https://github.com/yschimke/homeassistant-remotecompose/commit/c976571a93c4e67b210deed4f36bd1bb07eb93e9))
+* the design library keeps under the server's file limit ([#1615](https://github.com/yschimke/homeassistant-remotecompose/issues/1615)) ([f979ace](https://github.com/yschimke/homeassistant-remotecompose/commit/f979aceec0a277593fc5a7382aadc1404c164bfa))
+
 ## [0.1.95](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.94...v0.1.95) (2026-11-14)
 
 
