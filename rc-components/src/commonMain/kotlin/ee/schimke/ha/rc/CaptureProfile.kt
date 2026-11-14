@@ -38,6 +38,13 @@ val androidX: CaptureProfile = RcPlatformProfiles.ANDROIDX
 val androidXExperimental: CaptureProfile = RcCaptureProfiles.androidXExperimental
 
 /**
+ * [androidXExperimentalWrap]'s header tags, for a capture that names its operations itself (the
+ * design library's, off Android): its documents must play as the app's own captures do.
+ */
+val APP_HEADER_TAGS: List<HTag> =
+  listOf(HTag(Header.FEATURE_PAINT_MEASURE, 0), HTag(Header.FEATURE_DISALLOW_INTERCEPT_TOUCH, 0))
+
+/**
  * [androidXExperimental], for a document a host lays out by its own content size.
  *
  * `FEATURE_PAINT_MEASURE = 0`: the AndroidX View player's default is `1` ("measure in paint"),
@@ -55,11 +62,7 @@ val androidXExperimental: CaptureProfile = RcCaptureProfiles.androidXExperimenta
 val androidXExperimentalWrap: CaptureProfile =
   Profile(
     profileFlags = RcProfiles.PROFILE_ANDROIDX or RcProfiles.PROFILE_EXPERIMENTAL,
-    headerTags =
-      listOf(
-        HTag(Header.FEATURE_PAINT_MEASURE, 0),
-        HTag(Header.FEATURE_DISALLOW_INTERCEPT_TOUCH, 0),
-      ),
+    headerTags = APP_HEADER_TAGS,
   )
 
 /**

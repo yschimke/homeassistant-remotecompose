@@ -23,6 +23,7 @@ import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaHostFontFamilies
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -96,6 +97,7 @@ class JvmLibraryAndroidPlaybackTest {
           .composeSupportReport(
             allowExternalImagePlaceholders = true,
             availableCustomComponents = RcInput.configs,
+            availableFontFamilies = HaHostFontFamilies,
           )
       if (report.fullyRenderable) null
       else

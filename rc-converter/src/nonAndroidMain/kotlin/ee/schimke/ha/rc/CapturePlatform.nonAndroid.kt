@@ -23,12 +23,16 @@ class CommonCaptureHost(override val supportedOperations: Set<Int>) : CaptureHos
 
 /**
  * The AndroidX player with its experimental operations, as the app's own capture declares, held to
- * this host's operations: the writer refuses any other.
+ * this host's operations: the writer refuses any other. Its header is the app capture's too
+ * ([APP_HEADER_TAGS]): without `FEATURE_PAINT_MEASURE = 0` a player reports the document's declared
+ * size instead of what it measures, and a card that wraps its height stands the canvas's full
+ * height.
  */
 private fun CaptureHost.profile(): Profile =
   Profile(
     profileFlags = RcProfiles.PROFILE_ANDROIDX or RcProfiles.PROFILE_EXPERIMENTAL,
     supportedOperations = MutableIntSet().also { set -> supportedOperations.forEach(set::add) },
+    headerTags = APP_HEADER_TAGS,
   )
 
 internal actual val DOCUMENT_API_LEVEL: Int = CoreDocument.DOCUMENT_API_LEVEL

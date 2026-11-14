@@ -58,6 +58,13 @@ const val HaDigital7Font = "digital7"
  */
 const val HaGSpotFont = "gspot"
 
+/**
+ * The font families a card may name that hosts resolve themselves ([HaDigital7Font],
+ * [HaGSpotFont]): a player's support report counts them as available, so a card set in them plays
+ * in the Compose player instead of falling back.
+ */
+val HaHostFontFamilies: Set<String> = setOf(HaDigital7Font, HaGSpotFont)
+
 /** The hours-minutes digits' size, as a share of the window's height. */
 private const val MainShare = 0.86f
 

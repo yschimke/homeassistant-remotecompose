@@ -322,6 +322,8 @@ internal fun decodeForComposePlayer(bytes: ByteArray): RcDocument? {
       document.composeSupportReport(
         allowExternalImagePlaceholders = true,
         availableCustomComponents = ee.schimke.composeai.rcplayer.protocol.RcInput.configs,
+        // The fonts the app resolves itself (HaFonts): a card set in one still plays here.
+        availableFontFamilies = ee.schimke.ha.rc.components.HaHostFontFamilies,
       )
     }
       .onFailure { Log.w(TAG, "rc-player-compose capability report failed", it) }
