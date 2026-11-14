@@ -213,7 +213,6 @@ fun SectionFlowRemoteReflow() {
             documentBytes = bytes,
             modifier = Modifier.fillMaxWidth(),
             bitmapLoader = bitmapLoader,
-            fallback = { Text("CMP player could not play this document") },
           )
         }
       }

@@ -175,7 +175,7 @@ class WearWidgetTemplateTest {
             HaRcComposePlayer(
               documentBytes = bytes,
               modifier = Modifier.size(size.first.dp, size.second.dp),
-              fallback = { error("a Wear widget document must play") },
+              onIncomplete = { error("a Wear widget document must play: $it") },
             )
           }
         }
@@ -219,7 +219,7 @@ class WearWidgetTemplateTest {
             HaRcComposePlayer(
               documentBytes = bytes,
               modifier = Modifier.size(size.first.dp, size.second.dp),
-              fallback = { error("a Wear widget document must play") },
+              onIncomplete = { error("a Wear widget document must play: $it") },
             )
           }
         }

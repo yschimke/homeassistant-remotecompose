@@ -71,7 +71,7 @@ class PictureClonePlaybackTest {
       HaRcComposePlayer(
         documentBytes = bytes,
         bitmapLoader = loader,
-        fallback = { error("the document plays in the Compose player") },
+        onIncomplete = { error("the document plays in the Compose player: $it") },
       )
     }
     compose.waitForIdle()
@@ -105,7 +105,7 @@ class PictureClonePlaybackTest {
         documentBytes = document,
         bitmapLoader = loader,
         imageEpoch = epoch,
-        fallback = { error("the document plays in the Compose player") },
+        onIncomplete = { error("the document plays in the Compose player: $it") },
       )
     }
     compose.waitForIdle()

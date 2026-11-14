@@ -128,7 +128,7 @@ class WearLevelTest {
               documentBytes = bytes,
               modifier = Modifier.size(200.dp, 112.dp),
               namedValues = named,
-              fallback = { error("must play") },
+              onIncomplete = { error("must play: $it") },
             )
           }
         }

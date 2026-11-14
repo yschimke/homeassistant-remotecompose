@@ -87,9 +87,8 @@ class JvmLibraryAndroidPlaybackTest {
       emptyList(),
       different.map { "${it.key.cardType} ${it.key.shape} ${it.key.theme}" },
     )
-    // The app plays a design in rc-player-compose; one it reports it can't fully render falls back
-    // to AndroidX's player, which can't read everything the JVM writes (core text), so a sampled
-    // design that matched above may still only match by both falling back.
+    // The app plays every design in rc-player-compose, with no other player behind it: one it
+    // reports it can't fully render plays with that gap, so every sampled design must be complete.
     val unplayable = sample.mapNotNull { entry ->
       val jvm = dir.resolve(DesignManifest.blobPath(entry.sha256)).readBytes()
       val report =

@@ -84,9 +84,10 @@ enum class CardPlayback {
  *   expressions resolve to the same instant the converters encoded, and decodes a plain
  *   [BitmapLoader]'s images inline rather than on `Dispatchers.IO`, so a capture never races them.
  *
- * **Per-document fallback.** If rc-player-compose's own capability report says it can't fully
- * render a document, [fallback] draws it instead (the AndroidX player) and the reasons are logged —
- * a gap is never papered over silently.
+ * **No other player.** Every document plays here. If rc-player-compose's own capability report says
+ * it can't fully render one, it still plays, and [onIncomplete] hears what's missing (logged by
+ * default; tests fail on it): a gap is fixed in the player, never hidden behind another one. A
+ * document that doesn't decode shows [RcDisabledWarning] in its place.
  */
 @Composable
 fun HaRcComposePlayer(
@@ -96,7 +97,9 @@ fun HaRcComposePlayer(
   imageEpoch: Any? = null,
   namedValues: SnapshotStateMap<String, RcNamedValue> = rememberRcNamedValues(),
   onNamedAction: (name: String, value: Any?) -> Unit = { _, _ -> },
-  fallback: @Composable () -> Unit,
+  onIncomplete: (issues: List<String>) -> Unit = { issues ->
+    Log.w(TAG, "rc-player-compose can't fully render this document: $issues")
+  },
   inputDrafts: ee.schimke.composeai.rcplayer.runtime.RcInputDrafts = remember {
     ee.schimke.composeai.rcplayer.runtime.RcInputDrafts()
   },
@@ -144,9 +147,10 @@ fun HaRcComposePlayer(
     }
   }
   val decoded = remember(documentBytes) { decodedForComposePlayer(documentBytes) }
+  remember(decoded) { if (decoded.issues.isNotEmpty()) onIncomplete(decoded.issues) }
   val document = decoded.document
   if (document == null) {
-    fallback()
+    ee.schimke.terrazzo.shared.RcDisabledWarning(decoded.issues.joinToString("; "), modifier)
     return
   }
   // One player per card, across documents: a new document (a clone with a new picture, a
@@ -247,11 +251,19 @@ private val WrapUnpinnedHeight: Modifier = Modifier.layout { measurable, constra
  * identity: it is what the player keys its state on, so two decodes of one document play apart.
  */
 internal class DecodedForComposePlayer
-private constructor(val document: RcDocument?, val declared: Map<String, Int>) {
-  constructor(document: RcDocument?) : this(document, document?.declaredNamedVariables().orEmpty())
+private constructor(
+  val document: RcDocument?,
+  /** What the player's capability report says it can't render; empty when it renders it all. */
+  val issues: List<String>,
+  val declared: Map<String, Int>,
+) {
+  constructor(
+    document: RcDocument?,
+    issues: List<String>,
+  ) : this(document, issues, document?.declaredNamedVariables().orEmpty())
 
   /** Another play of the same document: shares the decode, nothing else. */
-  fun clone(): DecodedForComposePlayer = DecodedForComposePlayer(document, declared)
+  fun clone(): DecodedForComposePlayer = DecodedForComposePlayer(document, issues, declared)
 }
 
 /**
@@ -300,39 +312,37 @@ internal fun decodedForComposePlayer(bytes: ByteArray): DecodedForComposePlayer 
   val source = synchronized(cloneSources) { cloneSources[bytes] }
   val decoded =
     source?.let { decodedForComposePlayer(it).clone() }
-      ?: harcTrace(HarcTraceSections.DECODE_DOCUMENT) {
-        DecodedForComposePlayer(decodeForComposePlayer(bytes))
-      }
+      ?: harcTrace(HarcTraceSections.DECODE_DOCUMENT) { decodeForComposePlayer(bytes) }
   synchronized(decodedDocuments) { decodedDocuments[bytes] = decoded }
   return decoded
 }
 
 /**
- * Decode [bytes] for the Compose player, or null when the player reports it can't fully render the
- * document (or can't decode it at all). External (URL / file) images count as renderable: the host
- * resolves them through the image loader.
+ * Decode [bytes] for the Compose player, with what its capability report says it can't render. The
+ * document is null only when it doesn't decode at all. External (URL / file) images count as
+ * renderable: the host resolves them through the image loader.
  */
-internal fun decodeForComposePlayer(bytes: ByteArray): RcDocument? {
-  val document =
-    runCatching { RcDocumentCodec.decode(bytes) }
-      .onFailure { Log.w(TAG, "rc-player-compose could not decode the document", it) }
-      .getOrNull() ?: return null
-  val report =
-    runCatching {
-      document.composeSupportReport(
-        allowExternalImagePlaceholders = true,
-        availableCustomComponents = ee.schimke.composeai.rcplayer.protocol.RcInput.configs,
-        // The fonts the app resolves itself (HaFonts): a card set in one still plays here.
-        availableFontFamilies = ee.schimke.ha.rc.components.HaHostFontFamilies,
-      )
-    }
-      .onFailure { Log.w(TAG, "rc-player-compose capability report failed", it) }
-      .getOrNull() ?: return null
-  if (!report.fullyRenderable) {
-    Log.w(TAG, "Falling back to the AndroidX player: ${report.issues}")
-    return null
+internal fun decodeForComposePlayer(bytes: ByteArray): DecodedForComposePlayer {
+  val document = runCatching {
+    RcDocumentCodec.decode(bytes)
   }
-  return document
+    .getOrElse {
+      return DecodedForComposePlayer(null, listOf("the document doesn't decode: ${it.message}"))
+    }
+  val report = runCatching {
+    document.composeSupportReport(
+      allowExternalImagePlaceholders = true,
+      availableCustomComponents = ee.schimke.composeai.rcplayer.protocol.RcInput.configs,
+      // The fonts the app resolves itself (HaFonts): a card set in one still plays here.
+      availableFontFamilies = ee.schimke.ha.rc.components.HaHostFontFamilies,
+    )
+  }
+  val issues =
+    report.fold(
+      { if (it.fullyRenderable) emptyList() else it.issues.map { issue -> issue.detail } },
+      { listOf("the capability report failed: ${it.message}") },
+    )
+  return DecodedForComposePlayer(document, issues)
 }
 
 /** Named variables [RcDocument] declares, by name, with their [RcNamedVariable] type. */

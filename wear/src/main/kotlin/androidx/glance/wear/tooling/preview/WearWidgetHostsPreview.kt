@@ -32,7 +32,6 @@ import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
 import ee.schimke.ha.rc.HaRcComposePlayer
-import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import ee.schimke.terrazzo.wear.widget.WearWidgetIrSidecar
 import kotlinx.coroutines.runBlocking
 
@@ -111,9 +110,6 @@ private fun HostScreen(widget: GlanceWearWidget, host: WearWidgetHost, params: W
       HaRcComposePlayer(
         documentBytes = document,
         modifier = playerModifier,
-        fallback = {
-          WrapAdaptiveRemoteDocumentPlayer(documentBytes = document, modifier = playerModifier)
-        },
       )
     }
     Text(host.name, color = Color(0xFFBDC1C6), fontSize = 11.sp, modifier = Modifier.padding(4.dp))

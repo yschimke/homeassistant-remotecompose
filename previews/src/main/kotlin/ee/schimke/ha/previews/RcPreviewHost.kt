@@ -12,7 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.ha.rc.CaptureProfile
 import ee.schimke.ha.rc.HaRcComposePlayer
-import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import ee.schimke.ha.rc.captureSingleRemoteDocument
 import kotlinx.coroutines.runBlocking
 
@@ -61,13 +60,6 @@ internal fun RcContentPreview(
         documentBytes = bytes,
         modifier = Modifier.fillMaxSize(),
         bitmapLoader = bitmapLoader,
-        fallback = {
-          WrapAdaptiveRemoteDocumentPlayer(
-            documentBytes = bytes,
-            modifier = Modifier.fillMaxSize(),
-            bitmapLoader = bitmapLoader,
-          )
-        },
       )
     }
   }

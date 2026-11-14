@@ -415,7 +415,7 @@ class LauncherGridSweepTest {
             HaRcComposePlayer(
               documentBytes = current.bytes,
               modifier = Modifier.size(current.width.dp, current.height.dp),
-              fallback = { error("${file.name} must play") },
+              onIncomplete = { error("${file.name} must play: $it") },
             )
           }
         }
