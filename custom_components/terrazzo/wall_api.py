@@ -128,6 +128,11 @@ def _condition_entities(conditions):
         entity = _text(condition.get("entity")) or _text(condition.get("entity_id"))
         if entity is not None and entity not in out:
             out.append(entity)
+        # A numeric threshold may be another entity's state (`above: input_number.limit`).
+        for key in ("above", "below"):
+            raw = condition.get(key)
+            if isinstance(raw, str) and _finite(raw) is None and raw not in out:
+                out.append(raw)
         for nested in _condition_entities(condition.get("conditions")):
             if nested not in out:
                 out.append(nested)

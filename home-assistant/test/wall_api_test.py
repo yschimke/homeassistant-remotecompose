@@ -390,6 +390,11 @@ class ConditionalTest(unittest.TestCase):
         with self.assertRaises(wall.WallError):
             self.shown(card)
 
+    def test_an_entity_threshold_is_watched_too(self):
+        card = self.cond([{'condition': 'or', 'conditions': [
+            {'condition': 'numeric_state', 'entity': 'sensor.oven', 'above': 'input_number.limit', 'below': 300}]}])
+        self.assertEqual(wall.watched_entities(card), ['sensor.oven', 'input_number.limit'])
+
     def test_watched_entities_include_the_conditions(self):
         card = self.cond([{'condition': 'or', 'conditions': [{'entity': 'binary_sensor.door', 'state': 'on'}]}])
         self.assertEqual(wall.watched_entities(card), ['binary_sensor.door', 'sensor.oven'])
