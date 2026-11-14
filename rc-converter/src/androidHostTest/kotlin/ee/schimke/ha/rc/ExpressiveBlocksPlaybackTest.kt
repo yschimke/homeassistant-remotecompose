@@ -125,7 +125,7 @@ class ExpressiveBlocksPlaybackTest {
           modifier = Modifier.size(200.dp, 200.dp),
           namedValues = values,
           onNamedAction = { _, value -> sent.add(decodeHaAction(value?.toString().orEmpty())) },
-          fallback = { error("plays in the Compose player") },
+          onIncomplete = { error("plays in the Compose player: $it") },
           ambient = readAmbient,
         )
       }

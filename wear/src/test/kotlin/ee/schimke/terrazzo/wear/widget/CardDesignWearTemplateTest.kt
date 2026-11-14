@@ -156,7 +156,7 @@ class CardDesignWearTemplateTest {
             HaRcComposePlayer(
               documentBytes = current.bytes,
               modifier = frame,
-              fallback = { error("${file.name} must play") },
+              onIncomplete = { error("${file.name} must play: $it") },
             )
           }
         }

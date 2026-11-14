@@ -1069,7 +1069,7 @@ class LauncherDesignsTest {
         HaRcComposePlayer(
           documentBytes = baked.bytes,
           modifier = Modifier.size(width.dp, height.dp),
-          fallback = { error("regression document must render") },
+          onIncomplete = { error("regression document must render: $it") },
         )
       }
     }
@@ -1122,7 +1122,7 @@ class LauncherDesignsTest {
             HaRcComposePlayer(
               documentBytes = bytes,
               modifier = Modifier.size(widthDp.dp, heightDp.dp),
-              fallback = { error("the widget plays in the Compose player") },
+              onIncomplete = { error("the widget plays in the Compose player: $it") },
             )
           }
           return@Box

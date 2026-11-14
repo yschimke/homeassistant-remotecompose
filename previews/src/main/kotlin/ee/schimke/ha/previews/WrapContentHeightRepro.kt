@@ -304,6 +304,5 @@ private fun CmpPlayer(modifier: Modifier) {
   HaRcComposePlayer(
     documentBytes = documentBytes,
     modifier = modifier,
-    fallback = { WrapAdaptiveRemoteDocumentPlayer(documentBytes, modifier = modifier) },
   )
 }

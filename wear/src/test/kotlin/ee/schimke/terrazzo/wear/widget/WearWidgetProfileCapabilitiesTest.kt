@@ -288,7 +288,7 @@ class WearWidgetProfileCapabilitiesTest {
             HaRcComposePlayer(
               documentBytes = bytes,
               modifier = Modifier.size(200.dp, 112.dp),
-              fallback = {},
+              onIncomplete = {},
             )
         }
       }

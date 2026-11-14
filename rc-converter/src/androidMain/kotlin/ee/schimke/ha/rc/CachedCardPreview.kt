@@ -91,8 +91,8 @@ import kotlinx.serialization.json.contentOrNull
  * pins it — and animations run on the composition's frame clock rather than the View player's own,
  * which is what makes preview stills deterministic. [CardPlayback.LauncherWidget] keeps the
  * AndroidX View player for previews of the mobile launcher widget, which the platform draws with
- * that player; it is also the per-document fallback when rc-player-compose reports a document it
- * can't fully render.
+ * that player. The Compose player plays every other document itself, gaps and all: a document it
+ * can't fully render is a gap to fix in rc-player-compose, logged, never handed to AndroidX.
  *
  * Sizing on the AndroidX path: the document is authored with the wrap-friendly measure path
  * (FEATURE_PAINT_MEASURE = 0, baked by `androidXExperimentalWrap`) and played through
@@ -312,7 +312,7 @@ fun CachedCardPreview(
         }
       }
     }
-  // AndroidX player (launcher-widget previews, per-document fallback): the View handle survives
+  // AndroidX player (launcher-widget previews only): the View handle survives
   // recomposition but is replaced if the player is torn down and rebuilt (cache invalidation,
   // theme flip, resize).
   val playerHolder = remember { mutableStateOf<RemoteComposePlayer?>(null) }
@@ -413,7 +413,6 @@ fun CachedCardPreview(
         imageEpoch = pictureSignature,
         namedValues = namedValues,
         onNamedAction = onNamedAction,
-        fallback = androidXPlayer,
         ambient = ambient,
         inputDrafts = inputDrafts,
         onInputSubmit = { action, values ->

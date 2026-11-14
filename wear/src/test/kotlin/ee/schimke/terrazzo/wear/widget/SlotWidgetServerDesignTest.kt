@@ -271,7 +271,7 @@ class SlotWidgetServerDesignTest {
           HaRcComposePlayer(
             documentBytes = shown,
             modifier = frame,
-            fallback = { error("a baked Wear design must play") },
+            onIncomplete = { error("a baked Wear design must play: $it") },
           )
         }
       }

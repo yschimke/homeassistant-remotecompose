@@ -194,7 +194,7 @@ class SlotWidgetDesignTest {
           HaRcComposePlayer(
             documentBytes = displayed,
             modifier = Modifier.size(params.widthDp.dp, params.heightDp.dp),
-            fallback = { error("host geometry document must play") },
+            onIncomplete = { error("host geometry document must play: $it") },
           )
         }
       }
@@ -360,7 +360,7 @@ class SlotWidgetDesignTest {
           HaRcComposePlayer(
             documentBytes = frame.bytes,
             modifier = Modifier.size(200.dp, frame.height.dp),
-            fallback = { error("${frame.name} failed playback") },
+            onIncomplete = { error("${frame.name} failed playback: $it") },
           )
         }
       }
@@ -503,7 +503,7 @@ class SlotWidgetDesignTest {
           HaRcComposePlayer(
             documentBytes = frame.bytes,
             modifier = Modifier.size(200.dp, frame.height.dp),
-            fallback = { error("${frame.name} failed playback") },
+            onIncomplete = { error("${frame.name} failed playback: $it") },
           )
         }
       }
@@ -542,7 +542,7 @@ class SlotWidgetDesignTest {
         HaRcComposePlayer(
           documentBytes = bytes,
           modifier = Modifier.size(params.widthDp.dp, params.heightDp.dp),
-          fallback = { error("the baked widget plays in the Compose player") },
+          onIncomplete = { error("the baked widget plays in the Compose player: $it") },
         )
       }
     }
@@ -643,7 +643,7 @@ class SlotWidgetDesignTest {
           HaRcComposePlayer(
             documentBytes = bytes,
             modifier = Modifier.size(params.widthDp.dp, params.heightDp.dp),
-            fallback = { error("the widget plays in the Compose player") },
+            onIncomplete = { error("the widget plays in the Compose player: $it") },
           )
         }
       }

@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.core.WearWidgetParams
 import ee.schimke.ha.rc.HaRcComposePlayer
-import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import ee.schimke.ha.rc.components.R
 import ee.schimke.terrazzo.wear.widget.WearWidgetIrSidecar
 import kotlinx.coroutines.runBlocking
@@ -106,9 +105,6 @@ public fun WearWidgetPreviewSnapshot(
     HaRcComposePlayer(
       documentBytes = document,
       modifier = playerModifier,
-      fallback = {
-        WrapAdaptiveRemoteDocumentPlayer(documentBytes = document, modifier = playerModifier)
-      },
     )
 
     Column(

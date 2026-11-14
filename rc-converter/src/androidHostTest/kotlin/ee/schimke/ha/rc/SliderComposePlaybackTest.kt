@@ -45,8 +45,8 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * The in-app half of [SliderPlaybackTest]: the same slider card, played by the Compose
- * Multiplatform player through [HaRcComposePlayer] the way the app and the watch play it. Nothing
- * here may fall back to the AndroidX View player — the fallback fails the test.
+ * Multiplatform player through [HaRcComposePlayer] the way the app and the watch play it. A gap the
+ * player reports in it ([HaRcComposePlayer]'s `onIncomplete`) fails the test.
  *
  * The card is 300 × 160 px at mdpi: a 42 px slider (0–100 in steps of 1, resting at 30) above a 40
  * px toggle button, and, while locked, the unlock strip across the bottom (y 104–152).
@@ -122,7 +122,7 @@ class SliderComposePlaybackTest {
           documentBytes = bytes,
           modifier = Modifier.size(300.dp, 160.dp),
           onNamedAction = { _, value -> sent.add(decodeHaAction(value?.toString().orEmpty())) },
-          fallback = { error("a slider card plays in the Compose player") },
+          onIncomplete = { error("a slider card plays in the Compose player: $it") },
         )
       }
     }

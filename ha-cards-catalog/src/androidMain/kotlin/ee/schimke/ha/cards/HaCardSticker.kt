@@ -20,7 +20,6 @@ import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.padding
 import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.ha.rc.HaRcComposePlayer
-import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.captureSingleRemoteDocument
 import ee.schimke.ha.rc.components.ProvideNamedHaTheme
@@ -94,9 +93,6 @@ internal fun PlaySticker(bytes: ByteArray?) {
       HaRcComposePlayer(
         documentBytes = bytes,
         modifier = Modifier.fillMaxSize(),
-        fallback = {
-          WrapAdaptiveRemoteDocumentPlayer(documentBytes = bytes, modifier = Modifier.fillMaxSize())
-        },
       )
     }
   }
