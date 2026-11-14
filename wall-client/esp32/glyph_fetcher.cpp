@@ -93,9 +93,10 @@ void GlyphFetcher::task_(void *self) {
           if (f->keep_(r.body) && f->arrived_) f->arrived_();
         } else if (r.status == 404) {
           ESP_LOGW(TAG, "the design server has no glyph route");
-        } else if (r.status == 0 || r.status >= 500) {
+        } else if (r.status == 0 || r.status == 408 || r.status == 429 || r.status >= 500) {
+          // Not answered, timed out or throttled: asked again a while later.
           ESP_LOGW(TAG, "the design server didn't answer (HTTP %d)", r.status);
-          f->packs_.retry(part);   // asked again a while later
+          f->packs_.retry(part);
           vTaskDelay(pdMS_TO_TICKS(30000));
         }
       }
