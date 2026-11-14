@@ -1,0 +1,259 @@
+diff '--color=never' -ruN a/esp32/host/CMakeLists.txt b/esp32/host/CMakeLists.txt
+--- a/esp32/host/CMakeLists.txt
++++ b/esp32/host/CMakeLists.txt
+@@ -14,6 +14,11 @@
+ add_executable(rc2png rc2png/main.cpp)
+ target_link_libraries(rc2png PRIVATE kobentovg ZLIB::ZLIB)
+ target_compile_definitions(rc2png PRIVATE FONT_DIR="${CMAKE_CURRENT_LIST_DIR}/../../assets/fonts")
++# -DTZWALL_DIR=<homeassistant-remotecompose>/esphome/components/terrazzo_wall: --glyph-pack.
++if(DEFINED TZWALL_DIR)
++    target_include_directories(rc2png PRIVATE ${TZWALL_DIR})
++    target_compile_definitions(rc2png PRIVATE RC2PNG_GLYPH_PACKS)
++endif()
+ 
+ # paintcheck: colour filters and JPEG decoding in the ThorVG backend, checked pixel by pixel.
+ add_executable(paintcheck paintcheck/main.cpp)
+diff '--color=never' -ruN a/esp32/host/rc2png/main.cpp b/esp32/host/rc2png/main.cpp
+--- a/esp32/host/rc2png/main.cpp
++++ b/esp32/host/rc2png/main.cpp
+@@ -1,3 +1,4 @@
++#include <map>
+ // rc2png: render a RemoteCompose document with the ThorVG backend (the same code the Tab5
+ // runs) to a PNG, for comparison against the Skia reference renderer (rc2image).
+ //
+@@ -13,7 +14,12 @@
+ #include "rccore/RemoteContext.h"
+ #include "rccore/WireBuffer.h"
+ #include "rccore/operations/DrawOperations.h"   // NamedVariable
++#include "rccore/operations/LayoutOperations.h"   // setLayoutAnimationEnabled
++#include "rccore/LayoutSystem.h"
+ #include "kobentovg/ThorvgPaintContext.h"
++#ifdef RC2PNG_GLYPH_PACKS
++#include "glyph_packs.h"   // the wall panel's (homeassistant-remotecompose, esphome/components/terrazzo_wall)
++#endif
+ 
+ #include <zlib.h>
+ 
+@@ -87,6 +93,7 @@
+ }
+ 
+ int main(int argc, char** argv) {
++    if (std::getenv("RC_NO_LAYOUT_ANIMATION")) rccore::setLayoutAnimationEnabled(false);
+     if (argc < 3) {
+         std::cerr << "usage: rc2png in.rc out.png [--fit W H] [--native] [--theme light|dark]"
+                      " [--bg AARRGGBB] [--density D] [--frames N] [--anim SEC] [--time MS]"
+@@ -107,8 +114,25 @@
+     std::vector<std::string> prints;                          // --print NAME or PREFIX*
+     std::vector<std::pair<std::string, std::string>> live;    // --live NAME=VALUE
+     int liveMs = 16;                                          // --live-ms: a frame's time, live
++    int liveClockMs = 0;   // --live-clock: live frames step the animation clock by this, no sleep
+     std::vector<std::pair<std::string, std::string>> named;   // NAMED_VARIABLE overrides
++#ifdef RC2PNG_GLYPH_PACKS
++    // --glyph-pack FILE...: text composed from glyph packs, as the wall panel draws it.
++    static tzwall::GlyphPacks packs;
++    static tzwall::PackSource<kobentovg::ThorvgPaintContext> packSource(packs);
++    static std::vector<std::vector<uint8_t>> packBytes;
++    packBytes.reserve(64);
++#endif
+     for (int i = 3; i < argc; i++) {
++#ifdef RC2PNG_GLYPH_PACKS
++        if (!strcmp(argv[i], "--glyph-pack") && i + 1 < argc) {
++            packBytes.push_back(readFile(argv[++i]));
++            if (!packs.add(packBytes.back().data(), packBytes.back().size()))
++                std::cerr << "warning: " << argv[i] << " is not a glyph pack the player draws\n";
++            kobentovg::ThorvgPaintContext::setGlyphSource(&packSource);
++            continue;
++        }
++#endif
+         if (!strcmp(argv[i], "--fit") && i + 2 < argc) { fitW = atoi(argv[++i]); fitH = atoi(argv[++i]); }
+         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) frames = std::max(1, atoi(argv[++i]));
+         else if (!strcmp(argv[i], "--anim") && i + 1 < argc) anim = (float) atof(argv[++i]);
+@@ -127,6 +151,7 @@
+         }
+         else if (!strcmp(argv[i], "--print") && i + 1 < argc) prints.push_back(argv[++i]);
+         else if (!strcmp(argv[i], "--live-ms") && i + 1 < argc) liveMs = std::max(1, atoi(argv[++i]));
++        else if (!strcmp(argv[i], "--live-clock") && i + 1 < argc) liveClockMs = std::max(1, atoi(argv[++i]));
+         else if (!strcmp(argv[i], "--live") && i + 1 < argc) {
+             std::string kv = argv[++i];
+             size_t eq = kv.find('=');
+@@ -179,6 +204,13 @@
+     std::vector<uint32_t> px((size_t) sw * sh);
+     rccore::RemoteContext ctx;
+     kobentovg::ThorvgPaintContext pc(ctx, px.data(), sw, sh);
++    // RC_DAMAGE: draw only what changed, into two alternating buffers as a device does; print
++    // what each frame redrew, and check both buffers against a full redraw at the end.
++    const bool damage = std::getenv("RC_DAMAGE") != nullptr;
++    std::vector<uint32_t> px2(damage ? px.size() : 0);
++    uint32_t* bufs[2] = {px.data(), damage ? px2.data() : px.data()};
++    int back = 0;
++    if (damage) pc.setDamageTracking(true);
+     ctx.setPaintContext(&pc);
+     ctx.setDocument(&doc);
+     ctx.mWidth = (float) dw;
+@@ -201,6 +233,41 @@
+             }
+         };
+     collect(doc.getOperations());
++    if (const char* tree = std::getenv("RC_OPTREE")) {   // the operations as nested, depth-first
++        int left = atoi(tree) > 0 ? atoi(tree) : 200;
++        std::function<void(const std::vector<std::unique_ptr<rccore::Operation>>&, int)> dump =
++            [&](const std::vector<std::unique_ptr<rccore::Operation>>& ops, int depth) {
++                for (auto& op : ops) {
++                    if (left-- <= 0) return;
++                    std::printf("  %*s%d %s\n", depth * 2, "", op->opcode(), op->name().c_str());
++                    if (!op->mChildren.empty()) dump(op->mChildren, depth + 1);
++                }
++            };
++        dump(doc.getOperations(), 0);
++    }
++    if (std::getenv("RC_OPCOUNTS")) {   // what the document is made of, by operation
++        std::map<std::string, int> counts;
++        std::function<void(const std::vector<std::unique_ptr<rccore::Operation>>&)> count =
++            [&](const std::vector<std::unique_ptr<rccore::Operation>>& ops) {
++                for (auto& op : ops) {
++                    counts[op->name()]++;
++                    if (!op->mChildren.empty()) count(op->mChildren);
++                }
++            };
++        count(doc.getOperations());
++        for (auto& [n, c] : counts) std::printf("  op %-32s %d\n", n.c_str(), c);
++        std::map<int, int> fams;
++        std::function<void(const std::vector<std::unique_ptr<rccore::Operation>>&)> fam =
++            [&](const std::vector<std::unique_ptr<rccore::Operation>>& ops) {
++                for (auto& op : ops) {
++                    if (auto* t = dynamic_cast<rccore::LayoutText*>(op.get())) fams[t->fontFamilyId]++;
++                    if (!op->mChildren.empty()) fam(op->mChildren);
++                }
++            };
++        fam(doc.getOperations());
++        for (auto& [id, c] : fams)
++            std::printf("  TextLayout family id %d (%s): %d\n", id, id > 0 ? ctx.getText(id).c_str() : "-", c);
++    }
+     auto setNamed = [&](const std::string& n, const std::string& v) {
+         for (auto* nv : vars) {
+             if (nv->varName != n) continue;
+@@ -217,10 +284,27 @@
+     for (auto& [n, v] : named) setNamed(n, v);
+ 
+     const tvg::Matrix base{scale, 0, ox, 0, scale, oy, 0, 0, 1};
++    long drawnPx = 0;
+     auto frame = [&] {
++        pc.retarget(bufs[back]);
+         pc.beginFrame(base, bg);
+         doc.paint(ctx, theme);
+         pc.endFrame();
++        back ^= 1;
++        if (std::getenv("RC_PROFILE")) {
++            const auto& fp = rccore::frameProfile();
++            std::printf("  frame: data %ld us, layout %ld us (%s), paint %ld us\n", fp.dataUs, fp.layoutUs,
++                        fp.measured ? "measured" : "cached", fp.paintUs);
++        }
++        if (!damage) return;
++        long a = 0;
++        for (auto& r : pc.drawnRects()) a += r.area();
++        drawnPx += a;
++        if (std::getenv("RC_DAMAGE_LOG")) {
++            std::printf("  frame: drew %ld px in %zu rects:", a, pc.drawnRects().size());
++            for (auto& r : pc.drawnRects()) std::printf(" [%d,%d %dx%d]", r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
++            std::printf("\n");
++        }
+     };
+     for (int i = 0; i < frames; i++) frame();
+     // Gestures (dp), after a frame has laid the document out. A click prints what it runs. A
+@@ -259,15 +343,41 @@
+     for (auto& [n, v] : live) {
+         setNamed(n, v);
+         int drawn = 0;
++        double drawingMs = 0, firstMs = 0;
+         do {
+-            std::this_thread::sleep_for(std::chrono::milliseconds(liveMs));
++            if (liveClockMs) {
++                static float clock = 100.0f;   // far from the load, so a change isn't taken as driven
++                ctx.overrideFloat(rccore::RemoteContext::ID_ANIMATION_TIME, clock += liveClockMs / 1000.0f);
++            } else {
++                std::this_thread::sleep_for(std::chrono::milliseconds(liveMs));
++            }
++            const auto t0 = std::chrono::steady_clock::now();
+             frame();
++            if (std::getenv("RC_FRAME_HASH")) {
++                // The frame just drawn (frame() flipped `back`): with damage on, the buffer it drew.
++                const uint32_t* drawn = bufs[back ^ 1];
++                uint64_t h = 1469598103934665603ull;
++                for (size_t i = 0; i < px.size(); i++) h = (h ^ drawn[i]) * 1099511628211ull;
++                std::printf("  frame %d hash %016llx\n", drawn == px.data() ? 0 : 1, (unsigned long long) h);
++            }
++            const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
++            if (drawn == 0) firstMs = ms;
++            drawingMs += ms;
+             drawn++;
+             const auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::system_clock::now().time_since_epoch()).count();
+             if (!pc.doesNeedsRepaint() && ctx.getRepaintDelay(now) != 0) break;
+         } while (drawn < 300);
+-        std::printf("live %s=%s: %d frames\n", n.c_str(), v.c_str(), drawn);
++        std::printf("live %s=%s: %d frames, %.2f ms drawing (first %.2f ms)", n.c_str(), v.c_str(),
++                    drawn, drawingMs, firstMs);
++        if (damage) std::printf(", %.2f screens redrawn", (double) drawnPx / ((double) sw * sh));
++        {
++            const auto& fp = rccore::frameProfile();
++            std::printf(" | last: data %ld us, layout %ld us (%s), paint %ld us", fp.dataUs, fp.layoutUs,
++                        fp.measured ? "measured" : "cached", fp.paintUs);
++        }
++        std::printf("\n");
++        drawnPx = 0;
+     }
+ 
+     // The named variables asked for, as they end up: NAME, or PREFIX* for a class.
+@@ -283,10 +393,48 @@
+     }
+ 
+     if (bench > 0) {
+-        auto t0 = std::chrono::steady_clock::now();
+-        for (int i = 0; i < bench; i++) frame();
+-        double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+-        std::printf("bench: %.2f ms/frame (%d paints)\n", ms / bench, pc.paintCount());
++        using clk = std::chrono::steady_clock;
++        double docMs = 0, rasterMs = 0;
++        auto t0 = clk::now();
++        for (int i = 0; i < bench; i++) {
++            pc.retarget(bufs[back]);
++            auto a = clk::now();
++            pc.beginFrame(base, bg);
++            doc.paint(ctx, theme);
++            auto b = clk::now();
++            pc.endFrame();
++            rasterMs += std::chrono::duration<double, std::milli>(clk::now() - b).count();
++            docMs += std::chrono::duration<double, std::milli>(b - a).count();
++            back ^= 1;
++        }
++        double ms = std::chrono::duration<double, std::milli>(clk::now() - t0).count();
++        std::printf("bench: %.2f ms/frame: doc %.3f + raster %.3f (%d paints)\n", ms / bench,
++                    docMs / bench, rasterMs / bench, pc.paintCount());
++    }
++    if (damage) {
++        // One more frame (nothing changed: it brings the other buffer up to date), then both
++        // buffers against a frame drawn whole.
++        frame();
++        std::vector<uint32_t> ref(px.size());
++        pc.setDamageTracking(false);
++        pc.retarget(ref.data());
++        pc.beginFrame(base, bg);
++        doc.paint(ctx, theme);
++        pc.endFrame();
++        for (int b = 0; b < 2; b++) {
++            long bad = 0;
++            int bx0 = sw, by0 = sh, bx1 = -1, by1 = -1;
++            for (int y = 0; y < sh; y++)
++                for (int x = 0; x < sw; x++)
++                    if (bufs[b][(size_t) y * sw + x] != ref[(size_t) y * sw + x]) {
++                        bad++;
++                        bx0 = std::min(bx0, x); by0 = std::min(by0, y);
++                        bx1 = std::max(bx1, x); by1 = std::max(by1, y);
++                    }
++            if (bad) std::printf("damage check: buffer %d differs in %ld px, [%d,%d - %d,%d]\n", b, bad, bx0, by0, bx1, by1);
++            else std::printf("damage check: buffer %d matches\n", b);
++        }
++        px.swap(ref);
+     }
+     if (!writePng(argv[2], px.data(), sw, sh)) { std::cerr << "write failed\n"; return 1; }
+     std::printf("%s -> %s (%dx%d, %d paints)\n", argv[1], argv[2], sw, sh, pc.paintCount());

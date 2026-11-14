@@ -1,0 +1,166 @@
+diff --color -ruN a/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp b/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp
+--- a/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp	2026-11-13 22:40:51.821503145 +0000
++++ b/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp	2026-11-13 22:40:51.822383974 +0000
+@@ -8,6 +8,7 @@
+ #include "rccore/operations/AdvancedOperations.h"
+ #include "rccore/LayoutSystem.h"
+ #include "rccore/RemoteContext.h"
++#include "rccore/CoreDocument.h"
+ #include "rccore/PaintContext.h"
+ #include "rccore/PaintBundle.h"
+ #include "rccore/CustomComponentHost.h"
+@@ -3944,74 +3945,97 @@
+         cache.remeasure = sHeldReleased;
+         if (sSawActiveAnim) context.needsRepaint();
+     } else if (needMeasure) {
+-        // Full measure/layout, exactly as the un-cached path did (fresh per-op state so
+-        // inflateLayout — gated on ls.inflated — re-reads every modifier this pass).
+-        cache.states.clear();
+-        sSawStateLayout = false;
+-        sStatePending = false;
+-        sSawActiveAnim = false;
+-        resetLayoutOverflowCounts();
+-
+-        context.setMode(ContextMode::DATA);
+-        // As CoreDocument::applyDataOperations: a dirty op (new, or re-dirtied by a listener when
+-        // its variable changed) refreshes its cached values first, then is marked clean — an
+-        // unconditional refresh clobbered component values before the layout set them (U59).
+-        for (auto* op : rootDataOps) {
+-            if (op->isVariableSupport() && op->isDirty()) op->updateVariables(context);
+-            context.incrementOpCount(); op->apply(context); op->markNotDirty();
+-        }
+-        for (auto* op : rootCanvasOps) { context.incrementOpCount(); op->apply(context); }
+-        context.setMode(ContextMode::PAINT);
++        // A layout reads what the last one published (a grid's columns from its width, then a
++        // cell's icon from the cell): the document's data pass computes those from the bounds a
++        // layout publishes, so one layout isn't settled until the data pass after it moves nothing
++        // the layout reads (the layout epoch). That data pass runs here, and the layout again, in
++        // this frame, until it holds (a few times at most): the frame painted is the settled
++        // layout, a new document's first frame included, with no unseen frames before it. Still
++        // moving after that: the next frame goes on, as before.
++        constexpr int kSettlePasses = 6;
++        bool settled = false;
++        for (int pass = 1;; pass++) {
++            // Full measure/layout, exactly as the un-cached path did (fresh per-op state so
++            // inflateLayout — gated on ls.inflated — re-reads every modifier this pass).
++            cache.states.clear();
++            sSawStateLayout = false;
++            sStatePending = false;
++            sSawActiveAnim = false;
++            resetLayoutOverflowCounts();
+ 
+-        // Two passes: pass 1 establishes dimensions; the DATA pass in between publishes them as
+-        // COMPONENT_VALUEs; pass 2 re-layouts so LayoutCompute expressions that read those work.
+-        for (auto* layoutChild : layoutChildren) {
+             context.setMode(ContextMode::DATA);
+-            applyDataOps(layoutChild, context);
++            // As CoreDocument::applyDataOperations: a dirty op (new, or re-dirtied by a listener when
++            // its variable changed) refreshes its cached values first, then is marked clean — an
++            // unconditional refresh clobbered component values before the layout set them (U59).
++            for (auto* op : rootDataOps) {
++                if (op->isVariableSupport() && op->isDirty()) op->updateVariables(context);
++                context.incrementOpCount(); op->apply(context); op->markNotDirty();
++            }
++            for (auto* op : rootCanvasOps) { context.incrementOpCount(); op->apply(context); }
+             context.setMode(ContextMode::PAINT);
+ 
+-            measureComponent(layoutChild, pc, context, 0, maxW, 0, maxH, measure);
+-            layoutComponent(layoutChild, context, measure);
+-            storeMeasuredDimensions(layoutChild, context, measure);
+-
+-            context.setMode(ContextMode::DATA);
+-            applyDataOps(layoutChild, context);
++            // Two passes: pass 1 establishes dimensions; the DATA pass in between publishes them as
++            // COMPONENT_VALUEs; pass 2 re-layouts so LayoutCompute expressions that read those work.
++            for (auto* layoutChild : layoutChildren) {
++                context.setMode(ContextMode::DATA);
++                applyDataOps(layoutChild, context);
++                context.setMode(ContextMode::PAINT);
++
++                measureComponent(layoutChild, pc, context, 0, maxW, 0, maxH, measure);
++                layoutComponent(layoutChild, context, measure);
++                storeMeasuredDimensions(layoutChild, context, measure);
++
++                context.setMode(ContextMode::DATA);
++                applyDataOps(layoutChild, context);
++                context.setMode(ContextMode::PAINT);
++
++                layoutComponent(layoutChild, context, measure);
++                gCountLayoutOverflow = true;    // the settled layout: what a host would show
++                storeMeasuredDimensions(layoutChild, context, measure);
++                gCountLayoutOverflow = false;
++            }
++
++            // Layout-animation pass: blend measured bounds toward targets over time.
++            cache.targets = measure;
++            cache.hasTargets = true;
++            sHeldReleased = false;
++            double animTime = context.getAnimationTime();
++            sSnapLayout = cache.converging;
++            for (auto* layoutChild : layoutChildren) {
++                animateLayoutTree(layoutChild, context, measure, animTime);
++                // The bounds shown, mid-animation included, are the component's bounds (the
++                // reference's Component.layout applies the AnimateMeasure before
++                // updateComponentValues).
++                storeMeasuredDimensions(layoutChild, context, measure);
++            }
++
++            cache.hasStateLayout = cache.hasStateLayout || sSawStateLayout;
++            cache.animating = sSawActiveAnim;
++            cache.remeasure = sHeldReleased;
++            if (sSawActiveAnim) context.needsRepaint();   // the next frame moves it on
++            if (pass >= kSettlePasses) break;
++            auto* doc = context.getDocument();
++            if (!doc) {
++                settled = true;
++                break;
++            }
++            const uint64_t epoch = context.mLayoutEpoch;
++            const int theme = context.getTheme(), paintTheme = context.getPaintTheme();
++            doc->applyDataOperations(context, paintTheme);
+             context.setMode(ContextMode::PAINT);
+-
+-            layoutComponent(layoutChild, context, measure);
+-            gCountLayoutOverflow = true;    // the settled layout: what a host would show
+-            storeMeasuredDimensions(layoutChild, context, measure);
+-            gCountLayoutOverflow = false;
+-        }
+-
+-        // Layout-animation pass: blend measured bounds toward targets over time.
+-        cache.targets = measure;
+-        cache.hasTargets = true;
+-        sHeldReleased = false;
+-        double animTime = context.getAnimationTime();
+-        sSnapLayout = cache.converging;
+-        for (auto* layoutChild : layoutChildren) {
+-            animateLayoutTree(layoutChild, context, measure, animTime);
+-            // The bounds shown, mid-animation included, are the component's bounds (the
+-            // reference's Component.layout applies the AnimateMeasure before
+-            // updateComponentValues).
+-            storeMeasuredDimensions(layoutChild, context, measure);
++            context.setTheme(theme);
++            context.setPaintTheme(paintTheme);
++            if (context.mLayoutEpoch == epoch) {
++                settled = true;
++                break;
++            }
+         }
+-
+-        cache.hasStateLayout = cache.hasStateLayout || sSawStateLayout;
+-        cache.animating = sSawActiveAnim;
+-        cache.remeasure = sHeldReleased;
+-        if (sSawActiveAnim) context.needsRepaint();   // the next frame moves it on
+-        // A layout reads what the last one published (a grid's columns from its width, an icon's
+-        // scale from its box), so one whose bounds moved isn't settled yet: the next frame lays
+-        // it out again. Ask for that frame, a few in a row at most, so a player that draws only
+-        // when asked shows the settled layout rather than keeping the first.
+         {
+             std::vector<std::array<float, 5>> now;
+             for (auto& [id, d] : context.getComponentDimensions())
+                 now.push_back({(float) id, d.x, d.y, d.w, d.h});
+             std::sort(now.begin(), now.end());
+-            if (now != cache.published && cache.settling < 4) {
++            if (!settled && now != cache.published && cache.settling < 4) {
+                 cache.settling++;
+                 context.needsRepaint();
+             } else {

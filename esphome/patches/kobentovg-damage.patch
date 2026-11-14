@@ -1,0 +1,2062 @@
+diff -ruN a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h
+--- a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h	2026-11-13 11:09:33.909962664 +0000
++++ b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h	2026-11-13 11:09:33.892562587 +0000
+@@ -17,6 +17,7 @@
+ #endif
+ #include <cstdint>
+ #include <cstdlib>
++#include <list>
+ #include <memory>
+ 
+ #include "rccore/PaintContext.h"
+@@ -48,9 +49,37 @@
+ 
+     // Font families this backend resolves typefaces to. Register the data once, before
+     // any document paints, with registerFont(). Without fonts, text is skipped.
+-    enum class Face { Sans, SansBold, Mono };
++    // Emoji: drawn only from the glyph source, in colour, for what the other faces lack.
++    enum class Face { Sans, SansBold, Mono, Emoji };
+     static bool registerFont(Face face, const uint8_t* data, size_t size);
+ 
++    // Glyph coverage for a face at a size, which a plain text run is composed from instead of
++    // rasterised by ThorVG (a copy, where rasterising a run is milliseconds on a microcontroller).
++    // Each glyph goes at the pen position the face's own advances give, rounded to a pixel, so a
++    // run is as wide as measured. A run with a glyph the source lacks draws with ThorVG, and the
++    // source is told of each glyph it lacked, to fetch it.
++    struct SourceGlyph {
++        int16_t left = 0, top = 0;   // the ink's top-left from the pen on the baseline
++        uint16_t width = 0, height = 0;
++        uint8_t bits = 8;            // coverage depth; rows padded to a byte, high bits first;
++                                     // 32: colour, premultiplied ARGB, big-endian, untinted
++        const uint8_t* rows = nullptr;
++        int16_t advance = 0;         // where the pen goes after it (a colour glyph's own)
++    };
++    class GlyphSource {
++    public:
++        virtual ~GlyphSource() = default;
++        // Called from the paint (any thread drawing); the rows must stay where they are.
++        virtual bool glyph(Face face, int px, uint32_t codePoint, SourceGlyph& out) = 0;
++        virtual void missing(Face face, int px, uint32_t codePoint) = 0;
++        // Moves whenever glyphs are added: text measured or drawn before then is again.
++        virtual uint32_t generation() const { return 0; }
++    };
++    // Whether [face]'s own font has [codePoint] (its character map): what it lacks, an emoji
++    // say, comes from the glyph source's Emoji face instead.
++    static bool faceHas(Face face, uint32_t codePoint);
++    static void setGlyphSource(GlyphSource* source);
++
+     // `pixels` is a premultiplied ARGB8888 buffer of w*h pixels, owned by the caller.
+     ThorvgPaintContext(rccore::RemoteContext& context, uint32_t* pixels, int w, int h);
+     ~ThorvgPaintContext() override;
+@@ -70,6 +99,35 @@
+     // Number of tvg paints the last frame produced; a cheap complexity gauge.
+     int paintCount() const { return mPaintCount; }
+ 
++    // Damage tracking. On: endFrame hashes every paint, diffs the hashes with the frame
++    // before, and redraws only the rectangles that changed since the target buffer was last
++    // drawn (each buffer remembers its own backlog, so double buffering stays exact). A buffer
++    // seen for the first time is drawn whole.
++    void setDamageTracking(bool on);
++    struct Rect {
++        int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
++        bool empty() const { return x1 <= x0 || y1 <= y0; }
++        long area() const { return empty() ? 0 : (long) (x1 - x0) * (y1 - y0); }
++    };
++    // What the last endFrame changed in the frame (not the buffer's backlog): the rectangles
++    // to copy on from the previous frame. Empty when nothing changed.
++    const std::vector<Rect>& frameDamage() const { return mFrameDamage; }
++    // What the last endFrame redrew in its target.
++    const std::vector<Rect>& drawnRects() const { return mDrawn; }
++    // Microseconds the last endFrame spent hashing and diffing (the rest is drawing).
++    long diffMicros() const { return mDiffUs; }
++    // This frame's text runs rasterised (cache misses) and the time they took, and the time
++    // beginFrame spent dropping the last frame's scene.
++    int textMisses() const { return mTextMisses; }
++    long textMissMicros() const { return mTextMissUs; }
++    // Of those, the runs composed from the glyph source.
++    int textComposed() const { return mTextComposed; }
++    // What the paint context keeps between frames, in bytes: text-run images, bitmaps (decoded),
++    // colour-filtered copies, composed bitmap-font runs, and the text widths it remembers.
++    struct CacheBytes { size_t textRuns, textRunCount, images, filtered, glyphRuns, widths; };
++    CacheBytes cacheBytes() const;
++    long removeMicros() const { return mRemoveUs; }
++
+ #if !defined(ESP_PLATFORM) || CONFIG_KOBENTOVG_3D
+     rccore::Paint3D* asPaint3D() override { return &m3D; }
+ #else
+@@ -88,6 +146,7 @@
+     void drawTweenPath(int path1Id, int path2Id, float tween, float start, float end) override;
+     void tweenPath(int outId, int pathId1, int pathId2, float tween) override;
+     void drawBitmap(int imageId, float l, float t, float r, float b) override;
++    void drawBitmapGlyphs(const std::vector<BitmapGlyph>& glyphs) override;
+     void drawBitmapInt(int imageId, int srcL, int srcT, int srcR, int srcB,
+                        int dstL, int dstT, int dstR, int dstB, int cdId) override;
+     void drawTextRun(int textId, int start, int end, int contextStart, int contextEnd,
+@@ -177,7 +236,12 @@
+     struct SaveEntry {
+         tvg::Matrix matrix;
+         size_t containerDepth;
++        float layerAlpha = 1;   // mLayerAlpha when it was saved
+     };
++    // The product of the open saveLayerAlpha layers: applied to each paint as it's pushed, not
++    // to a scene, which ThorVG would composite through a buffer the size of the whole canvas
++    // (1.5 MB at 800x480; a panel couldn't always find it, and drew a fading layer opaque).
++    float mLayerAlpha = 1;
+     struct PathData {
+         std::vector<float> floats;
+         int winding = 0;
+@@ -185,6 +249,9 @@
+     struct Image {
+         int w = 0, h = 0;
+         std::vector<uint32_t> px;         // premultiplied ARGB8888
++        // A RAW8 bitmap's coverage, kept at a byte a pixel (a bitmap font's white-mask glyphs);
++        // px is filled from it only if the image is drawn on its own.
++        std::vector<uint8_t> a8;
+         uint32_t version = 0;             // changes whenever px does
+     };
+     // Bitmaps drawn through a colour filter: one filtered copy per image and filter, rebuilt
+@@ -194,8 +261,20 @@
+         uint32_t version, color;
+         int mode;
+         Image img;
++        uint32_t usedFrame = 0;
+     };
+-    std::vector<Filtered> mFiltered;
++    // A list: ThorVG reads a copy's pixels when the frame renders, so a copy must stay where it
++    // is until then. (A vector shifted its entries along when it dropped the oldest, and a frame
++    // with more than its 16 filtered images drew other images' pixels.)
++    std::list<Filtered> mFiltered;
++    // Bitmap-font runs composed into one image each (drawBitmapGlyphs), by their glyphs and
++    // places; runs not drawn lately go past a bound, as text runs do.
++    struct GlyphRun {
++        Image img;
++        uint32_t usedFrame = 0;
++    };
++    std::unordered_map<uint64_t, GlyphRun> mGlyphRuns;
++    size_t mGlyphRunBytes = 0;
+     uint32_t mImageVersion = 0;
+     Image& filtered(Image& img);
+     uint32_t paintColor() const;          // the paint's colour, through its colour filter
+@@ -252,6 +331,29 @@
+     int mPaintCount = 0;
+     bool mClearOpaque = false;
+ 
++    // Damage tracking (setDamageTracking).
++    struct Leaf {
++        uint64_t hash;
++        Rect box;
++        // This frame's paint and the scene holding it (null: the canvas), to drop it when it
++        // falls outside what's drawn. Stale once the frame ends.
++        tvg::Paint* paint = nullptr;
++        tvg::Scene* parent = nullptr;
++    };
++    bool mDamageOn = false;
++    long mDiffUs = 0;
++    long mTextMissUs = 0;
++    int mTextMisses = 0;
++    int mTextComposed = 0;
++    long mRemoveUs = 0;
++    std::vector<Leaf> mPrevLeaves, mLeaves;   // sorted by hash
++    std::vector<std::pair<const uint32_t*, std::vector<Rect>>> mBacklog;   // per buffer
++    std::vector<Rect> mFrameDamage, mDrawn;
++    std::vector<std::pair<const tvg::Paint*, float>> mEffectPad;   // blur scenes: pixels
++    void collectLeaves(tvg::Paint* p, uint64_t ctx, Rect clip, float pad, tvg::Scene* parent);
++    Rect boxOf(tvg::Paint* p, float pad);
++    void drawDamaged();
++
+     std::unordered_map<int, std::string> mTexts;
+     std::unordered_map<int, PathData> mPaths;
+     std::unordered_map<int, Image> mImages;
+@@ -271,6 +373,9 @@
+     uint32_t mFrame = 0;
+     bool drawCachedText(const std::string& utf8, const char* font, float size, uint32_t argb,
+                         float x, float top);
++    int composeText(TextImage& img, const std::string& utf8, const char* font, float size,
++                    uint32_t argb, float qx, float qy, float ascent);
++    bool makeTextRoom(size_t bytes, const std::string& utf8);
+     tvg::Text* mMeasure = nullptr;
+     const char* mMeasureFont = nullptr;
+     float mMeasureSize = -1;
+diff -ruN a/components/kobentovg/src/ThorvgPaintContext.cpp b/components/kobentovg/src/ThorvgPaintContext.cpp
+--- a/components/kobentovg/src/ThorvgPaintContext.cpp	2026-11-13 11:09:33.910569157 +0000
++++ b/components/kobentovg/src/ThorvgPaintContext.cpp	2026-11-13 11:09:33.894967537 +0000
+@@ -1,9 +1,15 @@
+ #include "kobentovg/ThorvgPaintContext.h"
++extern "C" void tvg_note(const char* note);   // ThorVG's, patched: kept across a reboot
++#if defined(ESP_PLATFORM)
++#include "esp_heap_caps.h"
++#include "esp_log.h"
++#endif
+ 
+ #include "rccore/RemoteContext.h"
+ #include "rccore/Utils.h"
+ 
+ #include <algorithm>
++#include <chrono>
+ #include <cmath>
+ #include <cstring>
+ #include <functional>
+@@ -12,6 +18,8 @@
+ 
+ namespace kobentovg {
+ 
++static uint32_t trimId(float start, float end);
++
+ // Host debugging aid: RC_TVG_TRACE=1 logs every draw call with its key arguments.
+ #if !defined(ESP_PLATFORM)
+ #include <cstdio>
+@@ -26,10 +34,15 @@
+ // ── Fonts ────────────────────────────────────────────────────────────────────────────────
+ 
+ static const char* kFaceNames[] = {"rc-sans", "rc-sans-bold", "rc-mono"};
++static const uint8_t* sFaceData[3] = {nullptr, nullptr, nullptr};
++static size_t sFaceSize[3] = {0, 0, 0};
+ static bool sFaceLoaded[3] = {false, false, false};
+ 
+ bool ThorvgPaintContext::registerFont(Face face, const uint8_t* data, size_t size) {
+     int i = static_cast<int>(face);
++    if (i < 0 || i > 2) return false;
++    sFaceData[i] = data;   // its character map, for faceHas
++    sFaceSize[i] = size;
+     // copy=false: font data must outlive ThorVG; callers pass flash/static data.
+     auto r = tvg::Text::load(kFaceNames[i], reinterpret_cast<const char*>(data),
+                              static_cast<uint32_t>(size), "ttf", false);
+@@ -37,6 +50,98 @@
+     return sFaceLoaded[i];
+ }
+ 
++static ThorvgPaintContext::GlyphSource* sGlyphSource = nullptr;
++
++// ── A font's character map (TrueType `cmap`, formats 4 and 12), for faceHas ──────────────
++
++static uint32_t be16(const uint8_t* p) { return (uint32_t) p[0] << 8 | p[1]; }
++static uint32_t be32(const uint8_t* p) { return be16(p) << 16 | be16(p + 2); }
++
++// The subtable a face's code points are looked up in: its offset in the font, 0 for none.
++static size_t cmapSubtable(const uint8_t* f, size_t n) {
++    if (n < 12) return 0;
++    const uint32_t tables = be16(f + 4);
++    for (uint32_t i = 0; i < tables && 12 + 16 * (i + 1) <= n; i++) {
++        const uint8_t* rec = f + 12 + 16 * i;
++        if (std::memcmp(rec, "cmap", 4) != 0) continue;
++        const size_t cmap = be32(rec + 8);
++        if (cmap + 4 > n) return 0;
++        size_t best = 0;
++        int bestRank = 0;
++        for (uint32_t k = 0, m = be16(f + cmap + 2); k < m && cmap + 4 + 8 * (k + 1) <= n; k++) {
++            const uint8_t* e = f + cmap + 4 + 8 * k;
++            const size_t sub = cmap + be32(e + 4);
++            if (sub + 2 > n) continue;
++            const uint32_t format = be16(f + sub), platform = be16(e), encoding = be16(e + 2);
++            // Full Unicode (format 12) beats the basic plane (format 4).
++            const int rank = format == 12 && (platform == 0 || encoding == 10) ? 2
++                             : format == 4 && (platform == 0 || encoding == 1) ? 1 : 0;
++            if (rank > bestRank) bestRank = rank, best = sub;
++        }
++        return best;
++    }
++    return 0;
++}
++
++static bool cmapHas(const uint8_t* f, size_t n, size_t sub, uint32_t cp) {
++    if (!sub) return true;   // no map to go by: assume the face draws it, as before
++    const uint32_t format = be16(f + sub);
++    if (format == 12 && sub + 16 <= n) {
++        const uint32_t groups = be32(f + sub + 12);
++        uint32_t lo = 0, hi = groups;
++        while (lo < hi) {   // groups are sorted by start code point
++            const uint32_t mid = (lo + hi) / 2;
++            const size_t g = sub + 16 + 12 * (size_t) mid;
++            if (g + 12 > n) return false;
++            if (cp < be32(f + g)) hi = mid;
++            else if (cp > be32(f + g + 4)) lo = mid + 1;
++            else return be32(f + g + 8) + (cp - be32(f + g)) != 0;
++        }
++        return false;
++    }
++    if (format == 4 && sub + 14 <= n) {
++        if (cp > 0xFFFF) return false;
++        const uint32_t segs = be16(f + sub + 6) / 2;
++        const size_t ends = sub + 14, starts = ends + 2 * segs + 2, deltas = starts + 2 * segs,
++                     ranges = deltas + 2 * segs;
++        if (ranges + 2 * segs > n) return false;
++        for (uint32_t i = 0; i < segs; i++) {
++            if (cp > be16(f + ends + 2 * i)) continue;
++            const uint32_t start = be16(f + starts + 2 * i);
++            if (cp < start) return false;
++            const uint32_t range = be16(f + ranges + 2 * i);
++            if (range == 0) return ((cp + be16(f + deltas + 2 * i)) & 0xFFFF) != 0;
++            const size_t at = ranges + 2 * i + range + 2 * (cp - start);
++            return at + 2 <= n && be16(f + at) != 0;
++        }
++    }
++    return false;
++}
++
++bool ThorvgPaintContext::faceHas(Face face, uint32_t cp) {
++    const int i = static_cast<int>(face);
++    if (i < 0 || i > 2 || !sFaceData[i]) return i <= 2;
++    static size_t sub[3] = {SIZE_MAX, SIZE_MAX, SIZE_MAX};
++    if (sub[i] == SIZE_MAX) sub[i] = cmapSubtable(sFaceData[i], sFaceSize[i]);
++    return cmapHas(sFaceData[i], sFaceSize[i], sub[i], cp);
++}
++
++// Joiners and variation selectors: part of an emoji's sequence, nothing drawn of their own.
++static bool zeroWidth(uint32_t cp) { return cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F); }
++
++void ThorvgPaintContext::setGlyphSource(GlyphSource* source) { sGlyphSource = source; }
++
++ThorvgPaintContext::CacheBytes ThorvgPaintContext::cacheBytes() const {
++    CacheBytes b{};
++    for (const auto& e : mTextImages) b.textRuns += e.second.px.capacity() * 4;
++    b.textRunCount = mTextImages.size();
++    for (const auto& e : mImages) b.images += e.second.px.capacity() * 4 + e.second.a8.capacity();
++    for (const auto& f : mFiltered) b.filtered += f.img.px.capacity() * 4;
++    for (const auto& e : mGlyphRuns) b.glyphRuns += e.second.img.px.capacity() * 4;
++    b.widths = mWidthCache.size() * 32;
++    return b;
++}
++
+ const char* ThorvgPaintContext::fontName() const {
+     int i = 0;
+     if (mPaint.fontType == PaintBundle::FONT_TYPE_MONOSPACE && sFaceLoaded[2]) i = 2;
+@@ -219,17 +324,22 @@
+     const uint32_t color = mPaint.colorFilter;
+     const int mode = mPaint.colorFilterMode;
+     for (auto& f : mFiltered)
+-        if (f.src == &img && f.color == color && f.mode == mode && f.version == img.version && f.img.w == img.w)
++        if (f.src == &img && f.color == color && f.mode == mode && f.version == img.version && f.img.w == img.w) {
++            f.usedFrame = mFrame;
+             return f.img;
+-    // A changed image replaces its old copy; a few images x filters at most otherwise.
++        }
++    // A changed image replaces its old copy. Past a bound, copies no frame drew lately go (never
++    // one this frame drew: its pixels are read when the frame renders).
+     Filtered* slot = nullptr;
+     for (auto& f : mFiltered)
+         if (f.src == &img && f.color == color && f.mode == mode) slot = &f;
+     if (!slot) {
+-        if (mFiltered.size() >= 16) mFiltered.erase(mFiltered.begin());
+-        mFiltered.push_back({&img, 0, color, mode, {}});
++        if (mFiltered.size() >= 32)
++            mFiltered.remove_if([this](const Filtered& f) { return mFrame - f.usedFrame > 2; });
++        mFiltered.push_back({&img, 0, color, mode, {}, mFrame});
+         slot = &mFiltered.back();
+     }
++    slot->usedFrame = mFrame;
+     slot->version = img.version;
+     slot->img.w = img.w;
+     slot->img.h = img.h;
+@@ -253,6 +363,7 @@
+     std::vector<tvg::Scene*> containers;
+     tvg::Matrix matrix;
+     std::vector<SaveEntry> saves;
++    float layerAlpha = 1;
+ };
+ 
+ // ── Lifecycle ─────────────────────────────────────────────────────────────────────────────
+@@ -269,10 +380,18 @@
+ }
+ 
+ void ThorvgPaintContext::beginFrame(const tvg::Matrix& base, uint32_t clearArgb) {
++    const auto begun = std::chrono::steady_clock::now();
+     mFrame++;
++    mTextMissUs = 0;
++    mTextMisses = 0;
++    mTextComposed = 0;
+     mCanvas->remove();
++    mRemoveUs = (long) std::chrono::duration_cast<std::chrono::microseconds>(
++        std::chrono::steady_clock::now() - begun).count();
++    mEffectPad.clear();
+     mContainers.clear();
+     mSaves.clear();
++    mLayerAlpha = 1;
+     mPaintCount = 0;
+     m3D.~Tvg3D();               // drop last frame's 3D blits but keep nothing else
+     new (&m3D) Tvg3D(*this);
+@@ -302,10 +421,300 @@
+ 
+ void ThorvgPaintContext::endFrame() {
+     if (mOffscreen) endDrawToBitmap();
++    if (mDamageOn && mClearOpaque) {
++        drawDamaged();
++        return;
++    }
++    mFrameDamage.assign(1, Rect{0, 0, mW, mH});
++    mDrawn = mFrameDamage;
++    mCanvas->viewport(0, 0, mW, mH);
+     mCanvas->draw(!mClearOpaque);
+     mCanvas->sync();
+ }
+ 
++// ── Damage tracking ───────────────────────────────────────────────────────────────────────
++
++static inline uint64_t hmix(uint64_t h, uint64_t v) {
++    h ^= v + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
++    return h * 0xff51afd7ed558ccdull;
++}
++
++static uint64_t hbytes(uint64_t h, const void* data, size_t n) {
++    auto p = static_cast<const uint8_t*>(data);
++    size_t i = 0;
++    for (; i + 8 <= n; i += 8) {
++        uint64_t v;
++        std::memcpy(&v, p + i, 8);
++        h = hmix(h, v);
++    }
++    uint64_t tail = 0;
++    if (i < n) std::memcpy(&tail, p + i, n - i);
++    return hmix(h, tail ^ n);
++}
++
++static uint32_t trimId(float start, float end) {
++    uint32_t a, b;
++    std::memcpy(&a, &start, 4);
++    std::memcpy(&b, &end, 4);
++    return (a * 2654435761u) ^ (b * 40503u) ^ 1u;
++}
++
++static uint64_t hashFill(uint64_t h, const tvg::Fill* f) {
++    if (!f) return hmix(h, 0x11);
++    h = hmix(h, (uint64_t) f->type());
++    const tvg::Fill::ColorStop* stops = nullptr;
++    const uint32_t n = f->colorStops(&stops);
++    if (n && stops) h = hbytes(h, stops, sizeof(*stops) * n);
++    h = hmix(h, (uint64_t) f->spread());
++    h = hbytes(h, &f->transform(), sizeof(tvg::Matrix));
++    float v[6] = {};
++    if (f->type() == tvg::Type::LinearGradient)
++        static_cast<const tvg::LinearGradient*>(f)->linear(&v[0], &v[1], &v[2], &v[3]);
++    else if (f->type() == tvg::Type::RadialGradient)
++        static_cast<const tvg::RadialGradient*>(f)->radial(&v[0], &v[1], &v[2], &v[3], &v[4], &v[5]);
++    return hbytes(h, v, sizeof(v));
++}
++
++// What a leaf paint draws, apart from its transform, opacity and clip (hashed by the caller).
++// 0 = it can't be read back (a Picture or Text without an id): always redrawn.
++static uint64_t hashLeaf(const tvg::Paint* p) {
++    uint64_t h = hmix(0x6a09e667f3bcc909ull, (uint64_t) p->type());
++    switch (p->type()) {
++        case tvg::Type::Shape: {
++            auto s = static_cast<const tvg::Shape*>(p);
++            const tvg::PathCommand* cmds = nullptr;
++            const tvg::Point* pts = nullptr;
++            uint32_t nc = 0, np = 0;
++            s->path(&cmds, &nc, &pts, &np);
++            if (nc) h = hbytes(h, cmds, sizeof(*cmds) * nc);
++            if (np) h = hbytes(h, pts, sizeof(*pts) * np);
++            uint8_t c[4] = {};
++            if (auto f = s->fill()) h = hashFill(h, f);
++            else { s->fill(&c[0], &c[1], &c[2], &c[3]); h = hbytes(h, c, 4); }
++            h = hmix(h, (uint64_t) s->fillRule());
++            const float sw = s->strokeWidth();
++            h = hbytes(h, &sw, 4);
++            if (sw > 0) {
++                if (auto f = s->strokeFill()) h = hashFill(h, f);
++                else { s->strokeFill(&c[0], &c[1], &c[2], &c[3]); h = hbytes(h, c, 4); }
++                const float* dash = nullptr;
++                float off = 0;
++                const uint32_t nd = s->strokeDash(&dash, &off);
++                if (nd && dash) h = hbytes(h, dash, sizeof(float) * nd);
++                h = hbytes(h, &off, 4);
++                h = hmix(h, ((uint64_t) s->strokeCap() << 8) | (uint64_t) s->strokeJoin());
++                const float ml = s->strokeMiterlimit();
++                h = hbytes(h, &ml, 4);
++            }
++            return h;
++        }
++        case tvg::Type::Picture: {
++            if (!p->id) return 0;
++            float w = 0, hh = 0;
++            static_cast<const tvg::Picture*>(p)->size(&w, &hh);
++            float wh[2] = {w, hh};
++            return hbytes(h, wh, sizeof(wh));
++        }
++        default:
++            return 0;
++    }
++}
++
++void ThorvgPaintContext::setDamageTracking(bool on) {
++    mDamageOn = on;
++    mPrevLeaves.clear();
++    mBacklog.clear();
++}
++
++ThorvgPaintContext::Rect ThorvgPaintContext::boxOf(tvg::Paint* p, float pad) {
++    tvg::Point q[4];
++    if (p->bounds(q) != tvg::Result::Success) return Rect{0, 0, mW, mH};
++    float x0 = q[0].x, y0 = q[0].y, x1 = q[0].x, y1 = q[0].y;
++    for (int i = 1; i < 4; i++) {
++        x0 = std::min(x0, q[i].x); x1 = std::max(x1, q[i].x);
++        y0 = std::min(y0, q[i].y); y1 = std::max(y1, q[i].y);
++    }
++    if (!std::isfinite(x0) || !std::isfinite(y0) || !std::isfinite(x1) || !std::isfinite(y1))
++        return Rect{0, 0, mW, mH};
++    // A pixel of antialiasing either side, and whatever reaches past the geometry.
++    pad += 2;
++    Rect r{(int) std::floor(x0 - pad), (int) std::floor(y0 - pad), (int) std::ceil(x1 + pad),
++           (int) std::ceil(y1 + pad)};
++    r.x0 = std::max(r.x0, 0); r.y0 = std::max(r.y0, 0);
++    r.x1 = std::min(r.x1, mW); r.y1 = std::min(r.y1, mH);
++    return r;
++}
++
++static ThorvgPaintContext::Rect intersect(const ThorvgPaintContext::Rect& a,
++                                          const ThorvgPaintContext::Rect& b) {
++    return {std::max(a.x0, b.x0), std::max(a.y0, b.y0), std::min(a.x1, b.x1), std::min(a.y1, b.y1)};
++}
++
++static ThorvgPaintContext::Rect unite(const ThorvgPaintContext::Rect& a,
++                                      const ThorvgPaintContext::Rect& b) {
++    return {std::min(a.x0, b.x0), std::min(a.y0, b.y0), std::max(a.x1, b.x1), std::max(a.y1, b.y1)};
++}
++
++// Add `r` to a short list of rectangles, merging where the union costs little extra area,
++// and keeping at most `cap` (the cheapest pair merged first).
++static void addRect(std::vector<ThorvgPaintContext::Rect>& list, ThorvgPaintContext::Rect r, size_t cap) {
++    if (r.empty()) return;
++    for (bool merged = true; merged;) {
++        merged = false;
++        for (size_t i = 0; i < list.size(); i++) {
++            auto u = unite(list[i], r);
++            if (u.area() <= list[i].area() + r.area() + 2048) {
++                r = u;
++                list.erase(list.begin() + (long) i);
++                merged = true;
++                break;
++            }
++        }
++    }
++    list.push_back(r);
++    while (list.size() > cap) {
++        size_t bi = 0, bj = 1;
++        long best = -1;
++        for (size_t i = 0; i < list.size(); i++)
++            for (size_t j = i + 1; j < list.size(); j++) {
++                long grow = unite(list[i], list[j]).area() - list[i].area() - list[j].area();
++                if (best < 0 || grow < best) { best = grow; bi = i; bj = j; }
++            }
++        auto u = unite(list[bi], list[bj]);
++        list.erase(list.begin() + (long) bj);
++        list.erase(list.begin() + (long) bi);
++        addRect(list, u, cap);
++    }
++}
++
++void ThorvgPaintContext::collectLeaves(tvg::Paint* p, uint64_t ctx, Rect clip, float pad, tvg::Scene* parent) {
++    uint64_t h = hmix(ctx, ((uint64_t) p->opacity() << 32) | p->id);
++    h = hbytes(h, &p->transform(), sizeof(tvg::Matrix));
++    if (auto c = p->clip()) {
++        h = hmix(h, hashLeaf(c));
++        h = hbytes(h, &c->transform(), sizeof(tvg::Matrix));
++        clip = intersect(clip, boxOf(c, 0));
++    }
++    const tvg::Paint* mt = nullptr;
++    const auto mm = p->mask(&mt);
++    if (mm != tvg::MaskMethod::None && mt) {
++        // The mask's own content: hashed as leaves under this paint's context.
++        h = hmix(h, (uint64_t) mm);
++        const size_t before = mLeaves.size();
++        collectLeaves(const_cast<tvg::Paint*>(mt), h, clip, pad, nullptr);
++        for (size_t i = before; i < mLeaves.size(); i++) h = hmix(h, mLeaves[i].hash);
++        mLeaves.resize(before);
++    }
++    if (clip.empty()) return;   // clipped away: draws nothing
++    if (p->type() == tvg::Type::Scene) {
++        for (auto& e : mEffectPad)
++            if (e.first == p) pad += e.second;
++        auto* scene = static_cast<tvg::Scene*>(p);
++        for (auto* child : scene->paints()) collectLeaves(child, h, clip, pad, scene);
++        return;
++    }
++    const uint64_t leaf = hashLeaf(p);
++    // Unreadable content changes every frame: a hash no other frame shares.
++    h = leaf ? hmix(h, leaf) : hmix(h, 0xdead0000ull + mFrame);
++    float extra = pad;
++    if (p->type() == tvg::Type::Shape) {
++        const float sw = static_cast<tvg::Shape*>(p)->strokeWidth();
++        if (sw > 0) {
++            const auto& m = p->transform();
++            const float scale = std::sqrt(std::fabs(m.e11 * m.e22 - m.e12 * m.e21));
++            extra += sw * scale * 2;   // miter joins reach past half the width
++        }
++    }
++    const Rect box = intersect(boxOf(p, extra), clip);
++#if !defined(ESP_PLATFORM)
++    if (!leaf && std::getenv("RC_DAMAGE_DEBUG"))
++        std::printf("    volatile type=%d [%d,%d %dx%d]\n", (int) p->type(), box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0);
++#endif
++    if (!box.empty()) mLeaves.push_back({h, box, p, parent});
++}
++
++void ThorvgPaintContext::drawDamaged() {
++    const auto t0 = std::chrono::steady_clock::now();
++    const Rect full{0, 0, mW, mH};
++    mLeaves.clear();
++    for (auto* p : mCanvas->paints()) collectLeaves(p, 0, full, 0, nullptr);
++    std::sort(mLeaves.begin(), mLeaves.end(),
++              [](const Leaf& a, const Leaf& b) { return a.hash < b.hash; });
++
++    // What changed: every leaf of either frame that the other doesn't have (as a multiset).
++    // Unchanged paints over a changed area are redrawn with it: the viewport draws all.
++    mFrameDamage.clear();
++    std::vector<Rect> raw;
++    long rawArea = 0;
++    if (mPrevLeaves.empty()) raw.push_back(full);
++    size_t i = 0, j = 0;
++    while (raw.size() < 4096 && (i < mPrevLeaves.size() || j < mLeaves.size())) {
++        if (j >= mLeaves.size() || (i < mPrevLeaves.size() && mPrevLeaves[i].hash < mLeaves[j].hash)) {
++            raw.push_back(mPrevLeaves[i++].box);
++        } else if (i >= mPrevLeaves.size() || mLeaves[j].hash < mPrevLeaves[i].hash) {
++            raw.push_back(mLeaves[j++].box);
++        } else {
++            i++;
++            j++;
++        }
++    }
++    for (auto& r : raw) rawArea += r.area();
++#if !defined(ESP_PLATFORM)
++    if (std::getenv("RC_DAMAGE_DEBUG")) {
++        std::printf("  damage: %zu leaves, %zu changed, area %ld\n", mLeaves.size(), raw.size(), rawArea);
++        for (auto& r : raw) if (r.area() > 20000) std::printf("    big [%d,%d %dx%d]\n", r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
++    }
++#endif
++    if (rawArea >= full.area() / 2 || raw.size() >= 4096) mFrameDamage.assign(1, full);
++    else for (auto& r : raw) addRect(mFrameDamage, r, 4);
++    std::swap(mPrevLeaves, mLeaves);
++
++    // Each buffer's backlog gains this frame's damage; the target's is drawn and cleared.
++    std::vector<Rect>* own = nullptr;
++    for (auto& b : mBacklog) {
++        for (auto& r : mFrameDamage) addRect(b.second, r, 4);
++        if (b.first == mPixels) own = &b.second;
++    }
++    if (!own) {
++        mBacklog.emplace_back(mPixels, std::vector<Rect>{full});
++        own = &mBacklog.back().second;
++    }
++    mDrawn = std::move(*own);
++    own->clear();
++
++    // A paint that touches none of it draws nothing this frame, but ThorVG would still
++    // prepare it (outline, stroke, RLE) before finding it outside the viewport: drop it.
++    // (The leaves are this frame's: mLeaves and mPrevLeaves were swapped above.)
++    long drawnArea = 0;
++    for (auto& r : mDrawn) drawnArea += r.area();
++    // Off: removing (and so freeing) paints from their scenes mid-frame is the prime suspect for
++    // the panel's corrupted span lists (crashes rasterising a shape after a screen change);
++    // RC_CULL=1 (host) turns it back on to compare.
++#if defined(ESP_PLATFORM)
++    constexpr bool cull = false;
++#else
++    static const bool cull = std::getenv("RC_CULL") != nullptr;
++#endif
++    if (cull && drawnArea < full.area()) {
++        for (auto& leaf : mPrevLeaves) {
++            bool touches = false;
++            for (auto& r : mDrawn) touches = touches || !intersect(leaf.box, r).empty();
++            if (touches || !leaf.paint) continue;
++            if (leaf.parent) leaf.parent->remove(leaf.paint);
++            else mCanvas->remove(leaf.paint);
++        }
++    }
++    for (auto& leaf : mPrevLeaves) leaf.paint = nullptr, leaf.parent = nullptr;
++    mDiffUs = (long) std::chrono::duration_cast<std::chrono::microseconds>(
++                  std::chrono::steady_clock::now() - t0).count();
++
++    for (auto& r : mDrawn) {
++        mCanvas->viewport(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
++        mCanvas->draw(false);
++        mCanvas->sync();
++    }
++}
++
+ void ThorvgPaintContext::reset() {
+     mPaint = PaintState();
+     mPaintStack.clear();
+@@ -321,10 +730,14 @@
+     if (only && (int) p->type() != std::atoi(only)) { tvg::Paint::rel(p); return; }
+ #endif
+     p->transform(mMatrix);
++    if (mLayerAlpha < 1) p->opacity((uint8_t) (p->opacity() * mLayerAlpha + 0.5f));
+     TRACE("  push type=%d depth=%zu saves=%zu m=[%g %g %g / %g %g %g]\n", (int) p->type(),
+           mContainers.size(), mSaves.size(), mMatrix.e11, mMatrix.e12, mMatrix.e13, mMatrix.e21,
+           mMatrix.e22, mMatrix.e23);
+-    if (mPaint.blend != tvg::BlendMethod::Normal) p->blend(mPaint.blend);
++    if (mPaint.blend != tvg::BlendMethod::Normal) {
++        p->blend(mPaint.blend);
++        p->id = p->id * 31 + 1 + (uint32_t) mPaint.blend;   // the damage hash can't read it back
++    }
+     if (!mContainers.empty()) mContainers.back()->add(p);
+     else if (mOffscreen) mOffscreen->canvas->add(p);
+     else mCanvas->add(p);
+@@ -572,7 +985,10 @@
+ void ThorvgPaintContext::drawPath(int pathId, float start, float end) {
+     auto s = tvg::Shape::gen();
+     if (!buildPath(s, pathId)) { tvg::Paint::rel(s); return; }
+-    if (start > 0.0f || end < 1.0f) s->trimpath(start, end, false);
++    if (start > 0.0f || end < 1.0f) {
++        s->trimpath(start, end, false);
++        s->id = trimId(start, end);   // the damage hash can't read the trim back
++    }
+     drawShape(s);
+ }
+ 
+@@ -604,7 +1020,10 @@
+     }
+     auto s = tvg::Shape::gen();
+     buildPathFromFloats(s, *use);
+-    if (start > 0.0f || end < 1.0f) s->trimpath(start, end, false);
++    if (start > 0.0f || end < 1.0f) {
++        s->trimpath(start, end, false);
++        s->id = trimId(start, end);   // the damage hash can't read the trim back
++    }
+     drawShape(s);
+ }
+ 
+@@ -625,7 +1044,108 @@
+ 
+ ThorvgPaintContext::Image* ThorvgPaintContext::imageFor(int id) {
+     auto it = mImages.find(id);
+-    return it == mImages.end() || it->second.px.empty() ? nullptr : &it->second;
++    if (it == mImages.end()) return nullptr;
++    Image& img = it->second;
++    if (img.px.empty() && !img.a8.empty()) {
++        // A RAW8 bitmap drawn on its own: as a grey image, as before it was kept as coverage.
++        img.px.resize(img.a8.size());
++        for (size_t i = 0; i < img.a8.size(); i++) {
++            const uint32_t v = img.a8[i];
++            img.px[i] = premul((v << 24) | (v << 16) | (v << 8) | v);
++        }
++    }
++    return img.px.empty() ? nullptr : &img;
++}
++
++// One run of a bitmap font's glyphs as one image, composed once and kept while it is drawn:
++// one picture a run for ThorVG and the damage hash, one filtered copy when a colour filter tints
++// white-mask glyphs, instead of one of each a glyph. The glyphs of a run sit whole pixels apart
++// (margins and widths are whole; only the run's origin is fractional), so composing them at
++// their offsets from the run's top-left and drawing the run there is drawing each one.
++void ThorvgPaintContext::drawBitmapGlyphs(const std::vector<BitmapGlyph>& glyphs) {
++    if (glyphs.empty()) return;
++    float left = glyphs[0].left, top = glyphs[0].top, right = left, bottom = top;
++    uint64_t key = 1469598103934665603ull;
++    auto mix = [&key](uint64_t v) { key = (key ^ v) * 1099511628211ull; };
++    for (const auto& g : glyphs) {
++        auto it = mImages.find(g.imageId);
++        if (it == mImages.end() || (it->second.px.empty() && it->second.a8.empty()) ||
++            it->second.w != (int) g.width || it->second.h != (int) g.height) {
++            PaintContext::drawBitmapGlyphs(glyphs);   // scaled, or an image missing: a glyph at a time
++            return;
++        }
++        left = std::min(left, g.left);
++        top = std::min(top, g.top);
++        right = std::max(right, g.left + g.width);
++        bottom = std::max(bottom, g.top + g.height);
++    }
++    const int w = (int) std::lround(right - left), h = (int) std::lround(bottom - top);
++    if (w <= 0 || h <= 0 || (size_t) w * h > (1u << 20)) return;
++    // On whole device pixels when drawn unscaled, as text runs are: a filtered image at a
++    // fraction of a pixel isn't drawn the same clipped to a redrawn rectangle as whole.
++    const tvg::Matrix& m = mMatrix;
++    float drawLeft = left, drawTop = top;
++    if (m.e11 == 1 && m.e22 == 1 && m.e12 == 0 && m.e21 == 0) {
++        drawLeft = std::round(m.e13 + left) - m.e13;
++        drawTop = std::round(m.e23 + top) - m.e23;
++    }
++    mix((uint64_t) w << 32 | (uint32_t) h);
++    for (const auto& g : glyphs) {
++        mix((uint64_t) (uint32_t) g.imageId << 32 | mImages[g.imageId].version);
++        mix((uint64_t) (uint32_t) std::lround(g.left - left) << 32 | (uint32_t) std::lround(g.top - top));
++    }
++    auto it = mGlyphRuns.find(key);
++    if (it == mGlyphRuns.end()) {
++        GlyphRun run;
++        run.img.w = w;
++        run.img.h = h;
++        run.img.px.assign((size_t) w * h, 0);
++        run.img.version = ++mImageVersion;
++        for (const auto& g : glyphs) {
++            const Image& src = mImages[g.imageId];
++            const int ox = (int) std::lround(g.left - left), oy = (int) std::lround(g.top - top);
++            for (int y = 0; y < src.h; y++) {
++                if (oy + y < 0 || oy + y >= h) continue;
++                uint32_t* dst = &run.img.px[(size_t) (oy + y) * w];
++                for (int x = 0; x < src.w; x++) {
++                    if (ox + x < 0 || ox + x >= w) continue;
++                    uint32_t s;
++                    if (!src.a8.empty()) {
++                        const uint32_t a = src.a8[(size_t) y * src.w + x];
++                        s = (a << 24) | (a << 16) | (a << 8) | a;   // white, premultiplied
++                    } else {
++                        s = src.px[(size_t) y * src.w + x];
++                    }
++                    const uint32_t sa = s >> 24;
++                    if (!sa) continue;
++                    uint32_t& d = dst[ox + x];
++                    if (sa == 255 || !d) { d = s; continue; }
++                    const uint32_t inv = 255 - sa;
++                    auto ch = [&](int sh) { return ((s >> sh) & 0xFF) + ((((d >> sh) & 0xFF) * inv + 127) / 255); };
++                    d = (ch(24) << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0);
++                }
++            }
++        }
++        mGlyphRunBytes += run.img.px.size() * 4;
++        if (mGlyphRunBytes > (128u << 10)) {
++            for (auto e = mGlyphRuns.begin(); e != mGlyphRuns.end();) {
++                if (mFrame - e->second.usedFrame > 2) {
++                    mGlyphRunBytes -= e->second.img.px.size() * 4;
++                    e = mGlyphRuns.erase(e);
++                } else {
++                    ++e;
++                }
++            }
++        }
++        it = mGlyphRuns.emplace(key, std::move(run)).first;
++    }
++    it->second.usedFrame = mFrame;
++#if !defined(ESP_PLATFORM)
++    if (std::getenv("RC_BMF_DEBUG"))
++        std::fprintf(stderr, "glyph run %dx%d at %g,%g: paint %08x filter %d %08x mode %d\n", w, h, left, top,
++                     mPaint.color, (int) mPaint.hasColorFilter, mPaint.colorFilter, mPaint.colorFilterMode);
++#endif
++    drawImage(it->second.img, drawLeft, drawTop, (float) w, (float) h);
+ }
+ 
+ void ThorvgPaintContext::drawImage(Image& source, float dl, float dt, float dw, float dh) {
+@@ -639,6 +1159,10 @@
+     }
+     if (mPaint.nearestFilter) pic->filter(tvg::FilterMethod::Nearest);
+     pic->size(dw, dh);
++    // What the pixels are, for the damage hash: this buffer at this version.
++    pic->id = ((uint32_t) (((uintptr_t) img.px.data() >> 4) * 2654435761u) ^ (source.version * 40503u) ^
++               (mPaint.hasColorFilter ? mPaint.colorFilter * 7u + (uint32_t) mPaint.colorFilterMode : 0u) ^
++               (mPaint.nearestFilter ? 0x5bd1e995u : 0u)) | 1u;
+     tvg::Matrix saved = mMatrix;
+     mMatrix = mul(mMatrix, translateM(dl, dt));
+     uint8_t a = mPaint.color >> 24;
+@@ -698,6 +1222,11 @@
+         encoding = (heightAndEncoding >> 16) & 0xFFFF;
+         height = heightAndEncoding & 0xFFFF;
+     }
++#if !defined(ESP_PLATFORM)
++    if (std::getenv("RC_IMG_DEBUG"))
++        std::fprintf(stderr, "bitmap %d: %dx%d type %d encoding %d, %zu bytes\n", imageId, width, height, type,
++                     encoding, data.size());
++#endif
+     if (encoding == ENCODING_EMPTY) {
+         Image& img = mImages[imageId];
+         if (img.px.empty() && width > 0 && height > 0) {
+@@ -734,18 +1263,20 @@
+             break;
+         }
+         case TYPE_RAW8: {
++            // Kept at a byte a pixel: imageFor makes the grey image if it is drawn on its own.
+             size_t n = (size_t) width * height;
+             if (data.size() < n) return;
+-            img.w = width; img.h = height; img.px.resize(n);
+-            for (size_t i = 0; i < n; i++) {
+-                uint32_t v = data[i];
+-                img.px[i] = premul((v << 24) | (v << 16) | (v << 8) | v);
+-            }
++            img.w = width; img.h = height;
++            img.a8.assign(data.begin(), data.begin() + (long) n);
+             break;
+         }
+         default:
+             return;
+     }
++#if !defined(ESP_PLATFORM)
++    if (std::getenv("RC_IMG_DEBUG"))
++        std::fprintf(stderr, "bitmap %d decoded %dx%d (%zu KB)\n", imageId, img.w, img.h, img.px.size() * 4 >> 10);
++#endif
+     img.version = ++mImageVersion;
+     mImages[imageId] = std::move(img);
+     mImageSourceHash[imageId] = hash;
+@@ -760,6 +1291,8 @@
+     off->containers.swap(mContainers);
+     off->matrix = mMatrix;
+     off->saves.swap(mSaves);
++    off->layerAlpha = mLayerAlpha;
++    mLayerAlpha = 1;
+     if ((mode & 1) == 0) std::fill(img->px.begin(), img->px.end(), premul((uint32_t) color));
+     off->canvas.reset(tvg::SwCanvas::gen());
+     off->canvas->target(img->px.data(), img->w, img->w, img->h, tvg::ColorSpace::ARGB8888);
+@@ -777,6 +1310,7 @@
+     mContainers.swap(off->containers);
+     mSaves.swap(off->saves);
+     mMatrix = off->matrix;
++    mLayerAlpha = off->layerAlpha;
+ }
+ 
+ // ── Text ─────────────────────────────────────────────────────────────────────────────────
+@@ -816,18 +1350,37 @@
+     uint32_t szBits;
+     std::memcpy(&szBits, &size, 4);
+     key = (key * 1099511628211ull) ^ szBits ^ ((uint64_t) (uintptr_t) font << 32);
++    if (sGlyphSource) key = (key ^ sGlyphSource->generation()) * 1099511628211ull;   // emoji arrived
+     auto hit = mWidthCache.find(key);
+     if (hit != mWidthCache.end()) return hit->second;
+ 
+     tvg::Text* t = measurer(font, size);
++    int faceIndex = 0;
++    for (int i = 0; i < 3; i++)
++        if (font == kFaceNames[i]) faceIndex = i;
++    const int px = (int) std::lround(size);
+     float adv = 0;
+     const char* p = utf8.c_str();
+     const char* end = p + utf8.size();
+     while (p < end) {
++        const int n = std::min<int>(utf8Len((unsigned char) *p), (int) (end - p));
++        uint32_t cp = n == 1 ? (unsigned char) p[0] : n == 2 ? (p[0] & 0x1F) : n == 3 ? (p[0] & 0x0F) : (p[0] & 0x07);
++        for (int i = 1; i < n; i++) cp = (cp << 6) | ((unsigned char) p[i] & 0x3F);
++        if (zeroWidth(cp)) { p += n; continue; }
++        // A character the face lacks (an emoji) is as wide as the glyph source's colour glyph.
++        if (sGlyphSource && !faceHas(static_cast<Face>(faceIndex), cp)) {
++            SourceGlyph g;
++            if (sGlyphSource->glyph(Face::Emoji, px, cp, g)) {
++                adv += g.advance;
++                p += n;
++                continue;
++            }
++            sGlyphSource->missing(Face::Emoji, px, cp);
++        }
+         tvg::GlyphMetrics gm{};
+         const char* next = nullptr;
+         if (t->metrics(p, gm, &next) == tvg::Result::Success) adv += gm.advance;
+-        p = (next && next > p) ? next : p + utf8Len((unsigned char) *p);
++        p = (next && next > p) ? next : p + n;
+     }
+     if (mWidthCache.size() >= 4096) mWidthCache.clear();
+     mWidthCache.emplace(key, adv);
+@@ -853,19 +1406,66 @@
+     float size = mPaint.textSize;
+     if (!font || utf8.empty() || !(size > 0) || size > 10000) return;
+     if (!std::isfinite(x) || !std::isfinite(baselineY)) return;
++    if (size > 400) {   // larger than the screen is tall: a size gone astray
++        static int logged = 0;
++        if (logged++ < 8) {
++#if defined(ESP_PLATFORM)
++            ESP_LOGW("kobentovg", "text '%.24s' at size %g: not drawn", utf8.c_str(), size);
++            char note[64];
++            snprintf(note, sizeof(note), "text '%.16s' size %g", utf8.c_str(), size);
++            tvg_note(note);
++#else
++            std::fprintf(stderr, "text '%.24s' at size %g: not drawn\n", utf8.c_str(), size);
++#endif
++        }
++        return;
++    }
++    {
++        // Far off the canvas (a layout or animation gone astray): the rasteriser's fixed-point
++        // coordinates overflow there, and its span arrays grew until the panel ran out of memory.
++        const float dx = mMatrix.e11 * x + mMatrix.e12 * baselineY + mMatrix.e13;
++        const float dy = mMatrix.e21 * x + mMatrix.e22 * baselineY + mMatrix.e23;
++        const float limit = 4.0f * (float) std::max(mW, mH) + size * 64;
++        if (!std::isfinite(dx) || !std::isfinite(dy) || std::fabs(dx) > limit || std::fabs(dy) > limit) {
++            static int logged = 0;
++            if (logged < 8) {
++                logged++;
++#if defined(ESP_PLATFORM)
++                ESP_LOGW("kobentovg", "text '%.24s' at %g,%g on the canvas: not drawn", utf8.c_str(), dx, dy);
++                char note[64];
++                snprintf(note, sizeof(note), "text '%.16s' at %g,%g", utf8.c_str(), dx, dy);
++                tvg_note(note);
++#else
++                std::fprintf(stderr, "text '%.24s' at %g,%g on the canvas: not drawn\n", utf8.c_str(), dx, dy);
++#endif
++            }
++            return;
++        }
++    }
+     TRACE("  drawText '%s' at %g,%g color=%08x grad=%d\n", utf8.c_str(), x, baselineY,
+           mPaint.color, mPaint.gradient.type);
+     float ascent, descent;
+     textMetrics(size, ascent, descent);
++    uint32_t c = paintColor();
++    const int gt = mPaint.gradient.type;
++    bool gradient = gt == PaintBundle::LINEAR_GRADIENT || gt == PaintBundle::RADIAL_GRADIENT ||
++                    gt == PaintBundle::SWEEP_GRADIENT;
++    // A plain fill drawn unscaled and unrotated (a panel's text, nearly always): the run's
++    // image, rasterised once, rather than its glyphs tessellated again this frame. Checked
++    // before a Text is made: a hit needs none.
++    if (!gradient && mPaint.style != PaintBundle::STYLE_STROKE && !mPaint.italic && !mOffscreen &&
++        drawCachedText(utf8, font, size, c, x, baselineY - ascent))
++        return;
++#if !defined(ESP_PLATFORM)
++    if (std::getenv("RC_TEXT_DEBUG"))
++        std::fprintf(stderr, "uncached text '%s' size %g matrix %g %g %g / %g %g %g\n", utf8.c_str(), size,
++                     mMatrix.e11, mMatrix.e12, mMatrix.e13, mMatrix.e21, mMatrix.e22, mMatrix.e23);
++#endif
+     auto t = tvg::Text::gen();
+     t->font(font);
+     t->size(size * kPxToTvgSize);
+     t->text(utf8.c_str());
+     if (mPaint.italic) t->italic();
+-    uint32_t c = paintColor();
+-    const int gt = mPaint.gradient.type;
+-    bool gradient = gt == PaintBundle::LINEAR_GRADIENT || gt == PaintBundle::RADIAL_GRADIENT ||
+-                    gt == PaintBundle::SWEEP_GRADIENT;
+     if (mPaint.style == PaintBundle::STYLE_STROKE)
+         t->outline(mPaint.strokeWidth > 0 ? mPaint.strokeWidth : 1, (c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
+     else if (gradient) {
+@@ -887,13 +1487,6 @@
+         push(box);
+         return;
+     } else {
+-        // A plain fill drawn unscaled and unrotated (a panel's text, nearly always): the run's
+-        // image, rasterised once, rather than its glyphs tessellated again this frame.
+-        if (mPaint.style != PaintBundle::STYLE_STROKE && !mPaint.italic && !mOffscreen &&
+-            drawCachedText(utf8, font, size, c, x, baselineY - ascent)) {
+-            tvg::Paint::rel(t);
+-            return;
+-        }
+         t->fill((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
+     }
+     if ((c >> 24) != 255) t->opacity(c >> 24);
+@@ -927,47 +1520,56 @@
+     std::memcpy(&bits[3], &qy, 4);
+     for (uint32_t b : bits) key = (key ^ b) * 1099511628211ull;
+     key ^= (uint64_t) (uintptr_t) font;
++    // A run drawn before its emoji arrived is drawn again once they have.
++    if (sGlyphSource) key = (key ^ sGlyphSource->generation()) * 1099511628211ull;
+ 
+     auto it = mTextImages.find(key);
+     if (it == mTextImages.end() || it->second.text != utf8) {
+-        const float w = advanceOf(utf8, size);
++        const auto missAt = std::chrono::steady_clock::now();
++        struct Timed {
++            std::chrono::steady_clock::time_point at;
++            long& us;
++            ~Timed() {
++                us += (long) std::chrono::duration_cast<std::chrono::microseconds>(
++                    std::chrono::steady_clock::now() - at).count();
++            }
++        } timed{missAt, mTextMissUs};
++        mTextMisses++;
+         float ascent, descent;
+         textMetrics(size, ascent, descent);
+-        const float pad = std::ceil(size * 0.25f) + 1;
+         TextImage img;
+         img.text = utf8;
+-        img.w = (int) std::ceil(w + qx + 2 * pad);
+-        img.h = (int) std::ceil(ascent + descent + qy + 2 * pad);
+-        if (img.w <= 0 || img.h <= 0 || (size_t) img.w * img.h > 1u << 20) return false;
+-        img.ox = -pad;
+-        img.oy = -pad;
+-        img.px.assign((size_t) img.w * img.h, 0);
+-        std::unique_ptr<tvg::SwCanvas> canvas(tvg::SwCanvas::gen());
+-        if (!canvas || canvas->target(img.px.data(), img.w, img.w, img.h, tvg::ColorSpace::ARGB8888) !=
+-                           tvg::Result::Success)
+-            return false;
+-        auto t = tvg::Text::gen();
+-        t->font(font);
+-        t->size(size * kPxToTvgSize);
+-        t->text(utf8.c_str());
+-        t->fill((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
+-        t->translate(pad + qx, pad + qy);
+-        canvas->add(t);
+-        canvas->draw(false);
+-        canvas->sync();
+-        canvas->remove();
+-        // Bounded: a screen's runs, many times over. Past it, those not drawn lately go.
+-        mTextImageBytes += img.px.size() * 4;
+-        if (mTextImageBytes > (4u << 20)) {
+-            for (auto e = mTextImages.begin(); e != mTextImages.end();) {
+-                if (mFrame - e->second.usedFrame > 2) {
+-                    mTextImageBytes -= e->second.px.size() * 4;
+-                    e = mTextImages.erase(e);
+-                } else {
+-                    ++e;
+-                }
+-            }
++        // From glyph coverage when the source has the run: an image exactly the run's ink.
++        const int composed = composeText(img, utf8, font, size, argb, qx, qy, ascent);
++        if (composed == 2) return true;   // no room this frame: the run waits for the next
++        if (composed == 1) {
++            mTextComposed++;
++        } else {
++            const float w = advanceOf(utf8, size);
++            const float pad = std::ceil(size * 0.25f) + 1;   // ThorVG's ink may overhang the box
++            img.w = (int) std::ceil(w + qx + 2 * pad);
++            img.h = (int) std::ceil(ascent + descent + qy + 2 * pad);
++            if (img.w <= 0 || img.h <= 0 || (size_t) img.w * img.h > 1u << 20) return false;
++            img.ox = -pad;
++            img.oy = -pad;
++            if (!makeTextRoom((size_t) img.w * img.h * 4, utf8)) return true;
++            img.px.assign((size_t) img.w * img.h, 0);
++            std::unique_ptr<tvg::SwCanvas> canvas(tvg::SwCanvas::gen());
++            if (!canvas || canvas->target(img.px.data(), img.w, img.w, img.h, tvg::ColorSpace::ARGB8888) !=
++                               tvg::Result::Success)
++                return false;
++            auto t = tvg::Text::gen();
++            t->font(font);
++            t->size(size * kPxToTvgSize);
++            t->text(utf8.c_str());
++            t->fill((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
++            t->translate(pad + qx, pad + qy);
++            canvas->add(t);
++            canvas->draw(false);
++            canvas->sync();
++            canvas->remove();
+         }
++        mTextImageBytes += img.px.size() * 4;
+         if (it != mTextImages.end()) {
+             mTextImageBytes -= it->second.px.size() * 4;
+             it->second = std::move(img);
+@@ -984,6 +1586,7 @@
+         return false;
+     }
+     if ((argb >> 24) != 255) pic->opacity(argb >> 24);
++    pic->id = (uint32_t) (key ^ (key >> 32)) | 1u;   // the run's pixels, for the damage hash
+     tvg::Matrix saved = mMatrix;
+     // The image was rasterised at this phase: place it on the whole pixel below.
+     // The image holds the run at its quarter-pixel phase: its origin is on the whole pixel.
+@@ -993,6 +1596,177 @@
+     return true;
+ }
+ 
++// Room for a text-run image of [bytes]: past the cache's budget, runs not drawn this frame go
++// first (the last frame's scene is gone by now, so nothing else points at them). A layout that
++// settles over a few frames draws its text at a new phase each frame; keeping two frames of runs
++// as before held two or three screens of text at once, more than the panel's PSRAM. False, and
++// the run waits a frame, when even then no block takes it with ThorVG's working room to spare.
++bool ThorvgPaintContext::makeTextRoom(size_t bytes, const std::string& utf8) {
++    constexpr size_t kBudget = 64u << 10;
++    // No run on an 800x480 screen is a quarter of a megabyte: one that is has a size or width
++    // gone astray, and allowing it took the heap.
++    if (bytes > (256u << 10)) {
++        static int logged = 0;
++        if (logged++ < 8) {
++#if defined(ESP_PLATFORM)
++            ESP_LOGW("kobentovg", "text run '%.24s' needs %u KB: not drawn", utf8.c_str(), (unsigned) (bytes >> 10));
++            char note[64];
++            snprintf(note, sizeof(note), "run '%.16s' %u KB", utf8.c_str(), (unsigned) (bytes >> 10));
++            tvg_note(note);
++#else
++            std::fprintf(stderr, "text run '%.24s' needs %u KB: not drawn\n", utf8.c_str(), (unsigned) (bytes >> 10));
++#endif
++        }
++        return false;
++    }
++    if (mTextImageBytes + bytes > kBudget) {
++        for (auto e = mTextImages.begin(); e != mTextImages.end();) {
++            if (e->second.usedFrame != mFrame) {
++                mTextImageBytes -= e->second.px.size() * 4;
++                e = mTextImages.erase(e);
++            } else {
++                ++e;
++            }
++        }
++    }
++#if defined(ESP_PLATFORM)
++    // Room for it and some to spare, asked by a trial allocation: heap_caps_get_largest_free_block
++    // walks the heap with interrupts off (2.6 ms on the LCD-7), and the panel's scan-out slips.
++    void* trial = heap_caps_malloc(bytes + (32u << 10), MALLOC_CAP_SPIRAM);
++    if (trial == nullptr) {
++        ESP_LOGW("kobentovg", "text run '%.24s' (%u B) waits: no %u KB block of PSRAM", utf8.c_str(),
++                 (unsigned) bytes, (unsigned) ((bytes >> 10) + 32));
++        return false;
++    }
++    heap_caps_free(trial);
++#else
++    (void) utf8;
++    // RC_TEXT_ROOM_FAIL=N: every Nth run finds no room, as on a panel short of PSRAM.
++    static const int failEvery = std::getenv("RC_TEXT_ROOM_FAIL") ? std::atoi(std::getenv("RC_TEXT_ROOM_FAIL")) : 0;
++    static int calls = 0;
++    if (failEvery > 0 && ++calls % failEvery == 0) return false;
++#endif
++    return true;
++}
++
++// [utf8] composed from the glyph source into [img] (premultiplied ARGB, sized to the run's ink;
++// ox/oy its top-left from the text box's), the pen starting at [qx] and the baseline at
++// [qy + ascent] within the box: 1 when composed, 0 when the source lacks a glyph or the face and
++// size aren't a whole-pixel style it has, 2 when composable but there's no room this frame.
++int ThorvgPaintContext::composeText(TextImage& img, const std::string& utf8, const char* font,
++                                    float size, uint32_t argb, float qx, float qy, float ascent) {
++#if !defined(ESP_PLATFORM)
++    static const bool off = std::getenv("RC_NO_GLYPH_SOURCE") != nullptr;   // compare without
++    if (off) return 0;
++#endif
++    if (!sGlyphSource) return 0;
++    int faceIndex = -1;
++    for (int i = 0; i < 3; i++)
++        if (font == kFaceNames[i]) faceIndex = i;
++    const int px = (int) std::lround(size);
++#if !defined(ESP_PLATFORM)
++    static const bool debug = std::getenv("RC_GLYPH_DEBUG") != nullptr;
++    if (debug) std::fprintf(stderr, "compose '%s' face %d size %g\n", utf8.c_str(), faceIndex, size);
++#endif
++    if (faceIndex < 0 || std::fabs(size - (float) px) > 0.01f) return 0;
++    const Face face = static_cast<Face>(faceIndex);
++    struct Placed {
++        SourceGlyph g;
++        int x, y;   // the glyph's top-left in the text box
++    };
++    std::vector<Placed> run;
++    run.reserve(utf8.size());
++    bool all = true;
++    tvg::Text* t = measurer(font, size);
++    float pen = qx;
++    const float baseline = qy + ascent;
++    int x0 = INT32_MAX, y0 = INT32_MAX, x1 = INT32_MIN, y1 = INT32_MIN;
++    const char* p = utf8.c_str();
++    const char* end = p + utf8.size();
++    while (p < end) {
++        const unsigned char c0 = (unsigned char) *p;
++        const int n = std::min<int>(utf8Len(c0), (int) (end - p));
++        uint32_t cp = n == 1 ? c0 : n == 2 ? (c0 & 0x1F) : n == 3 ? (c0 & 0x0F) : (c0 & 0x07);
++        for (int i = 1; i < n; i++) cp = (cp << 6) | ((unsigned char) p[i] & 0x3F);
++        if (zeroWidth(cp)) { p += n; continue; }
++        // What the face lacks (an emoji) comes from the colour face, at its own advance.
++        const bool own = faceHas(face, cp);
++        SourceGlyph g;
++        if (sGlyphSource->glyph(own ? face : Face::Emoji, px, cp, g)) {
++            if (all && g.width > 0 && g.height > 0) {
++                const int gx = (int) std::floor(pen + g.left + 0.5f), gy = (int) std::floor(baseline + g.top + 0.5f);
++                run.push_back({g, gx, gy});
++                x0 = std::min(x0, gx);
++                y0 = std::min(y0, gy);
++                x1 = std::max(x1, gx + (int) g.width);
++                y1 = std::max(y1, gy + (int) g.height);
++            }
++        } else {
++            sGlyphSource->missing(own ? face : Face::Emoji, px, cp);   // every one lacked, for one fetch
++            all = false;
++        }
++        // The pen moves as the layout measured it (advanceOf): ThorVG's advance for the face's
++        // own glyphs, the colour glyph's for the rest.
++        if (all && !own) {
++            pen += g.advance;
++        } else {
++            tvg::GlyphMetrics gm{};
++            const char* next = nullptr;
++            if (all && t->metrics(p, gm, &next) == tvg::Result::Success) pen += gm.advance;
++        }
++        p += n;
++    }
++    if (!all) return 0;
++    if (run.empty()) { x0 = y0 = 0; x1 = y1 = 1; }   // spaces only: one clear pixel
++    img.w = x1 - x0;
++    img.h = y1 - y0;
++    img.ox = (float) x0;
++    img.oy = (float) y0;
++    if ((size_t) img.w * img.h > 1u << 20) return 0;
++    if (!makeTextRoom((size_t) img.w * img.h * 4, utf8)) return 2;
++    img.px.assign((size_t) img.w * img.h, 0);
++    const uint32_t r = (argb >> 16) & 0xFF, gr = (argb >> 8) & 0xFF, b = argb & 0xFF;
++    for (const Placed& placed : run) {
++        const SourceGlyph& g = placed.g;
++        const int ox = placed.x - x0, oy = placed.y - y0;
++        const int levels = g.bits >= 8 ? 255 : (1 << g.bits) - 1, rowBytes = (g.width * g.bits + 7) / 8;
++        for (int y = 0; y < g.height; y++) {
++            uint32_t* dst = &img.px[(size_t) (oy + y) * img.w];
++            const uint8_t* row = g.rows + (size_t) y * rowBytes;
++            for (int x = 0; x < g.width; x++) {
++                uint32_t a;
++                if (g.bits == 32) {   // colour: premultiplied ARGB, drawn as it is
++                    const uint8_t* q = row + 4 * x;
++                    const uint32_t s = (uint32_t) q[0] << 24 | (uint32_t) q[1] << 16 | (uint32_t) q[2] << 8 | q[3];
++                    const uint32_t sa = s >> 24;
++                    if (!sa) continue;
++                    uint32_t& d = dst[ox + x];
++                    if (sa == 255 || !d) { d = s; continue; }
++                    const uint32_t inv = 255 - sa;
++                    auto ch = [&](int sh) { return ((s >> sh) & 0xFF) + ((((d >> sh) & 0xFF) * inv + 127) / 255); };
++                    d = (ch(24) << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0);
++                    continue;
++                }
++                if (g.bits == 8) {
++                    a = row[x];
++                } else {
++                    const int bit = x * g.bits;
++                    a = (uint32_t) (((row[bit >> 3] >> (8 - g.bits - (bit & 7))) & levels) * 255 / levels);
++                }
++                if (!a) continue;
++                const uint32_t s = (a << 24) | ((r * a + 127) / 255 << 16) | ((gr * a + 127) / 255 << 8) |
++                                   ((b * a + 127) / 255);
++                uint32_t& d = dst[ox + x];
++                if (a == 255 || !d) { d = s; continue; }
++                const uint32_t inv = 255 - a;
++                auto ch = [&](int sh) { return ((s >> sh) & 0xFF) + ((((d >> sh) & 0xFF) * inv + 127) / 255); };
++                d = (ch(24) << 24) | (ch(16) << 16) | (ch(8) << 8) | ch(0);
++            }
++        }
++    }
++    return 1;
++}
++
+ void ThorvgPaintContext::drawTextRun(int textId, int start, int end, int, int, float x, float y,
+                                      bool) {
+     auto it = mTexts.find(textId);
+@@ -1464,11 +2238,12 @@
+ 
+ // ── Transform / clip / layers ─────────────────────────────────────────────────────────────
+ 
+-void ThorvgPaintContext::matrixSave() { mSaves.push_back({mMatrix, mContainers.size()}); }
++void ThorvgPaintContext::matrixSave() { mSaves.push_back({mMatrix, mContainers.size(), mLayerAlpha}); }
+ 
+ void ThorvgPaintContext::matrixRestore() {
+     if (mSaves.empty()) return;
+     mMatrix = mSaves.back().matrix;
++    mLayerAlpha = mSaves.back().layerAlpha;
+     mContainers.resize(std::min(mContainers.size(), mSaves.back().containerDepth));
+     mSaves.pop_back();
+ }
+@@ -1494,9 +2269,10 @@
+ 
+ void ThorvgPaintContext::saveLayerAlpha(float alpha, float, float, float, float) {
+     matrixSave();
+-    auto scene = tvg::Scene::gen();
+-    scene->opacity((uint8_t) (std::max(0.0f, std::min(1.0f, alpha)) * 255.0f + 0.5f));
+-    pushContainer(scene);
++    // The layer's alpha goes on each paint inside it (push), not on the scene: see mLayerAlpha.
++    // Where its paints overlap they show through each other, which a card's fades don't mind.
++    mLayerAlpha *= std::max(0.0f, std::min(1.0f, alpha));
++    pushContainer(tvg::Scene::gen());
+ }
+ 
+ void ThorvgPaintContext::saveLayerWithBlur(float sx, float sy, float, float, float, float) {
+@@ -1505,7 +2281,11 @@
+     // Sigma is in document units; scale by the CTM's x scale to get device pixels.
+     float scale = std::sqrt(mMatrix.e11 * mMatrix.e11 + mMatrix.e21 * mMatrix.e21);
+     double sigma = std::max(sx, sy) * scale;
+-    if (sigma > 0) scene->add(tvg::SceneEffect::GaussianBlur, sigma, 0, 0, 75);
++    if (sigma > 0) {
++        scene->add(tvg::SceneEffect::GaussianBlur, sigma, 0, 0, 75);
++        mEffectPad.emplace_back(scene, (float) sigma * 3 + 2);
++        scene->id = (uint32_t) (sigma * 64) | 1u;
++    }
+     pushContainer(scene);
+ }
+ 
+diff -ruN a/components/rcstage/include/rcstage/stage.h b/components/rcstage/include/rcstage/stage.h
+--- a/components/rcstage/include/rcstage/stage.h	2026-11-13 11:09:33.911806768 +0000
++++ b/components/rcstage/include/rcstage/stage.h	2026-11-13 11:09:33.902167750 +0000
+@@ -23,8 +23,27 @@
+     // 1 int, 2 string.
+     void (*hostAction)(int id, const std::string& metadata) = nullptr;
+     void (*namedAction)(const std::string& name, int type, const std::string& value) = nullptr;
++    // A tap on the navigation bar (setNavBar): the item's index. Player task.
++    void (*navTap)(int index) = nullptr;
+ };
+ 
++// A navigation bar across the bottom of the screen, `heightDp` tall: documents lay out (and
++// fit) in the screen above it, and touches on it are the bar's, never the document's. Set
++// before start(); 0 (the default) has none.
++void setNavHeight(int heightDp);
++int navHeight();
++// What the bar shows: its items left to right, each `weight` of its width, the selected one
++// highlighted. Labels too wide for their item are cut short with an ellipsis. Any task.
++struct NavItem {
++    std::string label;
++    float weight = 1;
++    bool selected = false;
++    bool operator==(const NavItem& o) const {
++        return label == o.label && weight == o.weight && selected == o.selected;
++    }
++};
++void setNavBar(std::vector<NavItem> items);
++
+ // Call after board::displayInit(). Shows `doc` first (copied).
+ // false if `doc` didn't load: call again with another.
+ bool start(const Hooks& hooks, const uint8_t* doc, size_t size, const char* name, bool fit = false);
+diff -ruN a/components/rcstage/src/stage.cpp b/components/rcstage/src/stage.cpp
+--- a/components/rcstage/src/stage.cpp	2026-11-13 11:09:33.911189595 +0000
++++ b/components/rcstage/src/stage.cpp	2026-11-13 11:09:33.899767860 +0000
+@@ -25,6 +25,7 @@
+ #include "rccore/RemoteContext.h"
+ #include "rccore/WireBuffer.h"
+ #include "rccore/operations/DrawOperations.h"
++#include "rccore/LayoutSystem.h"
+ #include "board/board.h"
+ #include "kobentovg/ThorvgPaintContext.h"
+ 
+@@ -42,6 +43,10 @@
+ 
+ static int sRenderDiv = 1;
+ static Hooks sHooks;
++// The navigation bar's height in dp, kept from the document (set before start; 0: none).
++static std::atomic<int> sNavHeight{0};
++// Unseen layout passes owed by a document just loaded (see the render loop). Player task.
++static int sPreroll = 0;
+ 
+ // Sticky values, applied to each newly loaded document (player task only).
+ static std::map<std::string, std::string> sNamedValues;
+@@ -112,7 +117,9 @@
+         doc = std::move(next);
+         bytes = std::make_shared<const std::vector<uint8_t>>(std::move(data));   // same buffer
+         name = docName;
+-        const int winW = (int) (board::kWidth / kDensity), winH = (int) (board::kHeight / kDensity);
++        // The screen in dp, less the navigation bar under it.
++        const int winW = (int) (board::kWidth / kDensity),
++                  winH = (int) (board::kHeight / kDensity) - sNavHeight.load();
+         // A document with no size in its header (androidx demos, watch faces) was drawn for a
+         // phone-sized canvas in pixels: fit it from 600 x 600, the default of rc2png
+         // --native and of the Skia reference renderer.
+@@ -129,6 +136,11 @@
+         rw = board::kWidth / sRenderDiv;
+         rh = board::kHeight / sRenderDiv;
+         pc = std::make_unique<kobentovg::ThorvgPaintContext>(*ctx, pixels, rw, rh);
++#if defined(BOARD_PRESENT_DAMAGE) && !defined(BOARD_NO_DAMAGE_TRACKING)
++        // The board copies on only what changed, so draw only that too (a board can opt out:
++        // every frame is then drawn whole, and presented whole).
++        pc->setDamageTracking(true);
++#endif
+         ctx->setPaintContext(pc.get());
+         ctx->setDocument(doc.get());
+         ctx->mWidth = (float) dpW;
+@@ -161,6 +173,7 @@
+                 for (auto& [pattern, fn] : sListeners)
+                     if (matches(pattern, v->varName)) { watched.push_back({v, valueOf(*v)}); break; }
+         }
++        sPreroll = 2;
+         return true;
+     }
+ 
+@@ -246,7 +259,19 @@
+ 
+ static Player sPlayer;
+ static uint32_t* sBufs[2];
++static int64_t sLastRasterUs = 0;   // the last frame's endFrame
++static int64_t sLastDocUs = 0;      // the last frame's beginFrame and paint
++static size_t sFrameFree[3] = {0, 0, 0};   // PSRAM free before the frame, after paint, after raster
++static TaskHandle_t sTask = nullptr;   // the player task, for its stack's high-water mark
+ static int sBack = 0;
++// One render target, the panel converting it before the next frame draws into it: e-ink, and a
++// board that defines BOARD_SINGLE_RENDER_BUFFER because a second full-screen ARGB8888 buffer
++// (1.5 MB at 800x480) is more PSRAM than it can spare.
++#ifdef BOARD_SINGLE_RENDER_BUFFER
++static constexpr bool kSingleBuffer = true;
++#else
++static constexpr bool kSingleBuffer = board::kEink;
++#endif
+ static bool sDirty = true;
+ static bool sStatsNow = false;
+ // When the document wants its next frame (esp_timer us; INT64_MAX: never), and frames drawn.
+@@ -292,6 +317,9 @@
+ static std::string sBannerTitle, sBannerDetail;
+ static uint32_t sBannerArgb = 0;
+ static bool sBannerChanged = false;
++// The navigation bar's items (sLock).
++static std::vector<NavItem> sNavItems;
++static bool sNavChanged = false;
+ 
+ // What other tasks may read of the showing document (sLock): its size and bytes, and its
+ // named variables' values as of the last frame drawn.
+@@ -450,7 +478,8 @@
+     // Banner metrics are in Tab5 panel pixels (density 2): scale to this render size and density.
+     const float s = (float) rw / board::kWidth * kDensity / 2;
+     const float m = 24 * s, h = (detail.empty() ? 120 : 170) * s;
+-    const float x = m, y = rh - h - m, w = rw - 2 * m;
++    const float navPx = sNavHeight.load() * kDensity * rw / board::kWidth;   // above the bar
++    const float x = m, y = rh - navPx - h - m, w = rw - 2 * m;
+ 
+     auto card = tvg::Shape::gen();
+     card->appendRect(x, y, w, h, 28 * s, 28 * s);
+@@ -476,6 +505,142 @@
+     if (!detail.empty()) text(detail, "rc-sans", 24, y + 92 * s, 200);
+ }
+ 
++// ── Navigation bar ──────────────────────────────────────────────────────────────────────
++
++// A label as drawn: cut short to fit its item (measured once per set of items, not per frame).
++struct NavLabel {
++    std::string text;
++    float w = 0, h = 0, bx = 0, by = 0;   // its bounds, at its size
++};
++static std::vector<NavItem> sNavShown;   // player task: the items sNavLabels were measured for
++static std::vector<NavLabel> sNavLabels;
++static NavLabel sNavLine;   // "Hg": every label sits on its baseline, whatever its own ink
++static constexpr const char* kNavFont = "rc-sans";
++static constexpr const char* kNavFontSelected = "rc-sans-bold";
++
++static bool measureNav(const std::string& str, bool bold, float pt, NavLabel& out) {
++    auto t = tvg::Text::gen();
++    if (t->font(bold ? kNavFontSelected : kNavFont) != tvg::Result::Success) { tvg::Paint::rel(t); return false; }
++    t->size(pt);
++    t->text(str.c_str());
++    float x = 0, y = 0, w = 0, h = 0;
++    const bool ok = t->bounds(&x, &y, &w, &h) == tvg::Result::Success;
++    tvg::Paint::rel(t);
++    out = {str, w, h, x, y};
++    return ok;
++}
++
++// The bar's pixel geometry at this render size: its top, and px per dp.
++static void navGeometry(int rw, int rh, float& top, float& k) {
++    k = kDensity * rw / board::kWidth;
++    top = rh - sNavHeight.load() * k;
++}
++
++static void addNavBar(kobentovg::ThorvgPaintContext& pc, int rw, int rh) {
++    if (sNavHeight.load() <= 0) return;
++    std::vector<NavItem> items;
++    {
++        std::lock_guard<std::mutex> g(sLock);
++        items = sNavItems;
++    }
++    float top, k;
++    navGeometry(rw, rh, top, k);
++    const float barH = rh - top, pt = 15 * k;
++    auto bg = tvg::Shape::gen();
++    bg->appendRect(0, top, (float) rw, barH);
++    bg->fill(24, 26, 32, 255);
++    pc.addOverlay(bg);
++    auto rule = tvg::Shape::gen();
++    rule->appendRect(0, top, (float) rw, std::max(1.0f, k));
++    rule->fill(60, 64, 72, 255);
++    pc.addOverlay(rule);
++
++    float total = 0;
++    for (auto& it : items) total += std::max(0.0f, it.weight);
++    if (total <= 0) return;
++    const float pad = 10 * k;
++    if (!(items == sNavShown)) {
++        // Measure again: each label, cut until it fits its item.
++        sNavShown = items;
++        sNavLabels.assign(items.size(), {});
++        measureNav("Hg", false, pt, sNavLine);
++        for (size_t i = 0; i < items.size(); i++) {
++            const float room = rw * std::max(0.0f, items[i].weight) / total - 2 * pad - 8 * k;
++            std::string str = items[i].label;
++            NavLabel l;
++            if (!measureNav(str, items[i].selected, pt, l)) continue;
++            while (l.w > room && !str.empty()) {
++                // Drop the last code point (and any ellipsis), then try again with one.
++                if (str.size() >= 3 && str.compare(str.size() - 3, 3, "\u2026") == 0) str.resize(str.size() - 3);
++                if (str.empty()) break;
++                size_t at = str.size() - 1;
++                while (at > 0 && (static_cast<uint8_t>(str[at]) & 0xC0) == 0x80) at--;
++                str.resize(at);
++                while (!str.empty() && str.back() == ' ') str.pop_back();
++                str += "\u2026";
++                if (!measureNav(str, items[i].selected, pt, l)) break;
++                if (str == "\u2026") break;
++            }
++            sNavLabels[i] = l;
++        }
++    }
++    float x = 0;
++    for (size_t i = 0; i < items.size(); i++) {
++        const float w = rw * std::max(0.0f, items[i].weight) / total;
++        const float cx = x + w / 2, cy = top + barH / 2;
++        if (items[i].selected) {
++            auto pill = tvg::Shape::gen();
++            const float ph = barH - 12 * k;
++            pill->appendRect(x + pad / 2, cy - ph / 2, w - pad, ph, ph / 2, ph / 2);
++            pill->fill(3, 169, 244, 64);
++            pc.addOverlay(pill);
++        }
++        const NavLabel& l = sNavLabels[i];
++        if (!l.text.empty()) {
++            auto t = tvg::Text::gen();
++            if (t->font(items[i].selected ? kNavFontSelected : kNavFont) == tvg::Result::Success) {
++                t->size(pt);
++                t->text(l.text.c_str());
++                t->fill(255, 255, 255);
++                t->opacity(items[i].selected ? 255 : 190);
++                t->translate(std::round(cx - l.w / 2 - l.bx), std::round(cy - sNavLine.h / 2 - sNavLine.by));
++                pc.addOverlay(t);
++            } else {
++                tvg::Paint::rel(t);
++            }
++        }
++        x += w;
++    }
++}
++
++// Which item of the bar a touch at panel pixel x is on: -1 none.
++static int navIndexAt(int panelX) {
++    std::vector<NavItem> items;
++    {
++        std::lock_guard<std::mutex> g(sLock);
++        items = sNavItems;
++    }
++    float total = 0;
++    for (auto& it : items) total += std::max(0.0f, it.weight);
++    if (total <= 0) return -1;
++    float x = 0;
++    for (size_t i = 0; i < items.size(); i++) {
++        x += board::kWidth * std::max(0.0f, items[i].weight) / total;
++        if (panelX < x) return (int) i;
++    }
++    return -1;
++}
++
++void setNavHeight(int heightDp) { sNavHeight = std::max(0, heightDp); }
++int navHeight() { return sNavHeight.load(); }
++
++void setNavBar(std::vector<NavItem> items) {
++    std::lock_guard<std::mutex> g(sLock);
++    if (items == sNavItems) return;
++    sNavItems = std::move(items);
++    sNavChanged = true;
++}
++
+ // ── Player-task API ─────────────────────────────────────────────────────────────────────
+ 
+ bool load(const uint8_t* data, size_t size, const char* name, bool fit) {
+@@ -539,6 +704,9 @@
+     run("clear + opaque rect", true, 255, 1);
+     run("blended rect (a=128)", false, 128, 1);
+     run("4 blended rects", false, 128, 4);
++#if defined(BOARD_PRESENT_DAMAGE) && !defined(BOARD_NO_DAMAGE_TRACKING)
++    if (sPlayer.pc) sPlayer.pc->setDamageTracking(true);   // the bench drew over a buffer
++#endif
+     sDirty = true;
+ }
+ 
+@@ -656,8 +824,8 @@
+         }
+         named.swap(sPendingNamed);
+         system.swap(sPendingSystem);
+-        banner = sBannerChanged;
+-        sBannerChanged = false;
++        banner = sBannerChanged || sNavChanged;
++        sBannerChanged = sNavChanged = false;
+     }
+     if (haveDoc) {
+         size_t n = doc.size();
+@@ -722,6 +890,8 @@
+     bool wasDown = false, moved = false;
+     float downX = 0, downY = 0, lastX = 0, lastY = 0;
+     int64_t downAt = 0;
++    bool navTouch = false;          // the touch now down started on the navigation bar
++    int navDownX = 0, navDownY = 0;
+     int frames = 0;
+     int64_t tPresent = 0, statsAt = esp_timer_get_time();
+     // Render only when input arrived, the document changed, or the engine's own schedule
+@@ -748,8 +918,28 @@
+             sTouch.down = false;
+             sTouch.atUs = now;
+         }
+-        if (sSwallow.exchange(false) && (t.down || wasDown)) downAt = INT64_MAX / 2;   // as after a long press
+-        if (t.down && !wasDown) {
++        if (sSwallow.exchange(false) && (t.down || wasDown)) {
++            downAt = INT64_MAX / 2;   // as after a long press
++            navDownX = -10000;        // and no item of the bar
++        }
++        // A touch that lands on the navigation bar is the bar's, to its end: a tap there picks
++        // an item, and the document never sees it.
++        if (t.down && !wasDown)
++            navTouch = sNavHeight.load() > 0 && t.y >= board::kHeight - sNavHeight.load() * kDensity;
++        if (navTouch) {
++            if (t.down && !wasDown) {
++                navDownX = t.x, navDownY = t.y;
++            } else if (t.down) {
++                if (std::abs(t.x - navDownX) > 8 * kDensity || std::abs(t.y - navDownY) > 8 * kDensity) navDownX = -10000;
++            } else if (wasDown) {
++                const int index = navDownX > -10000 ? navIndexAt(navDownX) : -1;
++                if (index >= 0) {
++                    pushEvent({0, 0, "nav", (float) index, 0, {}, {}});
++                    if (sHooks.navTap) sHooks.navTap(index);
++                }
++                navTouch = false;
++            }
++        } else if (t.down && !wasDown) {
+             downX = lastX = x; downY = lastY = y; downAt = now; moved = false;
+             if (gestureUntil == 0) sPlayer.checkWatched(false);   // take the values as they are now
+             gestureUntil = INT64_MAX;
+@@ -802,25 +992,61 @@
+             vTaskDelay(pdMS_TO_TICKS(5));
+             continue;
+         }
++        if (kSingleBuffer && !board::kEink) board::presentWait();   // the panel has read it
+         sPlayer.pc->retarget(sBufs[sBack]);
+         const float k = kDensity / sRenderDiv;
+         const float ks = k * sPlayer.scale;
+         const tvg::Matrix base{ks, 0, k * sPlayer.ox, 0, ks, k * sPlayer.oy, 0, 0, 1};
+         int64_t t0 = esp_timer_get_time();
++        sFrameFree[0] = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+         // A fitted document sits on black bars; anything else covers the screen.
++        // A document just loaded is laid out twice unseen first. A layout that reads a size it
++        // measures (columns from the width a row turned out to have) only settles on its third
++        // pass: shown at once, it arrives in one column and reflows to two a frame later. The
++        // passes paint into the scene and are dropped at the next beginFrame, never rasterised,
++        // so the screen and its damage tracking see only the settled frame.
++        if (sPreroll > 0) {
++            for (; sPreroll > 0; sPreroll--) {
++                sPlayer.pc->beginFrame(base, sPlayer.fit ? 0xFF000000 : 0xFFFFFFFF);
++                try {
++                    sPlayer.doc->paint(*sPlayer.ctx, kThemeLight);
++                } catch (const std::exception& e) {
++                    ESP_LOGE(TAG, "paint threw: %s", e.what());
++                }
++            }
++            sPlayer.doc->resetAnimationClock();   // its opening animation starts when it's seen
++        }
+         sPlayer.pc->beginFrame(base, sPlayer.fit ? 0xFF000000 : 0xFFFFFFFF);
+         try {
+             sPlayer.doc->paint(*sPlayer.ctx, kThemeLight);
+         } catch (const std::exception& e) {
+             ESP_LOGE(TAG, "paint threw: %s", e.what());
+         }
++        addNavBar(*sPlayer.pc, sPlayer.rw, sPlayer.rh);
+         addBanner(*sPlayer.pc, sPlayer.rw, sPlayer.rh);
+         int64_t t1 = esp_timer_get_time();
++        sFrameFree[1] = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+         sPlayer.pc->endFrame();
+         int64_t t2 = esp_timer_get_time();
++        sFrameFree[2] = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+         sPlayer.tDoc += t1 - t0;
+         sPlayer.tRaster += t2 - t1;
++        sLastRasterUs = t2 - t1;
++        sLastDocUs = t1 - t0;
++#ifdef BOARD_PRESENT_DAMAGE
++        {
++            const auto& dmg = sPlayer.pc->frameDamage();
++            board::Rect rects[8];
++            int n = 0;
++            for (auto& r : dmg) if (n < 8) rects[n++] = {r.x0, r.y0, r.x1, r.y1};
++            // Nothing changed: the panel already shows this frame. Still wait for the frame
++            // being sent: the next one draws into the buffer it reads.
++            if (n) board::presentAsyncDamage(sBufs[sBack], sPlayer.rw, sPlayer.rh, rects, n);
++            else board::presentWait();
++        }
++#else
+         board::presentAsync(sBufs[sBack], sPlayer.rw, sPlayer.rh);   // waits for the previous one
++#endif
+         tPresent += esp_timer_get_time() - t2;
+         sBack ^= 1;
+         frames++;
+@@ -832,6 +1058,34 @@
+         sFrames++;
+ 
+         if (sStatsNow || now - statsAt > 5000000) {
++#ifdef BOARD_PRESENT_DAMAGE
++            {
++                long px = 0;
++                for (auto& r : sPlayer.pc->drawnRects()) px += r.area();
++                ESP_LOGI(TAG, "last frame: redrew %ld px in %d rects, diff %.1f ms, raster %.1f ms (%d frames since the last stats)",
++                         px, (int) sPlayer.pc->drawnRects().size(), sPlayer.pc->diffMicros() / 1000.0f,
++                         sLastRasterUs / 1000.0f, frames);
++                ESP_LOGI(TAG, "last frame doc %.1f ms: drop scene %.1f, %d text runs rasterised (%d from glyphs) in %.1f, paint %d tvg paints",
++                         sLastDocUs / 1000.0f, sPlayer.pc->removeMicros() / 1000.0f, sPlayer.pc->textMisses(),
++                         sPlayer.pc->textComposed(), sPlayer.pc->textMissMicros() / 1000.0f, sPlayer.pc->paintCount());
++                {
++                    const auto cb = sPlayer.pc->cacheBytes();
++                    ESP_LOGI(TAG, "frame psram: %uK before, %uK after paint, %uK after raster; stack %u B never used",
++                             (unsigned) (sFrameFree[0] >> 10), (unsigned) (sFrameFree[1] >> 10),
++                             (unsigned) (sFrameFree[2] >> 10),
++                             (unsigned) (sTask ? uxTaskGetStackHighWaterMark(sTask) : 0));
++                    ESP_LOGI(TAG, "kept: text %uK/%u img %uK filt %uK glyph %uK",
++                             (unsigned) (cb.textRuns >> 10), (unsigned) cb.textRunCount, (unsigned) (cb.images >> 10),
++                             (unsigned) (cb.filtered >> 10), (unsigned) (cb.glyphRuns >> 10));
++                }
++                {
++                    const auto& fp = rccore::frameProfile();
++                    ESP_LOGI(TAG, "last frame rccore: data %.1f ms, layout %.1f ms (%s), paint %.1f ms",
++                             fp.dataUs / 1000.0f, fp.layoutUs / 1000.0f, fp.measured ? "measured" : "cached",
++                             fp.paintUs / 1000.0f);
++                }
++            }
++#endif
+             ESP_LOGI(TAG, "%dx%d %.1f fps | doc %.1f + raster %.1f ms | present wait %.1f ms | %d tvg paints | heap int %u psram %u",
+                      sPlayer.rw, sPlayer.rh, frames * 1e6f / (now - statsAt + 1),
+                      sPlayer.tDoc / 1000.0f / frames, sPlayer.tRaster / 1000.0f / frames, tPresent / 1000.0f / frames,
+@@ -861,22 +1115,27 @@
+ 
+         // Two render targets: the CPU draws into one while the PPA converts the other. E-ink
+         // needs one: its presentAsync converts the frame before it returns (2 MB on the PaperS3).
+-        for (int i = 0; i < (board::kEink ? 1 : 2); i++) {
++        for (int i = 0; i < (kSingleBuffer ? 1 : 2); i++) {
+             sBufs[i] = (uint32_t*) heap_caps_aligned_alloc(128, (size_t) board::kWidth * board::kHeight * 4,
+                                                            MALLOC_CAP_SPIRAM);
+             if (!sBufs[i]) { ESP_LOGE(TAG, "no frame memory"); return false; }
+         }
+-        if (board::kEink) sBufs[1] = sBufs[0];
++        if (kSingleBuffer) sBufs[1] = sBufs[0];
+     }
+     if (!sBufs[0] || !load(doc, size, name, fit)) return false;
+-    // Rendering is deep C++ (layout recursion, ThorVG); give it a large stack.
+-#if CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY
++    // Rendering is deep C++ (layout recursion, ThorVG); give it a large stack. A board can
++    // ask for more (BOARD_RENDER_STACK_KB) in PSRAM: a deep screen of cards (236 layout
++    // components, nested scenes) overflowed 64 KB on the LCD-7 and corrupted the heap.
++#if defined(BOARD_RENDER_STACK_KB) && CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY
++    return xTaskCreatePinnedToCoreWithCaps(task, "rcstage", BOARD_RENDER_STACK_KB * 1024, nullptr, 5, &sTask, 1,
++                                           MALLOC_CAP_SPIRAM) == pdPASS;
++#elif CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY
+     // Boards short of internal RAM (the classic ESP32 needs it for Wi-Fi and DMA) keep the
+     // engine's deep stack in PSRAM.
+-    return xTaskCreatePinnedToCoreWithCaps(task, "rcstage", 64 * 1024, nullptr, 5, nullptr, 1,
++    return xTaskCreatePinnedToCoreWithCaps(task, "rcstage", 64 * 1024, nullptr, 5, &sTask, 1,
+                                            MALLOC_CAP_SPIRAM) == pdPASS;
+ #else
+-    return xTaskCreatePinnedToCore(task, "rcstage", 64 * 1024, nullptr, 5, nullptr, 1) == pdPASS;
++    return xTaskCreatePinnedToCore(task, "rcstage", 64 * 1024, nullptr, 5, &sTask, 1) == pdPASS;
+ #endif
+ }
+ 
+diff -ruN a/third_party/thorvg/src/common/tvgArray.h b/third_party/thorvg/src/common/tvgArray.h
+--- a/third_party/thorvg/src/common/tvgArray.h	2026-11-13 11:09:33.913037817 +0000
++++ b/third_party/thorvg/src/common/tvgArray.h	2026-11-13 11:09:33.906937926 +0000
+@@ -34,6 +34,9 @@
+ namespace tvg
+ {
+ 
++// A failed array allocation: logged (rate-limited) on a microcontroller.
++void arrayAllocFailed(size_t bytes, uint32_t count);
++
+ template<class T>
+ struct Array
+ {
+@@ -54,19 +57,18 @@
+         *this = rhs;
+     }
+ 
++    // kobento: an allocation that fails keeps the array as it was and drops what didn't fit (a
++    // paint draws wrong for a frame), where it wrote through null and crashed the panel.
+     void push(T element)
+     {
+-        if (count + 1 > reserved) {
+-            reserved = count + (count + 2) / 2;
+-            data = tvg::realloc<T>(data, sizeof(T) * reserved);
+-        }
++        if (count + 1 > reserved && !reserve(count + (count + 2) / 2)) return;
+         data[count++] = element;
+     }
+ 
+     void push(const Array<T>& rhs)
+     {
+         if (rhs.count == 0) return;
+-        grow(rhs.count);
++        if (!grow(rhs.count)) return;
+         memcpy(data + count, rhs.data, rhs.count * sizeof(T));
+         count += rhs.count;
+     }
+@@ -74,8 +76,19 @@
+     bool reserve(uint32_t size)
+     {
+         if (size > reserved) {
++            // kobento: no array on an 800x480 screen needs more; past it a paint has run away
++            // (spans or points without end), and growing on would take every byte of the heap.
++            if (sizeof(T) * (size_t) size > (256u << 10)) {
++                arrayAllocFailed(sizeof(T) * size, count);
++                return false;
++            }
++            auto grown = tvg::realloc<T>(data, sizeof(T) * size);
++            if (!grown) {
++                arrayAllocFailed(sizeof(T) * size, count);
++                return false;
++            }
++            data = grown;
+             reserved = size;
+-            data = tvg::realloc<T>(data, sizeof(T) * reserved);
+         }
+         return true;
+     }
+@@ -97,7 +110,10 @@
+ 
+     void operator=(const Array& rhs)
+     {
+-        reserve(rhs.count);
++        if (!reserve(rhs.count)) {
++            count = 0;
++            return;
++        }
+         if (rhs.count > 0) memcpy(data, rhs.data, sizeof(T) * rhs.count);
+         count = rhs.count;
+     }
+@@ -150,7 +166,10 @@
+ 
+     T& next()
+     {
+-        if (full()) grow(count + 1);
++        if (full() && !grow(count + 1)) {
++            static T scratch;   // the element is dropped: written here, not counted
++            return scratch;
++        }
+         return data[count++];
+     }
+ 
+diff -ruN a/third_party/thorvg/src/renderer/cpu_engine/tvgSwRenderer.cpp b/third_party/thorvg/src/renderer/cpu_engine/tvgSwRenderer.cpp
+--- a/third_party/thorvg/src/renderer/cpu_engine/tvgSwRenderer.cpp	2026-11-13 11:09:33.913675158 +0000
++++ b/third_party/thorvg/src/renderer/cpu_engine/tvgSwRenderer.cpp	2026-11-13 11:09:33.909332938 +0000
+@@ -22,6 +22,8 @@
+ 
+ #include <algorithm>
+ #include "tvgSwCommon.h"
++#include <cstdio>
++extern "C" void tvg_note(const char* note);   // kobento: tvgSwRle.cpp
+ #include "tvgTaskScheduler.h"
+ #include "tvgSwRenderer.h"
+ 
+@@ -356,6 +358,10 @@
+     dirtyRegion.clear();
+     fulldraw = false;
+ 
++    // kobento: composition buffers are a full surface each; kept between draws they held
++    // 1.5 MB (one per nesting level) of a microcontroller's PSRAM for good. Made per draw.
++    clearCompositors();
++
+     return true;
+ }
+ 
+@@ -608,9 +614,18 @@
+     //New Composition
+     if (!cmp) {
+         //Inherits attributes from main surface
++        // kobento: a full-surface buffer (1.5 MB at 800x480), which a microcontroller may not
++        // have: without it, the layer draws straight to its target, not a write through null.
++        auto data = tvg::malloc<pixel_t>(channelSize * w * h);
++        if (!data) {
++            char note[64];
++            snprintf(note, sizeof(note), "compositor %ux%u not allocated", (unsigned) w, (unsigned) h);
++            tvg_note(note);
++            return nullptr;
++        }
+         cmp = new SwSurface(surface);
+         cmp->compositor = new SwCompositor;
+-        cmp->compositor->image.data = tvg::malloc<pixel_t>(channelSize * w * h);
++        cmp->compositor->image.data = data;
+         cmp->w = cmp->compositor->image.w = w;
+         cmp->h = cmp->compositor->image.h = h;
+         cmp->stride = cmp->compositor->image.stride = w;
+@@ -634,6 +649,7 @@
+     if (bbox.invalid()) return nullptr;
+ 
+     auto cmp = request(CHANNEL_SIZE(cs), (flags & CompositionFlag::PostProcessing));
++    if (!cmp) return nullptr;   // kobento: no memory for it; callers draw uncomposited
+     cmp->compositor->recoverSfc = surface;
+     cmp->compositor->recoverCmp = surface->compositor;
+     cmp->compositor->valid = false;
+diff -ruN a/third_party/thorvg/src/renderer/cpu_engine/tvgSwRle.cpp b/third_party/thorvg/src/renderer/cpu_engine/tvgSwRle.cpp
+--- a/third_party/thorvg/src/renderer/cpu_engine/tvgSwRle.cpp	2026-11-13 11:09:33.912415214 +0000
++++ b/third_party/thorvg/src/renderer/cpu_engine/tvgSwRle.cpp	2026-11-13 11:09:33.904586807 +0000
+@@ -190,6 +190,10 @@
+ 
+ #include <limits.h>
+ #include "tvgSwCommon.h"
++#if defined(ESP_PLATFORM)
++#include "esp_heap_caps.h"
++#include "esp_log.h"
++#endif
+ 
+ /************************************************************************/
+ /* Internal Class Implementation                                        */
+@@ -868,7 +872,8 @@
+ SwRle* rleRender(const RenderRegion* bbox)
+ {
+     auto rle = tvg::calloc<SwRle>(sizeof(SwRle), 1);
+-    rle->spans.reserve(bbox->h());
++    if (!rle) return nullptr;
++    if (!rle->spans.reserve(bbox->h())) return rle;   // kobento: no spans, rather than a crash
+     rle->spans.count = bbox->h();
+ 
+     //cheaper without push()
+@@ -896,12 +901,75 @@
+ }
+ 
+ 
++#if defined(ESP_PLATFORM)
++#include "esp_attr.h"
++// kobento: the last few refusals, kept across a reboot (a crash right after one loses the log).
++RTC_NOINIT_ATTR static char sNotes[256];
++RTC_NOINIT_ATTR static uint32_t sNotesMagic;
++#endif
++extern "C" void tvg_note(const char* note)
++{
++#if defined(ESP_PLATFORM)
++    if (sNotesMagic != 0x6E6F7465u) { sNotes[0] = 0; sNotesMagic = 0x6E6F7465u; }
++    size_t have = strnlen(sNotes, sizeof(sNotes) - 1);
++    if (have > sizeof(sNotes) / 2) { memmove(sNotes, sNotes + have / 2, have - have / 2 + 1); have = strlen(sNotes); }
++    snprintf(sNotes + have, sizeof(sNotes) - have, "%s; ", note);
++#else
++    (void) note;
++#endif
++}
++extern "C" const char* tvg_take_notes()
++{
++#if defined(ESP_PLATFORM)
++    static char out[256];
++    if (sNotesMagic != 0x6E6F7465u) return "";
++    strncpy(out, sNotes, sizeof(out) - 1);
++    out[sizeof(out) - 1] = 0;
++    sNotes[0] = 0;
++    return out;
++#else
++    return "";
++#endif
++}
++
++namespace tvg {
++void arrayAllocFailed(size_t bytes, uint32_t count)
++{
++    static uint32_t failures = 0;
++    failures++;
++    {
++        char note[64];
++        snprintf(note, sizeof(note), "array %u B (holding %u)", (unsigned) bytes, (unsigned) count);
++        tvg_note(note);
++    }
++#if defined(ESP_PLATFORM)
++    if (failures <= 8 || failures % 256 == 0)
++        ESP_LOGE("thorvg", "array of %u bytes (holding %u) refused or not allocated (%u so far); psram free %u largest %u",
++                 (unsigned) bytes, (unsigned) count, (unsigned) failures,
++                 (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
++                 (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
++#else
++    if (failures <= 8) fprintf(stderr, "thorvg: array of %zu bytes (holding %u) not allocated\n", bytes, count);
++#endif
++}
++}
++
+ bool rleClip(SwRle* rle, const SwRle *clip)
+ {
+     if (rle->spans.empty() || clip->spans.empty()) return false;
+ 
+     Array<SwSpan> out;
+     out.reserve(std::max(rle->spans.count, clip->spans.count));
++    if (!out.data) {   // kobento: a failed allocation is a write through null; fail the clip
++#if defined(ESP_PLATFORM)
++        ESP_LOGE("thorvg", "rleClip: no %u spans (shape %u, clip %u); psram free %u largest %u",
++                 (unsigned) std::max(rle->spans.count, clip->spans.count), (unsigned) rle->spans.count,
++                 (unsigned) clip->spans.count, (unsigned) heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
++                 (unsigned) heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM));
++#endif
++        rle->spans.clear();
++        return false;
++    }
+ 
+     const SwSpan *end;
+     auto spans = rle->fetch(clip->spans.first().y, clip->spans.last().y, &end);
+@@ -954,7 +1022,10 @@
+     auto& max = clip->max;
+ 
+     Array<SwSpan> out;
+-    out.reserve(rle->spans.count);
++    if (!out.reserve(rle->spans.count)) {   // kobento: a failed allocation fails the clip
++        rle->spans.clear();
++        return false;
++    }
+     auto data = out.data;
+     const SwSpan* end;
+     int32_t x, len;
+diff -ruN a/third_party/thorvg/src/renderer/tvgCanvas.h b/third_party/thorvg/src/renderer/tvgCanvas.h
+--- a/third_party/thorvg/src/renderer/tvgCanvas.h	2026-11-13 11:09:33.915092932 +0000
++++ b/third_party/thorvg/src/renderer/tvgCanvas.h	2026-11-13 11:09:33.897408435 +0000
+@@ -130,7 +130,10 @@
+ 
+     Result viewport(int32_t x, int32_t y, int32_t w, int32_t h)
+     {
+-        if (status == Status::Synced || status == Status::Damaged) {
++        // kobento: also while painting (paints added, nothing updated yet), so a caller can
++        // pick the region to draw once the frame's paints are known. The update that
++        // draw() runs for the new paints prepares them against the new viewport.
++        if (status == Status::Synced || status == Status::Damaged || status == Status::Painting) {
+             RenderRegion val = {{x, y}, {x + w, y + h}};
+             //intersect if the target buffer is already set.
+             auto surface = renderer->mainSurface();
+@@ -140,7 +143,7 @@
+             if (vport == val) return Result::Success;
+             renderer->viewport(val);
+             vport = val;
+-            status = Status::Damaged;
++            if (status != Status::Painting) status = Status::Damaged;
+             return Result::Success;
+         }
+         TVGLOG("RENDERER", "viewport() is only allowed after sync.");

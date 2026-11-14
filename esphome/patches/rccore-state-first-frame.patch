@@ -1,0 +1,43 @@
+diff --color -ruN a/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp b/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp
+--- a/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp	2026-11-14 11:29:37.120220648 +0000
++++ b/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp	2026-11-14 11:29:37.121048478 +0000
+@@ -819,6 +819,9 @@
+ // anything it cannot resolve to GONE, which is what makes a document that switches
+ // between mutually exclusive branches show exactly one of them.
+ static bool gLayoutAnimationEnabled = true;
++// A document's layout before its first painted frame: nothing is on screen yet to animate
++// from, so what would play a transition (a state layout's new index) takes effect at once.
++static thread_local bool sUnshownLayout = false;
+ static void applyVisibility(const LayoutState& ls, RemoteContext& ctx, ComponentMeasure& m) {
+     m.holdExit = false;
+     if (ls.visibilityId < 0) return;
+@@ -2318,9 +2321,11 @@
+     if (!sl->indexInitialized) {
+         sl->indexInitialized = true;
+         sl->currentIndex = sl->previousIndex = sl->indexId != 0 ? ctx.getInteger(sl->indexId) : 0;
+-    } else if (!gLayoutAnimationEnabled) {
++    } else if (!gLayoutAnimationEnabled || sUnshownLayout) {
+         // Without layout animations there is no transition to play: a new state is measured in
+-        // the frame that sees the variable change, not the one after (one frame a change).
++        // the frame that sees the variable change, not the one after (one frame a change). Nor
++        // before a document's first frame: the passes that settle its layout move the index
++        // (a grid's columns from its width), and the frame shows the state they settle on.
+         const int idx = sl->indexId != 0 ? ctx.getInteger(sl->indexId) : 0;
+         if (idx != sl->currentIndex) {
+             sl->previousIndex = sl->currentIndex = idx;
+@@ -3954,6 +3959,7 @@
+         // moving after that: the next frame goes on, as before.
+         constexpr int kSettlePasses = 6;
+         bool settled = false;
++        sUnshownLayout = !cache.laid;
+         for (int pass = 1;; pass++) {
+             // Full measure/layout, exactly as the un-cached path did (fresh per-op state so
+             // inflateLayout — gated on ls.inflated — re-reads every modifier this pass).
+@@ -4044,6 +4050,7 @@
+             }
+             cache.published = std::move(now);
+         }
++        sUnshownLayout = false;
+         cache.epoch = context.mLayoutEpoch;   // snapshot: re-lay-out when a non-clock var moves
+         cache.laid = true;
+         cache.w = maxW;

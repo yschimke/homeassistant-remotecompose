@@ -1,0 +1,935 @@
+--- a/players/cpp/lib/rccore/include/rccore/LayoutSystem.h
++++ b/players/cpp/lib/rccore/include/rccore/LayoutSystem.h
+@@ -1,4 +1,6 @@
+ #pragma once
++#include <cstdint>
++#include <string>
+ #include <unordered_map>
+ #include <vector>
+ #include <algorithm>
+@@ -6,6 +8,14 @@
+ 
+ namespace rccore {
+ 
++// Where the last CoreDocument::paint spent its time, for a player's stats (microseconds): the
++// DATA pass, the layout (a measure, or the expressions a cached layout re-reads) and the paint.
++struct FrameProfile {
++    long dataUs = 0, layoutUs = 0, paintUs = 0;
++    bool measured = false;   // the layout measured this frame (else it was reused)
++};
++FrameProfile& frameProfile();
++
+ class Operation;
+ class RemoteContext;
+ class PaintContext;
+@@ -58,6 +68,10 @@
+     // GONE, but kept in the layout for the length of its exit animation (an exit SEQUENCE
+     // BEFORE: Component.isHoldingLayoutForBeforeAnimation).
+     bool holdExit = false;
++    // The measure pass (measureComponent's generation) and constraints this was last measured
++    // with: measured again with the same in the same pass, its subtree's measures still hold.
++    uint64_t memoGen = 0;
++    float memoC[4] = {};
+ 
+     bool isGone() const { return visibility == VIS_GONE; }
+     bool isVisible() const { return visibility == VIS_VISIBLE; }
+--- a/players/cpp/lib/rccore/include/rccore/operations/AdvancedOperations.h
++++ b/players/cpp/lib/rccore/include/rccore/operations/AdvancedOperations.h
+@@ -3,6 +3,7 @@
+ #include <functional>
+ #include <stdexcept>
+ #include "rccore/RemoteContext.h"
++#include "rccore/PaintContext.h"
+ #include "rccore/WireBuffer.h"
+ #include "rccore/ExpressionEvaluator.h"
+ #include "rccore/IntegerExpressionEvaluator.h"
+@@ -2494,62 +2495,303 @@
+     }
+ };
+ 
+-// ── BitmapFontData (167) ──────────────────────────────────────────────
+-// Stores bitmap font glyph data. Currently a parse-only stub.
++// ── Bitmap fonts (DATA_BITMAP_FONT 167, DRAW_BITMAP_FONT_TEXT_RUN 48, BITMAP_TEXT_MEASURE 183,
++// DRAW_BITMAP_TEXT_ANCHORED 184) ─────────────────────────────────────────
++// A font is glyph metadata: each glyph's characters, the image (a BitmapData) drawn for it and its
++// margins; text is drawn a glyph at a time from left to right, the longest glyph that matches at
++// each place, as AndroidX and rc-players' Compose player lay it out (RcBitmapFontLayout.kt).
+ class BitmapFontDataOp : public Operation {
+ public:
++    struct Glyph {
++        std::string chars;   // UTF-8
++        int bitmapId = -1;
++        int marginLeft = 0, marginTop = 0, marginRight = 0, marginBottom = 0, width = 0, height = 0;
++    };
++    int fontId = 0;
++    std::vector<Glyph> glyphs;                         // longest chars first
++    std::unordered_map<std::string, int> kerning;      // the pair's chars, joined
++
+     std::string name() const override { return "BitmapFontData"; }
+     int opcode() const override { return 167; }
+     std::vector<Field> fields() const override { return {}; }
+-    void apply(RemoteContext& context) override {}
++    void apply(RemoteContext& context) override { context.mBitmapFonts[fontId] = this; }
++
++    // The glyph for `text` at byte `pos`, the longest that matches, or null.
++    const Glyph* lookup(const std::string& text, size_t pos) const {
++        for (const auto& g : glyphs)
++            if (!g.chars.empty() && text.compare(pos, g.chars.size(), g.chars) == 0) return &g;
++        return nullptr;
++    }
++    int kern(const std::string& previous, const std::string& chars) const {
++        if (kerning.empty() || previous.empty()) return 0;
++        auto it = kerning.find(previous + chars);
++        return it == kerning.end() ? 0 : it->second;
++    }
+ 
+     static void read(WireBuffer& buf, std::vector<std::unique_ptr<Operation>>& ops) {
+         auto op = std::make_unique<BitmapFontDataOp>();
+-        buf.readId();  // id
++        op->fontId = buf.readId();
+         int versionAndCount = buf.readInt();
+         int numGlyphs = versionAndCount & 0xFFFF;
+         int version = (versionAndCount >> 16) & 0xFFFF;
++        op->glyphs.reserve(numGlyphs);
+         for (int i = 0; i < numGlyphs; i++) {
+-            buf.readUTF8();   // chars
+-            buf.readId();    // bitmapId
+-            buf.readShort();  // marginLeft
+-            buf.readShort();  // marginTop
+-            buf.readShort();  // marginRight
+-            buf.readShort();  // marginBottom
+-            buf.readShort();  // bitmapWidth
+-            buf.readShort();  // bitmapHeight
++            Glyph g;
++            g.chars = buf.readUTF8();
++            g.bitmapId = buf.readId();
++            g.marginLeft = (int16_t) buf.readShort();
++            g.marginTop = (int16_t) buf.readShort();
++            g.marginRight = (int16_t) buf.readShort();
++            g.marginBottom = (int16_t) buf.readShort();
++            g.width = (int16_t) buf.readShort();
++            g.height = (int16_t) buf.readShort();
++            op->glyphs.push_back(std::move(g));
+         }
+-        if (version >= 1) {  // VERSION_2 has kerning table
++        if (version >= 1) {   // VERSION_2 has a kerning table
+             int numKerning = buf.readShort();
+             for (int i = 0; i < numKerning; i++) {
+-                buf.readUTF8();   // glyph pair
+-                buf.readShort();  // adjustment
++                std::string pair = buf.readUTF8();
++                op->kerning[pair] = (int16_t) buf.readShort();
+             }
+         }
+-        ops.push_back(std::move(op));
+-    }
+-};
++#if !defined(ESP_PLATFORM)
++        if (const char* want = std::getenv("RC_BMF_FONT"))
++            if (atoi(want) == op->fontId)
++                for (auto& g : op->glyphs)
++                    std::fprintf(stderr, "font %d glyph '%s' bitmap %d %dx%d m %d,%d,%d,%d\n", op->fontId, g.chars.c_str(),
++                                 g.bitmapId, g.width, g.height, g.marginLeft, g.marginTop, g.marginRight, g.marginBottom);
++#endif
++        std::stable_sort(op->glyphs.begin(), op->glyphs.end(),
++                         [](const Glyph& a, const Glyph& b) { return a.chars.size() > b.chars.size(); });
++        ops.push_back(std::move(op));
++    }
++};
++
++namespace bitmapfont {
++// The byte offset of UTF-16 index `index` in `s` (a document's text indices count UTF-16 units).
++inline size_t byteOffset(const std::string& s, int index) {
++    size_t pos = 0;
++    int units = 0;
++    while (pos < s.size() && units < index) {
++        const unsigned char c = (unsigned char) s[pos];
++        const int len = c < 0x80 ? 1 : c < 0xE0 ? 2 : c < 0xF0 ? 3 : 4;
++        units += len == 4 ? 2 : 1;
++        pos += len;
++    }
++    return std::min(pos, s.size());
++}
++inline int utf16Length(const std::string& s) {
++    int units = 0;
++    for (size_t pos = 0; pos < s.size();) {
++        const unsigned char c = (unsigned char) s[pos];
++        const int len = c < 0x80 ? 1 : c < 0xE0 ? 2 : c < 0xF0 ? 3 : 4;
++        units += len == 4 ? 2 : 1;
++        pos += len;
++    }
++    return units;
++}
++// The text [start, end) as the reference slices it: an end past the text or negative is its end.
++inline std::string slice(const std::string& text, int start, int end) {
++    const int n = utf16Length(text);
++    start = std::max(0, std::min(start, n));
++    if (end < 0 || end > n) end = n;
++    end = std::max(end, start);
++    const size_t a = byteOffset(text, start), b = byteOffset(text, end);
++    return text.substr(a, b - a);
++}
++inline size_t charLength(const std::string& s, size_t pos) {
++    const unsigned char c = (unsigned char) s[pos];
++    return c < 0x80 ? 1 : c < 0xE0 ? 2 : c < 0xF0 ? 3 : 4;
++}
++struct Bounds { float left = 0, top = 1000, right = 0, bottom = -3.4e38f; };
++// measureBitmapText (kerned) or the anchored draw's measure (not kerned).
++inline Bounds measure(const BitmapFontDataOp& font, const std::string& text, float spacing, bool kerned) {
++    Bounds b;
++    std::string previous;
++    for (size_t pos = 0; pos < text.size();) {
++        const auto* g = font.lookup(text, pos);
++        if (!g) { pos += charLength(text, pos); previous.clear(); continue; }
++        pos += g->chars.size();
++        b.right += g->marginLeft + g->marginRight;
++        if (g->bitmapId != -1) b.right += g->width;
++        if (kerned) b.right += font.kern(previous, g->chars);
++        b.top = std::min(b.top, (float) g->marginTop);
++        b.bottom = std::max(b.bottom, (float) (g->height + g->marginTop + g->marginBottom));
++        previous = g->chars;
++        b.right += spacing;
++    }
++    return b;
++}
++// layoutBitmapTextRun: each glyph's image and where it goes.
++inline void layoutRun(const BitmapFontDataOp& font, const std::string& text, float x, float y, float spacing,
++                      std::vector<PaintContext::BitmapGlyph>& out) {
++    std::string previous;
++    for (size_t pos = 0; pos < text.size();) {
++        const auto* g = font.lookup(text, pos);
++        if (!g) { pos += charLength(text, pos); previous.clear(); continue; }
++        pos += g->chars.size();
++        if (g->bitmapId == -1) {
++            x += g->marginLeft + g->marginRight;
++            previous = g->chars;
++            continue;
++        }
++        x += g->marginLeft + font.kern(previous, g->chars);
++        out.push_back({g->bitmapId, x, y + g->marginTop, (float) g->width, (float) g->height});
++        x += g->width + g->marginRight + spacing;
++        previous = g->chars;
++    }
++}
++inline const BitmapFontDataOp* font(RemoteContext& context, int id) {
++    auto it = context.mBitmapFonts.find(id);
++    return it == context.mBitmapFonts.end() ? nullptr : it->second;
++}
++// A text id word whose top bit says a glyph spacing (a float word) follows.
++inline int readFlagged(WireBuffer& buf, float& spacing, int mask) {
++    const int first = buf.readInt();
++    spacing = 0;
++    if (first < 0) { spacing = buf.readNanId(); return first & mask; }
++    return first;
++}
++}  // namespace bitmapfont
+ 
+-// ── DrawBitmapFontText (48) ───────────────────────────────────────────
+-// Draws text using a bitmap font. Currently a parse-only stub.
+ class DrawBitmapFontTextOp : public Operation {
+ public:
++    int textId = 0, fontId = 0, start = 0, end = -1;
++    float x = 0, y = 0, spacing = 0;
++    float oX = 0, oY = 0, oSpacing = 0;
++
+     std::string name() const override { return "DrawBitmapFontText"; }
+     int opcode() const override { return 48; }
+     std::vector<Field> fields() const override { return {}; }
+-    void apply(RemoteContext& context) override {}
++    bool isPaintOperation() const override { return true; }
++    bool isVariableSupport() const override { return true; }
++    void registerListening(RemoteContext& context) override {
++        Utils::registerFloatVar(x, context, this);
++        Utils::registerFloatVar(y, context, this);
++        Utils::registerFloatVar(spacing, context, this);
++    }
++    void updateVariables(RemoteContext& context) override {
++        oX = Utils::resolveFloat(x, context);
++        oY = Utils::resolveFloat(y, context);
++        oSpacing = Utils::resolveFloat(spacing, context);
++    }
++    void apply(RemoteContext& context) override {
++        if (context.getMode() != ContextMode::PAINT) return;
++        auto* pc = context.getPaintContext();
++        const auto* f = bitmapfont::font(context, fontId);
++#if !defined(ESP_PLATFORM)
++        if (!f && std::getenv("RC_BMF_DEBUG")) std::fprintf(stderr, "bmf font %d missing (%zu fonts)\n", fontId, context.mBitmapFonts.size());
++#endif
++        if (!pc || !f) return;
++        std::vector<PaintContext::BitmapGlyph> glyphs;
++        bitmapfont::layoutRun(*f, bitmapfont::slice(context.getText(textId), start, end), oX, oY, oSpacing, glyphs);
++#if !defined(ESP_PLATFORM)
++        if (std::getenv("RC_BMF_DEBUG"))
++            std::fprintf(stderr, "bmf text %d font %d '%s' [%d,%d) at %g,%g: %zu glyphs\n", textId, fontId,
++                         context.getText(textId).c_str(), start, end, oX, oY, glyphs.size());
++#endif
++        if (!glyphs.empty()) pc->drawBitmapGlyphs(glyphs);
++    }
+ 
+     static void read(WireBuffer& buf, std::vector<std::unique_ptr<Operation>>& ops) {
+         auto op = std::make_unique<DrawBitmapFontTextOp>();
+-        int textId = buf.readInt();
+-        if ((textId & 0x80000000) != 0) {
+-            buf.readFloat();  // glyphSpacing (conditional)
+-        }
+-        buf.readInt();    // bitmapFontID
+-        buf.readInt();    // start
+-        buf.readInt();    // end
+-        buf.readFloat();  // x
+-        buf.readFloat();  // y
++        op->textId = bitmapfont::readFlagged(buf, op->spacing, 0x7fffffff);
++        op->fontId = buf.readId();
++        op->start = buf.readInt();
++        op->end = buf.readInt();
++        op->x = buf.readNanId();
++        op->y = buf.readNanId();
++        op->oX = op->x; op->oY = op->y; op->oSpacing = op->spacing;
++        ops.push_back(std::move(op));
++    }
++};
++
++class DrawBitmapTextAnchoredOp : public Operation {
++public:
++    int textId = 0, fontId = 0;
++    float start = 0, end = -1, x = 0, y = 0, panX = 0, panY = 0, spacing = 0;
++    float oStart = 0, oEnd = -1, oX = 0, oY = 0, oPanX = 0, oPanY = 0, oSpacing = 0;
++
++    std::string name() const override { return "DrawBitmapTextAnchored"; }
++    int opcode() const override { return 184; }
++    std::vector<Field> fields() const override { return {}; }
++    bool isPaintOperation() const override { return true; }
++    bool isVariableSupport() const override { return true; }
++    void registerListening(RemoteContext& context) override {
++        for (float v : {start, end, x, y, panX, panY, spacing}) Utils::registerFloatVar(v, context, this);
++    }
++    void updateVariables(RemoteContext& context) override {
++        oStart = Utils::resolveFloat(start, context);
++        oEnd = Utils::resolveFloat(end, context);
++        oX = Utils::resolveFloat(x, context);
++        oY = Utils::resolveFloat(y, context);
++        oPanX = Utils::resolveFloat(panX, context);
++        oPanY = Utils::resolveFloat(panY, context);
++        oSpacing = Utils::resolveFloat(spacing, context);
++    }
++    void apply(RemoteContext& context) override {
++        if (context.getMode() != ContextMode::PAINT) return;
++        auto* pc = context.getPaintContext();
++        const auto* f = bitmapfont::font(context, fontId);
++        if (!pc || !f) return;
++        const std::string text = bitmapfont::slice(context.getText(textId), (int) oStart, (int) oEnd);
++        // AndroidX measures the anchored text without kerning, then kerns as it draws.
++        const auto b = bitmapfont::measure(*f, text, oSpacing, false);
++        const float h = -(b.right - b.left) * (1 + oPanX) / 2 - b.left;
++        const float v = -(b.bottom - b.top) * (1 - oPanY) / 2 - b.top;
++        std::vector<PaintContext::BitmapGlyph> glyphs;
++        bitmapfont::layoutRun(*f, text, oX + h, oY + v, oSpacing, glyphs);
++        if (!glyphs.empty()) pc->drawBitmapGlyphs(glyphs);
++    }
++
++    static void read(WireBuffer& buf, std::vector<std::unique_ptr<Operation>>& ops) {
++        auto op = std::make_unique<DrawBitmapTextAnchoredOp>();
++        op->textId = bitmapfont::readFlagged(buf, op->spacing, 0xffff);
++        op->fontId = buf.readId();
++        op->start = buf.readNanId(); op->end = buf.readNanId();
++        op->x = buf.readNanId(); op->y = buf.readNanId();
++        op->panX = buf.readNanId(); op->panY = buf.readNanId();
++        op->oStart = op->start; op->oEnd = op->end; op->oX = op->x; op->oY = op->y;
++        op->oPanX = op->panX; op->oPanY = op->panY; op->oSpacing = op->spacing;
++        ops.push_back(std::move(op));
++    }
++};
++
++class BitmapTextMeasureOp : public Operation {
++public:
++    int outId = 0, textId = 0, fontId = 0, type = 0;
++    float spacing = 0, oSpacing = 0;
++
++    std::string name() const override { return "BitmapTextMeasure"; }
++    int opcode() const override { return 183; }
++    std::vector<Field> fields() const override { return {}; }
++    bool isVariableSupport() const override { return true; }
++    void registerListening(RemoteContext& context) override { Utils::registerFloatVar(spacing, context, this); }
++    void updateVariables(RemoteContext& context) override { oSpacing = Utils::resolveFloat(spacing, context); }
++    void apply(RemoteContext& context) override {
++        const auto* f = bitmapfont::font(context, fontId);
++        if (!f) return;
++        const auto b = bitmapfont::measure(*f, context.getText(textId), oSpacing, true);
++        float v;
++        switch (type) {
++            case 0: v = b.right - b.left; break;   // width
++            case 1: v = b.bottom - b.top; break;   // height
++            case 2: v = b.left; break;
++            case 3: v = b.right; break;
++            case 4: v = b.top; break;
++            case 5: v = b.bottom; break;
++            default: return;
++        }
++        context.loadFloat(outId, v);
++    }
++
++    static void read(WireBuffer& buf, std::vector<std::unique_ptr<Operation>>& ops) {
++        auto op = std::make_unique<BitmapTextMeasureOp>();
++        op->outId = bitmapfont::readFlagged(buf, op->spacing, 0x7fffffff);
++        op->textId = buf.readId();
++        op->fontId = buf.readId();
++        op->type = buf.readInt();
++        op->oSpacing = op->spacing;
+         ops.push_back(std::move(op));
+     }
+ };
+--- a/players/cpp/lib/rccore/include/rccore/PaintContext.h
++++ b/players/cpp/lib/rccore/include/rccore/PaintContext.h
+@@ -97,6 +97,16 @@
+     virtual void drawTextRun(int textId, int start, int end,
+                              int contextStart, int contextEnd,
+                              float x, float y, bool rtl) = 0;
++    // A bitmap font's glyphs, each image `imageId` drawn into its rectangle with the paint, as
++    // drawBitmap draws it (a colour filter tints a white mask). One call a run, so a context can
++    // compose the run once rather than draw each glyph.
++    struct BitmapGlyph {
++        int imageId;
++        float left, top, width, height;
++    };
++    virtual void drawBitmapGlyphs(const std::vector<BitmapGlyph>& glyphs) {
++        for (const auto& g : glyphs) drawBitmap(g.imageId, g.left, g.top, g.left + g.width, g.top + g.height);
++    }
+     virtual void drawTextAnchored(int textId, float x, float y,
+                                   float panX, float panY, int flags) = 0;
+     virtual void drawTextOnPath(int textId, int pathId,
+--- a/players/cpp/lib/rccore/include/rccore/RemoteContext.h
++++ b/players/cpp/lib/rccore/include/rccore/RemoteContext.h
+@@ -1,4 +1,5 @@
+ #pragma once
++#include <cstdlib>
+ #include <algorithm>
+ #include <cstdint>
+ #include <functional>
+@@ -19,6 +20,8 @@
+ 
+ enum class ContextMode { UNSET, DATA, PAINT };
+ 
++class BitmapFontDataOp;
++
+ class RemoteContext {
+ public:
+     RemoteContext() = default;
+@@ -144,7 +147,7 @@
+     void loadFloat(int id, float value) {
+         if (mFloatOverrides.count(id)) return;
+         auto it = mFloats.find(id);
+-        if ((it == mFloats.end() || it->second != value) && !isClockVar(id) && !isPaintOnlyVar(id)) mLayoutEpoch++;
++        if ((it == mFloats.end() || it->second != value) && movesLayout(id)) mLayoutEpoch++;
+         mFloats[id] = value;
+         mIntegers[id] = static_cast<int>(value);
+         notifyListeners(id);
+@@ -156,7 +159,7 @@
+      */
+     void overrideFloat(int id, float value) {
+         auto it = mFloats.find(id);
+-        if ((it == mFloats.end() || it->second != value) && !isClockVar(id) && !isPaintOnlyVar(id)) mLayoutEpoch++;
++        if ((it == mFloats.end() || it->second != value) && movesLayout(id)) mLayoutEpoch++;
+         mFloats[id] = value;
+         mIntegers[id] = static_cast<int>(value);
+         mFloatOverrides.insert(id);
+@@ -170,7 +173,7 @@
+     void loadInteger(int id, int value) {
+         if (mIntegerOverrides.count(id)) return;
+         auto it = mIntegers.find(id);
+-        if ((it == mIntegers.end() || it->second != value) && !isClockVar(id) && !isPaintOnlyVar(id)) mLayoutEpoch++;
++        if ((it == mIntegers.end() || it->second != value) && movesLayout(id)) mLayoutEpoch++;
+         mIntegers[id] = value;
+         mFloats[id] = static_cast<float>(value);
+         notifyListeners(id);
+@@ -178,7 +181,7 @@
+     /** As overrideFloat, for integers. */
+     void overrideInteger(int id, int value) {
+         auto it = mIntegers.find(id);
+-        if ((it == mIntegers.end() || it->second != value) && !isClockVar(id) && !isPaintOnlyVar(id)) mLayoutEpoch++;
++        if ((it == mIntegers.end() || it->second != value) && movesLayout(id)) mLayoutEpoch++;
+         mIntegers[id] = value;
+         mFloats[id] = static_cast<float>(value);
+         mIntegerOverrides.insert(id);
+@@ -402,6 +405,22 @@
+     // listeners are registered (CoreDocument::registerListeners); anything read by an operation
+     // not known to be paint-only stays a layout input.
+     void classifyPaintOnlyVars();
++    // Whether a change to `id` can change what the layout measures (else it leaves the layout
++    // epoch alone). The touch position and velocity are read only through expressions, which
++    // listen to them: with no listener, or only paint-time ones, a finger moving doesn't lay
++    // the document out again (it did, every frame of a press).
++    bool movesLayout(int id) const {
++        if (isClockVar(id) || isPaintOnlyVar(id)) return false;
++#if !defined(ESP_PLATFORM)
++        static const bool always = std::getenv("RC_TOUCH_MOVES_LAYOUT") != nullptr;   // compare without
++        if (always) return true;
++#endif
++        if (mClassified && id >= ID_TOUCH_POS_X && id <= ID_TOUCH_VEL_Y) {
++            auto it = mVarListeners.find(id);
++            if (it == mVarListeners.end() || it->second.empty()) return false;
++        }
++        return true;
++    }
+     bool isPaintOnlyVar(int id) const {
+         if (!mClassified) return false;
+         // Only what is proven paint-only. A variable with no listeners is NOT safe to skip:
+@@ -474,6 +493,10 @@
+     // Variable → list of operations listening to it
+     std::unordered_map<int, std::vector<Operation*>> mVarListeners;
+     std::unordered_set<int> mPaintOnlyVars;
++public:
++    // The document's bitmap fonts by id (DATA_BITMAP_FONT), owned by the document.
++    std::unordered_map<int, const BitmapFontDataOp*> mBitmapFonts;
++private:
+     std::unordered_map<int, Operation*> mFloatExpressionOps;
+     bool mClassified = false;                 // classifyPaintOnlyVars has run for these listeners
+ 
+--- a/players/cpp/lib/rccore/src/CoreDocument.cpp
++++ b/players/cpp/lib/rccore/src/CoreDocument.cpp
+@@ -18,6 +18,7 @@
+ #include <cmath>
+ #include <cstdlib>
+ #include <cstdio>
++#include "rccore/LayoutSystem.h"
+ 
+ namespace rccore {
+ 
+@@ -234,9 +235,13 @@
+         context.loadFloat(RemoteContext::ID_WINDOW_WIDTH, context.mWidth);
+         context.loadFloat(RemoteContext::ID_WINDOW_HEIGHT, context.mHeight);
+     }
++    frameProfile() = FrameProfile();
++    const auto dataAt = std::chrono::steady_clock::now();
+     updateTimeVariables(context);
+     applyOperations(context, mOperations, theme);
+     context.setMode(ContextMode::UNSET);
++    frameProfile().dataUs = (long) std::chrono::duration_cast<std::chrono::microseconds>(
++        std::chrono::steady_clock::now() - dataAt).count();
+ 
+     // PAINT pass: execute paint operations
+     context.setMode(ContextMode::PAINT);
+--- a/players/cpp/lib/rccore/src/operations/DrawOperations.cpp
++++ b/players/cpp/lib/rccore/src/operations/DrawOperations.cpp
+@@ -1,3 +1,4 @@
++#include <cstring>
+ #include "rccore/operations/DrawOperations.h"
+ #include "rccore/RemoteContext.h"
+ #include "rccore/PaintContext.h"
+@@ -383,10 +384,20 @@
+     oCy = Utils::resolveFloat(cy, context);
+ }
+ 
++// A pivot written as the canonical NaN (0x7FC00000, not a variable id) is "no pivot", as in
++// AndroidX's MatrixScale: scale about the origin.
++static float pivotOf(float v, RemoteContext& context) {
++    uint32_t bits;
++    std::memcpy(&bits, &v, sizeof bits);
++    if (bits == 0x7FC00000u) return 0.0f;
++    return Utils::resolveFloat(v, context);
++}
++
+ void MatrixScale::apply(RemoteContext& context) {
+     if (context.getMode() == ContextMode::PAINT) {
+         auto* pc = context.getPaintContext();
+-        if (pc) pc->matrixScale(oSx, oSy, oCx, oCy);
++        if (pc) pc->matrixScale(Utils::resolveFloat(sx, context), Utils::resolveFloat(sy, context),
++                                pivotOf(cx, context), pivotOf(cy, context));
+     }
+ }
+ 
+--- a/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp
++++ b/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp
+@@ -1,3 +1,7 @@
++#include <cstdlib>
++#include <chrono>
++#include <vector>
++#include <array>
+ #include <set>
+ #include "rccore/operations/LayoutOperations.h"
+ #include "rccore/easing/CubicEasing.h"
+@@ -28,6 +32,12 @@
+ 
+ namespace rccore {
+ 
++FrameProfile& frameProfile() {
++    static FrameProfile p;
++    return p;
++}
++
++
+ // ── Density behaviour of the layout pass in progress ───────────────────
+ // Set by LayoutRoot::apply from the document's DOC_DENSITY_BEHAVIOR. With DENSITY_BEHAVIOR_DP
+ // (2) the reference multiplies exact sizes, padding, spacedBy, border, rounded clip, offset
+@@ -524,6 +534,11 @@
+                     }
+                 }
+             }
++        } else if (self->opcode() == 205 && child->opcode() == 173) {
++            // A canvas's CanvasOperations directly under it, with no content wrapper (as
++            // rc-player-edit's bitmap-font text writes it): its draw operations paint with the
++            // canvas. As data it never ran in the paint pass, so nothing in it was drawn.
++            ls.canvasOps.push_back(child);
+         } else {
+             // Data operations (TextData, constants, expressions, etc.)
+             ls.dataOps.push_back(child);
+@@ -540,6 +555,9 @@
+ // thumbnail, a PDF page) would otherwise clear them mid-pass and the first document would
+ // cache a layout that is still moving.
+ thread_local bool sSawStateLayout = false;
++// A StateLayout took a new index at paint (it lays the new state out the frame after), or one
++// was mid-transition at the last layout: the next frame lays out again.
++thread_local bool sStatePending = false;
+ thread_local bool sSawActiveAnim = false;
+ 
+ static void collapseChildren(const LayoutState& ls, RemoteContext& ctx, MeasurePass& measure,
+@@ -753,6 +771,16 @@
+     bool animating = false;        // a layout animation was in flight last measure
+     float w = -1.0f, h = -1.0f;
+     uint64_t epoch = 0;            // RemoteContext.mLayoutEpoch at the last layout
++    int settling = 0;              // frames asked for in a row while the layout was still settling
++    // A document's first layouts, until one publishes the bounds the last did: what they move is
++    // the layout converging (a grid's columns from its width), not a change, so it isn't animated.
++    bool converging = true;
++    // The last measure's laid-out bounds, before the animation pass blended them: a frame that
++    // re-lays out only because an animation is in flight starts again from these.
++    MeasurePass targets;
++    bool hasTargets = false;
++    bool remeasure = false;        // a held exit ended: the next frame measures again
++    std::vector<std::array<float, 5>> published;   // the bounds the last layout published
+     float dpScale = 1.0f, density = 1.0f;   // the density scales the states were inflated with
+ };
+ 
+@@ -1171,7 +1199,7 @@
+ 
+     if (oc == 240) {
+         // FlowLayout: wrap children into rows based on available width
+-        float spacedBy = static_cast<LayoutFlow*>(op)->spacedBy * gDpScale;
++        float spacedBy = Utils::resolveFloat(static_cast<LayoutFlow*>(op)->spacedBy, ctx) * gDpScale;
+ 
+         // Inflate and measure all children first
+         for (auto* child : ls.layoutChildren) {
+@@ -1229,8 +1257,8 @@
+     } else if (oc == 203 || oc == 230) {
+         // Row: children laid out horizontally
+         float spacedBy = 0;
+-        if (oc == 203) spacedBy = static_cast<LayoutRow*>(op)->spacedBy * gDpScale;
+-        else if (oc == 230) spacedBy = static_cast<CollapsibleRowLayout*>(op)->spacedBy * gDpScale;
++        if (oc == 203) spacedBy = Utils::resolveFloat(static_cast<LayoutRow*>(op)->spacedBy, ctx) * gDpScale;
++        else if (oc == 230) spacedBy = Utils::resolveFloat(static_cast<CollapsibleRowLayout*>(op)->spacedBy, ctx) * gDpScale;
+ 
+         // Check for WEIGHT width children (two-pass measurement)
+         float totalWeights = 0;
+@@ -1303,8 +1331,8 @@
+     } else if (oc == 204 || oc == 233) {
+         // Column: children laid out vertically
+         float spacedBy = 0;
+-        if (oc == 204) spacedBy = static_cast<LayoutColumn*>(op)->spacedBy * gDpScale;
+-        else if (oc == 233) spacedBy = static_cast<CollapsibleColumnLayout*>(op)->spacedBy * gDpScale;
++        if (oc == 204) spacedBy = Utils::resolveFloat(static_cast<LayoutColumn*>(op)->spacedBy, ctx) * gDpScale;
++        else if (oc == 233) spacedBy = Utils::resolveFloat(static_cast<CollapsibleColumnLayout*>(op)->spacedBy, ctx) * gDpScale;
+ 
+         // Check for WEIGHT height children (two-pass measurement)
+         float totalWeights = 0;
+@@ -1705,7 +1733,7 @@
+         // FlowLayout: position children in wrapped rows
+         int hPos = static_cast<LayoutFlow*>(op)->horizontal;
+         int vPos = static_cast<LayoutFlow*>(op)->vertical;
+-        float spacedBy = static_cast<LayoutFlow*>(op)->spacedBy * gDpScale;
++        float spacedBy = Utils::resolveFloat(static_cast<LayoutFlow*>(op)->spacedBy, ctx) * gDpScale;
+ 
+         // Segment children into rows (WEIGHT children use WidthIn min, matching TS)
+         std::vector<std::vector<Operation*>> rows;
+@@ -1874,11 +1902,11 @@
+         if (oc == 203) {
+             hPos = static_cast<LayoutRow*>(op)->horizontal;
+             vPos = static_cast<LayoutRow*>(op)->vertical;
+-            spacedBy = static_cast<LayoutRow*>(op)->spacedBy * gDpScale;
++            spacedBy = Utils::resolveFloat(static_cast<LayoutRow*>(op)->spacedBy, ctx) * gDpScale;
+         } else {
+             hPos = static_cast<CollapsibleRowLayout*>(op)->horizontal;
+             vPos = static_cast<CollapsibleRowLayout*>(op)->vertical;
+-            spacedBy = static_cast<CollapsibleRowLayout*>(op)->spacedBy * gDpScale;
++            spacedBy = Utils::resolveFloat(static_cast<CollapsibleRowLayout*>(op)->spacedBy, ctx) * gDpScale;
+         }
+ 
+         // Weight redistribution (matching TS internalLayoutMeasure)
+@@ -2025,11 +2053,11 @@
+         if (oc == 204) {
+             hPos = static_cast<LayoutColumn*>(op)->horizontal;
+             vPos = static_cast<LayoutColumn*>(op)->vertical;
+-            spacedBy = static_cast<LayoutColumn*>(op)->spacedBy * gDpScale;
++            spacedBy = Utils::resolveFloat(static_cast<LayoutColumn*>(op)->spacedBy, ctx) * gDpScale;
+         } else {
+             hPos = static_cast<CollapsibleColumnLayout*>(op)->horizontal;
+             vPos = static_cast<CollapsibleColumnLayout*>(op)->vertical;
+-            spacedBy = static_cast<CollapsibleColumnLayout*>(op)->spacedBy * gDpScale;
++            spacedBy = Utils::resolveFloat(static_cast<CollapsibleColumnLayout*>(op)->spacedBy, ctx) * gDpScale;
+         }
+ 
+         // Weight redistribution (matching TS internalLayoutMeasure)
+@@ -2280,6 +2308,14 @@
+     if (!sl->indexInitialized) {
+         sl->indexInitialized = true;
+         sl->currentIndex = sl->previousIndex = sl->indexId != 0 ? ctx.getInteger(sl->indexId) : 0;
++    } else if (!gLayoutAnimationEnabled) {
++        // Without layout animations there is no transition to play: a new state is measured in
++        // the frame that sees the variable change, not the one after (one frame a change).
++        const int idx = sl->indexId != 0 ? ctx.getInteger(sl->indexId) : 0;
++        if (idx != sl->currentIndex) {
++            sl->previousIndex = sl->currentIndex = idx;
++            sl->inTransition = false;
++        }
+     }
+     Operation* layout = stateAt(ls, sl->currentIndex);
+     Operation* previous = stateAt(ls, sl->previousIndex);
+@@ -2427,9 +2463,45 @@
+ }
+ 
+ // ── Generic measure dispatcher ───────────────────────────────────────
++// A layout measures each child to size itself, then again with its final size: nested, that is
++// 2^depth measures of a leaf. A component measured earlier in the same pass with the same
++// constraints is not measured again: its subtree was last measured by that call (a subtree is
++// only measured through its root), so every measure under it still holds. A pass is one
++// top-level measureComponent call: the data between passes may change what a measure reads.
++static uint64_t gMeasureGen = 0;
++static int gMeasureDepth = 0;
++
++static void measureComponentUncached(Operation* op, PaintContext* pc, RemoteContext& ctx,
++                                     float minW, float maxW, float minH, float maxH,
++                                     MeasurePass& measure);
++
+ static void measureComponent(Operation* op, PaintContext* pc, RemoteContext& ctx,
+                              float minW, float maxW, float minH, float maxH,
+                              MeasurePass& measure) {
++    if (gMeasureDepth == 0) ++gMeasureGen;
++    const int oc = op->opcode();
++    // Collapsible rows and columns, and fit boxes, keep state across measures: always measured.
++    const bool memo = oc != 230 && oc != 233 && oc != 176;
++    const int cid = getComponentId(op);
++    if (memo && cid != -1 && measure.contains(cid)) {
++        auto& m = measure.get(cid);
++        if (m.memoGen == gMeasureGen && m.memoC[0] == minW && m.memoC[1] == maxW &&
++            m.memoC[2] == minH && m.memoC[3] == maxH)
++            return;
++    }
++    ++gMeasureDepth;
++    measureComponentUncached(op, pc, ctx, minW, maxW, minH, maxH, measure);
++    --gMeasureDepth;
++    if (memo && cid != -1) {
++        auto& m = measure.get(cid);
++        m.memoGen = gMeasureGen;
++        m.memoC[0] = minW, m.memoC[1] = maxW, m.memoC[2] = minH, m.memoC[3] = maxH;
++    }
++}
++
++static void measureComponentUncached(Operation* op, PaintContext* pc, RemoteContext& ctx,
++                                     float minW, float maxW, float minH, float maxH,
++                                     MeasurePass& measure) {
+     int oc = op->opcode();
+     if (oc == 208 || oc == 239) {
+         measureText(op, pc, ctx, minW, maxW, minH, maxH, measure);
+@@ -3362,6 +3434,8 @@
+             auto* lt = static_cast<LayoutText*>(op);
+             tMaxLines = lt->maxLines; tOverflow = lt->overflow;
+             tid = lt->textId; fsize = lt->fontSize; col = lt->color;
++            // TextLayout.FLAG_DYNAMIC_COLOR (bit 16 of the align word): `color` is a colour id.
++            if (lt->textAlign & 0x10000) colId = lt->color;
+             tAlign = lt->textAlign & 0xFFFF;
+             fWeight = (int)resolveVar(lt->fontWeight, ctx); fStyle = lt->fontStyle;
+             fFamilyId = lt->fontFamilyId;
+@@ -3452,6 +3526,7 @@
+                 sl->previousIndex = sl->currentIndex;
+                 sl->currentIndex = idx;
+                 sl->inTransition = true;
++                sStatePending = true;
+                 ctx.needsRepaint();
+             }
+         }
+@@ -3541,6 +3616,10 @@
+ // by it), while its children are animated.
+ static thread_local AnimationSpec* sParentSpec = nullptr;
+ static thread_local float sParentW = 0.0f, sParentH = 0.0f;
++// Layout animations snap: the layout being animated is still converging (LayoutCache::converging).
++static thread_local bool sSnapLayout = false;
++// A held exit ended in this animation pass: the layout must close up, which needs a measure.
++static thread_local bool sHeldReleased = false;
+ 
+ static void animateLayoutTree(Operation* op, RemoteContext& ctx, MeasurePass& measure,
+                               double timeSec, AnimAncestry ancestry = ANIM_NORMAL) {
+@@ -3587,16 +3666,19 @@
+         const bool held = m.holdExit;
+         if (held) m.visibility = VIS_GONE;   // held in the layout, leaving the screen
+         const bool targetVisible = m.isVisible();
+-        if (animUpdate(store, cid, m, timeSec, gLayoutAnimationEnabled, spec, sParentW, sParentH))
++        if (animUpdate(store, cid, m, timeSec, gLayoutAnimationEnabled && !sSnapLayout, spec, sParentW, sParentH))
+             sSawActiveAnim = true;   // still animating → layout depends on animationTime
+         else if (held)
+             // The held exit (SEQUENCE BEFORE) ended in this pass, which measured the component
+             // still in place: measure once more so the layout closes up (and the siblings
+             // move into the gap), as the reference re-measures when the hold is released.
+-            sSawActiveAnim = true;
++            sSawActiveAnim = sHeldReleased = true;
+         if (!targetVisible) childAncestry = m.isVisible() ? ANIM_FROZEN : ANIM_HIDDEN;
+     }
+-    if (op->opcode() == 217) sSawStateLayout = true;   // index can flip → keep re-laying out
++    if (op->opcode() == 217) {
++        sSawStateLayout = true;
++        if (static_cast<StateLayout*>(op)->inTransition) sStatePending = true;
++    }
+     auto& ls = getLS(ctx, op);
+ 
+     // A StateLayout's transition lasts while anything in it still animates
+@@ -3791,14 +3873,55 @@
+     // offset, a fade alpha, a colour) that DO move bump the epoch and re-lay-out while moving.
+     // (The CoreDocument DATA pass ran before this, so mLayoutEpoch already reflects this frame.)
+     bool needMeasure = !cache.laid || cache.w != maxW || cache.h != maxH
+-                       || cache.hasStateLayout || cache.animating
++                       || sStatePending || cache.animating
+                        || cache.epoch != context.mLayoutEpoch;
+ 
+-    if (needMeasure) {
++    const auto layoutAt = std::chrono::steady_clock::now();
++#if !defined(ESP_PLATFORM)
++    if (std::getenv("RC_LAYOUT_WHY") && needMeasure)
++        std::printf("  measure: laid=%d size=%d statePending=%d animating=%d epoch=%d\n", (int) cache.laid,
++                    (int) (cache.w != maxW || cache.h != maxH), (int) sStatePending, (int) cache.animating,
++                    (int) (cache.epoch != context.mLayoutEpoch));
++#endif
++    // A frame that would measure only because a layout animation is in flight: the measured
++    // bounds can't have moved (same size, same epoch, no state change, no held exit ending), so
++    // start again from them and run only the expressions and the animation pass.
++#if !defined(ESP_PLATFORM)
++    static const bool noFastAnim = std::getenv("RC_NO_FAST_ANIM") != nullptr;   // compare without
++#else
++    constexpr bool noFastAnim = false;
++#endif
++    const bool animOnly = needMeasure && !noFastAnim && cache.laid && cache.hasTargets
++                          && cache.w == maxW && cache.h == maxH && !sStatePending && cache.animating
++                          && !cache.remeasure && cache.epoch == context.mLayoutEpoch;
++    frameProfile().measured = frameProfile().measured || (needMeasure && !animOnly);
++    if (animOnly) {
++        context.setMode(ContextMode::DATA);
++        for (auto* op : rootDataOps) {
++            if (op->isVariableSupport() && op->isDirty()) op->updateVariables(context);
++            context.incrementOpCount(); op->apply(context); op->markNotDirty();
++        }
++        for (auto* op : rootCanvasOps) { context.incrementOpCount(); op->apply(context); }
++        for (auto* layoutChild : layoutChildren) applyDataOps(layoutChild, context);
++        context.setMode(ContextMode::PAINT);
++        measure = cache.targets;
++        sSawActiveAnim = false;
++        sHeldReleased = false;
++        sSnapLayout = cache.converging;
++        const double animTime = context.getAnimationTime();
++        for (auto* layoutChild : layoutChildren) {
++            animateLayoutTree(layoutChild, context, measure, animTime);
++            storeMeasuredDimensions(layoutChild, context, measure);
++        }
++        cache.animating = sSawActiveAnim;
++        cache.remeasure = sHeldReleased;
++        if (sSawActiveAnim) context.needsRepaint();
++    } else if (needMeasure) {
+         // Full measure/layout, exactly as the un-cached path did (fresh per-op state so
+         // inflateLayout — gated on ls.inflated — re-reads every modifier this pass).
+         cache.states.clear();
+         sSawStateLayout = false;
++        sStatePending = false;
+         sSawActiveAnim = false;
+         resetLayoutOverflowCounts();
+ 
+@@ -3835,7 +3958,11 @@
+         }
+ 
+         // Layout-animation pass: blend measured bounds toward targets over time.
++        cache.targets = measure;
++        cache.hasTargets = true;
++        sHeldReleased = false;
+         double animTime = context.getAnimationTime();
++        sSnapLayout = cache.converging;
+         for (auto* layoutChild : layoutChildren) {
+             animateLayoutTree(layoutChild, context, measure, animTime);
+             // The bounds shown, mid-animation included, are the component's bounds (the
+@@ -3846,7 +3973,26 @@
+ 
+         cache.hasStateLayout = cache.hasStateLayout || sSawStateLayout;
+         cache.animating = sSawActiveAnim;
++        cache.remeasure = sHeldReleased;
+         if (sSawActiveAnim) context.needsRepaint();   // the next frame moves it on
++        // A layout reads what the last one published (a grid's columns from its width, an icon's
++        // scale from its box), so one whose bounds moved isn't settled yet: the next frame lays
++        // it out again. Ask for that frame, a few in a row at most, so a player that draws only
++        // when asked shows the settled layout rather than keeping the first.
++        {
++            std::vector<std::array<float, 5>> now;
++            for (auto& [id, d] : context.getComponentDimensions())
++                now.push_back({(float) id, d.x, d.y, d.w, d.h});
++            std::sort(now.begin(), now.end());
++            if (now != cache.published && cache.settling < 4) {
++                cache.settling++;
++                context.needsRepaint();
++            } else {
++                cache.settling = 0;
++                cache.converging = false;   // settled: from here on a move is a change
++            }
++            cache.published = std::move(now);
++        }
+         cache.epoch = context.mLayoutEpoch;   // snapshot: re-lay-out when a non-clock var moves
+         cache.laid = true;
+         cache.w = maxW;
+@@ -3867,6 +4013,8 @@
+         context.setMode(ContextMode::PAINT);
+     }
+ 
++    const auto paintAt = std::chrono::steady_clock::now();
++    frameProfile().layoutUs += (long) std::chrono::duration_cast<std::chrono::microseconds>(paintAt - layoutAt).count();
+     // Paint every frame, from the (possibly cached) layout.
+     pc->matrixSave();
+     pc->savePaint();
+@@ -3876,6 +4024,8 @@
+     }
+     pc->restorePaint();
+     pc->matrixRestore();
++    frameProfile().paintUs += (long) std::chrono::duration_cast<std::chrono::microseconds>(
++        std::chrono::steady_clock::now() - paintAt).count();
+ }
+ 
+ // Helper: apply children with updateVariables (matching TS Component behavior)
+--- a/players/cpp/lib/rccore/src/Operations.cpp
++++ b/players/cpp/lib/rccore/src/Operations.cpp
+@@ -58,9 +58,8 @@
+     registerReader(DRAW_TEXT_ON_CIRCLE, "DRAW_TEXT_ON_CIRCLE", Stub::drawTextOnCircle);
+     registerReader(TEXT_LOOKUP_INT, "TEXT_LOOKUP_INT", Stub::textLookupInt);
+     registerReader(DATA_FONT, "DATA_FONT", Stub::fontData);
+-    registerReader(BITMAP_TEXT_MEASURE, "BITMAP_TEXT_MEASURE", Stub::bitmapTextMeasure);
+-    registerReader(DRAW_BITMAP_TEXT_ANCHORED, "DRAW_BITMAP_TEXT_ANCHORED",
+-                   Stub::drawBitmapTextAnchored);
++    registerReader(BITMAP_TEXT_MEASURE, "BITMAP_TEXT_MEASURE", BitmapTextMeasureOp::read);
++    registerReader(DRAW_BITMAP_TEXT_ANCHORED, "DRAW_BITMAP_TEXT_ANCHORED", DrawBitmapTextAnchoredOp::read);
+     registerReader(DRAW_BITMAP_FONT_TEXT_RUN_ON_PATH, "DRAW_BITMAP_FONT_TEXT_RUN_ON_PATH",
+                    Stub::drawBitmapFontTextRunOnPath);
+     registerReader(FUNCTION_CALL, "FUNCTION_CALL", FunctionCallOp::read);
+--- a/players/cpp/lib/rccore/src/RemoteContext.cpp
++++ b/players/cpp/lib/rccore/src/RemoteContext.cpp
+@@ -1,3 +1,5 @@
++#include <cstdlib>
++#include <cstdio>
+ #include "rccore/RemoteContext.h"
+ #include "rccore/operations/AdvancedOperations.h"
+ #include "rccore/PaintContext.h"
+@@ -396,6 +398,17 @@
+     }
+     mPaintOnlyVars = std::move(paintOnly);
+     mClassified = true;
++#if !defined(ESP_PLATFORM)
++    if (std::getenv("RC_TOUCH_VARS")) {
++        for (int id = ID_TOUCH_POS_X; id <= ID_TOUCH_VEL_Y; id++) {
++            auto it = mVarListeners.find(id);
++            std::printf("  var %d: %zu listeners, paint-only %d:", id, it == mVarListeners.end() ? (size_t) 0 : it->second.size(),
++                        (int) mPaintOnlyVars.count(id));
++            if (it != mVarListeners.end()) for (auto* op : it->second) std::printf(" %s", op->name().c_str());
++            std::printf("\n");
++        }
++    }
++#endif
+ }
+ 
+ void RemoteContext::notifyListeners(int variableId) {
