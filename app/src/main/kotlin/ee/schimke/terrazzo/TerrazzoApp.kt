@@ -113,25 +113,30 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   // Sign out of [signedOut]'s instance: wipe its cached dashboards / snapshots and refresh-token
   // vault entry so the next user on this device can't read the previous account's data, and so
   // cold start goes back to discovery. [reason] is shown on the sign-in screen.
+  // What this device keeps for [baseUrl]'s account: its dashboard choices, cached dashboards and
+  // snapshots, pictures, refresh token and remote URL. With no instance, just the dashboard
+  // choices.
+  suspend fun forgetInstance(baseUrl: String?) {
+    graph.preferencesStore.clearLastViewedDashboard()
+    graph.preferencesStore.clearSelectedDashboardUrls()
+    if (baseUrl == null) return
+    graph.offlineCache.clearInstance(baseUrl)
+    // Its pictures too: camera frames and people outlive the dashboards otherwise.
+    runCatching { imageStack?.clearCaches() }
+    runCatching { graph.tokenVault.clear(baseUrl) }
+    graph.remoteUrlStore.clear(baseUrl)
+  }
+
   fun signOut(signedOut: HaSession?, reason: Throwable? = null) {
-    val previousBaseUrl = signedOut?.baseUrl
     // Delete the account's dashboards, values and pins from the watch too.
     wearSync.clearWatchData()
     scope.launch {
       graph.preferencesStore.setDemoMode(false)
-      graph.preferencesStore.clearLastViewedDashboard()
-      graph.preferencesStore.clearSelectedDashboardUrls()
       // While the session can still reach Home Assistant: the watches' own tokens.
       if (signedOut != null && signedOut !is DemoHaSession) {
         runCatching { wearSync.revokeWatchAccess(signedOut) }
       }
-      if (previousBaseUrl != null) {
-        graph.offlineCache.clearInstance(previousBaseUrl)
-        // Its pictures too: camera frames and people outlive the dashboards otherwise.
-        runCatching { imageStack?.clearCaches() }
-        runCatching { graph.tokenVault.clear(previousBaseUrl) }
-        graph.remoteUrlStore.clear(previousBaseUrl)
-      }
+      forgetInstance(signedOut?.baseUrl)
       signedOut?.close()
     }
     widgetScheduler.cancelDemo()
@@ -208,17 +213,15 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
   }
 
   // A sign-in ends the pending re-auth (MainActivity's resume found the restored instance but no
-  // token). Signing in somewhere else, or to the demo, also drops that instance's restored cache,
-  // so a home the user moved away from isn't left on the device.
+  // token). Signing in to that instance keeps everything restored for it. Signing in somewhere
+  // else, or to the demo, forgets it as a sign-out would (its dashboard choices would otherwise
+  // hide the new instance's dashboards), so a home the user moved away from isn't left behind.
   fun signedIn(baseUrl: String?) {
     val restored = sessionHolder.reauthBaseUrl ?: return
     sessionHolder.reauthBaseUrl = null
-    if (restored != baseUrl) {
-      scope.launch {
-        graph.offlineCache.clearInstance(restored)
-        graph.remoteUrlStore.clear(restored)
-      }
-    }
+    if (restored == baseUrl) return
+    wearSync.clearWatchData()
+    scope.launch { forgetInstance(restored) }
   }
 
   val login =
