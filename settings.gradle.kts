@@ -144,6 +144,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
     ":terrazzo-core",
     ":app",
     ":app-benchmark",
+    ":app-container-tests",
     ":wear",
     ":wear-benchmark",
     ":tv",

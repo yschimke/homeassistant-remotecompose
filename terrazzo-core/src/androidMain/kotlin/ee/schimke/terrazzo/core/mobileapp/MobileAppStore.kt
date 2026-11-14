@@ -4,11 +4,13 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import ee.schimke.terrazzo.core.auth.isUnreadableCiphertext
 import ee.schimke.terrazzo.core.di.AppScope
 import java.security.KeyStore
 import java.util.UUID
@@ -64,11 +66,31 @@ class MobileAppStore(private val context: Context) {
     }
   }
 
+  /**
+   * The registration stored for [instanceId], or null when there is none, so the registrar
+   * registers again.
+   *
+   * A registration this install can't decrypt also reads as null, and its blob is dropped (the
+   * `deviceId` is kept, so Home Assistant still sees the same device). That happens after a restore
+   * from backup or a device transfer, which brings back the ciphertext but never its Keystore key
+   * ([isUnreadableCiphertext]).
+   */
   suspend fun get(instanceId: String): MobileAppRegistration? {
     val prefs = context.store.data.first()
-    val ciphertext = prefs[blobKey(instanceId)]?.fromBase64() ?: return null
-    val iv = prefs[ivKey(instanceId)]?.fromBase64() ?: return null
-    val bytes = decrypt(iv, ciphertext)
+    val ciphertext = prefs[blobKey(instanceId)] ?: return null
+    val iv = prefs[ivKey(instanceId)] ?: return null
+    val bytes =
+      try {
+        decrypt(iv.fromBase64(), ciphertext.fromBase64())
+      } catch (e: Exception) {
+        if (!e.isUnreadableCiphertext()) throw e
+        Log.w(TAG, "Stored mobile_app registration can't be decrypted on this install", e)
+        context.store.edit { edited ->
+          edited.remove(blobKey(instanceId))
+          edited.remove(ivKey(instanceId))
+        }
+        return null
+      }
     return json.decodeFromString(MobileAppRegistration.serializer(), bytes.toString(Charsets.UTF_8))
   }
 
@@ -123,6 +145,7 @@ class MobileAppStore(private val context: Context) {
   }
 
   private companion object {
+    const val TAG = "MobileAppStore"
     const val KEYSTORE = "AndroidKeyStore"
     const val KEY_ALIAS = "terrazzo-mobile-app-v1"
     const val TRANSFORMATION = "AES/GCM/NoPadding"

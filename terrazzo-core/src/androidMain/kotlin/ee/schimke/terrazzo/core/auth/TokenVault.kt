@@ -5,6 +5,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.AtomicFile
 import android.util.Base64
+import android.util.Log
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -63,11 +64,28 @@ class TokenVault(private val context: Context) {
     }
   }
 
+  /**
+   * The refresh token stored for [instanceId], or null when there is none, so the caller signs in
+   * again.
+   *
+   * A token this install can't decrypt also reads as null, and its slot is cleared. That happens
+   * after a restore from backup or a device transfer, which brings back the ciphertext but never
+   * its Keystore key ([isUnreadableCiphertext]). The vault lives in `noBackupFilesDir`, so this
+   * covers the legacy DataStore file from a backup made before that, which [migrateLegacyLocked]
+   * copies in as it is.
+   */
   suspend fun get(instanceId: String): String? {
     val entry = readVault().entries[instanceId] ?: return null
-    val ciphertext = entry.ciphertext?.fromBase64() ?: return null
-    val iv = entry.iv?.fromBase64() ?: return null
-    return decrypt(iv, ciphertext).toString(Charsets.UTF_8)
+    val ciphertext = entry.ciphertext ?: return null
+    val iv = entry.iv ?: return null
+    return try {
+      decrypt(iv.fromBase64(), ciphertext.fromBase64()).toString(Charsets.UTF_8)
+    } catch (e: Exception) {
+      if (!e.isUnreadableCiphertext()) throw e
+      Log.w(TAG, "Stored refresh token can't be decrypted on this install; signing in again", e)
+      clear(instanceId)
+      null
+    }
   }
 
   suspend fun clear(instanceId: String) {
@@ -91,8 +109,9 @@ class TokenVault(private val context: Context) {
   suspend fun clientId(instanceId: String): String =
     readVault().entries[instanceId]?.clientId ?: HaAuthService.CLIENT_ID
 
-  private suspend fun readVault(): VaultData =
-    mutex.withLock { withContext(Dispatchers.IO) { readVaultLocked() } }
+  private suspend fun readVault(): VaultData = mutex.withLock {
+    withContext(Dispatchers.IO) { readVaultLocked() }
+  }
 
   private suspend fun updateVault(transform: (MutableMap<String, VaultEntry>) -> Unit) {
     mutex.withLock {
@@ -108,11 +127,17 @@ class TokenVault(private val context: Context) {
   private suspend fun readVaultLocked(): VaultData {
     val file = vaultFile
     if (file.exists()) {
-      return runCatching {
-          val text = AtomicFile(file).readFully().toString(Charsets.UTF_8)
-          json.decodeFromString(VaultData.serializer(), text)
-        }
-        .getOrDefault(VaultData())
+      // An I/O error propagates: reading it as an empty vault would sign the user out, and the next
+      // update would write that empty map over a file that may read fine on a retry. Only content
+      // that can't be parsed (a SerializationException is an IllegalArgumentException) is
+      // unrecoverable, and reads as empty.
+      val text = AtomicFile(file).readFully().toString(Charsets.UTF_8)
+      return try {
+        json.decodeFromString(VaultData.serializer(), text)
+      } catch (e: IllegalArgumentException) {
+        Log.w(TAG, "Token vault can't be parsed; starting empty", e)
+        VaultData()
+      }
     }
     val legacy = legacyDataStoreFile
     if (!legacy.exists()) return VaultData()
@@ -199,8 +224,7 @@ class TokenVault(private val context: Context) {
     return generator.generateKey()
   }
 
-  @Serializable
-  private data class VaultData(val entries: Map<String, VaultEntry> = emptyMap())
+  @Serializable private data class VaultData(val entries: Map<String, VaultEntry> = emptyMap())
 
   @Serializable
   private data class VaultEntry(
@@ -210,6 +234,7 @@ class TokenVault(private val context: Context) {
   )
 
   private companion object {
+    const val TAG = "TokenVault"
     const val KEYSTORE = "AndroidKeyStore"
     const val KEY_ALIAS = "terrazzo-token-vault-v1"
     const val TRANSFORMATION = "AES/GCM/NoPadding"

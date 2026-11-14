@@ -41,11 +41,11 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
     get() = delegate.connectionStatus
 
   /**
-   * For a cache-only session (`TerrazzoGraph.createCachedOnly`): the cold-start resume couldn't
-   * replace it with a live one, so its status turns from connecting to failed.
+   * For a cache-only session (`TerrazzoGraph.createCachedOnly`): the cold-start resume found no
+   * stored token, so the user has to sign in again ([needsReauth] turns true).
    */
-  fun markUnreachable() {
-    (delegate as? OfflineOnlySession)?.markUnreachable()
+  fun markNeedsReauth() {
+    (delegate as? OfflineOnlySession)?.markNeedsReauth()
   }
 
   override val notifications: StateFlow<List<HaNotification>>
