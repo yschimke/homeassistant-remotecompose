@@ -12,9 +12,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * design and launcher templates, built icon glyphs — and every one of them can be rebuilt on
  * demand, so none of them should outlive a request to trim.
  *
- * - While the UI is out of view ([ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN]) or the device is
- *   running low, the document cache shrinks to [HIDDEN_DOCUMENTS], about a screen's worth: coming
- *   back to the last board still skips its encodes.
+ * - While the UI is out of view ([ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN]), the document cache
+ *   shrinks to [HIDDEN_DOCUMENTS], about a screen's worth: coming back to the last board still
+ *   skips its encodes.
  * - Once the process is in the background LRU list ([ComponentCallbacks2.TRIM_MEMORY_BACKGROUND]
  *   and above, or [ComponentCallbacks2.onLowMemory]) everything goes, along with the host's own
  *   caches ([install]'s `release`). A process that keeps less is less likely to be killed, and its
@@ -66,7 +66,6 @@ object CardMemory {
   }
 
   /** Trims for [level]; true when it released everything, so the host should too. */
-  @Suppress("DEPRECATION") // RUNNING_LOW is only delivered before API 34, where it still applies.
   fun trim(level: Int): Boolean =
     when {
       level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND -> {
@@ -74,7 +73,7 @@ object CardMemory {
         releaseAll()
         true
       }
-      level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> {
+      level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
         trimDocuments(level, keep = HIDDEN_DOCUMENTS)
         false
       }

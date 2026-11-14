@@ -76,6 +76,10 @@ class BackupRestoreSteps {
       datastoreFile("terrazzo_token_vault").exists(),
     )
     assertFalse(
+      "The token vault in noBackupFilesDir is never backed up",
+      File(context.noBackupFilesDir, "terrazzo_token_vault.json").exists(),
+    )
+    assertFalse(
       "The mobile_app registration is left out of backups",
       datastoreFile("terrazzo_mobile_app").exists(),
     )
