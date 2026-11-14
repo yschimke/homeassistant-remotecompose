@@ -135,6 +135,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
     ":rc-components",
     ":rc-components-ui",
     ":rc-material3-motion",
+    ":rc-mdi-icons",
     ":rc-converter",
     ":rc-card-shutter",
     ":rc-image-coil",

@@ -47,6 +47,8 @@ kotlin {
       api(libs.rc.widget.creation)
       implementation(libs.rc.player.edit)
       api(project(":rc-material3-motion"))
+      // Material Design Icons by name, for the icons Home Assistant draws inline.
+      api(project(":rc-mdi-icons"))
       api(libs.rc.creation.compose)
       api(libs.rc.creation.foundation)
       implementation(libs.cmp.runtime)

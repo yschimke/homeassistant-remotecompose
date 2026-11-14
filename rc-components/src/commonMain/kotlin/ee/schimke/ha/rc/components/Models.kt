@@ -199,7 +199,11 @@ data class HaGlanceData(val title: String?, val cells: List<HaGlanceCellData>)
 data class HaMarkdownData(val title: String?, val blocks: List<MarkdownBlock>)
 
 /** Heading card. */
-data class HaHeadingData(val title: String, val style: HaHeadingStyle = HaHeadingStyle.Title)
+data class HaHeadingData(
+  val title: String,
+  val style: HaHeadingStyle = HaHeadingStyle.Title,
+  val icon: ImageVector? = null,
+)
 
 /** Unsupported-card placeholder. */
 data class HaUnsupportedData(val cardType: String)

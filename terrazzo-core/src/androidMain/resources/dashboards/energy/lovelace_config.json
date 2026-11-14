@@ -9,7 +9,7 @@
         "card": {
           "type": "markdown",
           "text_only": true,
-          "content": "# ⚡ Energy\n☀️ Solar now: **{{ states('sensor.solaredge_current_power') | float(0) | round(0) }} W** · ⚡ Import rate: **{{ (states('sensor.octopus_energy_electricity_sn2_sn3_current_rate') | float(0) * 100) | round(2) }} p/kWh** · ⤴️ Export rate: **{{ (states('sensor.octopus_energy_electricity_sn2_sn4_export_current_rate') | float(0) * 100) | round(2) }} p/kWh** · 🔥 Gas rate: **{{ (states('sensor.octopus_energy_gas_sn5_sn6_current_rate') | float(0) * 100) | round(2) }} p/kWh**"
+          "content": "# <ha-icon icon=\"mdi:flash\"></ha-icon> Energy\n<ha-icon icon=\"mdi:weather-sunny\"></ha-icon> Solar now: **{{ states('sensor.solaredge_current_power') | float(0) | round(0) }} W** · <ha-icon icon=\"mdi:transmission-tower-import\"></ha-icon> Import rate: **{{ (states('sensor.octopus_energy_electricity_sn2_sn3_current_rate') | float(0) * 100) | round(2) }} p/kWh** · <ha-icon icon=\"mdi:transmission-tower-export\"></ha-icon> Export rate: **{{ (states('sensor.octopus_energy_electricity_sn2_sn4_export_current_rate') | float(0) * 100) | round(2) }} p/kWh** · <ha-icon icon=\"mdi:fire\"></ha-icon> Gas rate: **{{ (states('sensor.octopus_energy_gas_sn5_sn6_current_rate') | float(0) * 100) | round(2) }} p/kWh**"
         }
       },
       "sections": [
@@ -19,8 +19,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "☀️ Right now",
-              "heading_style": "title",
+              "heading": "Right now",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -62,8 +61,7 @@
             },
             {
               "type": "heading",
-              "heading": "💷 Octopus rates (today)",
-              "heading_style": "title",
+              "heading": "Octopus rates (today)",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -129,8 +127,7 @@
             },
             {
               "type": "heading",
-              "heading": "📅 Yesterday",
-              "heading_style": "title",
+              "heading": "Yesterday",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -196,8 +193,7 @@
             },
             {
               "type": "heading",
-              "heading": "📈 Solar production (7 days)",
-              "heading_style": "title",
+              "heading": "Solar production (7 days)",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -241,8 +237,7 @@
             },
             {
               "type": "heading",
-              "heading": "🎁 Octoplus perks",
-              "heading_style": "title",
+              "heading": "Octoplus perks",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -300,8 +295,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🌅 Timings today",
-              "heading_style": "title",
+              "heading": "Timings today",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -355,8 +349,7 @@
             },
             {
               "type": "heading",
-              "heading": "🔭 Position & conditions",
-              "heading_style": "title",
+              "heading": "Position & conditions",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -405,8 +398,7 @@
             },
             {
               "type": "heading",
-              "heading": "📊 Solar vs cloud vs UV (48h)",
-              "heading_style": "title",
+              "heading": "Solar vs cloud vs UV (48h)",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },

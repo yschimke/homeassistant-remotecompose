@@ -37,6 +37,11 @@ enum class DesignSurface(val wire: String) {
  *   or [WEAR_LARGE]), null on every other surface. The container draws the widget's shape and
  *   background into the document, so a Wear design is made per container: its card's design
  *   ([forWearWidget]) without the card's own surface.
+ * @property widthDp the width in dp the design is played at, when its player knows it (a wall
+ *   panel's screen: `POST /api/cards/resolve` with a `player` width). A layout that depends on its
+ *   width (a grid's columns) is then chosen when the design is captured, not at playback. Null for
+ *   a design that plays at any width, as every library design does; a key without one encodes as it
+ *   did before the field, so its id is unchanged.
  */
 @Serializable
 data class DesignKey(
@@ -48,6 +53,7 @@ data class DesignKey(
   val theme: String,
   val schema: Int = BINDING_SCHEMA_VERSION,
   val container: String? = null,
+  val widthDp: Int? = null,
 ) {
   /** This design's Wear widget design for [container]: the same card, variant and theme. */
   fun forWearWidget(container: String): DesignKey =

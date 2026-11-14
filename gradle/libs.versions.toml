@@ -69,10 +69,10 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "2.91.0"
+compose-preview-plugin = "2.92.0"
 # The compose-ai-tools release BOM can advance independently on partial releases where the plugin
 # marker itself is unchanged; modules such as preview-discovery resolve versionless through it.
-compose-ai-tools = "2.91.0"
+compose-ai-tools = "2.92.0"
 # The `ee.schimke.composeai:*-core` / `*-protocol` wire contracts are versioned on their
 # own 3.x line, NOT with the plugin, and partial releases publish only changed modules while
 # updating `compose-preview-contracts-bom`. Tying `data-render-core` to
@@ -278,6 +278,10 @@ androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstall
 # `dynamicColorScheme(...)` is what the widget provider calls at
 # capture time (we can't hold a Compose state across the widget boundary).
 materialkolor = { module = "com.materialkolor:material-kolor", version = "5.0.1" }
+# The whole Material Design Icons catalog (Home Assistant's icon set) as SVG path data, looked up
+# by name; `:rc-mdi-icons` turns it into Remote Compose glyphs. Its `@mdi/svg` release should stay
+# the one Home Assistant's frontend ships (MDI_VERSION in scripts/generate-ha-icon-tables.py).
+mdi-icons = { module = "io.github.timoptr:mdi-icons", version = "0.2.0" }
 
 # Ktor (HA WebSocket client)
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }

@@ -21,9 +21,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -50,6 +47,8 @@ import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.*
 import ee.schimke.ha.rc.formatState
+import ee.schimke.ha.rc.icons.HaIconMap
+import ee.schimke.ha.rc.icons.mdi.MdiIcons
 import ee.schimke.terrazzo.dashboard.AgentEditScreen
 import ee.schimke.terrazzo.dashboard.DashboardAgentDraft
 import ee.schimke.terrazzo.dashboard.DashboardDraftEditor
@@ -58,6 +57,9 @@ import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.EditorScope
 import ee.schimke.terrazzo.dashboard.preferredDashboardPath
+import io.github.timoptr.mdiicons.Mdi
+import io.github.timoptr.mdiicons.generated.Fullscreen
+import io.github.timoptr.mdiicons.generated.FullscreenExit
 import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -998,23 +1000,11 @@ internal fun CardStyleSetting(cardStyle: String, onCardStyle: (String) -> Unit) 
   }
 }
 
-private fun headerIcon(name: String, path: String) =
-  ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f)
-    .addPath(addPathNodes(path), fill = SolidColor(Color.Black))
-    .build()
+private val FullScreenIcon
+  get() = MdiIcons[Mdi.Fullscreen]
 
-// Material's fullscreen and fullscreen_exit, which the core icon set doesn't carry.
-private val FullScreenIcon =
-  headerIcon(
-    "FullScreen",
-    "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z",
-  )
-
-private val ExitFullScreenIcon =
-  headerIcon(
-    "ExitFullScreen",
-    "M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z",
-  )
+private val ExitFullScreenIcon
+  get() = MdiIcons[Mdi.FullscreenExit]
 
 @Composable
 private fun CardStyleMenu(cardStyle: String, onCardStyle: (String) -> Unit) {
@@ -1343,9 +1333,20 @@ fun DashboardContent(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         dashboard.views.forEachIndexed { i, v ->
+          val icon = remember(v.icon) { HaIconMap.mdi(v.icon) }
           FilterChip(
             selected = i == index,
             onClick = { selectedView = i },
+            leadingIcon =
+              icon?.let {
+                {
+                  Icon(
+                    it,
+                    contentDescription = null,
+                    modifier = Modifier.size(FilterChipDefaults.IconSize),
+                  )
+                }
+              },
             label = { Text(v.title ?: "View ${i + 1}") },
           )
         }

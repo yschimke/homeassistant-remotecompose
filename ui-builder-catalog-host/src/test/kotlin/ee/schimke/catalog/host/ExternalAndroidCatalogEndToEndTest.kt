@@ -72,6 +72,7 @@ class ExternalAndroidCatalogEndToEndTest {
         "rc-components.jar",
         "rc-converter.jar",
         "rc-material3-motion.jar",
+        "rc-mdi-icons.jar",
         "rc-player-ui.jar",
         "ui-builder-catalog.jar",
       ),

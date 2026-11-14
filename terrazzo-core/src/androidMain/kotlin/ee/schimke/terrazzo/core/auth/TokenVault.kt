@@ -3,24 +3,39 @@ package ee.schimke.terrazzo.core.auth
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.AtomicFile
 import android.util.Base64
 import android.util.Log
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import ee.schimke.terrazzo.core.di.AppScope
+import java.io.File
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
- * Persists the HA refresh token as AES-GCM ciphertext in DataStore. The symmetric key never leaves
- * the AndroidKeyStore — on most modern devices that's hardware-backed (TEE / StrongBox).
+ * Persists the HA refresh token as AES-GCM ciphertext in an [AtomicFile] under
+ * [Context.getNoBackupFilesDir]. The symmetric key never leaves the AndroidKeyStore — on most
+ * modern devices that's hardware-backed (TEE / StrongBox).
+ *
+ * Stored in `noBackupFilesDir` rather than `preferencesDataStore` so:
+ * - No `DataStoreInMemoryCache` or persistent coroutine scope stays pinned in RAM between reads.
+ * - Device-bound `AndroidKeyStore` ciphertext is never backed up or restored to another device
+ *   without its key.
  *
  * Access token: short-lived, kept in memory only. Refresh token: long-lived, encrypted here, used
  * to mint fresh access tokens via [HaAuthService].
@@ -32,13 +47,20 @@ import kotlinx.coroutines.flow.first
 @Inject
 class TokenVault(private val context: Context) {
 
-  private val Context.store by preferencesDataStore(name = "terrazzo_token_vault")
+  private val mutex = Mutex()
+  private val json = Json { ignoreUnknownKeys = true }
+
+  private val vaultFile: File
+    get() = File(context.applicationContext.noBackupFilesDir, VAULT_FILE_NAME)
+
+  private val legacyDataStoreFile: File
+    get() = File(context.applicationContext.filesDir, "datastore/$LEGACY_STORE_NAME.preferences_pb")
 
   suspend fun put(instanceId: String, refreshToken: String) {
     val (iv, ciphertext) = encrypt(refreshToken.toByteArray(Charsets.UTF_8))
-    context.store.edit { prefs ->
-      prefs[cipherKey(instanceId)] = ciphertext.base64()
-      prefs[ivKey(instanceId)] = iv.base64()
+    updateVault { entries ->
+      val current = entries[instanceId] ?: VaultEntry()
+      entries[instanceId] = current.copy(ciphertext = ciphertext.base64(), iv = iv.base64())
     }
   }
 
@@ -48,13 +70,14 @@ class TokenVault(private val context: Context) {
    *
    * A token this install can't decrypt also reads as null, and its slot is cleared. That happens
    * after a restore from backup or a device transfer, which brings back the ciphertext but never
-   * its Keystore key ([isUnreadableCiphertext]). The backup rules (`data_extraction_rules.xml`)
-   * leave the vault out, so this mostly covers backups made before those rules existed.
+   * its Keystore key ([isUnreadableCiphertext]). The vault lives in `noBackupFilesDir`, so this
+   * covers the legacy DataStore file from a backup made before that, which [migrateLegacyLocked]
+   * copies in as it is.
    */
   suspend fun get(instanceId: String): String? {
-    val prefs = context.store.data.first()
-    val ciphertext = prefs[cipherKey(instanceId)] ?: return null
-    val iv = prefs[ivKey(instanceId)] ?: return null
+    val entry = readVault().entries[instanceId] ?: return null
+    val ciphertext = entry.ciphertext ?: return null
+    val iv = entry.iv ?: return null
     return try {
       decrypt(iv.fromBase64(), ciphertext.fromBase64()).toString(Charsets.UTF_8)
     } catch (e: Exception) {
@@ -66,11 +89,7 @@ class TokenVault(private val context: Context) {
   }
 
   suspend fun clear(instanceId: String) {
-    context.store.edit { prefs ->
-      prefs.remove(cipherKey(instanceId))
-      prefs.remove(ivKey(instanceId))
-      prefs.remove(clientIdKey(instanceId))
-    }
+    updateVault { entries -> entries.remove(instanceId) }
   }
 
   /**
@@ -80,12 +99,98 @@ class TokenVault(private val context: Context) {
    * issued to. Not a secret, so kept in the clear.
    */
   suspend fun putClientId(instanceId: String, clientId: String) {
-    context.store.edit { it[clientIdKey(instanceId)] = clientId }
+    updateVault { entries ->
+      val current = entries[instanceId] ?: VaultEntry()
+      entries[instanceId] = current.copy(clientId = clientId)
+    }
   }
 
   /** The `client_id` to refresh [instanceId]'s token with: [putClientId]'s, else the app's own. */
   suspend fun clientId(instanceId: String): String =
-    context.store.data.first()[clientIdKey(instanceId)] ?: HaAuthService.CLIENT_ID
+    readVault().entries[instanceId]?.clientId ?: HaAuthService.CLIENT_ID
+
+  private suspend fun readVault(): VaultData = mutex.withLock {
+    withContext(Dispatchers.IO) { readVaultLocked() }
+  }
+
+  private suspend fun updateVault(transform: (MutableMap<String, VaultEntry>) -> Unit) {
+    mutex.withLock {
+      withContext(Dispatchers.IO) {
+        val current = readVaultLocked()
+        val updated = current.entries.toMutableMap()
+        transform(updated)
+        writeVaultLocked(VaultData(updated))
+      }
+    }
+  }
+
+  private suspend fun readVaultLocked(): VaultData {
+    val file = vaultFile
+    if (file.exists()) {
+      // An I/O error propagates: reading it as an empty vault would sign the user out, and the next
+      // update would write that empty map over a file that may read fine on a retry. Only content
+      // that can't be parsed (a SerializationException is an IllegalArgumentException) is
+      // unrecoverable, and reads as empty.
+      val text = AtomicFile(file).readFully().toString(Charsets.UTF_8)
+      return try {
+        json.decodeFromString(VaultData.serializer(), text)
+      } catch (e: IllegalArgumentException) {
+        Log.w(TAG, "Token vault can't be parsed; starting empty", e)
+        VaultData()
+      }
+    }
+    val legacy = legacyDataStoreFile
+    if (!legacy.exists()) return VaultData()
+    return migrateLegacyLocked(legacy).also { migrated ->
+      if (migrated.entries.isNotEmpty()) {
+        writeVaultLocked(migrated)
+      }
+      legacy.delete()
+    }
+  }
+
+  private fun writeVaultLocked(data: VaultData) {
+    val file = vaultFile
+    file.parentFile?.mkdirs()
+    val atomic = AtomicFile(file)
+    val stream = atomic.startWrite()
+    try {
+      stream.write(json.encodeToString(VaultData.serializer(), data).toByteArray(Charsets.UTF_8))
+      atomic.finishWrite(stream)
+    } catch (t: Throwable) {
+      atomic.failWrite(stream)
+      throw t
+    }
+  }
+
+  private suspend fun migrateLegacyLocked(legacyFile: File): VaultData {
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    return try {
+      val store = PreferenceDataStoreFactory.create(scope = scope) { legacyFile }
+      val prefs = store.data.first().asMap()
+      val entries = mutableMapOf<String, VaultEntry>()
+      for ((key, value) in prefs) {
+        val str = value as? String ?: continue
+        when {
+          key.name.startsWith("refresh.") && key.name.endsWith(".iv") -> {
+            val id = key.name.removePrefix("refresh.").removeSuffix(".iv")
+            entries[id] = (entries[id] ?: VaultEntry()).copy(iv = str)
+          }
+          key.name.startsWith("refresh.") -> {
+            val id = key.name.removePrefix("refresh.")
+            entries[id] = (entries[id] ?: VaultEntry()).copy(ciphertext = str)
+          }
+          key.name.startsWith("client.") -> {
+            val id = key.name.removePrefix("client.")
+            entries[id] = (entries[id] ?: VaultEntry()).copy(clientId = str)
+          }
+        }
+      }
+      VaultData(entries)
+    } finally {
+      scope.cancel()
+    }
+  }
 
   private fun encrypt(plaintext: ByteArray): Pair<ByteArray, ByteArray> {
     val cipher = Cipher.getInstance(TRANSFORMATION)
@@ -119,17 +224,22 @@ class TokenVault(private val context: Context) {
     return generator.generateKey()
   }
 
+  @Serializable private data class VaultData(val entries: Map<String, VaultEntry> = emptyMap())
+
+  @Serializable
+  private data class VaultEntry(
+    val ciphertext: String? = null,
+    val iv: String? = null,
+    val clientId: String? = null,
+  )
+
   private companion object {
     const val TAG = "TokenVault"
     const val KEYSTORE = "AndroidKeyStore"
     const val KEY_ALIAS = "terrazzo-token-vault-v1"
     const val TRANSFORMATION = "AES/GCM/NoPadding"
-
-    fun cipherKey(instanceId: String) = stringPreferencesKey("refresh.$instanceId")
-
-    fun ivKey(instanceId: String) = stringPreferencesKey("refresh.$instanceId.iv")
-
-    fun clientIdKey(instanceId: String) = stringPreferencesKey("client.$instanceId")
+    const val VAULT_FILE_NAME = "terrazzo_token_vault.json"
+    const val LEGACY_STORE_NAME = "terrazzo_token_vault"
 
     fun ByteArray.base64(): String = Base64.encodeToString(this, Base64.NO_WRAP)
 

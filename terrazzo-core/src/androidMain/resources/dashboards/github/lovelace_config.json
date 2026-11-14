@@ -19,8 +19,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🐛 Open issues — last 2 weeks",
-              "heading_style": "title",
+              "heading": "Open issues — last 2 weeks",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -461,8 +460,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "📝 Notes",
-              "heading_style": "title",
+              "heading": "Notes",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },

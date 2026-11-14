@@ -8,8 +8,9 @@
   transferred, so on the new device that ciphertext can't be decrypted. Restoring it would only
   hand the app a token it can't read (TokenVault and MobileAppStore treat that as absent, and
   covered backups made before these rules existed).
-  - terrazzo_token_vault: the Home Assistant refresh token for each instance. The restored app
-    asks the user to sign in again.
+  - terrazzo_token_vault: the legacy DataStore copy of the Home Assistant refresh tokens. TokenVault
+    now keeps them in noBackupFilesDir, which is never backed up; this keeps a legacy file that
+    hasn't migrated yet out too. The restored app asks the user to sign in again.
   - terrazzo_mobile_app: the mobile_app webhook registration. A restored phone registers as a new
     device instead of sharing the old phone's webhook.
 
