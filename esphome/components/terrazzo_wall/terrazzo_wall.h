@@ -216,6 +216,8 @@ class TerrazzoWall : public Component {
   std::atomic<int64_t> controlled_us_{0};   // the last Home Assistant control
   int published_screen_ = -1;
   void idle_return_check_();
+  void load_settings_();
+  void apply_setting_(const std::string &key, const std::string &value);
   // The select's options (their strings must outlive it), as url_paths and titles.
   std::vector<std::string> option_paths_, option_titles_;
   std::string published_option_, published_place_;

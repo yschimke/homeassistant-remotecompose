@@ -64,7 +64,13 @@ struct Config {
   // than a card at a time. Needs the screen size; ignored for a single card.
   bool screens = true;
   int picture_max = 0;                 // the most of the screen one picture takes, in %; 0: no limit
+  std::string home;                    // the home dashboard, for the settings screen to mark
 };
+
+// The dashboard the integration makes for a panel's settings (open_settings): its choices tap
+// through as a `navigate` to kSettingsPath<key>/<value>, which the client hands to on_setting.
+constexpr const char *kSettingsDashboard = "terrazzo-settings";
+constexpr const char *kSettingsPath = "/terrazzo-settings/set/";
 
 struct Card {
   std::string id, type;
@@ -94,6 +100,21 @@ class WallClient {
   // Home Assistant is back (it connected to the device): the next error backs off from the
   // shortest wait again, not from where a restart's errors left it. step()'s task.
   void retry_soon() { failures_ = 0; }
+
+  // The settings screen: open_settings() goes to it (blocking, as switch_dashboard), and
+  // close_settings() back where the panel was. A choice tapped there comes to [on_setting] as
+  // (key, value) — `home` <url_path>, `theme` <style id>, `dark` 0/1 — on the tapping task, for
+  // the device to keep and apply (set_look, Config::home).
+  bool open_settings();
+  bool close_settings();
+  bool in_settings() const;
+  void on_setting(std::function<void(const std::string &, const std::string &)> hook) {
+    std::lock_guard<std::mutex> g(lock_);
+    on_setting_ = std::move(hook);
+  }
+  // A new theme, mode or home: each design is the look's, so the place on screen is loaded again
+  // in it (blocking). Values the settings screen marks change with it.
+  bool set_look(const std::string &style, bool dark, const std::string &home);
 
   // Page through the view's cards (+1 / -1). Any task; shows the cached design at once.
   void page(int delta);
@@ -182,6 +203,8 @@ class WallClient {
   std::string layout_json_;            // the last grid, to re-pick a view without a fetch
   std::string dashboard_url_path_;     // the dashboard's real url_path (for a Navigate)
   std::string dash_;                   // the url_path asked for: config_.dashboard, `default` resolved
+  std::string settings_return_;        // where close_settings goes back to
+  std::function<void(const std::string &, const std::string &)> on_setting_;
   // The dashboards this user can see, (url_path, title), in /dashboards' order: to switch.
   std::vector<std::pair<std::string, std::string>> dashboards_;
   std::mutex switch_lock_;             // one switch at a time

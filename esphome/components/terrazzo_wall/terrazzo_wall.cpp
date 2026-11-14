@@ -165,6 +165,7 @@ struct ActionMsg {
   bool dashboard = false;   // with place: a whole dashboard, not a view
   std::string to;  // not a tap: go to this dashboard (url_path), on its first view
   int screen = 0;  // not a tap: page this many screens on (from Home Assistant: off the main loop)
+  bool settings = false;   // not a tap: open the settings screen, or close it when it's open
 };
 
 class StagePlayer : public ::tzwall::Player {
@@ -644,7 +645,10 @@ void TerrazzoWall::setup() {
   s_player = player;
   this->player_.reset(player);
   this->http_ = std::make_unique<IdfTransport>(this->url_, this->token_);
+  this->load_settings_();   // the home, theme and mode chosen on the settings screen
   this->client_ = std::make_unique<::tzwall::WallClient>(*this->http_, *this->player_, this->config_);
+  // A choice on the settings screen: kept, and the panel shown in it (on the tap task).
+  this->client_->on_setting([this](const std::string &key, const std::string &value) { this->apply_setting_(key, value); });
   // Pictures (cameras, images) the designs name by slot: fetched as they're drawn.
   s_pictures = new PictureSource(this->url_, this->token_, this->client_.get(), &this->screen_on_);
   kobentovg::ThorvgPaintContext::setBitmapSource(s_pictures);
@@ -959,6 +963,13 @@ void TerrazzoWall::action_task_(void *self) {
       delete msg;
       continue;
     }
+    if (msg->settings) {
+      const bool open = !wall->client_->in_settings();
+      const bool ok = open ? wall->client_->open_settings() : wall->client_->close_settings();
+      ESP_LOGI(TAG, "settings %s%s", open ? "opened" : "closed", ok ? "" : " (not loaded)");
+      delete msg;
+      continue;
+    }
     if (msg->place != 0) {
       const int64_t t0 = esp_timer_get_time();
       const bool ok = wall->client_->switch_place(msg->place, msg->dashboard);
@@ -1090,11 +1101,19 @@ void TerrazzoWall::toggle_menu() {
 void TerrazzoWall::show_menu_() {
   if (s_player == nullptr || !this->client_) return;
   s_player->menu(this->client_->place(),
-                 "\u2039 back  \u00b7  middle: next view (top), next dashboard (bottom)  \u00b7  on \u203a  \u00b7  hold: close");
+                 "top: settings  \u00b7  \u2039 back  \u00b7  middle: next view (top), next dashboard (bottom)  \u00b7  on \u203a  \u00b7  hold: close");
 }
 
 void TerrazzoWall::menu_tap(float x_dp, float y_dp) {
   this->menu_touched_us_ = esp_timer_get_time();
+  // The top of the screen: the settings screen, opened (or, from it, closed); the menu closes.
+  if (y_dp < this->config_.height_dp * 0.18f) {
+    this->toggle_menu();
+    auto *msg = new ActionMsg{};
+    msg->settings = true;
+    if (s_actions == nullptr || xQueueSend(s_actions, &msg, 0) != pdTRUE) delete msg;
+    return;
+  }
   const float third = this->config_.width_dp / 3.0f;
   if (x_dp < third) {
     this->page_(-1);
@@ -1223,6 +1242,64 @@ void WallButton::press_action() {
     case NEXT_VIEW: this->parent_->next_view(); break;
     case PREVIOUS_VIEW: this->parent_->previous_view(); break;
   }
+}
+
+// ── Settings: chosen on the settings screen, kept in NVS ──
+
+static const char *const SETTINGS_NVS = "tz_settings";
+
+static std::string nvs_string(nvs_handle_t h, const char *key) {
+  size_t size = 0;
+  if (nvs_get_str(h, key, nullptr, &size) != ESP_OK || size == 0) return "";
+  std::string out(size, '\0');
+  if (nvs_get_str(h, key, out.data(), &size) != ESP_OK) return "";
+  out.resize(size - 1);   // the stored terminator
+  return out;
+}
+
+// What the settings screen chose before, over the YAML's: the home dashboard (where the panel
+// starts and an idle panel returns), the theme and the mode.
+void TerrazzoWall::load_settings_() {
+  nvs_handle_t h;
+  if (nvs_open(SETTINGS_NVS, NVS_READONLY, &h) != ESP_OK) return;
+  const std::string home = nvs_string(h, "home"), style = nvs_string(h, "style");
+  uint8_t dark = 0;
+  const bool has_dark = nvs_get_u8(h, "dark", &dark) == ESP_OK;
+  nvs_close(h);
+  if (!home.empty()) {
+    this->config_.dashboard = home;
+    this->config_.home = home;
+    this->home_dashboard_ = home;
+  }
+  if (!style.empty()) this->config_.style = style;
+  if (has_dark) this->config_.dark = dark != 0;
+  ESP_LOGI(TAG, "settings: home %s, theme %s, %s", home.empty() ? "(default)" : home.c_str(),
+           this->config_.style.c_str(), this->config_.dark ? "dark" : "light");
+}
+
+// A choice on the settings screen (the tap task): kept, then the panel shown in it.
+void TerrazzoWall::apply_setting_(const std::string &key, const std::string &value) {
+  nvs_handle_t h;
+  const bool stored = nvs_open(SETTINGS_NVS, NVS_READWRITE, &h) == ESP_OK;
+  if (key == "home") {
+    this->config_.home = value;
+    this->home_dashboard_ = value;
+    if (stored) nvs_set_str(h, "home", value.c_str());
+  } else if (key == "theme") {
+    this->config_.style = value;
+    if (stored) nvs_set_str(h, "style", value.c_str());
+  } else if (key == "dark") {
+    this->config_.dark = value == "1";
+    if (stored) nvs_set_u8(h, "dark", this->config_.dark ? 1 : 0);
+  } else {
+    ESP_LOGW(TAG, "settings: no setting %s", key.c_str());
+  }
+  if (stored) {
+    nvs_commit(h);
+    nvs_close(h);
+  }
+  ESP_LOGI(TAG, "settings: %s = %s", key.c_str(), value.c_str());
+  this->client_->set_look(this->config_.style, this->config_.dark, this->config_.home);
 }
 
 void TerrazzoWall::show_dashboard_option(size_t index) {
