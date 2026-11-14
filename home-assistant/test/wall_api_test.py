@@ -674,19 +674,31 @@ class SettingsTest(unittest.TestCase):
         config = wall.settings_config(dashboards, None, 'classic', True, [])
         screens = wall.screens(wall.layout(config, wall.SETTINGS_DASHBOARD), 432, width=776)['views'][0]['screens']
         self.assertTrue(screens[0]['id'].startswith('v0.p0-'), screens[0]['id'])
+        # The first view stays a few screens: a panel loads every screen of a view at once.
+        self.assertLessEqual(len(screens), 3)
 
-    def test_each_theme_is_a_screen_of_its_own_drawn_in_it(self):
+    def test_each_theme_is_a_view_drawn_in_it(self):
         config = self.config(style='rugged', dark=False)
+        self.assertEqual(len(config['views']), 1 + len(wall.THEMES))
+        general = config['views'][0]['sections'][0]['cards']
+        self.assertEqual(general[4]['heading'], 'Theme · Rugged Digital')
+        rugged_button = [b for b in general[5]['cards'] if b['icon'] == 'mdi:check-circle'][0]
+        self.assertEqual(rugged_button['tap_action']['navigation_path'], '/terrazzo-settings/rugged')
         lay = wall.layout(config, wall.SETTINGS_DASHBOARD)
-        screens = wall.screens(lay, 432, width=776)['views'][0]['screens']
-        self.assertEqual(len(screens), 1 + len(wall.THEMES))
-        card = wall.find_card(config, screens[-1]['id'])
+        index = 1 + [t[0] for t in wall.THEMES].index('rugged')
+        self.assertEqual(lay['views'][index]['path'], 'rugged')
+        screens = wall.screens(lay, 432, width=776)['views'][index]['screens']
+        self.assertEqual(len(screens), 1)
+        card = wall.find_card(config, screens[0]['id'])
         theme, plain = wall.theme_of(card)
         self.assertEqual(theme, ('rugged', False))
         self.assertNotIn(wall.THEME_KEY, plain)
         self.assertEqual(plain['cards'][0]['heading'], 'Rugged Digital · in use')
+        use, back = plain['cards'][-1]['cards']
+        self.assertEqual(use['tap_action']['navigation_path'], wall.setting_path('theme', 'rugged'))
+        self.assertEqual(back['tap_action']['navigation_path'], '/terrazzo-settings/settings')
         # A dark-only theme draws dark on a light panel.
-        nixie = [c for c in (wall.find_card(config, s['id']) for s in screens) if c.get(wall.THEME_KEY) == 'nixie'][0]
+        nixie = config['views'][1 + [t[0] for t in wall.THEMES].index('nixie')]['sections'][0]['cards'][0]
         self.assertTrue(nixie[wall.DARK_KEY])
         self.assertEqual(wall.theme_of({'type': 'tile'}), (None, {'type': 'tile'}))
 

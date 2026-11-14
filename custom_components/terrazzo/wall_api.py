@@ -1517,8 +1517,6 @@ THEMES = (
 THEME_KEY = "terrazzo_theme"
 DARK_KEY = "terrazzo_dark"
 
-# A theme's screen: rows enough that no other section shares it.
-THEME_ROWS = 7
 # Cards from the home dashboard each theme draws, as its preview.
 PREVIEW_CARDS = 4
 _PREVIEW_SKIP = {"heading", "picture-entity", "picture", "picture-glance", CONDITIONAL_CARD, "markdown"}
@@ -1581,11 +1579,22 @@ def _choices(cards):
 
 
 def settings_config(dashboards, home, style, dark, preview, entity=SETTINGS_ENTITY):
-    """The settings dashboard: the home dashboard and mode, then a screen per theme drawing
-    [preview] (cards from the home dashboard) in it, each with a button to use it. [dashboards] is
-    [dashboard_list]'s; [home] the panel's home url_path (None: the list's default); [style] and
-    [dark] the panel's theme and mode now; [entity] the sensor its buttons are bound to."""
+    """The settings dashboard: a first view with the home dashboard, the mode and a button per
+    theme, then a view per theme drawing [preview] (cards from the home dashboard) in it, with a
+    button to use it and one back to the list. A view per theme, not a screen: a panel loads every
+    screen of the view it shows, and two dozen previews at once are more than one holds.
+
+    [dashboards] is [dashboard_list]'s; [home] the panel's home url_path (None: the list's
+    default); [style] and [dark] the panel's theme and mode now; [entity] the sensor its buttons
+    are bound to."""
     home = home or next((d["url_path"] for d in dashboards if d.get("default")), None)
+
+    def go(name, icon, path, chosen=False):
+        card = _choice(name, icon, chosen, "", "", entity)
+        card["tap_action"] = {"action": "navigate", "navigation_path": f"/{SETTINGS_DASHBOARD}/{path}"}
+        return card
+
+    current = next((name for tid, name, _ in THEMES if tid == style), style)
     general = [
         {"type": "heading", "heading": "Home dashboard"},
         _choices(
@@ -1601,26 +1610,29 @@ def settings_config(dashboards, home, style, dark, preview, entity=SETTINGS_ENTI
                 _choice("Dark", "mdi:weather-night", dark, "dark", "1", entity),
             ]
         ),
+        {"type": "heading", "heading": f"Theme · {current}"},
+        _choices([go(name, "mdi:palette-outline", tid, tid == style) for tid, name, _ in THEMES]),
     ]
-    sections = [{"cards": general}]
+    views = [{"title": "Settings", "path": "settings", "type": "sections", "max_columns": 1, "sections": [{"cards": general}]}]
     for tid, name, _ in THEMES:
-        current = tid == style
+        chosen = tid == style
         stack = {
             "type": "vertical-stack",
             THEME_KEY: tid,
             DARK_KEY: drawn_dark(tid, dark),
-            "grid_options": {"columns": "full", "rows": THEME_ROWS},
             "cards": [
-                {"type": "heading", "heading": f"{name} · in use" if current else name},
+                {"type": "heading", "heading": f"{name} · in use" if chosen else name},
                 *([{"type": "grid", "columns": 2, "square": False, "cards": preview}] if preview else []),
-                _choice("In use" if current else f"Use {name}", "mdi:palette-outline", current, "theme", tid, entity),
+                _choices(
+                    [
+                        _choice("In use" if chosen else f"Use {name}", "mdi:palette-outline", chosen, "theme", tid, entity),
+                        go("All themes", "mdi:arrow-left", "settings"),
+                    ]
+                ),
             ],
         }
-        sections.append({"cards": [stack]})
-    return {
-        "title": "Settings",
-        "views": [{"title": "Settings", "path": "settings", "type": "sections", "max_columns": 1, "sections": sections}],
-    }
+        views.append({"title": name, "path": tid, "type": "sections", "max_columns": 1, "sections": [{"cards": [stack]}]})
+    return {"title": "Settings", "views": views}
 
 
 def theme_of(card):
