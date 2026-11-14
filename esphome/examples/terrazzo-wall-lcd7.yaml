@@ -1,0 +1,81 @@
+# A Terrazzo wall display on a Waveshare ESP32-S3-Touch-LCD-7 (800x480 touch, 8 MB PSRAM).
+#
+# In ESPHome Builder: put the Kobento checkouts in the config folder (see ../README.md), put
+# `wall_token`, `wifi_ssid` and `wifi_password` in secrets.yaml, then Install.
+esphome:
+  name: wall-kitchen
+  friendly_name: Kitchen wall
+
+esp32:
+  variant: esp32s3
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/yschimke/homeassistant-remotecompose
+      ref: main
+      path: esphome/components
+    components: [terrazzo_wall]
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  # A mains-powered panel: no radio sleep. Light sleep's wake path (esp_phy_enable from the
+  # power-save TBTT handler) aborted on the LCD-7 while the RGB panel streamed from PSRAM.
+  power_save_mode: none
+
+logger:
+api:
+ota:
+  - platform: esphome
+
+# The documents' clocks; rcstage's own SNTP is left off.
+time:
+  - platform: sntp
+
+terrazzo_wall:
+  id: wall
+  url: http://homeassistant.local:8123
+  token: !secret wall_token     # a long-lived token of a non-admin user made for this panel
+  dashboard: default            # or a dashboard's url_path, e.g. wall-panel
+  view: "0"                     # a view's index or path
+  # card: v0.s0.c1              # one card only
+  kobento:
+    path: kobento/kobento-mcu   # relative to this file
+    board: waveshare_s3_lcd7     # bundled with the component (boards/)
+
+# Page through the view's cards from Home Assistant as well as on the panel.
+button:
+  - platform: template
+    name: Next card
+    on_press:
+      - terrazzo_wall.next_card: wall
+  - platform: template
+    name: Previous card
+    on_press:
+      - terrazzo_wall.previous_card: wall
+  # Another of the dashboards the panel's user can see (each starts on its first view).
+  - platform: template
+    name: Next dashboard
+    on_press:
+      - terrazzo_wall.next_dashboard: wall
+  - platform: template
+    name: Previous dashboard
+    on_press:
+      - terrazzo_wall.previous_dashboard: wall
+  # Wake the screen from Home Assistant (a motion sensor's automation presses it), or blank it.
+  - platform: template
+    name: Wake screen
+    on_press:
+      - terrazzo_wall.wake: wall
+  - platform: template
+    name: Sleep screen
+    on_press:
+      - terrazzo_wall.sleep: wall

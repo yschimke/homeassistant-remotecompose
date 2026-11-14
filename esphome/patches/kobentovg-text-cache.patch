@@ -1,0 +1,147 @@
+--- a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h
++++ b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h
+@@ -257,6 +257,20 @@
+     std::unordered_map<int, Image> mImages;
+     std::unordered_map<int, size_t> mImageSourceHash;
+     std::unordered_map<uint64_t, float> mWidthCache;
++    // Plain text runs rasterised once (premultiplied ARGB, with a margin) and blitted after:
++    // a frame otherwise re-tessellates every glyph, most of its cost on a microcontroller.
++    struct TextImage {
++        std::string text;            // the key's text, to tell a hash collision
++        std::vector<uint32_t> px;
++        int w = 0, h = 0;
++        float ox = 0, oy = 0;        // the image's top-left from the text box's top-left
++        uint32_t usedFrame = 0;
++    };
++    std::unordered_map<uint64_t, TextImage> mTextImages;
++    size_t mTextImageBytes = 0;
++    uint32_t mFrame = 0;
++    bool drawCachedText(const std::string& utf8, const char* font, float size, uint32_t argb,
++                        float x, float top);
+     tvg::Text* mMeasure = nullptr;
+     const char* mMeasureFont = nullptr;
+     float mMeasureSize = -1;
+--- a/components/kobentovg/src/ThorvgPaintContext.cpp
++++ b/components/kobentovg/src/ThorvgPaintContext.cpp
+@@ -269,6 +269,7 @@
+ }
+ 
+ void ThorvgPaintContext::beginFrame(const tvg::Matrix& base, uint32_t clearArgb) {
++    mFrame++;
+     mCanvas->remove();
+     mContainers.clear();
+     mSaves.clear();
+@@ -885,8 +886,16 @@
+         box->mask(t, tvg::MaskMethod::Alpha);
+         push(box);
+         return;
+-    } else
++    } else {
++        // A plain fill drawn unscaled and unrotated (a panel's text, nearly always): the run's
++        // image, rasterised once, rather than its glyphs tessellated again this frame.
++        if (mPaint.style != PaintBundle::STYLE_STROKE && !mPaint.italic && !mOffscreen &&
++            drawCachedText(utf8, font, size, c, x, baselineY - ascent)) {
++            tvg::Paint::rel(t);
++            return;
++        }
+         t->fill((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
++    }
+     if ((c >> 24) != 255) t->opacity(c >> 24);
+     // ThorVG anchors a text box at its top-left (align 0,0); the box top is the ascent line.
+     tvg::Matrix saved = mMatrix;
+@@ -895,6 +904,95 @@
+     mMatrix = saved;
+ }
+ 
++bool ThorvgPaintContext::drawCachedText(const std::string& utf8, const char* font, float size,
++                                        uint32_t argb, float x, float top) {
++    // Only where the image lands pixel for pixel: a translation (whole pixels apart, so the
++    // glyphs are rasterised at the phase they're drawn at).
++#if !defined(ESP_PLATFORM)
++    static const bool off = std::getenv("RC_NO_TEXT_CACHE") != nullptr;   // compare without
++    if (off) return false;
++#endif
++    const tvg::Matrix& m = mMatrix;
++    if (m.e11 != 1 || m.e22 != 1 || m.e12 != 0 || m.e21 != 0 || m.e31 != 0 || m.e32 != 0)
++        return false;
++    const float px = m.e13 + x, py = m.e23 + top;
++    if (!std::isfinite(px) || !std::isfinite(py)) return false;
++    const float fx = px - std::floor(px), fy = py - std::floor(py);
++    uint64_t key = std::hash<std::string>{}(utf8);
++    uint32_t bits[4];
++    std::memcpy(&bits[0], &size, 4);
++    bits[1] = argb | 0xFF000000u;   // the alpha is the Picture's opacity
++    const float qx = std::round(fx * 4) / 4, qy = std::round(fy * 4) / 4;   // quarter-pixel phase
++    std::memcpy(&bits[2], &qx, 4);
++    std::memcpy(&bits[3], &qy, 4);
++    for (uint32_t b : bits) key = (key ^ b) * 1099511628211ull;
++    key ^= (uint64_t) (uintptr_t) font;
++
++    auto it = mTextImages.find(key);
++    if (it == mTextImages.end() || it->second.text != utf8) {
++        const float w = advanceOf(utf8, size);
++        float ascent, descent;
++        textMetrics(size, ascent, descent);
++        const float pad = std::ceil(size * 0.25f) + 1;
++        TextImage img;
++        img.text = utf8;
++        img.w = (int) std::ceil(w + qx + 2 * pad);
++        img.h = (int) std::ceil(ascent + descent + qy + 2 * pad);
++        if (img.w <= 0 || img.h <= 0 || (size_t) img.w * img.h > 1u << 20) return false;
++        img.ox = -pad;
++        img.oy = -pad;
++        img.px.assign((size_t) img.w * img.h, 0);
++        std::unique_ptr<tvg::SwCanvas> canvas(tvg::SwCanvas::gen());
++        if (!canvas || canvas->target(img.px.data(), img.w, img.w, img.h, tvg::ColorSpace::ARGB8888) !=
++                           tvg::Result::Success)
++            return false;
++        auto t = tvg::Text::gen();
++        t->font(font);
++        t->size(size * kPxToTvgSize);
++        t->text(utf8.c_str());
++        t->fill((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF);
++        t->translate(pad + qx, pad + qy);
++        canvas->add(t);
++        canvas->draw(false);
++        canvas->sync();
++        canvas->remove();
++        // Bounded: a screen's runs, many times over. Past it, those not drawn lately go.
++        mTextImageBytes += img.px.size() * 4;
++        if (mTextImageBytes > (4u << 20)) {
++            for (auto e = mTextImages.begin(); e != mTextImages.end();) {
++                if (mFrame - e->second.usedFrame > 2) {
++                    mTextImageBytes -= e->second.px.size() * 4;
++                    e = mTextImages.erase(e);
++                } else {
++                    ++e;
++                }
++            }
++        }
++        if (it != mTextImages.end()) {
++            mTextImageBytes -= it->second.px.size() * 4;
++            it->second = std::move(img);
++        } else {
++            it = mTextImages.emplace(key, std::move(img)).first;
++        }
++    }
++    TextImage& img = it->second;
++    img.usedFrame = mFrame;
++    auto pic = tvg::Picture::gen();
++    if (pic->load(img.px.data(), img.w, img.h, tvg::ColorSpace::ARGB8888, false) !=
++        tvg::Result::Success) {
++        tvg::Paint::rel(pic);
++        return false;
++    }
++    if ((argb >> 24) != 255) pic->opacity(argb >> 24);
++    tvg::Matrix saved = mMatrix;
++    // The image was rasterised at this phase: place it on the whole pixel below.
++    // The image holds the run at its quarter-pixel phase: its origin is on the whole pixel.
++    mMatrix = translateM(std::floor(px) + img.ox, std::floor(py) + img.oy);
++    push(pic);
++    mMatrix = saved;
++    return true;
++}
++
+ void ThorvgPaintContext::drawTextRun(int textId, int start, int end, int, int, float x, float y,
+                                      bool) {
+     auto it = mTexts.find(textId);

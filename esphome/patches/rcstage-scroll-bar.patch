@@ -1,0 +1,147 @@
+diff --color -ruN c/components/rcstage/include/rcstage/stage.h b/components/rcstage/include/rcstage/stage.h
+--- a/components/rcstage/include/rcstage/stage.h	2026-11-13 18:41:16.602337109 +0000
++++ b/components/rcstage/include/rcstage/stage.h	2026-11-13 18:41:16.597901646 +0000
+@@ -25,6 +25,9 @@
+     void (*namedAction)(const std::string& name, int type, const std::string& value) = nullptr;
+     // A tap on the navigation bar (setNavBar): the item's index. Player task.
+     void (*navTap)(int index) = nullptr;
++    // A tap on the scroll bar (setSideWidth): where along it, 0 at the top to 1 at the bottom.
++    // Player task.
++    void (*sideTap)(float at) = nullptr;
+ };
+ 
+ // A navigation bar across the bottom of the screen, `heightDp` tall: documents lay out (and
+@@ -44,6 +47,13 @@
+ };
+ void setNavBar(std::vector<NavItem> items);
+ 
++// A scroll bar down the right of the screen, `widthDp` wide, above the navigation bar: documents
++// lay out in the screen left of it, and touches on it are the bar's (Hooks::sideTap). Set before
++// start(); 0 (the default) has none.
++void setSideWidth(int widthDp);
++// The bar's thumb: its top and its length, as fractions of the bar (0..1). Any task.
++void setSideThumb(float top, float length);
++
+ // Call after board::displayInit(). Shows `doc` first (copied).
+ // false if `doc` didn't load: call again with another.
+ bool start(const Hooks& hooks, const uint8_t* doc, size_t size, const char* name, bool fit = false);
+diff --color -ruN c/components/rcstage/src/stage.cpp b/components/rcstage/src/stage.cpp
+--- a/components/rcstage/src/stage.cpp	2026-11-13 18:41:16.602356776 +0000
++++ b/components/rcstage/src/stage.cpp	2026-11-13 18:41:16.598619408 +0000
+@@ -45,6 +45,7 @@
+ static Hooks sHooks;
+ // The navigation bar's height in dp, kept from the document (set before start; 0: none).
+ static std::atomic<int> sNavHeight{0};
++static std::atomic<int> sSideWidth{0};
+ // Unseen layout passes owed by a document just loaded (see the render loop). Player task.
+ static int sPreroll = 0;
+ 
+@@ -120,15 +121,16 @@
+         // The screen in dp, less the navigation bar under it.
+         const int winW = (int) (board::kWidth / kDensity),
+                   winH = (int) (board::kHeight / kDensity) - sNavHeight.load();
++        const int winWBar = winW - sSideWidth.load();   // less the scroll bar beside it
+         // A document with no size in its header (androidx demos, watch faces) was drawn for a
+         // phone-sized canvas in pixels: fit it from 600 x 600, the default of rc2png
+         // --native and of the Skia reference renderer.
+         constexpr int kFitDefault = 600;
+         fit = fitDoc;
+-        dpW = !fit ? winW : doc->getWidth() > 0 ? doc->getWidth() : kFitDefault;
++        dpW = !fit ? winWBar : doc->getWidth() > 0 ? doc->getWidth() : kFitDefault;
+         dpH = !fit ? winH : doc->getHeight() > 0 ? doc->getHeight() : kFitDefault;
+-        scale = fit ? std::min((float) winW / dpW, (float) winH / dpH) : 1.0f;
+-        ox = fit ? (winW - dpW * scale) / 2 : 0;
++        scale = fit ? std::min((float) winWBar / dpW, (float) winH / dpH) : 1.0f;
++        ox = fit ? (winWBar - dpW * scale) / 2 : 0;
+         oy = fit ? (winH - dpH * scale) / 2 : 0;
+         doc->setWidth(dpW);
+         doc->setHeight(dpH);
+@@ -320,6 +322,7 @@
+ // The navigation bar's items (sLock).
+ static std::vector<NavItem> sNavItems;
+ static bool sNavChanged = false;
++static float sThumbTop = 0, sThumbLength = 1;   // sLock
+ 
+ // What other tasks may read of the showing document (sLock): its size and bytes, and its
+ // named variables' values as of the last frame drawn.
+@@ -632,6 +635,38 @@
+ }
+ 
+ void setNavHeight(int heightDp) { sNavHeight = std::max(0, heightDp); }
++void setSideWidth(int widthDp) { sSideWidth = std::max(0, widthDp); }
++
++void setSideThumb(float top, float length) {
++    top = std::min(1.0f, std::max(0.0f, top));
++    length = std::min(1.0f - top, std::max(0.0f, length));
++    std::lock_guard<std::mutex> g(sLock);
++    if (top == sThumbTop && length == sThumbLength) return;
++    sThumbTop = top, sThumbLength = length;
++    sNavChanged = true;   // drawn again, as the navigation bar is
++}
++
++// The scroll bar: a track down the right, above the navigation bar, and its thumb.
++static void addSideBar(kobentovg::ThorvgPaintContext& pc, int rw, int rh) {
++    if (sSideWidth.load() <= 0) return;
++    float top, length;
++    {
++        std::lock_guard<std::mutex> g(sLock);
++        top = sThumbTop, length = sThumbLength;
++    }
++    const float k = kDensity * rw / board::kWidth;
++    const float x = rw - sSideWidth.load() * k, h = rh - sNavHeight.load() * k, w = rw - x;
++    auto bg = tvg::Shape::gen();
++    bg->appendRect(x, 0, w, h);
++    bg->fill(24, 26, 32, 255);
++    pc.addOverlay(bg);
++    if (length >= 1.0f) return;   // all of it shows: nothing to scroll
++    const float m = 6 * k, tw = w - 2 * m, inner = h - 2 * m;
++    auto thumb = tvg::Shape::gen();
++    thumb->appendRect(x + m, m + top * inner, tw, std::max(tw, length * inner), tw / 2, tw / 2);
++    thumb->fill(3, 169, 244, 200);
++    pc.addOverlay(thumb);
++}
+ int navHeight() { return sNavHeight.load(); }
+ 
+ void setNavBar(std::vector<NavItem> items) {
+@@ -895,6 +930,7 @@
+     float downX = 0, downY = 0, lastX = 0, lastY = 0;
+     int64_t downAt = 0;
+     bool navTouch = false;          // the touch now down started on the navigation bar
++    bool sideTouch = false;         // ... or on the scroll bar
+     int navDownX = 0, navDownY = 0;
+     int frames = 0;
+     int64_t tPresent = 0, statsAt = esp_timer_get_time();
+@@ -930,7 +966,24 @@
+         // an item, and the document never sees it.
+         if (t.down && !wasDown)
+             navTouch = sNavHeight.load() > 0 && t.y >= board::kHeight - sNavHeight.load() * kDensity;
+-        if (navTouch) {
++        if (t.down && !wasDown)
++            sideTouch = !navTouch && sSideWidth.load() > 0 && t.x >= board::kWidth - sSideWidth.load() * kDensity;
++        if (sideTouch) {
++            // Like the navigation bar's: a tap (a press that stays put) says where along the bar.
++            if (t.down && !wasDown) {
++                navDownX = t.x, navDownY = t.y;
++            } else if (t.down) {
++                if (std::abs(t.x - navDownX) > 8 * kDensity || std::abs(t.y - navDownY) > 8 * kDensity) navDownX = -10000;
++            } else if (wasDown) {
++                const float bar = board::kHeight - sNavHeight.load() * kDensity;
++                if (navDownX > -10000 && bar > 0) {
++                    const float at = std::min(1.0f, std::max(0.0f, navDownY / bar));
++                    pushEvent({0, 0, "side", at, 0, {}, {}});
++                    if (sHooks.sideTap) sHooks.sideTap(at);
++                }
++                sideTouch = false;
++            }
++        } else if (navTouch) {
+             if (t.down && !wasDown) {
+                 navDownX = t.x, navDownY = t.y;
+             } else if (t.down) {
+@@ -1027,6 +1080,7 @@
+             ESP_LOGE(TAG, "paint threw: %s", e.what());
+         }
+         addNavBar(*sPlayer.pc, sPlayer.rw, sPlayer.rh);
++        addSideBar(*sPlayer.pc, sPlayer.rw, sPlayer.rh);
+         addBanner(*sPlayer.pc, sPlayer.rw, sPlayer.rh);
+         int64_t t1 = esp_timer_get_time();
+         sFrameFree[1] = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);

@@ -1,0 +1,197 @@
+diff --color -ruN a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h
+--- a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h	2026-11-13 21:55:12.978461510 +0000
++++ b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h	2026-11-13 21:55:12.981248780 +0000
+@@ -97,6 +97,9 @@
+                              std::vector<uint32_t>& px, int& pw, int& ph) = 0;
+     };
+     static void setBitmapSource(BitmapSource* source);
++    // Whether this context asks the bitmap source for pictures (off for a document laid out
++    // ahead, unseen: its pictures are asked for once it shows).
++    void setPictures(bool on) { mPictures = on; }
+ 
+     // `pixels` is a premultiplied ARGB8888 buffer of w*h pixels, owned by the caller.
+     ThorvgPaintContext(rccore::RemoteContext& context, uint32_t* pixels, int w, int h);
+@@ -381,6 +384,7 @@
+     std::unordered_map<int, uint32_t> mImageUrlVersions;
+     // The last clipRect, in the coordinates it was given in: a scaled bitmap is drawn inside it.
+     float mLastClip[4] = {0, 0, 0, 0};
++    bool mPictures = true;
+     // A URL bitmap's image for its visible box [l, t, r, b] (document coordinates), or null.
+     Image* urlImage(int imageId, float l, float t, float r, float b);
+     std::unordered_map<uint64_t, float> mWidthCache;
+diff --color -ruN a/components/kobentovg/src/ThorvgPaintContext.cpp b/components/kobentovg/src/ThorvgPaintContext.cpp
+--- a/components/kobentovg/src/ThorvgPaintContext.cpp	2026-11-13 21:55:12.977712479 +0000
++++ b/components/kobentovg/src/ThorvgPaintContext.cpp	2026-11-13 21:55:12.980534054 +0000
+@@ -1302,7 +1302,7 @@
+ }
+ 
+ ThorvgPaintContext::Image* ThorvgPaintContext::urlImage(int imageId, float l, float t, float r, float b) {
+-    if (sBitmapSource == nullptr) return nullptr;
++    if (sBitmapSource == nullptr || !mPictures) return imageFor(imageId);
+     // The box in target pixels: the document's transform (no rotation in a card) scales it.
+     const float sx = std::sqrt(mMatrix.e11 * mMatrix.e11 + mMatrix.e21 * mMatrix.e21);
+     const float sy = std::sqrt(mMatrix.e12 * mMatrix.e12 + mMatrix.e22 * mMatrix.e22);
+diff --color -ruN a/components/rcstage/include/rcstage/stage.h b/components/rcstage/include/rcstage/stage.h
+--- a/components/rcstage/include/rcstage/stage.h	2026-11-13 21:55:12.977017621 +0000
++++ b/components/rcstage/include/rcstage/stage.h	2026-11-13 21:55:12.979846579 +0000
+@@ -66,6 +66,12 @@
+ // documents designed at one size (a 360 x 360 example on the Core2's 320 x 240), and for
+ // size-less ones drawn for a phone canvas in pixels.
+ void show(std::vector<uint8_t> bytes, std::string name, bool fit = false);
++// Lay out a document ahead, unseen, while the player is idle (a pass at a time): a show() of
++// the same bytes and name then swaps it in already settled, its first frame one pass instead of
++// three. `values` are named values it starts with (the ones show() would be preceded by). One
++// at a time: a new one replaces it. Skipped when memory is short. Any task.
++void preload(std::vector<uint8_t> bytes, std::string name, bool fit = false,
++             std::vector<std::pair<std::string, std::string>> values = {});
+ // A banner across the bottom of the screen; an empty title hides it. `argb` tints its
+ // accent bar (0 = neutral).
+ // A document that declares the named strings system.banner_title / system.banner_detail
+diff --color -ruN a/components/rcstage/src/stage.cpp b/components/rcstage/src/stage.cpp
+--- a/components/rcstage/src/stage.cpp	2026-11-13 21:55:12.976320147 +0000
++++ b/components/rcstage/src/stage.cpp	2026-11-13 21:55:12.979159054 +0000
+@@ -103,7 +103,8 @@
+     bool fit = false;
+     float scale = 1, ox = 0, oy = 0;
+ 
+-    bool load(std::vector<uint8_t> data, const char* docName, uint32_t* pixels, bool fitDoc = false) {
++    bool load(std::vector<uint8_t> data, const char* docName, uint32_t* pixels, bool fitDoc = false,
++              bool ahead = false) {
+         PsramFirst psram;
+         auto next = std::make_unique<rccore::CoreDocument>();
+         try {
+@@ -175,9 +176,15 @@
+                 for (auto& [pattern, fn] : sListeners)
+                     if (matches(pattern, v->varName)) { watched.push_back({v, valueOf(*v)}); break; }
+         }
+-        sPreroll = 2;
++        if (ahead) {
++            pc->setPictures(false);
++            preroll = 2;   // done a pass at a time while idle, unseen
++        } else {
++            sPreroll = 2;
++        }
+         return true;
+     }
++    int preroll = 0;   // a document laid out ahead: passes still to go
+ 
+     struct Watched { const rccore::NamedVariable* var; std::string last; };
+     std::vector<Watched> watched;
+@@ -260,6 +267,15 @@
+ };
+ 
+ static Player sPlayer;
++
++// A document laid out ahead (preload): loaded and prerolled while the player is idle, a step at a
++// time; swapped in by a show() of the same bytes and name.
++static Player sAhead;
++static std::vector<uint8_t> sAheadDoc;   // sLock: the next one to lay out ahead
++static std::string sAheadName;
++static bool sAheadFit = false, sHaveAhead = false;
++static std::vector<std::pair<std::string, std::string>> sAheadValues;
++static constexpr size_t kAheadRoom = 400 * 1024;   // PSRAM a document laid out ahead may leave
+ static uint32_t* sBufs[2];
+ static int64_t sLastRasterUs = 0;   // the last frame's endFrame
+ static int64_t sLastDocUs = 0;      // the last frame's beginFrame and paint
+@@ -759,6 +775,62 @@
+     sHavePending = true;
+ }
+ 
++void preload(std::vector<uint8_t> bytes, std::string name, bool fit,
++             std::vector<std::pair<std::string, std::string>> values) {
++    std::lock_guard<std::mutex> g(sLock);
++    sAheadDoc = std::move(bytes);
++    sAheadName = std::move(name);
++    sAheadFit = fit;
++    sAheadValues = std::move(values);
++    sHaveAhead = true;
++}
++
++// Player task, while idle: one step of laying a document out ahead. True when it did one.
++static bool aheadStep() {
++    std::vector<uint8_t> doc;
++    std::string name;
++    bool fit = false;
++    std::vector<std::pair<std::string, std::string>> values;
++    {
++        std::lock_guard<std::mutex> g(sLock);
++        if (sHaveAhead) {
++            doc = std::move(sAheadDoc);
++            name = std::move(sAheadName);
++            fit = sAheadFit;
++            values = std::move(sAheadValues);
++            sHaveAhead = false;
++        }
++    }
++    if (!name.empty()) {
++        if (name == sPlayer.name && sPlayer.bytes && *sPlayer.bytes == doc) return false;   // showing
++        if (sAhead.doc && sAhead.name == name && sAhead.bytes && *sAhead.bytes == doc) return false;   // laid out
++        sAhead = Player{};   // the one before: dropped first, for its memory
++        if (heap_caps_get_free_size(MALLOC_CAP_SPIRAM) < kAheadRoom + doc.size() * 8) return false;
++        const int64_t t0 = esp_timer_get_time();
++        if (!sAhead.load(std::move(doc), name.c_str(), sBufs[sBack], fit, true)) {
++            sAhead = Player{};
++            return true;
++        }
++        for (auto& [n, v] : sNamedValues) sAhead.setNamed(n, v);
++        for (auto& [n, v] : values) sAhead.setNamed(n, v);
++        ESP_LOGD(TAG, "ahead: '%s' loaded in %d ms", name.c_str(), (int) ((esp_timer_get_time() - t0) / 1000));
++        return true;
++    }
++    if (!sAhead.doc || sAhead.preroll <= 0) return false;
++    const float k = kDensity / sRenderDiv, ks = k * sAhead.scale;
++    const tvg::Matrix base{ks, 0, k * sAhead.ox, 0, ks, k * sAhead.oy, 0, 0, 1};
++    sAhead.pc->beginFrame(base, sAhead.fit ? 0xFF000000 : 0xFFFFFFFF);
++    try {
++        sAhead.doc->paint(*sAhead.ctx, kThemeLight);
++    } catch (const std::exception& e) {
++        ESP_LOGE(TAG, "ahead paint threw: %s", e.what());
++        sAhead = Player{};
++        return true;
++    }
++    if (--sAhead.preroll == 0) sAhead.doc->resetAnimationClock();
++    return true;
++}
++
+ void setBanner(const std::string& title, const std::string& detail, uint32_t argb) {
+     std::lock_guard<std::mutex> g(sLock);
+     if (title == sBannerTitle && detail == sBannerDetail && argb == sBannerArgb) return;
+@@ -878,13 +950,26 @@
+             handed = sPendingAtUs;
+         }
+         const int64_t t0 = esp_timer_get_time();
+-        bool ok = sPlayer.load(std::move(doc), name.c_str(), sBufs[sBack], fit);
++        bool ok;
++        const bool ahead = sAhead.doc && sAhead.name == name && sAhead.fit == fit && sAhead.bytes && *sAhead.bytes == doc;
++        if (ahead) {
++            // Laid out ahead: swapped in, its remaining passes (if any) still to run.
++            std::swap(sPlayer, sAhead);
++            sAhead = Player{};
++            sPlayer.pc->setPictures(true);
++            for (auto& [n, v] : sNamedValues) sPlayer.setNamed(n, v);
++            sPreroll = sPlayer.preroll;
++            sPlayer.preroll = 0;
++            ok = true;
++        } else {
++            ok = sPlayer.load(std::move(doc), name.c_str(), sBufs[sBack], fit);
++        }
+         sLoadedAtUs = esp_timer_get_time();
+         // Where a document's way onto the screen goes: waiting for this task, then loading it
+         // (parse, data pass); its first frame is logged when it's presented.
+-        ESP_LOGI(TAG, "doc '%s' (%u bytes): %s (waited %d ms, loaded in %d ms)", name.c_str(), (unsigned) n,
++        ESP_LOGI(TAG, "doc '%s' (%u bytes): %s (waited %d ms, %s in %d ms)", name.c_str(), (unsigned) n,
+                  ok ? "showing" : "FAILED, kept the old one", (int) ((t0 - handed) / 1000),
+-                 (int) ((sLoadedAtUs - t0) / 1000));
++                 ahead ? "laid out ahead, swapped" : "loaded", (int) ((sLoadedAtUs - t0) / 1000));
+         if (ok) {
+             publishInfo();
+             pushEvent({0, 0, "document", 0, 0, name, {}});
+@@ -1061,7 +1146,7 @@
+ 
+         // ── render ──
+         if (!sDirty && now < nextAt) {
+-            vTaskDelay(pdMS_TO_TICKS(5));
++            if (!aheadStep()) vTaskDelay(pdMS_TO_TICKS(5));
+             continue;
+         }
+         if (kSingleBuffer && !board::kEink) board::presentWait();   // the panel has read it

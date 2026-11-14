@@ -1,0 +1,26 @@
+# Waveshare ESP32-S3-Touch-LCD-7: ESP32-S3R8 (8 MB octal PSRAM), 8 MB flash, 7" 800x480 RGB
+# panel. Read by the terrazzo_wall ESPHome component, which leaves the chip, flash, console and
+# radio to ESPHome's own settings.
+CONFIG_IDF_TARGET="esp32s3"
+
+# ── PSRAM: the frame buffers and the player's render buffers live here ──
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+
+# ── RGB panel: run code and constants from PSRAM so a flash write (OTA, NVS) doesn't stall
+# the scan-out, and give the data cache room (ESP-IDF's RGB panel guidance) ──
+CONFIG_SPIRAM_XIP_FROM_PSRAM=y
+CONFIG_ESP32S3_DATA_CACHE_64KB=y
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
+# The player's code (rccore's layout and paint, ThorVG) runs from PSRAM too, on the bus the
+# scan-out keeps busy: the largest instruction cache (16 KB more internal RAM) misses less.
+CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
+CONFIG_ESP32S3_INSTRUCTION_CACHE_LINE_32B=y
+CONFIG_LCD_RGB_ISR_IRAM_SAFE=y
+
+# The player's stack lives in PSRAM (board.h BOARD_RENDER_STACK_KB), and a stack overflow
+# faults at once (a watchpoint on the stack's end) instead of corrupting what lies below.
+CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY=y
+CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK=y
