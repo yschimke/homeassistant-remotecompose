@@ -69,7 +69,7 @@ def _look(request):
     """The card style, light or dark, palette, and player a request asks for. The player is the
     display a small device draws on and what it can play, `(density, font_scale, width, height,
     profile)` from those query names: the design server makes each design for it (wall_api.player)."""
-    query = request.query
+    query = getattr(request, "query", request)  # A request, or its query.
     return (
         query.get("style") or "classic",
         query.get("dark", "").lower() in ("1", "true", "yes"),
@@ -85,8 +85,47 @@ def _look(request):
     )
 
 
-async def _dashboard(hass, user, url_path):
-    """(url_path or None, the dashboard's config). Raises WallError."""
+async def _wall_dashboards(hass, user):
+    """The dashboards [user] may see that a wall can show, as `/dashboards` lists them."""
+    configs = {}
+    for key, (dashboard, config) in edits.visible_dashboards(hass, user).items():
+        try:
+            cards = await dashboard.async_load(False)
+        except HomeAssistantError:
+            continue
+        if wall_api.has_cards(cards):
+            configs[key] = config
+    return wall_api.dashboard_list(configs, _chosen_dashboard(hass))
+
+
+async def _settings(hass, user, query):
+    """The settings dashboard for the panel asking: its home (`home=`), theme and mode (the look's
+    `style=` and `dark=`) marked, and its home dashboard's first cards as each theme's preview."""
+    dashboards = await _wall_dashboards(hass, user)
+    home = query.get("home") or next((d["url_path"] for d in dashboards if d["default"]), None)
+    try:
+        preview = wall_api.preview_cards((await _dashboard(hass, user, home))[1]) if home else []
+    except wall_api.WallError:
+        preview = []
+    style, dark = _look(query)[:2]
+    # The buttons' slot: a sensor this user can read that has a state.
+    entity = next(
+        (
+            state.entity_id
+            for state in hass.states.async_all("sensor")
+            if state.state not in ("unavailable", "unknown")
+            and user.permissions.check_entity(state.entity_id, POLICY_READ)
+        ),
+        wall_api.SETTINGS_ENTITY,
+    )
+    return wall_api.settings_config(dashboards, home, style, dark, preview, entity)
+
+
+async def _dashboard(hass, user, url_path, query=None):
+    """(url_path or None, the dashboard's config). [query] is the request's, which the settings
+    dashboard is made from. Raises WallError."""
+    if url_path == wall_api.SETTINGS_DASHBOARD:
+        return url_path, await _settings(hass, user, query or {})
     key = None if url_path in (None, "", wall_api.DEFAULT_DASHBOARD) else url_path
     found = edits.visible_dashboards(hass, user).get(key)
     if found is None:
@@ -301,10 +340,13 @@ class Hub:
                         if self.store.hide(cid):
                             self.wake.set()
                         return
+                    # A settings theme's screen is drawn in that theme, not the panel's.
+                    theme, card = wall_api.theme_of(card)
+                    look = self.look if theme is None else theme + self.look[2:]
                     if self.look[3] is not None:
                         card = wall_api.panel_card(card, self.look[3], self.look[4])
                     sha, exact, values = await _resolve(
-                        hass, self.user, base, authorization, card, self.look
+                        hass, self.user, base, authorization, card, look
                     )
                 except wall_api.WallError as failure:
                     if failure.status == 404 and wall_api.screen_size(cid) > 1:
@@ -398,11 +440,13 @@ class Wall:
                 del self.hubs[key]
                 hub.wake.set()  # Its polls answer `reset`.
 
-    def hub(self, user, url_path, look, config):
+    def hub(self, user, url_path, look, config, variant=None):
+        """[variant]: what else the dashboard was made from (the settings' home), so panels that
+        differ only in it keep hubs of their own."""
         now = time.monotonic()
         for key in [k for k, h in self.hubs.items() if now - h.used > IDLE]:
             del self.hubs[key]
-        key = (url_path, user.id, look)
+        key = (url_path, user.id, look, variant)
         hub = self.hubs.get(key)
         if hub is None or hub.etag != wall_api.config_etag(config):
             if hub is not None:
@@ -436,18 +480,7 @@ class WallDashboardsView(HomeAssistantView):
         self.hass = hass
 
     async def get(self, request):
-        user = request["hass_user"]
-        configs = {}
-        for key, (dashboard, config) in edits.visible_dashboards(self.hass, user).items():
-            try:
-                cards = await dashboard.async_load(False)
-            except HomeAssistantError:
-                continue
-            if wall_api.has_cards(cards):
-                configs[key] = config
-        return _json(
-            {"dashboards": wall_api.dashboard_list(configs, _chosen_dashboard(self.hass))}
-        )
+        return _json({"dashboards": await _wall_dashboards(self.hass, request["hass_user"])})
 
 
 class WallLayoutView(HomeAssistantView):
@@ -461,7 +494,7 @@ class WallLayoutView(HomeAssistantView):
 
     async def get(self, request, url_path):
         try:
-            _, config = await _dashboard(self.hass, request["hass_user"], url_path)
+            _, config = await _dashboard(self.hass, request["hass_user"], url_path, request.query)
             layout = wall_api.layout(config, url_path)
         except wall_api.WallError as failure:
             return _error(failure)
@@ -484,19 +517,21 @@ class WallCardView(HomeAssistantView):
 
     async def get(self, request, url_path, card_id):
         try:
-            _, config = await _dashboard(self.hass, request["hass_user"], url_path)
+            _, config = await _dashboard(self.hass, request["hass_user"], url_path, request.query)
             card = _shown(self.hass, request["hass_user"], wall_api.find_card(config, card_id))
             base = await _design_server_url(self.hass)
             if base is None:
                 raise wall_api.WallError(503, "No card design server: install the Terrazzo Card Designs add-on.")
             look = _look(request)
+            # A settings theme's preview is drawn in that theme, as /values draws it.
+            theme, card = wall_api.theme_of(card)
             sha, exact, values = await _resolve(
                 self.hass,
                 request["hass_user"],
                 base,
                 request.headers.get("Authorization"),
                 wall_api.panel_card(card, look[3], look[4]) if look[3] is not None else card,
-                look,
+                look if theme is None else theme + look[2:],
             )
         except wall_api.WallError as failure:
             return _error(failure)
@@ -531,11 +566,12 @@ class WallValuesView(HomeAssistantView):
 
     async def get(self, request, url_path):
         try:
-            key, config = await _dashboard(self.hass, request["hass_user"], url_path)
+            key, config = await _dashboard(self.hass, request["hass_user"], url_path, request.query)
             base = await _design_server_url(self.hass)
             if base is None:
                 raise wall_api.WallError(503, "No card design server: install the Terrazzo Card Designs add-on.")
-            hub = _wall(self.hass).hub(request["hass_user"], key, _look(request), config)
+            variant = request.query.get("home") if key == wall_api.SETTINGS_DASHBOARD else None
+            hub = _wall(self.hass).hub(request["hass_user"], key, _look(request), config, variant)
         except wall_api.WallError as failure:
             return _error(failure)
         authorization = request.headers.get("Authorization")
@@ -652,7 +688,7 @@ class WallActionView(HomeAssistantView):
     async def post(self, request, url_path, card_id):
         user = request["hass_user"]
         try:
-            _, config = await _dashboard(self.hass, user, url_path)
+            _, config = await _dashboard(self.hass, user, url_path, request.query)
             card = _shown(self.hass, user, wall_api.find_card(config, card_id))
         except wall_api.WallError as failure:
             return _error(failure)
@@ -829,7 +865,7 @@ class WallPictureView(HomeAssistantView):
         user = request["hass_user"]
         try:
             w, h, fit, fmt = wall_api.picture_query(request.query)
-            _, config = await _dashboard(self.hass, user, url_path)
+            _, config = await _dashboard(self.hass, user, url_path, request.query)
             card = _shown(self.hass, user, wall_api.find_card(config, card_id))
             entity = wall_api.picture_entity(card, slot)
             if entity is None:
