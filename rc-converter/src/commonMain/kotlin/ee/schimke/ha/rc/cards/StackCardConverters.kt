@@ -360,30 +360,37 @@ class GridCardConverter : DesignedCardConverter() {
           fillHeight = true,
         )
       } else if (threshold == null) {
-        GridCells(
-          children,
-          bindingIndices,
-          squareCells,
-          keepColumns,
-          snapshot,
-          plan.widePerRow,
-          modifier,
-        )
-      } else {
-        RemoteSizeBreakpoint(
-          thresholdsDp = intArrayOf(threshold),
-          modifier = modifier.fillMaxWidth(),
-        ) { tier ->
-          val perRow = if (tier > 0) plan.widePerRow else plan.narrowPerRow
+        // A cell's share of a known playback width, for a nested grid (ProvideChildCaptureShare).
+        ProvideChildCaptureShare(columns = plan.widePerRow, gapDp = HaGridLayout.GAP_DP) {
           GridCells(
             children,
             bindingIndices,
             squareCells,
             keepColumns,
             snapshot,
-            perRow,
-            RemoteModifier.fillMaxWidth(),
+            plan.widePerRow,
+            modifier,
           )
+        }
+      } else {
+        // At a playback width known when it's captured, the breakpoint picks the tier now and the
+        // design carries only that layout (RemoteSizeBreakpoint).
+        RemoteSizeBreakpoint(
+          thresholdsDp = intArrayOf(threshold),
+          modifier = modifier.fillMaxWidth(),
+        ) { tier ->
+          val perRow = if (tier > 0) plan.widePerRow else plan.narrowPerRow
+          ProvideChildCaptureShare(columns = perRow, gapDp = HaGridLayout.GAP_DP) {
+            GridCells(
+              children,
+              bindingIndices,
+              squareCells,
+              keepColumns,
+              snapshot,
+              perRow,
+              RemoteModifier.fillMaxWidth(),
+            )
+          }
         }
       }
     }

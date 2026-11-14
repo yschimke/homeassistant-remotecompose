@@ -184,8 +184,11 @@ object CardResolve {
     val palette =
       request.palette?.let { name -> ThemeStyle.entries.firstOrNull { it.name == name } }
         ?: ThemeStyle.entries.first()
+    // A player that shows the card at a width it knows gets a design captured for that width: a
+    // grid's columns chosen now, not by a size gate the player evaluates on every layout.
     val key =
       CardDesignTemplates.keyFor(card, snapshot, palette, request.dark, cardStyle = cardStyle)
+        ?.let { key -> request.player?.display?.width?.let { key.copy(widthDp = it) } ?: key }
         ?: return null
     val design = generator.design(key)
     val bytes = generator.bytes(design) ?: return null

@@ -85,6 +85,15 @@ fun RemoteSizeBreakpoint(
     return
   }
 
+  // A player that plays the design at a width known when it's captured (DesignKey.widthDp): a
+  // width ladder picks its tier now, and the document carries only that layout. Its height is
+  // still the player's to decide, so a height ladder stays live.
+  val playbackWidth = LocalPlaybackWidthDp.current
+  if (playbackWidth != null && axis == BreakpointAxis.Width) {
+    RemoteBox(modifier = modifier) { content(thresholdsDp.count { playbackWidth >= it }) }
+    return
+  }
+
   // Each breakpoint registers its own expression (see rememberExpressionName).
   val uniqueName = rememberExpressionName(BreakpointExpressionPrefix)
   RemoteBox(modifier = modifier) {
@@ -186,10 +195,19 @@ data class WidgetCaptureSizeDp(val widthDp: Int, val heightDp: Int)
 internal val LocalWidgetCaptureSizeDp = staticCompositionLocalOf<WidgetCaptureSizeDp?> { null }
 
 /**
- * Runs [content] with the launcher capture size narrowed to one child's share of it, for a
- * container that splits its room into [columns] × [rows] equal parts with [gapDp] between them (a
- * grid's cells, a horizontal stack's columns). A nested grid or size gate then picks its layout for
- * the room it will actually be played in, not the whole widget's. No-op outside a launcher capture.
+ * The width in dp the content is played at, when the design is captured for a player that knows it
+ * ([DesignKey.widthDp][ee.schimke.ha.design.DesignKey.widthDp]); null when it plays at any width.
+ * Unlike [LocalWidgetCaptureSizeDp] it decides only a width [RemoteSizeBreakpoint]'s tier: what is
+ * drawn stays the same as at any width, nothing dropped to fit.
+ */
+internal val LocalPlaybackWidthDp = staticCompositionLocalOf<Int?> { null }
+
+/**
+ * Runs [content] with the launcher capture size (and a known playback width,
+ * [LocalPlaybackWidthDp]) narrowed to one child's share of it, for a container that splits its room
+ * into [columns] × [rows] equal parts with [gapDp] between them (a grid's cells, a horizontal
+ * stack's columns). A nested grid or size gate then picks its layout for the room it will actually
+ * be played in, not the whole widget's. No-op when neither is known.
  */
 @Composable
 internal fun ProvideChildCaptureShare(
@@ -199,14 +217,16 @@ internal fun ProvideChildCaptureShare(
   content: @Composable () -> Unit,
 ) {
   val size = LocalWidgetCaptureSizeDp.current
-  if (size == null || columns < 1 || rows < 1) {
+  val playbackWidth = LocalPlaybackWidthDp.current
+  if ((size == null && playbackWidth == null) || columns < 1 || rows < 1) {
     content()
     return
   }
   fun share(total: Int, parts: Int): Int = ((total - gapDp * (parts - 1)) / parts).coerceAtLeast(0)
   CompositionLocalProvider(
     LocalWidgetCaptureSizeDp provides
-      WidgetCaptureSizeDp(share(size.widthDp, columns), share(size.heightDp, rows)),
+      size?.let { WidgetCaptureSizeDp(share(it.widthDp, columns), share(it.heightDp, rows)) },
+    LocalPlaybackWidthDp provides playbackWidth?.let { share(it, columns) },
     content = content,
   )
 }
