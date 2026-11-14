@@ -1,0 +1,44 @@
+diff --color -ruN a/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp b/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp
+--- a/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp	2026-11-13 17:21:53.589052790 +0000
++++ b/players/cpp/lib/rccore/src/operations/LayoutOperations.cpp	2026-11-13 19:23:23.534768831 +0000
+@@ -1413,6 +1413,15 @@
+         }
+     }
+ 
++    // ImageLayout.computeWrapSize: an image wraps to its bitmap's declared size (a picture the
++    // host loads by URL declares a placeholder's), which its modifiers then bound.
++    if (oc == 234) {
++        if (const auto* dim = ctx.getBitmapDim(static_cast<LayoutImage*>(op)->imageId)) {
++            wrapW = (float) dim->width;
++            wrapH = (float) dim->height;
++        }
++    }
++
+     // STEP 8: Apply wrap sizes (Java)
+     // The maximum is enforced here already (the reference does it after the wrap, in
+     // STEP 10), because the children are re-measured below at the final size: a collapsible
+@@ -3504,6 +3513,24 @@
+                            tAlign, tMaxLines, tOverflow, lsPx, tLineAdd, tLineMul, tUnderline, tStrike);
+             pc->restorePaint();
+         }
++    } else if (oc == 234) {
++        // ImageLayout.paint: the bitmap scaled into the content box by its content scale
++        // (ImageScaling, as DRAW_BITMAP_SCALED does), clipped to the box. The source is the
++        // bitmap's declared size: a placeholder's for a picture the host loads by URL.
++        auto* im = static_cast<LayoutImage*>(op);
++        const float cw = m.w - ls.paddingLeft - ls.paddingRight;
++        const float ch = m.h - ls.paddingTop - ls.paddingBottom;
++        const auto* dim = ctx.getBitmapDim(im->imageId);
++        if (dim && dim->width > 0 && dim->height > 0 && cw > 0 && ch > 0) {
++            DrawBitmapScaled draw;
++            draw.imageId = im->imageId;
++            draw.oSrcR = (float) dim->width;
++            draw.oSrcB = (float) dim->height;
++            draw.oDstR = cw;
++            draw.oDstB = ch;
++            draw.scaleType = im->contentScale;
++            draw.apply(ctx);
++        }
+     } else if (oc == 93) {
+         // Custom component: delegate drawing to the platform host (e.g. video). The
+         // canvas is already translated to the content box; hand it (0,0)..(w,h).

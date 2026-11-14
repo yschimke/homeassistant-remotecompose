@@ -1,0 +1,14 @@
+diff --color -ruN a/components/rcstage/src/stage.cpp b/components/rcstage/src/stage.cpp
+--- a/components/rcstage/src/stage.cpp	2026-11-13 22:40:51.829534357 +0000
++++ b/components/rcstage/src/stage.cpp	2026-11-13 22:40:51.830332841 +0000
+@@ -180,7 +180,9 @@
+             pc->setPictures(false);
+             preroll = 2;   // done a pass at a time while idle, unseen
+         } else {
+-            sPreroll = 2;
++            // rccore settles a layout within the frame it paints (rccore-settle.patch): its first
++            // frame is the settled one, with no unseen frames before it.
++            sPreroll = 0;
+         }
+         return true;
+     }

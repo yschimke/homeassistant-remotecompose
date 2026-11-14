@@ -1,0 +1,162 @@
+diff --color -ruN a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h
+--- a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h	2026-11-13 18:15:14.655953075 +0000
++++ b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h	2026-11-13 18:15:14.653994195 +0000
+@@ -45,6 +45,7 @@
+     static constexpr int TYPE_RAW8888 = 3;
+     static constexpr int TYPE_PNG_ALPHA_8 = 4;
+     static constexpr int ENCODING_INLINE = 0;
++    static constexpr int ENCODING_URL = 1;
+     static constexpr int ENCODING_EMPTY = 3;
+ 
+     // Font families this backend resolves typefaces to. Register the data once, before
+@@ -80,6 +81,23 @@
+     static bool faceHas(Face face, uint32_t codePoint);
+     static void setGlyphSource(GlyphSource* source);
+ 
++    // Pictures a document names by URL (a BitmapData of ENCODING_URL: `rc-slot://camera.s0/
++    // entity_picture`), which the host loads. Each is drawn whole into the part of its box that
++    // shows (its destination within the clip it's drawn in), so the host gives it at that size
++    // (or smaller, to save memory: it's scaled up), cropped to it. Nothing is drawn until the
++    // host has it. The host decodes it: the paint keeps the one copy of its pixels it's given.
++    class BitmapSource {
++    public:
++        virtual ~BitmapSource() = default;
++        // Called from the paint: [url] drawn [w] x [h] pixels, of which the caller has
++        // [version] (0: none). When the host has another, it fills [px] (premultiplied
++        // ARGB8888, [pw] x [ph]), sets [version] and returns true; else false. A host fetching
++        // what it's asked for calls rcstage::redraw() once it has it.
++        virtual bool picture(const std::string& url, int w, int h, uint32_t& version,
++                             std::vector<uint32_t>& px, int& pw, int& ph) = 0;
++    };
++    static void setBitmapSource(BitmapSource* source);
++
+     // `pixels` is a premultiplied ARGB8888 buffer of w*h pixels, owned by the caller.
+     ThorvgPaintContext(rccore::RemoteContext& context, uint32_t* pixels, int w, int h);
+     ~ThorvgPaintContext() override;
+@@ -358,6 +376,13 @@
+     std::unordered_map<int, PathData> mPaths;
+     std::unordered_map<int, Image> mImages;
+     std::unordered_map<int, size_t> mImageSourceHash;
++    // ENCODING_URL bitmaps: their URL, and the version of the bytes their image was decoded from.
++    std::unordered_map<int, std::string> mImageUrls;
++    std::unordered_map<int, uint32_t> mImageUrlVersions;
++    // The last clipRect, in the coordinates it was given in: a scaled bitmap is drawn inside it.
++    float mLastClip[4] = {0, 0, 0, 0};
++    // A URL bitmap's image for its visible box [l, t, r, b] (document coordinates), or null.
++    Image* urlImage(int imageId, float l, float t, float r, float b);
+     std::unordered_map<uint64_t, float> mWidthCache;
+     // Plain text runs rasterised once (premultiplied ARGB, with a margin) and blitted after:
+     // a frame otherwise re-tessellates every glyph, most of its cost on a microcontroller.
+diff --color -ruN a/components/kobentovg/src/ThorvgPaintContext.cpp b/components/kobentovg/src/ThorvgPaintContext.cpp
+--- a/components/kobentovg/src/ThorvgPaintContext.cpp	2026-11-13 18:15:14.660192774 +0000
++++ b/components/kobentovg/src/ThorvgPaintContext.cpp	2026-11-13 18:15:14.658563915 +0000
+@@ -130,6 +130,8 @@
+ static bool zeroWidth(uint32_t cp) { return cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F); }
+ 
+ void ThorvgPaintContext::setGlyphSource(GlyphSource* source) { sGlyphSource = source; }
++static ThorvgPaintContext::BitmapSource* sBitmapSource = nullptr;
++void ThorvgPaintContext::setBitmapSource(BitmapSource* source) { sBitmapSource = source; }
+ 
+ ThorvgPaintContext::CacheBytes ThorvgPaintContext::cacheBytes() const {
+     CacheBytes b{};
+@@ -1172,11 +1174,24 @@
+ }
+ 
+ void ThorvgPaintContext::drawBitmap(int imageId, float l, float t, float r, float b) {
++    if (mImageUrls.count(imageId)) {
++        if (Image* img = urlImage(imageId, l, t, r, b)) drawImage(*img, l, t, r - l, b - t);
++        return;
++    }
+     if (Image* img = imageFor(imageId)) drawImage(*img, l, t, r - l, b - t);
+ }
+ 
+ void ThorvgPaintContext::drawBitmapInt(int imageId, int srcL, int srcT, int srcR, int srcB,
+                                        int dstL, int dstT, int dstR, int dstB, int) {
++    if (mImageUrls.count(imageId)) {
++        // Its size in the document is a placeholder's: the picture fills what of the destination
++        // shows, which the host crops it to.
++        const float l = std::max((float) dstL, mLastClip[0]), t = std::max((float) dstT, mLastClip[1]);
++        const float r = std::min((float) dstR, mLastClip[2]), b = std::min((float) dstB, mLastClip[3]);
++        if (r > l && b > t)
++            if (Image* img = urlImage(imageId, l, t, r, b)) drawImage(*img, l, t, r - l, b - t);
++        return;
++    }
+     Image* img = imageFor(imageId);
+     if (!img || srcR <= srcL || srcB <= srcT) return;
+     float sx = float(dstR - dstL) / float(srcR - srcL);
+@@ -1227,6 +1242,10 @@
+         std::fprintf(stderr, "bitmap %d: %dx%d type %d encoding %d, %zu bytes\n", imageId, width, height, type,
+                      encoding, data.size());
+ #endif
++    if (encoding == ENCODING_URL) {
++        mImageUrls[imageId] = std::string(data.begin(), data.end());
++        return;
++    }
+     if (encoding == ENCODING_EMPTY) {
+         Image& img = mImages[imageId];
+         if (img.px.empty() && width > 0 && height > 0) {
+@@ -1282,6 +1301,28 @@
+     mImageSourceHash[imageId] = hash;
+ }
+ 
++ThorvgPaintContext::Image* ThorvgPaintContext::urlImage(int imageId, float l, float t, float r, float b) {
++    if (sBitmapSource == nullptr) return nullptr;
++    // The box in target pixels: the document's transform (no rotation in a card) scales it.
++    const float sx = std::sqrt(mMatrix.e11 * mMatrix.e11 + mMatrix.e21 * mMatrix.e21);
++    const float sy = std::sqrt(mMatrix.e12 * mMatrix.e12 + mMatrix.e22 * mMatrix.e22);
++    const int w = (int) std::lround((r - l) * sx), h = (int) std::lround((b - t) * sy);
++    if (w <= 0 || h <= 0) return nullptr;
++    const uint32_t had = mImageUrlVersions[imageId];
++    uint32_t version = had;
++    std::vector<uint32_t> px;
++    int pw = 0, ph = 0;
++    if (sBitmapSource->picture(mImageUrls[imageId], w, h, version, px, pw, ph) && version != had &&
++        pw > 0 && ph > 0 && px.size() >= (size_t) pw * ph) {
++        Image& img = mImages[imageId];
++        img.px = std::move(px);   // the old pixels go here, the new ones are the only copy
++        img.w = pw, img.h = ph;
++        img.version++;
++        mImageUrlVersions[imageId] = version;
++    }
++    return imageFor(imageId);
++}
++
+ void ThorvgPaintContext::beginDrawToBitmap(int bitmapId, int mode, int color) {
+     Image* img = imageFor(bitmapId);
+     if (!img) return;
+@@ -2292,6 +2333,7 @@
+ void ThorvgPaintContext::restoreLayer() { matrixRestore(); }
+ 
+ void ThorvgPaintContext::clipRect(float l, float t, float r, float b) {
++    mLastClip[0] = l, mLastClip[1] = t, mLastClip[2] = r, mLastClip[3] = b;
+     TRACE("clipRect %g %g %g %g depth=%zu\n", l, t, r, b, mContainers.size());
+     auto clip = tvg::Shape::gen();
+     clip->appendRect(l, t, r - l, b - t);
+diff --color -ruN a/components/rcstage/include/rcstage/stage.h b/components/rcstage/include/rcstage/stage.h
+--- a/components/rcstage/include/rcstage/stage.h	2026-11-13 18:15:14.664369984 +0000
++++ b/components/rcstage/include/rcstage/stage.h	2026-11-13 18:15:14.662974524 +0000
+@@ -66,6 +66,9 @@
+ // variables, a string. Sticky, like RemoteContext.setNamed*Override: it is applied to every
+ // document loaded later that declares the name, and ignored by those that don't.
+ void setNamed(std::string name, std::string value);
++// Draw the showing document again on the next loop: something it draws from outside the
++// document changed (a picture its bitmap source fetched). Any task.
++void redraw();
+ // Listen to a class of named variables: fn(name, value) runs when a named variable of the
+ // showing document whose name matches `pattern` was changed by a touch: a click's value
+ // change, or a value the document exports that follows a drag. It runs once the gesture is
+diff --color -ruN a/components/rcstage/src/stage.cpp b/components/rcstage/src/stage.cpp
+--- a/components/rcstage/src/stage.cpp	2026-11-13 18:15:14.667524998 +0000
++++ b/components/rcstage/src/stage.cpp	2026-11-13 18:15:14.666919186 +0000
+@@ -807,7 +807,11 @@
+ 
+ // ── The task ────────────────────────────────────────────────────────────────────────────
+ 
++static std::atomic<bool> sRedraw{false};
++void redraw() { sRedraw = true; }
++
+ static void drainInbox() {
++    if (sRedraw.exchange(false)) sDirty = true;
+     std::vector<uint8_t> doc;
+     std::string name;
+     bool haveDoc = false, banner = false, fit = false;
