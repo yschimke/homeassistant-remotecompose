@@ -19,7 +19,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemeChoice
-import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.widget.WidgetStore
@@ -252,9 +251,13 @@ private suspend fun resumeSession(
     if (graph.tokenVault.get(baseUrl) == null) {
       // The cache knows the instance but there's no token to reach it with: a restore from backup
       // or a device transfer (the token vault isn't backed up), or a token that couldn't be
-      // decrypted. Waiting can't fix that, so flag reauth: TerrazzoApp signs out to the sign-in
-      // screen, as it does when Home Assistant refuses a token.
-      (initial as? CachedHaSession)?.markNeedsReauth()
+      // decrypted. Waiting can't fix that, so go to sign-in with this instance pre-filled. Not a
+      // sign-out: the restored cache is the user's own, and signing in again shows it at once.
+      if (holder.session === initial) {
+        holder.reauthBaseUrl = baseUrl
+        holder.session = null
+        initial.close()
+      }
       return
     }
     // Live at once, without waiting for a token: the session mints one from the stored refresh

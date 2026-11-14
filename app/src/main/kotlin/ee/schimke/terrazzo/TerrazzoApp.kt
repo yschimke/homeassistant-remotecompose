@@ -207,9 +207,24 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
     s.connectionStatus.collect { imageStack?.setAuth(s.baseUrl, s.accessToken) }
   }
 
+  // A sign-in ends the pending re-auth (MainActivity's resume found the restored instance but no
+  // token). Signing in somewhere else, or to the demo, also drops that instance's restored cache,
+  // so a home the user moved away from isn't left on the device.
+  fun signedIn(baseUrl: String?) {
+    val restored = sessionHolder.reauthBaseUrl ?: return
+    sessionHolder.reauthBaseUrl = null
+    if (restored != baseUrl) {
+      scope.launch {
+        graph.offlineCache.clearInstance(restored)
+        graph.remoteUrlStore.clear(restored)
+      }
+    }
+  }
+
   val login =
     rememberLoginController(
       onReady = { baseUrl, accessToken ->
+        signedIn(baseUrl)
         session = graph.sessionFactory.create(baseUrl, accessToken)
       },
       onError = { lastError = it },
@@ -237,6 +252,7 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
         },
         onDemoSelected = {
           cancelLiveDemo()
+          signedIn(null)
           scope.launch { graph.preferencesStore.setDemoMode(true) }
           session = graph.sessionFactory.createDemo()
           widgetScheduler.scheduleDemo()
@@ -267,11 +283,13 @@ fun TerrazzoApp(sessionHolder: SessionHolder, initialDashboard: String? = null) 
             } else {
               graph.tokenVault.put(baseUrl, refresh)
               graph.tokenVault.putClientId(baseUrl, HaAuthService.passwordClientId(baseUrl))
+              signedIn(baseUrl)
               session = graph.sessionFactory.create(baseUrl, access)
             }
           }
         },
         liveDemoSigningIn = liveDemoSigningIn,
+        reauthBaseUrl = sessionHolder.reauthBaseUrl,
         error = lastError,
       )
     else ->
@@ -289,6 +307,7 @@ private fun UnauthenticatedScreen(
   onDemoSelected: () -> Unit,
   onLiveDemo: (username: String, password: String) -> Unit,
   liveDemoSigningIn: Boolean,
+  reauthBaseUrl: String?,
   error: Throwable?,
 ) {
   val snackbars = remember { SnackbarHostState() }
@@ -304,6 +323,7 @@ private fun UnauthenticatedScreen(
     onDemoSelected = onDemoSelected,
     onLiveDemo = onLiveDemo,
     liveDemoSigningIn = liveDemoSigningIn,
+    reauthBaseUrl = reauthBaseUrl,
     snackbarHost = { SnackbarHost(hostState = snackbars) },
   )
 }

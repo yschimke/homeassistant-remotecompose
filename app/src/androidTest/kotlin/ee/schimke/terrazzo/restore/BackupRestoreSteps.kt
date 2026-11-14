@@ -1,9 +1,15 @@
 package ee.schimke.terrazzo.restore
 
+import android.Manifest
 import android.content.Context
+import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
+import ee.schimke.terrazzo.MainActivity
 import ee.schimke.terrazzo.TerrazzoGraphProvider
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistration
@@ -13,6 +19,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -58,7 +65,8 @@ class BackupRestoreSteps {
 
   /**
    * After the reinstall and restore, which is what a new phone sees: the app still knows its home,
-   * holds no token it can't read, and signs in again normally.
+   * holds no token it can't read, opens on sign-in with that home filled in and its dashboards
+   * kept, and signs in again normally.
    */
   @Test
   fun signedOutAfterRestore(): Unit = runBlocking {
@@ -86,7 +94,41 @@ class BackupRestoreSteps {
     assertNull(graph.tokenVault.get(baseUrl))
     assertNull(graph.mobileAppStore.get(baseUrl))
 
+    opensOnSignInAgain(baseUrl)
+
     signIn(baseUrl)
+  }
+
+  /**
+   * Launches the app as the user would after the restore. With no token, the cold start goes to
+   * sign-in with [baseUrl] filled in and a line naming it, and keeps the restored cache rather than
+   * signing out.
+   */
+  private fun opensOnSignInAgain(baseUrl: String) {
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    // The app asks for notifications on launch; granted, no dialog covers the screen.
+    instrumentation.uiAutomation.grantRuntimePermission(
+      context.packageName,
+      Manifest.permission.POST_NOTIFICATIONS,
+    )
+    val device = UiDevice.getInstance(instrumentation)
+    val host = baseUrl.removePrefix("http://").removePrefix("https://")
+    ActivityScenario.launch(MainActivity::class.java).use {
+      assertTrue(
+        "The sign-in screen should say which Home Assistant to sign in to again",
+        device.wait(Until.hasObject(By.textContains("but not your sign-in")), UI_TIMEOUT_MS),
+      )
+      assertTrue(
+        "The sign-in notice should name $host",
+        device.hasObject(By.textContains("dashboards from $host")),
+      )
+      assertTrue("The URL field should start with $baseUrl", device.hasObject(By.text(baseUrl)))
+      assertEquals(
+        "Going to sign-in keeps the restored instance and its cache",
+        baseUrl,
+        graph.offlineCache.lastInstance(),
+      )
+    }
   }
 
   /** Signs in with a password, stores the token as the app does, and proves it refreshes. */
@@ -109,4 +151,8 @@ class BackupRestoreSteps {
   }
 
   private fun datastoreFile(name: String) = File(context.filesDir, "datastore/$name.preferences_pb")
+
+  private companion object {
+    const val UI_TIMEOUT_MS = 20_000L
+  }
 }
