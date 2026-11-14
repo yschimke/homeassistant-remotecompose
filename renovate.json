@@ -87,9 +87,9 @@
       "schedule": ["at any time"]
     },
     {
-      "description": "rc-players-bom >= 3.2.0 breaks WidgetFiltersTest (launcher text layout glyph spacing rejected on WIDGETS_V6 profile, opcode 48) and ExpressiveBlocksPlaybackTest (continuous animation frame gating). Skipped from https://github.com/yschimke/homeassistant-remotecompose/pull/1585. Remove when upstream rc-players aligns glyph spacing for WIDGETS_V6 and continuous frame gating.",
+      "description": "rc-players-bom >= 3.1.3 breaks WidgetFiltersTest (launcher text layout glyph spacing rejected on WIDGETS_V6 profile, opcode 48) and ExpressiveBlocksPlaybackTest (continuous animation frame gating). Skipped from https://github.com/yschimke/homeassistant-remotecompose/pull/1585 and https://github.com/yschimke/homeassistant-remotecompose/pull/1618. Remove when upstream rc-players aligns glyph spacing for WIDGETS_V6 and continuous frame gating.",
       "matchPackageNames": ["ee.schimke.composeai:rc-players-bom"],
-      "allowedVersions": "/^3\\.1\\.[0-9.]+$/"
+      "allowedVersions": "/^3\\.1\\.[0-2]$/"
     }
   ]
 }
