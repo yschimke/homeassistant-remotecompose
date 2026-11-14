@@ -62,6 +62,17 @@ class DashboardListTest(unittest.TestCase):
         self.assertEqual('lovelace', listed[0]['url_path'])
         self.assertTrue(listed[0]['default'])
 
+    def test_without_overview_or_the_choice_the_first_is_the_default(self):
+        listed = wall.dashboard_list({'b': {'title': 'B'}, 'a': {'title': 'A'}}, 'gone')
+        self.assertEqual(['a', 'b'], [d['url_path'] for d in listed])
+        self.assertEqual([True, False], [d['default'] for d in listed])
+
+    def test_a_strategy_dashboard_has_no_cards(self):
+        self.assertFalse(wall.has_cards({'strategy': {'type': 'original-states'}}))
+        self.assertFalse(wall.has_cards(None))
+        self.assertTrue(wall.has_cards({'views': [{'cards': []}]}))
+        self.assertTrue(wall.has_cards({'strategy': {'type': 'x'}, 'views': [{'cards': []}]}))
+
 
 class LayoutTest(unittest.TestCase):
     def setUp(self):
@@ -329,6 +340,294 @@ class PlayerTest(unittest.TestCase):
         self.assertEqual((1.0, 1.0, None, None, None), wall.player('1', '1', profile='Kobento MCU'))
         # A size alone doesn't make a small player.
         self.assertIsNone(wall.player(None, None, '800', '480'))
+
+class HiddenTest(unittest.TestCase):
+    def test_hidden_then_shown_again(self):
+        store = wall.ValueStore(epoch=1)
+        self.assertTrue(store.hide('c'))
+        self.assertFalse(store.hide('c'))
+        self.assertEqual(store.changes(['c'], 0), {'c': {'hidden': True}})
+        self.assertTrue(store.update('c', 'sha', '/b', True, {'a.s0.state': 'x'}))
+        self.assertEqual(store.changes(['c'], 1)['c']['design'], 'sha')
+
+
+class ConditionalTest(unittest.TestCase):
+    STATES = {'sensor.oven': '200', 'binary_sensor.door': 'on', 'input_number.limit': '150'}
+
+    def shown(self, card):
+        return wall.shown_card(card, self.STATES.get)
+
+    def cond(self, conditions):
+        return {'type': 'conditional', 'conditions': conditions,
+                'card': {'type': 'tile', 'entity': 'sensor.oven'}}
+
+    def test_a_met_condition_shows_the_inner_card(self):
+        card = self.cond([{'entity': 'binary_sensor.door', 'state': 'on'}])
+        self.assertEqual(self.shown(card), {'type': 'tile', 'entity': 'sensor.oven'})
+
+    def test_an_unmet_or_missing_condition_hides_it(self):
+        self.assertIsNone(self.shown(self.cond([{'entity': 'binary_sensor.door', 'state_not': ['on']}])))
+        self.assertIsNone(self.shown(self.cond([{'entity': 'binary_sensor.gone', 'state': 'on'}])))
+
+    def test_numeric_state_reads_a_number_or_an_entity(self):
+        self.assertIsNotNone(self.shown(self.cond([{'condition': 'numeric_state', 'entity': 'sensor.oven', 'above': 100}])))
+        self.assertIsNone(self.shown(self.cond([{'condition': 'numeric_state', 'entity': 'sensor.oven', 'below': 'input_number.limit'}])))
+
+    def test_and_or_not(self):
+        door = {'entity': 'binary_sensor.door', 'state': 'on'}
+        off = {'entity': 'binary_sensor.door', 'state': 'off'}
+        self.assertIsNotNone(self.shown(self.cond([{'condition': 'or', 'conditions': [off, door]}])))
+        self.assertIsNone(self.shown(self.cond([{'condition': 'and', 'conditions': [off, door]}])))
+        self.assertIsNotNone(self.shown(self.cond([{'condition': 'not', 'conditions': [off]}])))
+
+    def test_nested_conditionals_unwrap(self):
+        inner = self.cond([{'entity': 'binary_sensor.door', 'state': 'on'}])
+        outer = {'type': 'conditional', 'conditions': [], 'card': inner}
+        self.assertEqual(self.shown(outer)['type'], 'tile')
+
+    def test_a_condition_only_home_assistant_can_evaluate_is_an_error(self):
+        card = self.cond([{'condition': 'template', 'value_template': '{{ true }}'}])
+        with self.assertRaises(wall.WallError):
+            self.shown(card)
+
+    def test_an_entity_threshold_is_watched_too(self):
+        card = self.cond([{'condition': 'or', 'conditions': [
+            {'condition': 'numeric_state', 'entity': 'sensor.oven', 'above': 'input_number.limit', 'below': 300}]}])
+        self.assertEqual(wall.watched_entities(card), ['sensor.oven', 'input_number.limit'])
+
+    def test_watched_entities_include_the_conditions(self):
+        card = self.cond([{'condition': 'or', 'conditions': [{'entity': 'binary_sensor.door', 'state': 'on'}]}])
+        self.assertEqual(wall.watched_entities(card), ['binary_sensor.door', 'sensor.oven'])
+
+
+class ScreensTest(unittest.TestCase):
+    CONFIG = {'views': [{'type': 'sections', 'sections': [
+        {'cards': [
+            {'type': 'heading', 'heading': 'Speeds', 'icon': 'mdi:speedometer'},
+            {'type': 'grid', 'columns': 3, 'cards': [
+                {'type': 'tile', 'entity': 'sensor.a'}, {'type': 'tile', 'entity': 'sensor.b'}]},
+            {'type': 'tile', 'entity': 'light.x'},
+            {'type': 'tile', 'entity': 'light.y'},
+            {'type': 'heading', 'heading': 'Later'},
+            {'type': 'history-graph', 'entities': ['sensor.a'], 'grid_options': {'rows': 5}},
+        ]}]}]}
+
+    def setUp(self):
+        self.stack = wall.STACK_SCREENS
+        wall.STACK_SCREENS = True
+
+    def tearDown(self):
+        wall.STACK_SCREENS = self.stack
+
+    def layout(self, height=480, apart=frozenset(), skip=frozenset()):
+        return wall.screens(wall.layout(self.CONFIG, None), height, apart, skip)
+
+    def test_a_screen_holds_at_most_its_entity_budget(self):
+        budget = wall.SCREEN_ENTITIES
+        wall.SCREEN_ENTITIES = 3
+        try:
+            screens = self.layout(4096)['views'][0]['screens']
+        finally:
+            wall.SCREEN_ENTITIES = budget
+        # heading + grid (2) + the two tiles (2) would be 4: the tiles start the next screen.
+        self.assertEqual(screens[0]['id'], 'v0.p0-1')
+
+    def test_without_stacks_each_card_with_entities_is_a_screen(self):
+        wall.STACK_SCREENS = False
+        screens = self.layout()['views'][0]['screens']
+        self.assertEqual([s['id'] for s in screens], ['v0.p1-1', 'v0.p2-2', 'v0.p3-3', 'v0.p5-5'])
+
+    def test_a_grid_is_estimated_from_its_rows(self):
+        cards = self.layout()['views'][0]['sections'][0]['cards']
+        self.assertEqual(cards[1]['h'], 1)
+
+    def test_cards_pack_into_screens_and_a_heading_moves_with_its_cards(self):
+        screens = self.layout()['views'][0]['screens']
+        # 480 dp is 7 rows: heading, grid, the two tiles side by side; then the heading carried
+        # over. Showing the tiles again would be a step of 2 rows, under half a screen: a clean page.
+        self.assertEqual([s['id'] for s in screens], ['v0.p0-3', 'v0.p4-5'])
+        self.assertEqual(screens[1]['cards'], ['v0.s0.c4', 'v0.s0.c5'])
+
+    def test_a_long_view_steps_down_most_of_a_screen_at_a_time(self):
+        rows = [{'type': 'tile', 'entity': f'sensor.t{i}', 'grid_options': {'columns': 'full'}}
+                for i in range(10)]
+        config = {'views': [{'type': 'sections', 'sections': [{'cards': rows}]}]}
+        screens = wall.screens(wall.layout(config, None), 480)['views'][0]['screens']
+        # 7 rows a screen, a step of 5 (80% of 7, to a row): each screen shows 2 rows again.
+        self.assertEqual([s['id'] for s in screens], ['v0.p0-6', 'v0.p5-9'])
+        firsts = [int(s['id'].split('.p')[1].split('-')[0]) for s in screens]
+        self.assertTrue(all(b - a >= 1 for a, b in zip(firsts, firsts[1:])))
+
+    def test_a_card_that_doesnt_stack_is_a_screen_of_its_own(self):
+        screens = self.layout(4096, apart={'v0.s0.c1'})['views'][0]['screens']
+        # The heading before the grid goes with it; the tiles and what follows fill the next.
+        self.assertEqual([s['id'] for s in screens], ['v0.p1-1', 'v0.p2-5'])
+
+    def test_a_card_with_no_design_is_left_out_and_the_rest_packed_around_it(self):
+        screens = self.layout(4096, skip={'v0.s0.c1'})['views'][0]['screens']
+        # The screen runs on over it, and its id says so.
+        self.assertEqual([s['id'] for s in screens], ['v0.p0-5x1'])
+        self.assertNotIn('v0.s0.c1', screens[0]['cards'])
+        card = wall.find_card(self.CONFIG, 'v0.p0-5x1')
+        self.assertEqual(wall.entity_ids(card), ['light.x', 'light.y', 'sensor.a'])
+        self.assertEqual(wall.screen_size('v0.p0-5x1'), 5)
+        self.assertEqual(wall.screen_left_out('v0.p0-5x1'), {1})
+        # A heading with nothing after it on its screen has nothing to show.
+        screens = self.layout(4096, skip={'v0.s0.c5'})['views'][0]['screens']
+        self.assertEqual([s['id'] for s in screens], ['v0.p0-3'])
+
+    def test_a_screen_leaves_out_only_cards_inside_its_run(self):
+        for bad in ('v0.p0-3x0', 'v0.p0-3x3', 'v0.p0-3x9'):
+            with self.assertRaises(wall.WallError):
+                wall.find_card(self.CONFIG, bad)
+
+    def test_a_screen_is_a_stack_of_shelves(self):
+        card = wall.find_card(self.CONFIG, 'v0.p0-3')
+        self.assertEqual(card['type'], 'vertical-stack')
+        self.assertEqual([c['type'] for c in card['cards']], ['heading', 'grid', 'horizontal-stack'])
+        self.assertEqual(wall.entity_ids(card), ['sensor.a', 'sensor.b', 'light.x', 'light.y'])
+        with self.assertRaises(wall.WallError):
+            wall.find_card(self.CONFIG, 'v0.p3-9')
+
+    def test_screen_ids_and_their_cards(self):
+        self.assertEqual(wall.screen_range('v0.p4-5'), (0, 4, 5))
+        self.assertEqual(wall.screen_size('v0.p4-5'), 2)
+        self.assertEqual(wall.screen_size('v0.s0.c4'), 0)
+        lay = wall.layout(self.CONFIG, None)
+        self.assertEqual(wall.screen_cards(lay, 0, 4, 5), [(4, 'v0.s0.c4'), (5, 'v0.s0.c5')])
+        # A screen of one card is that card, not a stack of it.
+        self.assertEqual(wall.find_card(self.CONFIG, 'v0.p5-5')['type'], 'history-graph')
+
+    PRINTER = {'views': [{'type': 'sections', 'sections': [
+        {'cards': [{'type': 'heading', 'heading': 'P2s'}, {'type': 'picture-entity', 'entity': 'camera.p2s'}]},
+        {'cards': [{'type': 'tile', 'entity': f'sensor.t{i}'} for i in range(8)]
+         + [{'type': 'button', 'entity': 'button.open', 'grid_options': {'columns': 12, 'rows': 1}}]},
+        {'cards': [{'type': 'heading', 'heading': 'Remote Compose'},
+                   {'type': 'tile', 'entity': 'sensor.s'}, {'type': 'tile', 'entity': 'sensor.p'}]},
+    ]}]}
+
+    def test_a_wide_screen_has_home_assistants_section_columns(self):
+        view = wall.layout(self.PRINTER, None)['views'][0]
+        self.assertEqual(wall.section_columns(view, None), 1)
+        self.assertEqual(wall.section_columns(view, 600), 1)
+        self.assertEqual(wall.section_columns(view, 776), 2)
+        self.assertEqual(wall.section_columns(view, 1280), 3)
+        self.assertEqual(wall.section_columns(dict(view, max_columns=2), 1280), 2)
+        self.assertEqual(wall.section_columns(dict(view, type='masonry'), 1280), 1)
+
+    def test_sections_stand_side_by_side_on_a_wide_screen(self):
+        screens = wall.screens(wall.layout(self.PRINTER, None), 432, width=776)['views'][0]['screens']
+        # The picture beside the tiles, then the button again over the last section: two screens
+        # where one column took three.
+        self.assertEqual([s['id'] for s in screens], ['v0.p0-10c2', 'v0.p10-13c2'])
+        card = wall.find_card(self.PRINTER, 'v0.p0-10c2')
+        band = card['cards'][0]
+        self.assertEqual(band['type'], 'horizontal-stack')
+        left, right = band['cards']
+        self.assertEqual([c['type'] for c in left['cards']], ['heading', 'picture-entity'])
+        # The section's tiles two to a row in its column: four across the screen.
+        self.assertEqual(right['cards'][0]['type'], 'horizontal-stack')
+        self.assertEqual(len(right['cards'][0]['cards']), 2)
+        self.assertEqual(wall.screen_range('v0.p0-10c2'), (0, 0, 10))
+        self.assertEqual(wall.screen_size('v0.p0-10c2'), 11)
+        # Without a width the sections stack, one across the screen at a time, as before.
+        flat = wall.screens(wall.layout(self.PRINTER, None), 432)['views'][0]['screens']
+        self.assertTrue(all(not s['id'].endswith('c2') for s in flat))
+
+    def test_a_column_with_nothing_on_a_screen_keeps_its_width(self):
+        card = wall.find_card(self.PRINTER, 'v0.p10-13c2')
+        top, bottom = card['cards']
+        # The button's column beside an empty one; the last section in the first column of its
+        # band, as Home Assistant leaves a short row of sections its column's width.
+        self.assertEqual(top['cards'][0], wall.COLUMN_SPACER)
+        self.assertEqual(top['cards'][1]['type'], 'button')
+        self.assertEqual(bottom['cards'][1], wall.COLUMN_SPACER)
+
+    def test_a_section_spanning_columns_goes_across_the_screen(self):
+        config = json.loads(json.dumps(self.PRINTER))
+        config['views'][0]['sections'][1]['column_span'] = 2
+        screens = wall.screens(wall.layout(config, None), 4096, width=776)['views'][0]['screens']
+        card = wall.find_card(config, screens[0]['id'])
+        kinds = [c['type'] for c in card['cards']]
+        # Its own band, between the two others (each a band with a spacer beside it).
+        self.assertEqual(kinds[0], 'horizontal-stack')
+        self.assertEqual(card['cards'][0]['cards'][1], wall.COLUMN_SPACER)
+        self.assertIn('button', [c['type'] for c in card['cards'][1:]])
+
+    def test_a_wide_section_holds_its_full_width_cards_side_by_side(self):
+        config = {'views': [{'type': 'sections', 'sections': [{'column_span': 2, 'cards': [
+            {'type': 'heading', 'heading': 'P2s'},
+            {'type': 'picture-entity', 'entity': 'camera.p2s'},
+            {'type': 'grid', 'columns': 2, 'cards': [{'type': 'tile', 'entity': f'sensor.t{i}'} for i in range(8)]},
+        ]}]}]}
+        screens = wall.screens(wall.layout(config, None), 432, width=776)['views'][0]['screens']
+        self.assertEqual([s['id'] for s in screens], ['v0.p0-2c2'])
+        card = wall.find_card(config, 'v0.p0-2c2')
+        # The heading across, the picture beside the tiles, each in half the screen.
+        self.assertEqual([c['type'] for c in card['cards']], ['heading', 'horizontal-stack'])
+        self.assertEqual([c['type'] for c in card['cards'][1]['cards']], ['picture-entity', 'grid'])
+        # One column: stacked across the screen, as before.
+        flat = wall.screens(wall.layout(config, None), 432)['views'][0]['screens']
+        self.assertTrue(all(not s['id'].endswith('c2') for s in flat))
+
+    def test_the_store_stamps_each_version_of_a_views_screens(self):
+        store = wall.ValueStore(epoch=1)
+        self.assertTrue(store.set_screens(0, ['v0.p0-3']))
+        self.assertFalse(store.set_screens(0, ['v0.p0-3']))
+        self.assertEqual(store.screens_since(0, 0), ['v0.p0-3'])
+        self.assertIsNone(store.screens_since(0, 1))
+        store.set_screens(0, ['v0.p0-1', 'v0.p2-3'])
+        self.assertEqual(store.screens_since(0, 1), ['v0.p0-1', 'v0.p2-3'])
+
+    def test_a_panel_card_drops_what_its_template_cant_draw(self):
+        card = wall.panel_card(wall.find_card(self.CONFIG, 'v0.p0-3'))
+        self.assertEqual(card['cards'][0], {'type': 'heading', 'heading': 'Speeds'})
+        md = wall.panel_card({'type': 'markdown', 'text_only': True,
+                              'content': '# Hi\n**Down:** {{ x }} · [link](http://x) _a_ *b* `c`\n* item'})
+        self.assertEqual(md, {'type': 'markdown', 'content': '# Hi\nDown: {{ x }} · link a b c\n* item'})
+
+    def test_a_panel_picture_is_drawn_from_its_entity_alone(self):
+        camera = {'type': 'picture-entity', 'entity': 'camera.door', 'camera_image': 'camera.door',
+                  'camera_view': 'auto', 'aspect_ratio': '16:9', 'name': 'Door',
+                  'tap_action': {'action': 'more-info'}}
+        grid = wall.panel_card({'type': 'grid', 'columns': 3, 'cards': [camera]})
+        self.assertEqual(grid['cards'][0], {'type': 'picture-entity', 'entity': 'camera.door', 'name': 'Door'})
+        # Another entity's picture isn't one a design draws: left as it is.
+        over = dict(camera, entity='binary_sensor.door')
+        self.assertEqual(wall.panel_card(over), over)
+
+    def test_a_picture_takes_at_most_its_share_of_the_screen(self):
+        camera = {'type': 'picture-entity', 'entity': 'camera.door'}
+        player = (1.0, 1.0, 776, 432)
+        # Full width, 776 x 436 at 16:9: past a quarter of the screen, so half as wide (388 x 218).
+        capped = wall.panel_card(camera, player, 0.25)
+        self.assertEqual(capped, {'type': 'grid', 'columns': 2, 'square': False, 'cards': [camera]})
+        self.assertEqual(wall.entity_ids(capped), ['camera.door'])
+        # Three to a grid row are each 259 wide: within it already.
+        grid = {'type': 'grid', 'columns': 3, 'cards': [camera, camera, camera]}
+        self.assertEqual(wall.panel_card(grid, player, 0.25)['cards'], [camera] * 3)
+        # A tenth of the screen: a third as wide (259 x 146).
+        self.assertEqual(wall.panel_card(camera, player, 0.1)['columns'], 3)
+        # A conditional's card, and a stack's, are capped where they sit; no limit, none are.
+        cond = {'type': 'conditional', 'conditions': [], 'card': camera}
+        self.assertEqual(wall.panel_card(cond, player, 0.25)['card']['type'], 'grid')
+        self.assertEqual(wall.panel_card(camera, player, None), camera)
+        self.assertEqual(wall.panel_card(camera), camera)
+
+    def test_picture_max_is_a_percentage(self):
+        self.assertEqual(wall.picture_max('25'), 0.25)
+        self.assertIsNone(wall.picture_max(None))
+        self.assertIsNone(wall.picture_max('0'))
+        self.assertIsNone(wall.picture_max('150'))
+
+    def test_a_hidden_child_leaves_its_stack(self):
+        stack = {'type': 'vertical-stack', 'cards': [
+            {'type': 'conditional', 'conditions': [{'entity': 'light.x', 'state': 'on'}],
+             'card': {'type': 'tile', 'entity': 'light.x'}},
+            {'type': 'tile', 'entity': 'light.y'}]}
+        self.assertEqual(wall.shown_card(stack, {'light.x': 'off'}.get)['cards'], [{'type': 'tile', 'entity': 'light.y'}])
+        self.assertIsNone(wall.shown_card({'type': 'vertical-stack', 'cards': [stack['cards'][0]]}, {}.get))
+        self.assertEqual(wall.watched_entities(stack), ['light.x', 'light.y'])
 
 if __name__ == '__main__':
     unittest.main()

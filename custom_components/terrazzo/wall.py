@@ -43,7 +43,12 @@ IDLE = 600
 BLOB_CACHE = 256
 # Scaled pictures kept, by (source URL, box, fit, format); fonts' manifest, for this long.
 PICTURE_CACHE = 64
+# A picture is fetched from its source at most this often (s) for one size: a panel showing a
+# camera, or several panels, don't pull a still each poll. `fresh=1` (a tap) fetches it now.
+PICTURE_FRESH_FOR = 60
 FONTS_FOR = 300
+# The longest glyph query passed on: a few dozen characters, percent-encoded.
+GLYPH_QUERY_MAX = 2048
 # A picture larger than this isn't fetched.
 MAX_PICTURE_BYTES = 10 * 1024 * 1024
 ENV_DESIGN_SERVER = "TERRAZZO_DESIGN_SERVER_URL"
@@ -76,6 +81,7 @@ def _look(request):
             query.get("height"),
             query.get("profile"),
         ),
+        wall_api.picture_max(query.get("picture_max")),
     )
 
 
@@ -103,6 +109,23 @@ async def _design_server_url(hass):
     if info is None or info.get("state") != "started" or not info.get("hostname"):
         return None
     return f"http://{info['hostname']}:{ADDON_PORT}"
+
+
+def _state_text(hass, user, entity):
+    """[entity]'s state string if [user] may read it, else None."""
+    if not user.permissions.check_entity(entity, POLICY_READ):
+        return None
+    state = hass.states.get(entity)
+    return None if state is None else state.state
+
+
+def _shown(hass, user, card):
+    """The card a wall display draws for [card] now (through `conditional` wrappers). Raises
+    WallError(404) while its conditions hide it."""
+    shown = wall_api.shown_card(card, lambda entity: _state_text(hass, user, entity))
+    if shown is None:
+        raise wall_api.WallError(404, "This conditional card is hidden by its conditions.")
+    return shown
 
 
 def _readable(hass, user, card):
@@ -138,13 +161,16 @@ def _pictures(hass, user, card):
 
 async def _resolve(hass, user, base, authorization, card, look):
     """The design add-on's resolve of [card] with the current states of its entities [user] may
-    read: (sha, exact, values). An entity they may not read is sent as missing, so its values are
-    the card's unavailable ones. Raises WallError."""
-    style, dark, palette, player = look
+    read: (sha, exact, values). An entity they may not read, or that doesn't exist, is sent as
+    unavailable, as Home Assistant's own card shows it: the card still has its exact design, with
+    that slot's unavailable values. Raises WallError."""
+    style, dark, palette, player = look[:4]
     states = {
         entity: {"state": state.state, "attributes": dict(state.attributes)}
         for entity, state in _resolve_states(hass, user, card).items()
     }
+    for entity in wall_api.entity_ids(card):
+        states.setdefault(entity, {"state": "unavailable", "attributes": {}})
     body = {"card": card, "states": states, "cardStyle": style, "dark": dark}
     # The home's zone, not the add-on's: the sun's times are minutes of the home's local day.
     if time_zone := getattr(hass.config, "time_zone", None):
@@ -188,24 +214,60 @@ class Hub:
         self.url_path = url_path
         self.look = look
         self.etag = wall_api.config_etag(config)
+        self.config = config
         self.layout = wall_api.layout(config, url_path)
-        self.cards = {
-            cid: wall_api.find_card(config, cid) for cid in wall_api.view_card_ids(self.layout)
-        }
+        self.cards = {}
         self.by_entity = {}
-        for cid, card in self.cards.items():
-            for entity in wall_api.entity_ids(card):
-                self.by_entity.setdefault(entity, set()).add(cid)
+        self.locks = {}
+        self.dirty = set()
+        for cid in wall_api.view_card_ids(self.layout):
+            self._add(cid)
         # Cards whose last resolve carried a shared value (`HA:sun.sun.*`): a shared entity's change
         # changes them, and only them.
         self.shared_readers = set()
         self.store = wall_api.ValueStore(epoch=int(time.time() * 1000))
-        self.dirty = set(self.cards)
         self.retry = set()
-        # One resolve per card at a time, so a later one (with later states) is always stored last.
-        self.locks = {cid: asyncio.Lock() for cid in self.cards}
+        # A player with a screen size polls screens: each view packed a screen at a time
+        # (wall_api.screens), view index → its screen ids, in order. A card found not to draw in a
+        # stack is set [apart], one with no design at all is [skip]ped, and the views are packed
+        # again ([_pack]), so the list can change; the store stamps each version.
+        self.screens = {}
+        # Card id → whether it draws inside a stack (a one-card stack of it has a design).
+        self.stackable = {}
+        self.apart = set()
+        self.skip = set()
         self.wake = asyncio.Event()
+        self._pack()
         self.used = time.monotonic()
+
+    def _add(self, cid):
+        """Track card or screen [cid]: its config, the entities that change it, dirty."""
+        if cid in self.cards:
+            return
+        card = wall_api.find_card(self.config, cid)
+        self.cards[cid] = card
+        for entity in wall_api.watched_entities(card):
+            self.by_entity.setdefault(entity, set()).add(cid)
+        # One resolve per card at a time, so a later one (with later states) is always stored last.
+        self.locks[cid] = asyncio.Lock()
+        self.dirty.add(cid)
+
+    def _pack(self):
+        """Pack each view into screens for the player's height, with what's known of which cards
+        stack. Returns every screen id."""
+        player = self.look[3]
+        if player is None or player[3] is None:
+            return []
+        wall_api.screens(self.layout, player[3], self.apart, self.skip, player[2])
+        for view in self.layout["views"]:
+            self._set_screens(view["index"], [screen["id"] for screen in view["screens"]])
+        return [sid for ids in self.screens.values() for sid in ids]
+
+    def _set_screens(self, view, ids):
+        for sid in ids:
+            self._add(sid)
+        self.screens[view] = list(ids)
+        self.store.set_screens(view, ids)
 
     def entity_changed(self, entity):
         cids = set(self.by_entity.get(entity, ()))
@@ -223,14 +285,36 @@ class Hub:
         self.dirty -= set(todo)
         gate = asyncio.Semaphore(PARALLEL)
 
+        unstacked = []
+        undrawn = []
+
         async def one(cid):
             async with gate, self.locks[cid]:
                 try:
                     # States are read once the lock is held: after any resolve still in flight.
+                    # A `conditional` is drawn as the card its conditions show; while they hide it
+                    # the answer is `hidden`, and when they hold again the card comes whole.
+                    card = wall_api.shown_card(
+                        self.cards[cid], lambda entity: _state_text(hass, self.user, entity)
+                    )
+                    if card is None:
+                        if self.store.hide(cid):
+                            self.wake.set()
+                        return
+                    if self.look[3] is not None:
+                        card = wall_api.panel_card(card, self.look[3], self.look[4])
                     sha, exact, values = await _resolve(
-                        hass, self.user, base, authorization, self.cards[cid], self.look
+                        hass, self.user, base, authorization, card, self.look
                     )
                 except wall_api.WallError as failure:
+                    if failure.status == 404 and wall_api.screen_size(cid) > 1:
+                        unstacked.append(cid)  # Packed again once every resolve is done.
+                        return
+                    if failure.status == 404 and wall_api.screen_size(cid) == 1:
+                        # A card with no design: a screen saying so is a page with nothing on it.
+                        view, first, _ = wall_api.screen_range(cid)
+                        undrawn.extend(c for _, c in wall_api.screen_cards(self.layout, view, first, first))
+                        return
                     if self.store.fail(cid, failure.message):
                         self.wake.set()
                     if failure.status == 502:
@@ -242,7 +326,7 @@ class Hub:
                     self.shared_readers.discard(cid)
                 values.update(
                     wall_api.picture_values(
-                        self.url_path, cid, self.cards[cid], _pictures(hass, self.user, self.cards[cid])
+                        self.url_path, cid, card, _pictures(hass, self.user, card)
                     )
                 )
                 if self.store.update(cid, sha, wall_api.blob_url(sha), exact, values):
@@ -250,6 +334,41 @@ class Hub:
                     self.wake.set()
 
         await asyncio.gather(*(one(cid) for cid in todo))
+        if unstacked or undrawn:
+            self.skip.update(undrawn)
+            for sid in unstacked:
+                await self._set_apart(hass, base, authorization, sid)
+            # Each pass sets more cards apart or skips them, so this ends.
+            await self.refresh(hass, base, authorization, self._pack())
+
+    async def _set_apart(self, hass, base, authorization, sid):
+        """Screen [sid]'s stack has no design: set apart its cards that don't draw in a stack, or,
+        when each does on its own, all of them."""
+        view, first, last = wall_api.screen_range(sid)
+        left_out = wall_api.screen_left_out(sid)
+        members = [cid for _, cid in wall_api.screen_cards(self.layout, view, first, last, left_out)]
+        alone = [cid for cid in members if not await self._stacks(hass, base, authorization, cid)]
+        self.apart.update(alone or members)
+
+    async def _stacks(self, hass, base, authorization, cid):
+        """Whether card [cid] draws inside a stack: a one-card stack of it has a design. A card with
+        no entities (a heading, markdown) does, beside one that has them."""
+        if cid in self.stackable:
+            return self.stackable[cid]
+        card = self.cards[cid]
+        result = True
+        if wall_api.entity_ids(card):
+            shown = wall_api.shown_card(card, lambda entity: _state_text(hass, self.user, entity))
+            if shown is not None:
+                stack = {"type": "vertical-stack", "cards": [wall_api.panel_card(shown, self.look[3], self.look[4])]}
+                try:
+                    await _resolve(hass, self.user, base, authorization, stack, self.look)
+                except wall_api.WallError as failure:
+                    if failure.status != 404:
+                        return True  # Not known yet: try it in its run.
+                    result = False
+        self.stackable[cid] = result
+        return result
 
 
 class Wall:
@@ -306,7 +425,9 @@ def _chosen_dashboard(hass):
 
 
 class WallDashboardsView(HomeAssistantView):
-    """`GET /dashboards`: the dashboards this user may see, the chosen wall one first."""
+    """`GET /dashboards`: the dashboards this user may see and a wall can show, the chosen wall one
+    first. One without saved cards (Overview, generated by Home Assistant until someone takes
+    control of it) is left out: every layout request for it would be refused."""
 
     url = wall_api.API + "/dashboards"
     name = "api:terrazzo:wall:dashboards"
@@ -316,8 +437,14 @@ class WallDashboardsView(HomeAssistantView):
 
     async def get(self, request):
         user = request["hass_user"]
-        visible = edits.visible_dashboards(self.hass, user)
-        configs = {key: config for key, (_, config) in visible.items()}
+        configs = {}
+        for key, (dashboard, config) in edits.visible_dashboards(self.hass, user).items():
+            try:
+                cards = await dashboard.async_load(False)
+            except HomeAssistantError:
+                continue
+            if wall_api.has_cards(cards):
+                configs[key] = config
         return _json(
             {"dashboards": wall_api.dashboard_list(configs, _chosen_dashboard(self.hass))}
         )
@@ -358,17 +485,18 @@ class WallCardView(HomeAssistantView):
     async def get(self, request, url_path, card_id):
         try:
             _, config = await _dashboard(self.hass, request["hass_user"], url_path)
-            card = wall_api.find_card(config, card_id)
+            card = _shown(self.hass, request["hass_user"], wall_api.find_card(config, card_id))
             base = await _design_server_url(self.hass)
             if base is None:
                 raise wall_api.WallError(503, "No card design server: install the Terrazzo Card Designs add-on.")
+            look = _look(request)
             sha, exact, values = await _resolve(
                 self.hass,
                 request["hass_user"],
                 base,
                 request.headers.get("Authorization"),
-                card,
-                _look(request),
+                wall_api.panel_card(card, look[3], look[4]) if look[3] is not None else card,
+                look,
             )
         except wall_api.WallError as failure:
             return _error(failure)
@@ -411,7 +539,16 @@ class WallValuesView(HomeAssistantView):
         except wall_api.WallError as failure:
             return _error(failure)
         authorization = request.headers.get("Authorization")
-        card_ids = wall_api.parse_card_ids(request.query.get("cards", ""), hub.cards)
+        # `screens=<view>`: that view's screens (a player with a screen size), whose list can change
+        # as screens without a design are split; else the cards asked for.
+        screens_of = request.query.get("screens")
+        view = int(screens_of) if screens_of and screens_of.isdigit() else None
+
+        def wanted_ids():
+            if view is not None:
+                return list(hub.screens.get(view, []))
+            return wall_api.parse_card_ids(request.query.get("cards", ""), hub.cards)
+
         cursor = request.query.get("since", "")
         since = hub.store.since(cursor)
         # A cursor from before a restart or a dashboard edit: everything again, and a hint to
@@ -421,13 +558,13 @@ class WallValuesView(HomeAssistantView):
 
         hub.dirty |= hub.retry
         hub.retry.clear()
-        await hub.refresh(self.hass, base, authorization, card_ids)
+        await hub.refresh(self.hass, base, authorization, wanted_ids())
+        card_ids = wanted_ids()
         changes = hub.store.changes(card_ids, since)
         deadline = time.monotonic() + wait
-        wanted = set(card_ids)
         while not changes and not reset and (left := deadline - time.monotonic()) > 0:
             hub.wake.clear()
-            if hub.dirty & wanted:
+            if hub.dirty & set(card_ids):
                 left = 0  # Changed while we resolved: don't wait for the next one.
             if left:
                 try:
@@ -438,20 +575,25 @@ class WallValuesView(HomeAssistantView):
                 reset = True  # The dashboard changed: the device fetches its layout again.
                 break
             await asyncio.sleep(SETTLE)
-            await hub.refresh(self.hass, base, authorization, card_ids)
+            await hub.refresh(self.hass, base, authorization, wanted_ids())
+            card_ids = wanted_ids()
             changes = hub.store.changes(card_ids, since)
         hub.used = time.monotonic()
         # Read with the cursor, with no await between: whatever another poll's resolve stored while
         # this one waited is in this answer, never behind the cursor it returns.
+        card_ids = wanted_ids()
         changes = hub.store.changes(card_ids, since)
-        return _json(
-            {
-                "cursor": hub.store.cursor(),
-                "etag": hub.etag,
-                "reset": reset,
-                "cards": {} if reset and not changes else changes,
-            }
-        )
+        answer = {
+            "cursor": hub.store.cursor(),
+            "etag": hub.etag,
+            "reset": reset,
+            "cards": {} if reset and not changes else changes,
+        }
+        if view is not None:
+            screens = hub.store.screens_since(view, 0 if reset else since)
+            if screens is not None:
+                answer["screens"] = screens
+        return _json(answer)
 
 
 class WallBlobView(HomeAssistantView):
@@ -511,7 +653,7 @@ class WallActionView(HomeAssistantView):
         user = request["hass_user"]
         try:
             _, config = await _dashboard(self.hass, user, url_path)
-            card = wall_api.find_card(config, card_id)
+            card = _shown(self.hass, user, wall_api.find_card(config, card_id))
         except wall_api.WallError as failure:
             return _error(failure)
         value = None
@@ -597,6 +739,47 @@ class WallFontView(HomeAssistantView):
         return web.Response(body=body, headers={**headers, "Content-Type": content_type[match.group(2)]})
 
 
+class WallGlyphsView(HomeAssistantView):
+    """`GET /glyphs?family=&size=&chars=&bits=…`: a face's glyphs as a glyph pack, from the design
+    server's glyph route (`/designs/v1/fonts/glyphs`), for a panel drawing text its own fonts
+    lack: another size, or an emoji (`family=emoji&bits=32`, colour). The query passes as it
+    is; so do the answer's status, type and ETag (404: the add-on has no glyph route yet)."""
+
+    url = wall_api.API + "/glyphs"
+    name = "api:terrazzo:wall:glyphs"
+
+    def __init__(self, hass):
+        self.hass = hass
+
+    async def get(self, request):
+        if not request.query_string or len(request.query_string) > GLYPH_QUERY_MAX:
+            return _json({"message": "family, size and chars are required"}, status=400)
+        base = await _design_server_url(self.hass)
+        if base is None:
+            return _json({"message": "No card design server"}, status=503)
+        headers = {}
+        if auth := request.headers.get("Authorization"):
+            headers["Authorization"] = auth
+        if etag := request.headers.get("If-None-Match"):
+            headers["If-None-Match"] = etag
+        try:
+            async with async_get_clientsession(self.hass).get(
+                f"{base}/designs/v1/fonts/glyphs?{request.query_string}",
+                headers=headers,
+                timeout=RESOLVE_TIMEOUT,
+            ) as response:
+                body = await response.read()
+                out = {"Cache-Control": "private, max-age=86400"}
+                for header in ("Content-Type", "ETag", "X-Glyphs"):
+                    if value := response.headers.get(header):
+                        out[header] = value
+                if response.status in (200, 304, 400, 404):
+                    return web.Response(status=response.status, body=body or None, headers=out)
+                return _json({"message": f"The design server answered {response.status}."}, status=502)
+        except (ClientError, TimeoutError):
+            return _json({"message": "The design server didn't answer"}, status=502)
+
+
 async def _fetch_design_server(hass, path, authorization):
     """The design server's bytes at [path]. Raises WallError."""
     base = await _design_server_url(hass)
@@ -647,7 +830,7 @@ class WallPictureView(HomeAssistantView):
         try:
             w, h, fit, fmt = wall_api.picture_query(request.query)
             _, config = await _dashboard(self.hass, user, url_path)
-            card = wall_api.find_card(config, card_id)
+            card = _shown(self.hass, user, wall_api.find_card(config, card_id))
             entity = wall_api.picture_entity(card, slot)
             if entity is None:
                 raise wall_api.WallError(404, f"No slot {slot} on {card_id}")
@@ -655,26 +838,36 @@ class WallPictureView(HomeAssistantView):
             source = wall_api.picture_source(picture)
             if source is None:
                 raise wall_api.WallError(404, f"{entity} has no picture")
-            body, content_type = await _picture(self.hass, request, source)
+            # By entity, not by its picture's URL: a camera's URL moves with its rotating token.
+            key = (entity, w, h, fit, fmt)
+            wall = _wall(self.hass)
+            cached = wall.pictures.get(key)
+            fresh = request.query.get("fresh") == "1"
+            if cached is None or fresh or time.monotonic() - cached[3] >= PICTURE_FRESH_FOR:
+                body, content_type = await _picture(self.hass, request, source)
+            else:
+                body = None
         except wall_api.WallError as failure:
             return _error(failure)
-        key = (picture, w, h, fit, fmt)
-        wall = _wall(self.hass)
-        cached = wall.pictures.get(key)
-        if cached is None or cached[0] != hashlib.sha256(body).digest():
-            try:
-                out, out_type = await self.hass.async_add_executor_job(
-                    _scale, body, content_type, w, h, fit, fmt
-                )
-            except ValueError as failure:
-                return _json({"message": f"Not a picture: {failure}"}, status=502)
-            cached = wall.pictures[key] = (hashlib.sha256(body).digest(), out, out_type)
+        if body is not None:
+            digest = hashlib.sha256(body).digest()
+            if cached is None or cached[0] != digest:
+                try:
+                    out, out_type = await self.hass.async_add_executor_job(
+                        _scale, body, content_type, w, h, fit, fmt
+                    )
+                except ValueError as failure:
+                    return _json({"message": f"Not a picture: {failure}"}, status=502)
+            else:
+                out, out_type = cached[1], cached[2]
+            wall.pictures.pop(key, None)  # Last in, so the oldest is dropped first.
+            cached = wall.pictures[key] = (digest, out, out_type, time.monotonic())
             while len(wall.pictures) > PICTURE_CACHE:
                 wall.pictures.pop(next(iter(wall.pictures)))
-        _, out, out_type = cached
+        _, out, out_type, _ = cached
         etag = '"' + hashlib.sha256(out).hexdigest()[:32] + '"'
-        # With `v` (the URL the long poll gives), the picture at this URL never changes.
-        cache = "private, max-age=86400" if request.query.get("v") else "private, no-cache"
+        # A camera's still changes behind the same URL: good for as long as it's served from cache.
+        cache = f"private, max-age={PICTURE_FRESH_FOR}"
         headers = {"ETag": etag, "Cache-Control": cache}
         if request.headers.get("If-None-Match") == etag:
             return web.Response(status=304, headers=headers)
@@ -756,6 +949,7 @@ def async_register(hass):
         WallActionView,
         WallFontsView,
         WallFontView,
+        WallGlyphsView,
         WallPictureView,
     ):
         hass.http.register_view(view(hass))
