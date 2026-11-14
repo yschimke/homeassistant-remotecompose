@@ -669,6 +669,12 @@ class SettingsTest(unittest.TestCase):
         homes = self.config()['views'][0]['sections'][0]['cards'][1]['cards']
         self.assertEqual(homes[0]['icon'], 'mdi:check-circle')
 
+    def test_the_home_choices_share_a_screen_with_their_heading(self):
+        dashboards = [{'url_path': f'd{i}', 'title': f'D{i}', 'default': i == 0} for i in range(8)]
+        config = wall.settings_config(dashboards, None, 'classic', True, [])
+        screens = wall.screens(wall.layout(config, wall.SETTINGS_DASHBOARD), 432, width=776)['views'][0]['screens']
+        self.assertTrue(screens[0]['id'].startswith('v0.p0-'), screens[0]['id'])
+
     def test_each_theme_is_a_screen_of_its_own_drawn_in_it(self):
         config = self.config(style='rugged', dark=False)
         lay = wall.layout(config, wall.SETTINGS_DASHBOARD)

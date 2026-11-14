@@ -1576,7 +1576,8 @@ def _choice(name, icon, chosen, key, value, entity=SETTINGS_ENTITY):
 
 
 def _choices(cards):
-    return {"type": "grid", "columns": 3, "square": False, "cards": cards}
+    # Four across: a dozen dashboards stay two rows, so their heading shares their screen.
+    return {"type": "grid", "columns": 4, "square": False, "cards": cards}
 
 
 def settings_config(dashboards, home, style, dark, preview, entity=SETTINGS_ENTITY):
