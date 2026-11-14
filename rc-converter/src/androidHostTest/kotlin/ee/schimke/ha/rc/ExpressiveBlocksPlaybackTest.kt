@@ -134,7 +134,16 @@ class ExpressiveBlocksPlaybackTest {
   }
 
   private fun settle(ms: Long = 800) {
-    compose.mainClock.advanceTimeBy(ms)
+    if (manualClock) {
+      // A frame at a time, each one drawn, as a display would: the player keeps its clock running
+      // only while what it draws reads the clock, and Robolectric draws nothing unless asked.
+      repeat((ms / FRAME_MS).toInt()) {
+        compose.mainClock.advanceTimeByFrame()
+        frame()
+      }
+    } else {
+      compose.mainClock.advanceTimeBy(ms)
+    }
     compose.waitForIdle()
   }
 
@@ -477,3 +486,6 @@ class ExpressiveBlocksPlaybackTest {
     assertEquals(0, frame().differs(interactive), "and leaving ambient brings them back")
   }
 }
+
+/** The test clock's frame, as `advanceTimeByFrame` steps it. */
+private const val FRAME_MS = 16L
