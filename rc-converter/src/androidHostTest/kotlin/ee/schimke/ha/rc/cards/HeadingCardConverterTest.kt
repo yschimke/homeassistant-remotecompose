@@ -31,8 +31,8 @@ class HeadingCardConverterTest {
     assertEquals("Indoor climate", data.title)
     assertEquals(HaHeadingStyle.Subtitle, data.style)
     assertEquals("mdi:home-floor-l", assertNotNull(data.icon).name)
-    // Heading with an icon skips the icon-less template path so the icon is baked.
-    assertNull(converter.designProperties(card, HaSnapshot()))
+    // The icon is a design property: a heading with one renders from its own design.
+    assertEquals("home-floor-l", converter.designProperties(card, HaSnapshot())?.get("icon"))
   }
 
   @Test
