@@ -210,6 +210,7 @@ class MarkdownCardConverter : DesignedCardConverter() {
               is MarkdownInline.Text -> inline.copy(boundText = template.bind(inline.text))
               is MarkdownInline.Link -> inline.copy(boundText = template.bind(inline.text))
               is MarkdownInline.Image -> inline
+              is MarkdownInline.Icon -> inline
             }
           },
       )

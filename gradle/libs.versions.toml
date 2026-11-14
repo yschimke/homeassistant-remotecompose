@@ -277,6 +277,10 @@ androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstall
 # `dynamicColorScheme(...)` is what the widget provider calls at
 # capture time (we can't hold a Compose state across the widget boundary).
 materialkolor = { module = "com.materialkolor:material-kolor", version = "5.0.1" }
+# The whole Material Design Icons catalog (Home Assistant's icon set) as SVG path data, looked up
+# by name; `:rc-mdi-icons` turns it into Remote Compose glyphs. Its `@mdi/svg` release should stay
+# the one Home Assistant's frontend ships (MDI_VERSION in scripts/generate-ha-icon-tables.py).
+mdi-icons = { module = "io.github.timoptr:mdi-icons", version = "0.2.0" }
 
 # Ktor (HA WebSocket client)
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }

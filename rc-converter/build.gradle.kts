@@ -104,6 +104,8 @@ kotlin {
     commonMain.dependencies {
       api(project.dependencies.platform(libs.rc.players.bom))
       api(project(":rc-components"))
+      // HaIconMap's glyphs: Material Design Icons by name.
+      api(project(":rc-mdi-icons"))
       implementation(project(":ha-model"))
       implementation(project(":ha-client"))
       // RcErrorBoundary: each player disables a document that throws, instead of the screen.

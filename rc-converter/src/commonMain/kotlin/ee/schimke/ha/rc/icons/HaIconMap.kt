@@ -20,8 +20,8 @@ import kotlinx.serialization.json.doubleOrNull
  *    ([HaIconTables.RULES]),
  * 5. the frontend's domain fallback, then its default ([HaIconTables.DEFAULT_ICON], a bookmark).
  *
- * An unknown name in steps 1–2 (a custom icon set, or an MDI icon this build doesn't bundle) falls
- * through to the next step rather than drawing nothing.
+ * An unknown name in steps 1–2 (a custom icon set, or a name MDI doesn't have) falls through to the
+ * next step rather than drawing nothing.
  *
  * **Live updates.** Most cards are bound documents: captured once, then fed values by name, and
  * often rendered from a card design captured in another state entirely
@@ -129,27 +129,17 @@ object HaIconMap {
   }
 
   /**
-   * The bundled glyph for an icon name (`mdi:water-percent`, `hass:fan`, `weather-sunny`), or null
-   * when it isn't an MDI name this build bundles.
+   * The glyph for an icon name (`mdi:water-percent`, `hass:fan`, `weather-sunny`), or null when it
+   * isn't an MDI icon.
    */
   fun mdi(raw: String?): ImageVector? = mdiName(raw)?.let { MdiIcons[it] }
 
-  /** The bundled MDI name [raw] names (prefix stripped, lower-cased), or null. */
-  fun mdiName(raw: String?): String? {
-    val trimmed = raw?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return null
-    val name =
-      when {
-        trimmed.startsWith("mdi:") -> trimmed.removePrefix("mdi:")
-        trimmed.startsWith("hass:") -> trimmed.removePrefix("hass:")
-        ':' in trimmed -> return null // another icon set (`phu:`, `si:`, …)
-        else -> trimmed
-      }
-    return name.takeIf { it in MdiIcons }
-  }
+  /** The MDI name [raw] names (prefix stripped, lower-cased), or null when MDI has no such icon. */
+  fun mdiName(raw: String?): String? = MdiIcons.nameOf(raw)?.takeIf { it in MdiIcons }
 
   // --- resolution ---
 
-  /** Steps 1–2: an icon the card or the entity fixes, when it is a bundled MDI name. */
+  /** Steps 1–2: an icon the card or the entity fixes, when it is an MDI name. */
   private fun fixedName(iconOverride: String?, entity: EntityState?): String? =
     mdiName(iconOverride)
       ?: mdiName((entity?.attributes?.get("icon") as? JsonPrimitive)?.contentOrNull)

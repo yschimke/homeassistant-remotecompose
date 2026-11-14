@@ -12,8 +12,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🚪 Garage door",
-              "heading_style": "title",
+              "heading": "Garage door",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -111,8 +110,7 @@
             },
             {
               "type": "heading",
-              "heading": "📷 Outdoor cameras",
-              "heading_style": "title",
+              "heading": "Outdoor cameras",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -157,8 +155,7 @@
             },
             {
               "type": "heading",
-              "heading": "🚶 Motion",
-              "heading_style": "title",
+              "heading": "Motion",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -200,8 +197,7 @@
             },
             {
               "type": "heading",
-              "heading": "🔔 Alarm",
-              "heading_style": "title",
+              "heading": "Alarm",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },

@@ -175,8 +175,8 @@ class HaIconMapTest {
       } + HaIconTables.DOMAIN_FALLBACKS.map { it.substringAfter(' ') } + HaIconTables.DEFAULT_ICON
     val missing = names.toSet().filter { it !in MdiIcons }
     assertEquals(emptyList(), missing)
-    // Every bundled glyph builds into a non-empty vector.
-    for (name in MdiIcons.names) {
+    // Every table glyph builds into a non-empty vector.
+    for (name in names.toSet()) {
       val icon = assertNotNull(MdiIcons[name], name)
       assertEquals(24f, icon.viewportWidth)
       assertTrue(icon.root.size > 0, name)

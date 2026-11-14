@@ -100,8 +100,7 @@
             },
             {
               "type": "heading",
-              "heading": "🎒 Card tracker",
-              "heading_style": "title",
+              "heading": "Card tracker",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -114,7 +113,7 @@
               "cards": [
                 {
                   "type": "markdown",
-                  "content": "{% set e = 'binary_sensor.meshcore_kodu_t1000e_sn3_contact' %}\n{% set lat = state_attr(e, 'latitude') %}\n{% set lon = state_attr(e, 'longitude') %}\n{% set d = distance(lat, lon) if lat is number and lon is number else none %}\n{% set d = d | float(0) if d is not none else none %}\n### {% if states(e) == 'fresh' %}🟢 Online{% else %}🔴 Stale{% endif %}\n\n{% if d is not none %}## {% if d < 0.15 %}🏠 At home{% elif d < 1 %}🚶 {{ (d*1000)|round(0)|int }} m from home{% elif d < 50 %}🚗 {{ d|round(2) }} km from home{% else %}✈️ {{ d|round(0)|int }} km from home{% endif %}\n\n{% else %}*No location advertised yet.*\n\n{% endif %}**Last heard:** {{ state_attr(e, 'last_advert_formatted') or '–' }}\n\n**Hops to hub:** {% set h = state_attr(e, 'out_path_len') %}{% if h is number and h >= 0 %}{{ h }}{% else %}– (no direct route){% endif %}"
+                  "content": "{% set e = 'binary_sensor.meshcore_kodu_t1000e_sn3_contact' %}\n{% set lat = state_attr(e, 'latitude') %}\n{% set lon = state_attr(e, 'longitude') %}\n{% set d = distance(lat, lon) if lat is number and lon is number else none %}\n{% set d = d | float(0) if d is not none else none %}\n### {% if states(e) == 'fresh' %}🟢 Online{% else %}🔴 Stale{% endif %}\n\n{% if d is not none %}## {% if d < 0.15 %}<ha-icon icon=\"mdi:home\"></ha-icon> At home{% elif d < 1 %}<ha-icon icon=\"mdi:walk\"></ha-icon> {{ (d*1000)|round(0)|int }} m from home{% elif d < 50 %}<ha-icon icon=\"mdi:car\"></ha-icon> {{ d|round(2) }} km from home{% else %}<ha-icon icon=\"mdi:airplane\"></ha-icon> {{ d|round(0)|int }} km from home{% endif %}\n\n{% else %}*No location advertised yet.*\n\n{% endif %}**Last heard:** {{ state_attr(e, 'last_advert_formatted') or '–' }}\n\n**Hops to hub:** {% set h = state_attr(e, 'out_path_len') %}{% if h is number and h >= 0 %}{{ h }}{% else %}– (no direct route){% endif %}"
                 },
                 {
                   "type": "grid",
@@ -191,8 +190,7 @@
             },
             {
               "type": "heading",
-              "heading": "☀️ Solar Repeater battery",
-              "heading_style": "title",
+              "heading": "Solar Repeater battery",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -252,8 +250,7 @@
             },
             {
               "type": "heading",
-              "heading": "💬 Send to a room",
-              "heading_style": "title",
+              "heading": "Send to a room",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -290,8 +287,7 @@
             },
             {
               "type": "heading",
-              "heading": "🏠 Room server activity",
-              "heading_style": "title",
+              "heading": "Room server activity",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -348,8 +344,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🔋 Solar Repeater — battery & power",
-              "heading_style": "title",
+              "heading": "Solar Repeater — battery & power",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -440,8 +435,7 @@
             },
             {
               "type": "heading",
-              "heading": "📶 Link quality",
-              "heading_style": "title",
+              "heading": "Link quality",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -483,8 +477,7 @@
             },
             {
               "type": "heading",
-              "heading": "📈 Traffic",
-              "heading_style": "title",
+              "heading": "Traffic",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -619,8 +612,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🏠 Room Server (Kodu Room) — mains-powered",
-              "heading_style": "title",
+              "heading": "Room Server (Kodu Room) — mains-powered",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -662,8 +654,7 @@
             },
             {
               "type": "heading",
-              "heading": "💬 Send to this room",
-              "heading_style": "title",
+              "heading": "Send to this room",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -696,8 +687,7 @@
             },
             {
               "type": "heading",
-              "heading": "📨 Room messages",
-              "heading_style": "title",
+              "heading": "Room messages",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -789,8 +779,7 @@
             },
             {
               "type": "heading",
-              "heading": "📶 Link quality",
-              "heading_style": "title",
+              "heading": "Link quality",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -859,8 +848,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "💬 Send Message",
-              "heading_style": "title",
+              "heading": "Send Message",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -901,8 +889,7 @@
             },
             {
               "type": "heading",
-              "heading": "📻 Radio config",
-              "heading_style": "title",
+              "heading": "Radio config",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -944,8 +931,7 @@
             },
             {
               "type": "heading",
-              "heading": "🔧 Maintenance",
-              "heading_style": "title",
+              "heading": "Maintenance",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
