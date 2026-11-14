@@ -657,7 +657,7 @@ class SettingsTest(unittest.TestCase):
 
     def test_the_preview_is_the_home_dashboards_entity_cards(self):
         cards = wall.preview_cards(self.HOME)
-        self.assertEqual([c['entity'] for c in cards], ['sensor.down', 'sensor.up'])
+        self.assertEqual([c['entity'] for c in cards], ['sensor.down', 'sensor.up', 'device_tracker.d0', 'device_tracker.d1'])
         self.assertNotIn('grid_options', cards[0])
 
     def test_the_home_and_mode_choices_mark_the_current_one(self):
@@ -677,14 +677,17 @@ class SettingsTest(unittest.TestCase):
         screens = wall.screens(wall.layout(config, wall.SETTINGS_DASHBOARD), 432, width=776)['views'][0]['screens']
         self.assertTrue(screens[0]['id'].startswith('v0.p0-'), screens[0]['id'])
         # The first view stays a few screens: a panel loads every screen of a view at once.
-        self.assertLessEqual(len(screens), 3)
+        self.assertLessEqual(len(screens), 5)
+        # The theme heading shares a screen with the first themes.
+        themes = [s for s in screens if 'Theme' in str(wall.find_card(config, s['id']))]
+        self.assertTrue(themes)
 
     def test_each_theme_is_a_view_drawn_in_it(self):
         config = self.config(style='rugged', dark=False)
         self.assertEqual(len(config['views']), 1 + len(wall.THEMES))
         general = config['views'][0]['sections'][0]['cards']
         self.assertEqual(general[4]['heading'], 'Theme · Rugged Digital')
-        rugged_button = [b for b in general[5]['cards'] if b['icon'] == 'mdi:check-circle'][0]
+        rugged_button = [b for g in general[5:] for b in g['cards'] if b['icon'] == 'mdi:check-circle'][0]
         self.assertEqual(rugged_button['tap_action']['navigation_path'], '/terrazzo-settings/rugged')
         lay = wall.layout(config, wall.SETTINGS_DASHBOARD)
         index = 1 + [t[0] for t in wall.THEMES].index('rugged')

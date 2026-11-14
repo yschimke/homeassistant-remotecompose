@@ -1554,15 +1554,21 @@ def preview_cards(config, limit=PREVIEW_CARDS):
         if isinstance(section, dict):
             cards.extend(c for c in section.get("cards") or [] if isinstance(c, dict))
     out = []
-    for card in cards:
-        if card.get("type") in _PREVIEW_SKIP or not slot_entries(card):
-            continue
-        # Small cards only: a list or a grid of them would push the theme's buttons off its screen.
-        if card.get("type") in ("grid", "vertical-stack", "horizontal-stack") or card_size(card)[1] > 2:
-            continue
-        out.append({k: v for k, v in card.items() if k not in ("grid_options", "visibility")})
-        if len(out) == limit:
-            break
+
+    def walk(cards):
+        for card in cards:
+            if len(out) == limit:
+                return
+            if not isinstance(card, dict) or card.get("type") in _PREVIEW_SKIP:
+                continue
+            # Into grids and stacks for their cards: a whole one would push the theme's buttons off
+            # its screen, as would a list taller than two rows.
+            if card.get("type") in ("grid", "vertical-stack", "horizontal-stack"):
+                walk(card.get("cards") or [])
+            elif slot_entries(card) and card_size(card)[1] <= 2:
+                out.append({k: v for k, v in card.items() if k not in ("grid_options", "visibility")})
+
+    walk(cards)
     return out
 
 
@@ -1614,7 +1620,11 @@ def settings_config(dashboards, home, style, dark, preview, entity=SETTINGS_ENTI
             ]
         ),
         {"type": "heading", "heading": f"Theme · {current}"},
-        _choices([go(name, "mdi:palette-outline", tid, tid == style) for tid, name, _ in THEMES]),
+        # Eight a grid, two rows: the heading stays with the first, and the screens cut between.
+        *[
+            _choices([go(name, "mdi:palette-outline", tid, tid == style) for tid, name, _ in THEMES[i : i + 8]])
+            for i in range(0, len(THEMES), 8)
+        ],
     ]
     views = [{"title": "Settings", "path": "settings", "type": "sections", "max_columns": 1, "sections": [{"cards": general}]}]
     for tid, name, _ in THEMES:
