@@ -108,7 +108,17 @@ async def _settings(hass, user, query):
     except wall_api.WallError:
         preview = []
     style, dark = _look(query)[:2]
-    return wall_api.settings_config(dashboards, home, style, dark, preview)
+    # The buttons' slot: a sensor this user can read that has a state.
+    entity = next(
+        (
+            state.entity_id
+            for state in hass.states.async_all("sensor")
+            if state.state not in ("unavailable", "unknown")
+            and user.permissions.check_entity(state.entity_id, POLICY_READ)
+        ),
+        wall_api.SETTINGS_ENTITY,
+    )
+    return wall_api.settings_config(dashboards, home, style, dark, preview, entity)
 
 
 async def _dashboard(hass, user, url_path, query=None):

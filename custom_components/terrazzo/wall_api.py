@@ -1479,9 +1479,10 @@ def parse_card_ids(raw, known):
 SETTINGS_DASHBOARD = "terrazzo-settings"
 SETTINGS_PATH = f"/{SETTINGS_DASHBOARD}/set/"
 
-# A settings button's slot: an entity every Home Assistant has, so the button has its plain
-# entity design. Its state isn't shown; only its slot carries the tap to the button's own action.
-SETTINGS_ENTITY = "sun.sun"
+# A settings button's slot: a sensor the user can read (the integration picks one), so the button
+# has its plain entity design, which only light, switch, sensor and binary_sensor buttons have. Its
+# state, name and icon aren't shown; only its slot carries the tap to the button's own action.
+SETTINGS_ENTITY = "sensor.terrazzo_settings"
 
 # The card themes (`style=`) a panel can play, as `HaUberTheme.all` lists them in rc-components:
 # (id, name, the modes it draws in). A theme with one mode draws in it whatever the panel's mode.
@@ -1564,10 +1565,10 @@ def preview_cards(config, limit=PREVIEW_CARDS):
     return out
 
 
-def _choice(name, icon, chosen, key, value):
+def _choice(name, icon, chosen, key, value, entity=SETTINGS_ENTITY):
     return {
         "type": "button",
-        "entity": SETTINGS_ENTITY,
+        "entity": entity,
         "name": name,
         "icon": "mdi:check-circle" if chosen else icon,
         "tap_action": {"action": "navigate", "navigation_path": setting_path(key, value)},
@@ -1578,25 +1579,25 @@ def _choices(cards):
     return {"type": "grid", "columns": 3, "square": False, "cards": cards}
 
 
-def settings_config(dashboards, home, style, dark, preview):
+def settings_config(dashboards, home, style, dark, preview, entity=SETTINGS_ENTITY):
     """The settings dashboard: the home dashboard and mode, then a screen per theme drawing
     [preview] (cards from the home dashboard) in it, each with a button to use it. [dashboards] is
     [dashboard_list]'s; [home] the panel's home url_path (None: the list's default); [style] and
-    [dark] the panel's theme and mode now."""
+    [dark] the panel's theme and mode now; [entity] the sensor its buttons are bound to."""
     home = home or next((d["url_path"] for d in dashboards if d.get("default")), None)
     general = [
         {"type": "heading", "heading": "Home dashboard"},
         _choices(
             [
-                _choice(d["title"], "mdi:view-dashboard-outline", d["url_path"] == home, "home", d["url_path"])
+                _choice(d["title"], "mdi:view-dashboard-outline", d["url_path"] == home, "home", d["url_path"], entity)
                 for d in dashboards
             ]
         ),
         {"type": "heading", "heading": "Mode"},
         _choices(
             [
-                _choice("Light", "mdi:weather-sunny", not dark, "dark", "0"),
-                _choice("Dark", "mdi:weather-night", dark, "dark", "1"),
+                _choice("Light", "mdi:weather-sunny", not dark, "dark", "0", entity),
+                _choice("Dark", "mdi:weather-night", dark, "dark", "1", entity),
             ]
         ),
     ]
@@ -1611,7 +1612,7 @@ def settings_config(dashboards, home, style, dark, preview):
             "cards": [
                 {"type": "heading", "heading": f"{name} · in use" if current else name},
                 *([{"type": "grid", "columns": 2, "square": False, "cards": preview}] if preview else []),
-                _choice("In use" if current else f"Use {name}", "mdi:palette-outline", current, "theme", tid),
+                _choice("In use" if current else f"Use {name}", "mdi:palette-outline", current, "theme", tid, entity),
             ],
         }
         sections.append({"cards": [stack]})
