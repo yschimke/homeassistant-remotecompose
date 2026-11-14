@@ -237,14 +237,16 @@ service the user may not call. The state change it causes reaches the device thr
 
 `terrazzo-settings` is a dashboard the integration makes for each request rather than one a user
 saved: `/dashboards` doesn't list it, but `/dashboards/terrazzo-settings`, `/values`, `/actions`
-and `/cards` all answer for it, so a panel plays it like any other. It is one view:
+and `/cards` all answer for it, so a panel plays it like any other:
 
-- **Home dashboard** and **Mode**: a button for each dashboard the user can see and for light and
-  dark, the panel's current one (`home=`, `dark=`) ticked.
-- **A screen per theme** (24, as `HaUberTheme.all` lists them, `wall_api.THEMES`): the theme's name,
-  the first cards with entities from the home dashboard's first view drawn in that theme, and a
-  button to use it. Each screen is resolved in its own theme (and in its only mode, for a theme
-  with one), not the panel's: the preview is the real thing.
+- **The first view**: a button for each dashboard the user can see, for light and dark, and for
+  each theme (24, as `HaUberTheme.all` lists them, `wall_api.THEMES`), the panel's current ones
+  (`home=`, `dark=`, `style=`) ticked. A theme's button goes to its view.
+- **A view per theme**: the theme's name, small cards with entities from the home dashboard's
+  first view drawn in that theme (resolved in it, and in its only mode for a theme with one, not
+  in the panel's), a button to use it and one back to the list. A view each, not a screen each: a
+  panel loads every screen of the view it shows, and two dozen previews at once are more than one
+  holds. For the same reason wall-client fetches nothing ahead from the settings dashboard.
 
 A choice taps through as a `navigate` to `/terrazzo-settings/set/<key>/<value>` (`home`
 `<url_path>`, `theme` `<style>`, `dark` `0`/`1`), which the device keeps and applies itself: the
