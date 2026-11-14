@@ -85,6 +85,11 @@
       "groupName": "rc-players",
       "enabled": true,
       "schedule": ["at any time"]
+    },
+    {
+      "description": "rc-players-bom 3.2.0 breaks WidgetFiltersTest (launcher text layout glyph spacing rejected on WIDGETS_V6 profile, opcode 48). Skipped from https://github.com/yschimke/homeassistant-remotecompose/pull/1585. Remove when upstream rc-players relaxes or aligns glyph spacing validation for WIDGETS_V6.",
+      "matchPackageNames": ["ee.schimke.composeai:rc-players-bom"],
+      "allowedVersions": "!/^(3\\.2\\.0|.*-SNAPSHOT|.*-compat)$/"
     }
   ]
 }
