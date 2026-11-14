@@ -357,4 +357,42 @@ class MarkdownTest {
     assertEquals(HaAction.Url("https://example.com"), markdownLinkAction("https://example.com"))
     assertEquals(HaAction.Url("//cdn.example/x"), markdownLinkAction("//cdn.example/x"))
   }
+
+  @Test
+  fun inlineHaIconInHeadingAndParagraph() {
+    val blocks =
+      Markdown.parse(
+        """
+        # <ha-icon icon="mdi:factory"></ha-icon> 3D Printing
+        Status: <ha-icon icon="mdi:check" /> OK
+        """
+          .trimIndent(),
+      )
+    assertEquals(2, blocks.size)
+    assertEquals(
+      listOf(MarkdownInline.Icon("mdi:factory"), MarkdownInline.Text(" 3D Printing")),
+      blocks[0].inlines,
+    )
+    assertTrue(blocks[0].hasInlineMarkup)
+    assertEquals(
+      listOf(
+        MarkdownInline.Text("Status: "),
+        MarkdownInline.Icon("mdi:check"),
+        MarkdownInline.Text(" OK"),
+      ),
+      blocks[1].inlines,
+    )
+    assertTrue(blocks[1].hasInlineMarkup)
+  }
+
+  @Test
+  fun lineLeadingHaIconHtmlBlock() {
+    val blocks = Markdown.parse("""<ha-icon icon="mdi:home"></ha-icon> At home""")
+    assertEquals(1, blocks.size)
+    assertEquals(
+      listOf(MarkdownInline.Icon("mdi:home"), MarkdownInline.Text(" At home")),
+      blocks[0].inlines,
+    )
+    assertTrue(blocks[0].hasInlineMarkup)
+  }
 }

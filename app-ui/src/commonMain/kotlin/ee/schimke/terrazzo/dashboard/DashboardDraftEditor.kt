@@ -88,6 +88,7 @@ import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.SectionCardGrid
+import ee.schimke.ha.rc.icons.HaIconMap
 import kotlin.math.roundToInt
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -355,12 +356,17 @@ fun DashboardDraftEditor(
       if (views.size > 1) {
         PrimaryScrollableTabRow(selectedTabIndex = viewIndex, edgePadding = 16.dp) {
           views.forEachIndexed { i, view ->
+            val icon = remember(view) { HaIconMap.mdi(view.stringOf("icon")) }
             Tab(
               selected = i == viewIndex,
               onClick = {
                 viewIndex = i
                 selected = null
               },
+              icon =
+                icon?.let {
+                  { Icon(it, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                },
               text = { Text(view.stringOf("title") ?: "View ${i + 1}") },
             )
           }

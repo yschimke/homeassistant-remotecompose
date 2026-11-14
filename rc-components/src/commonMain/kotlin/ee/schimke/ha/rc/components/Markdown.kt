@@ -78,6 +78,15 @@ sealed interface MarkdownInline {
     override val text: String
       get() = ""
   }
+
+  /**
+   * `<ha-icon icon="mdi:…"></ha-icon>` — an inline Material Design Icon rendered at the line's text
+   * size via `RemoteMdiIcon`. Contributes no visible text.
+   */
+  data class Icon(val name: String) : MarkdownInline {
+    override val text: String
+      get() = ""
+  }
 }
 
 /**
@@ -109,8 +118,9 @@ data class MarkdownBlock(
    */
   val hasInlineMarkup: Boolean
     get() =
-      inlines.any { it is MarkdownInline.Link || it is MarkdownInline.Image } ||
-        drawnStyles.size > 1
+      inlines.any {
+        it is MarkdownInline.Link || it is MarkdownInline.Image || it is MarkdownInline.Icon
+      } || drawnStyles.size > 1
 
   /**
    * The emphasis every text run of the block shares (`_Mobile companion for MeshCore_` is italic
@@ -190,6 +200,7 @@ object Markdown {
               )
           }
       }
+      MarkdownElementTypes.HTML_BLOCK -> emitHtmlBlock(node, src, out)
       MarkdownElementTypes.BLOCK_QUOTE -> node.children.forEach { visit(it, src, out) }
       else ->
         if (node.children.isNotEmpty()) {
@@ -205,7 +216,7 @@ object Markdown {
     level: Int,
     out: MutableList<MarkdownBlock>,
   ) {
-    val inlines = normalize(inlineSpans(node, src))
+    val inlines = normalize(splitHaIcons(inlineSpans(node, src)))
     if (inlines.isEmpty()) return
     out += MarkdownBlock(kind, textOf(inlines), level = level, inlines = inlines)
   }
@@ -466,6 +477,79 @@ object Markdown {
     return merged.filterNot { it is MarkdownInline.Text && it.text.isEmpty() }
   }
 
+  private fun appendHtmlTag(tag: String, style: MarkdownStyle, runs: Runs) {
+    val open = HA_ICON_OPEN.matchEntire(tag.trim())
+    when {
+      open != null -> runs.span(MarkdownInline.Icon(open.groupValues[1]))
+      HA_ICON_CLOSE.matches(tag.trim()) -> Unit
+      else -> runs.text(tag, style)
+    }
+  }
+
+  private fun emitHtmlBlock(node: ASTNode, src: String, out: MutableList<MarkdownBlock>) {
+    val raw = node.getTextInNode(src).toString().trim()
+    if (!HA_ICON_INLINE.containsMatchIn(raw)) return
+    val spans = mutableListOf<MarkdownInline>()
+    var cursor = 0
+    for (match in HA_ICON_INLINE.findAll(raw)) {
+      if (match.range.first > cursor) {
+        val before = raw.substring(cursor, match.range.first)
+        if (before.isNotEmpty()) spans += MarkdownInline.Text(before)
+      }
+      spans += MarkdownInline.Icon(match.groupValues[1])
+      cursor = match.range.last + 1
+    }
+    if (cursor < raw.length) {
+      val after = raw.substring(cursor)
+      if (after.isNotEmpty()) spans += MarkdownInline.Text(after)
+    }
+    val normalized = normalize(spans)
+    val text = normalized.joinToString("") { it.text }.trim()
+    if (normalized.isNotEmpty()) {
+      out += MarkdownBlock(MarkdownBlock.Kind.Paragraph, text, inlines = normalized)
+    }
+  }
+
+  private fun splitHaIcons(spans: List<MarkdownInline>): List<MarkdownInline> {
+    val out = mutableListOf<MarkdownInline>()
+    for (span in spans) {
+      if (
+        span !is MarkdownInline.Text ||
+          span.style.code ||
+          !HA_ICON_INLINE.containsMatchIn(span.text)
+      ) {
+        out += span
+        continue
+      }
+      var cursor = 0
+      for (match in HA_ICON_INLINE.findAll(span.text)) {
+        if (match.range.first > cursor) {
+          out += span.copy(text = span.text.substring(cursor, match.range.first))
+        }
+        out += MarkdownInline.Icon(match.groupValues[1])
+        cursor = match.range.last + 1
+      }
+      if (cursor < span.text.length) {
+        out += span.copy(text = span.text.substring(cursor))
+      }
+    }
+    return out
+  }
+
+  private val HA_ICON_OPEN =
+    Regex(
+      """^<ha-icon\b[^>]*\bicon\s*=\s*["']([^"']+)["'][^>]*/?>$""",
+      RegexOption.IGNORE_CASE,
+    )
+
+  private val HA_ICON_CLOSE = Regex("""^</ha-icon\s*>$""", RegexOption.IGNORE_CASE)
+
+  private val HA_ICON_INLINE =
+    Regex(
+      """<ha-icon\b[^>]*\bicon\s*=\s*["']([^"']+)["'][^>]*(?:/>|>\s*</ha-icon\s*>)""",
+      RegexOption.IGNORE_CASE,
+    )
+
   private val HORIZONTAL_WHITESPACE = Regex("[ \\t\\x0B\\f\\r]+")
 
   /** A CommonMark backslash escape: `\` before ASCII punctuation. */
@@ -477,8 +561,6 @@ object Markdown {
       MarkdownTokenTypes.RBRACKET,
       MarkdownTokenTypes.LPAREN,
       MarkdownTokenTypes.RPAREN,
-      MarkdownTokenTypes.LT,
-      MarkdownTokenTypes.GT,
       MarkdownTokenTypes.EXCLAMATION_MARK,
       MarkdownTokenTypes.ATX_HEADER,
       MarkdownTokenTypes.SETEXT_1,

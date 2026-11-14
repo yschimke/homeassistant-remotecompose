@@ -44,7 +44,12 @@ class SectionsLayoutTest {
 
     val header = assertNotNull(overview.header?.card, "3D printing overview header card")
     assertEquals("markdown", header.type)
-    assertTrue(header.raw["content"]!!.jsonPrimitive.content.startsWith("# 🏭 3D Printing"))
+    assertTrue(
+      header.raw["content"]!!
+        .jsonPrimitive
+        .content
+        .startsWith("""# <ha-icon icon="mdi:factory"></ha-icon> 3D Printing"""),
+    )
     assertEquals(4, overview.maxColumns)
     assertEquals(listOf(2, 2), overview.sections.map { it.columnSpan })
   }

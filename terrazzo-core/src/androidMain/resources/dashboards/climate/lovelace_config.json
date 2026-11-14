@@ -12,8 +12,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🌤️  Outside right now",
-              "heading_style": "title",
+              "heading": "Outside right now",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -95,8 +94,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "📷  Live view",
-              "heading_style": "title",
+              "heading": "Live view",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -134,8 +132,7 @@
             },
             {
               "type": "heading",
-              "heading": "🏠  Indoor climate",
-              "heading_style": "title",
+              "heading": "Indoor climate",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -244,8 +241,7 @@
             },
             {
               "type": "heading",
-              "heading": "📊  Indoor vs outdoor (48h)",
-              "heading_style": "title",
+              "heading": "Indoor vs outdoor (48h)",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -305,8 +301,7 @@
             },
             {
               "type": "heading",
-              "heading": "🌙  Sun & extras",
-              "heading_style": "title",
+              "heading": "Sun & extras",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },

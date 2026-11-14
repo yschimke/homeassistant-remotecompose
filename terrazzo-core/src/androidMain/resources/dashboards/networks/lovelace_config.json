@@ -19,8 +19,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🚀 Broadband speeds",
-              "heading_style": "title",
+              "heading": "Broadband speeds",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -74,8 +73,7 @@
             },
             {
               "type": "heading",
-              "heading": "📶 UniFi",
-              "heading_style": "title",
+              "heading": "UniFi",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -157,8 +155,7 @@
             },
             {
               "type": "heading",
-              "heading": "👥 People",
-              "heading_style": "title",
+              "heading": "People",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },

@@ -10,7 +10,9 @@ import ee.schimke.ha.rc.components.HaHeadingData
 import ee.schimke.ha.rc.components.HaHeadingStyle
 import ee.schimke.ha.rc.components.placeholderTitle
 import ee.schimke.ha.rc.design.DesignedCardConverter
+import ee.schimke.ha.rc.icons.HaIconMap
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
@@ -50,7 +52,7 @@ class HeadingCardConverter : DesignedCardConverter() {
     return DesignTemplateInput(card, HaSnapshot())
   }
 
-  /** The heading [card] shows, in its style. */
+  /** The heading [card] shows, in its style and optional icon. */
   internal fun headingData(card: CardConfig): HaHeadingData =
     HaHeadingData(
       title =
@@ -58,6 +60,7 @@ class HeadingCardConverter : DesignedCardConverter() {
           ?: card.raw["title"]?.jsonPrimitive?.content
           ?: "",
       style = styleOf(card),
+      icon = HaIconMap.mdi(card.raw["icon"]?.jsonPrimitive?.contentOrNull),
     )
 
   private fun styleOf(card: CardConfig): HaHeadingStyle =

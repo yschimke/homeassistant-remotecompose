@@ -19,6 +19,7 @@ import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.modifier.height
 import ee.schimke.composeai.rccreation.compose.modifier.padding
+import ee.schimke.composeai.rccreation.compose.modifier.size
 import ee.schimke.composeai.rccreation.compose.modifier.width
 import ee.schimke.composeai.rccreation.compose.state.RemoteColor
 import ee.schimke.composeai.rccreation.compose.state.RemoteString
@@ -29,6 +30,7 @@ import ee.schimke.composeai.rccreation.compose.text.RemoteFontFamily
 import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
 import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 import ee.schimke.composeai.rccreation.compose.text.RemoteTextStyle
+import ee.schimke.ha.rc.icons.mdi.RemoteMdiIcon
 
 /**
  * HA `markdown` card — renders parsed markdown blocks inside the card chrome. Headings, bullets and
@@ -270,7 +272,7 @@ private fun MarkdownLine(
   val wrapsAsOneText =
     !LocalSupportsFlowLayout.current &&
       links.size <= 1 &&
-      block.inlines.none { it is MarkdownInline.Image }
+      block.inlines.none { it is MarkdownInline.Image || it is MarkdownInline.Icon }
   if (!block.hasInlineMarkup || wrapsAsOneText) {
     val text = block.boundText ?: block.text.rs
     val linkClick =
@@ -454,6 +456,15 @@ private fun InlineSpan(
       )
     }
     is MarkdownInline.Image -> MarkdownBadge(inline)
+    is MarkdownInline.Icon -> {
+      val iconDp = (fontSize.value.constantValueOrNull ?: 16f).coerceAtLeast(14f).toInt()
+      RemoteMdiIcon(
+        name = inline.name,
+        contentDescription = null,
+        tint = primary,
+        modifier = RemoteModifier.size(iconDp.rdp),
+      )
+    }
   }
 }
 

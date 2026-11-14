@@ -9,7 +9,7 @@
         "card": {
           "type": "markdown",
           "text_only": true,
-          "content": "# 🏭 3D Printing\nTwo Bambu printers — tap a tab above for full detail"
+          "content": "# <ha-icon icon=\"mdi:factory\"></ha-icon> 3D Printing\nTwo Bambu printers — tap a tab above for full detail"
         }
       },
       "sections": [
@@ -19,8 +19,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🖨️ P2s",
-              "heading_style": "title",
+              "heading": "P2s",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -121,8 +120,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🖨️ A1 Mini",
-              "heading_style": "title",
+              "heading": "A1 Mini",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -231,7 +229,7 @@
         "card": {
           "type": "markdown",
           "text_only": true,
-          "content": "# 🖨️ P2s\n**Status:** {{ states('sensor.p2s_sn2_print_status') }} · **Stage:** {{ states('sensor.p2s_sn2_current_stage') }} · **Progress:** {{ states('sensor.p2s_sn2_print_progress') }}% · {% set r = states('sensor.p2s_sn2_remaining_time') %}**Remaining:** {% if r not in ['unknown','unavailable','0','0.0'] %}{{ r }} h{% else %}–{% endif %}"
+          "content": "# <ha-icon icon=\"mdi:printer-3d\"></ha-icon> P2s\n**Status:** {{ states('sensor.p2s_sn2_print_status') }} · **Stage:** {{ states('sensor.p2s_sn2_current_stage') }} · **Progress:** {{ states('sensor.p2s_sn2_print_progress') }}% · {% set r = states('sensor.p2s_sn2_remaining_time') %}**Remaining:** {% if r not in ['unknown','unavailable','0','0.0'] %}{{ r }} h{% else %}–{% endif %}"
         }
       },
       "sections": [
@@ -353,8 +351,7 @@
             },
             {
               "type": "heading",
-              "heading": "🎮 Controls",
-              "heading_style": "title",
+              "heading": "Controls",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -397,8 +394,7 @@
             },
             {
               "type": "heading",
-              "heading": "🌡️ Temperatures",
-              "heading_style": "title",
+              "heading": "Temperatures",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -468,8 +464,7 @@
             },
             {
               "type": "heading",
-              "heading": "💨 Fans",
-              "heading_style": "title",
+              "heading": "Fans",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -511,8 +506,7 @@
             },
             {
               "type": "heading",
-              "heading": "📦 Task details",
-              "heading_style": "title",
+              "heading": "Task details",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -602,8 +596,7 @@
             },
             {
               "type": "heading",
-              "heading": "🔧 Health & diagnostics",
-              "heading_style": "title",
+              "heading": "Health & diagnostics",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -733,7 +726,7 @@
         "card": {
           "type": "markdown",
           "text_only": true,
-          "content": "# 🖨️ A1 Mini\n**Status:** {{ states('sensor.a1mini_sn1_print_status') }} · **Stage:** {{ states('sensor.a1mini_sn1_current_stage') }} · **Progress:** {{ states('sensor.a1mini_sn1_print_progress') }}% · {% set r = states('sensor.a1mini_sn1_remaining_time') %}**Remaining:** {% if r not in ['unknown','unavailable','0','0.0'] %}{{ r }} h{% else %}–{% endif %}"
+          "content": "# <ha-icon icon=\"mdi:printer-3d\"></ha-icon> A1 Mini\n**Status:** {{ states('sensor.a1mini_sn1_print_status') }} · **Stage:** {{ states('sensor.a1mini_sn1_current_stage') }} · **Progress:** {{ states('sensor.a1mini_sn1_print_progress') }}% · {% set r = states('sensor.a1mini_sn1_remaining_time') %}**Remaining:** {% if r not in ['unknown','unavailable','0','0.0'] %}{{ r }} h{% else %}–{% endif %}"
         }
       },
       "sections": [
@@ -868,8 +861,7 @@
             },
             {
               "type": "heading",
-              "heading": "🎮 Controls",
-              "heading_style": "title",
+              "heading": "Controls",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -939,8 +931,7 @@
             },
             {
               "type": "heading",
-              "heading": "🌡️ Temperatures",
-              "heading_style": "title",
+              "heading": "Temperatures",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -1000,8 +991,7 @@
             },
             {
               "type": "heading",
-              "heading": "💨 Fans",
-              "heading_style": "title",
+              "heading": "Fans",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -1037,8 +1027,7 @@
             },
             {
               "type": "heading",
-              "heading": "📦 Task details",
-              "heading_style": "title",
+              "heading": "Task details",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -1128,8 +1117,7 @@
             },
             {
               "type": "heading",
-              "heading": "🔧 Health & diagnostics",
-              "heading_style": "title",
+              "heading": "Health & diagnostics",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -1256,8 +1244,7 @@
           "cards": [
             {
               "type": "heading",
-              "heading": "🖨️ P2s — AMS",
-              "heading_style": "title",
+              "heading": "P2s — AMS",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -1355,8 +1342,7 @@
             },
             {
               "type": "heading",
-              "heading": "🪢 External spool (P2s)",
-              "heading_style": "title",
+              "heading": "External spool (P2s)",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -1393,8 +1379,7 @@
             },
             {
               "type": "heading",
-              "heading": "🖨️ A1 Mini — AMS",
-              "heading_style": "title",
+              "heading": "A1 Mini — AMS",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
@@ -1480,8 +1465,7 @@
             },
             {
               "type": "heading",
-              "heading": "🪢 External spool (A1 Mini)",
-              "heading_style": "title",
+              "heading": "External spool (A1 Mini)",              "heading_style": "title",
               "grid_options": {
                 "columns": "full"
               },
