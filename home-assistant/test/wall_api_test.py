@@ -324,9 +324,9 @@ class PlayerTest(unittest.TestCase):
         self.assertEqual((1.0, 1.0, None, None, None), wall.player('1', '1', '800', None))
         self.assertEqual((1.0, 1.0, None, None, None), wall.player('1', '1', '0', '480'))
         # A profile by name; anything that isn't a name is dropped.
-        self.assertEqual((1.0, 1.0, None, None, 'kobento-mcu'), wall.player('1', '1', profile='kobento-mcu'))
+        self.assertEqual((1.0, 1.0, None, None, 'mcu'), wall.player('1', '1', profile='mcu'))
         self.assertEqual((1.0, 1.0, None, None, None), wall.player('1', '1', profile='../etc'))
-        self.assertEqual((1.0, 1.0, None, None, None), wall.player('1', '1', profile='Kobento MCU'))
+        self.assertEqual((1.0, 1.0, None, None, None), wall.player('1', '1', profile='Small MCU'))
         # A size alone doesn't make a small player.
         self.assertIsNone(wall.player(None, None, '800', '480'))
 

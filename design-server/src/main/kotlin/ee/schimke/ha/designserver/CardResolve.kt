@@ -90,7 +90,7 @@ data class ResolveRequest(
   val timeZone: String? = null,
   /**
    * The player the design is for (PlayerFolding.parsePlayer): its display (`{"density": 1,
-   * "fontScale": 1, "width": 800, "height": 480}`) and its profile (`"kobento-mcu"`, or `{"base":
+   * "fontScale": 1, "width": 800, "height": 480}`) and its profile (`"mcu"`, or `{"base":
    * "androidx", "without": ["op:CORE_TEXT", "feature:variable-float-fields"]}`). The design served
    * is the one made for it, under its own sha. Null for a full player.
    */

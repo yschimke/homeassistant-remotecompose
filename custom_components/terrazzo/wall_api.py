@@ -30,7 +30,7 @@ DEFAULT_DASHBOARD = "lovelace"
 # Card ids: `v<view>.c<card>` (a masonry or panel view) or `v<view>.s<section>.c<card>`.
 CARD_ID = re.compile(r"^v(\d{1,4})(?:\.s(\d{1,4}))?\.c(\d{1,4})$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
-# A player profile's name, as the design server knows them (`kobento-mcu`, `widgets-v6`).
+# A player profile's name, as the design server knows them (`mcu`, `widgets-v6`).
 PROFILE_NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 
 # Cards whose size HA's sections view gives as a default (`getGridOptions`), in grid units.
@@ -221,7 +221,7 @@ def player(density, font_scale, width=None, height=None, profile=None):
     that display, with its sizes as numbers, under its own sha. `width=` and `height=` (dp, both or
     neither) also make each design's canvas the whole screen, for a device showing one card at a
     time. `profile=` names what the player can play (a name the design server knows, such as
-    `kobento-mcu`, its default); a name that isn't one is ignored. A value that isn't a positive
+    `mcu`, its default); a name that isn't one is ignored. A value that isn't a positive
     number in range is ignored, so a typo gets the full design, not an error."""
 
     def number(value, high):

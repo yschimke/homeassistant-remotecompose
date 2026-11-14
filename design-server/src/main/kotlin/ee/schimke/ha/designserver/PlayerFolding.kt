@@ -95,11 +95,11 @@ object PlayerFolding {
         )
 
       /**
-       * Kobento's MCU player (rccore): it decodes what AndroidX does, `CoreText` included, but
-       * never resolves a variable a padding nested in a layout reads (the card lays out as NaN) and
-       * reads a `TextLayout`'s colour only as a literal.
+       * A microcontroller player: it decodes what AndroidX does, `CoreText` included, but never
+       * resolves a variable a padding nested in a layout reads (the card lays out as NaN) and reads
+       * a `TextLayout`'s colour only as a literal.
        */
-      val KOBENTO_MCU: Profile =
+      val MCU: Profile =
         Profile(
           "androidx",
           withoutFeatures =
@@ -107,18 +107,17 @@ object PlayerFolding {
         )
 
       /** Players known by name: each base as it is, and the families with their own gaps. */
-      val NAMED: Map<String, Profile> =
-        BASES.keys.associateWith { Profile(it) } + ("kobento-mcu" to KOBENTO_MCU)
+      val NAMED: Map<String, Profile> = BASES.keys.associateWith { Profile(it) } + ("mcu" to MCU)
 
       /**
-       * A request's profile: a name (`"kobento-mcu"`), or `{"base": …, "without": […]}` where each
-       * entry is `op:<opcode name or number>` (`op:CORE_TEXT`, `op:239`) or `feature:<feature>`
-       * (`feature:variable-float-fields`). Null is [KOBENTO_MCU], the small player the wall display
-       * API was made for. Throws [IllegalArgumentException] on anything else.
+       * A request's profile: a name (`"mcu"`), or `{"base": …, "without": […]}` where each entry is
+       * `op:<opcode name or number>` (`op:CORE_TEXT`, `op:239`) or `feature:<feature>`
+       * (`feature:variable-float-fields`). Null is [MCU], the small player the wall display API was
+       * made for. Throws [IllegalArgumentException] on anything else.
        */
       fun parse(json: JsonElement?): Profile =
         when (json) {
-          null -> KOBENTO_MCU
+          null -> MCU
           is JsonPrimitive -> {
             val name = json.contentOrNull?.takeIf { json.isString }
             requireNotNull(name?.let(NAMED::get)) {
@@ -187,7 +186,7 @@ object PlayerFolding {
   }
 
   /** What a request asks a design to be made for. */
-  data class Player(val display: Display = Display(), val profile: Profile = Profile.KOBENTO_MCU)
+  data class Player(val display: Display = Display(), val profile: Profile = Profile.MCU)
 
   /** A folded design: its bytes and sha256, and what [Player.profile] still can't play in it. */
   class Folded(val bytes: ByteArray, val sha256: String, val notes: List<String>)
@@ -294,8 +293,8 @@ object PlayerFolding {
 
   /**
    * A request's `player`: `{"display": {...}, "profile": ...}`, or the first form's flat
-   * `{"density", "fontScale", "width", "height"}`, which is the display alone and
-   * [Profile.KOBENTO_MCU]. Throws [IllegalArgumentException] on a bad display or profile.
+   * `{"density", "fontScale", "width", "height"}`, which is the display alone and [Profile.MCU].
+   * Throws [IllegalArgumentException] on a bad display or profile.
    */
   fun parsePlayer(json: JsonObject): Player {
     val displayJson = json["display"] as? JsonObject ?: json

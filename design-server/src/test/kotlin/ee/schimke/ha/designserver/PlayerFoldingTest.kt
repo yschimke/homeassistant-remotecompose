@@ -31,7 +31,7 @@ class PlayerFoldingTest {
     RcDocumentCodec.decode(bytes, RcWireLimits()).operations
 
   @Test
-  fun kobentoKeepsCoreTextAndGetsLiteralPaddings() {
+  fun mcuKeepsCoreTextAndGetsLiteralPaddings() {
     val folded = assertNotNull(PlayerFolding.fold(heading, Player(), bound = setOf("card.title")))
     val before = operations(heading)
     val after = operations(folded.bytes)
@@ -56,7 +56,7 @@ class PlayerFoldingTest {
   fun aPlayerWithoutCoreTextGetsTextLayoutWithItsColour() {
     val player =
       Player(
-        profile = Profile.KOBENTO_MCU.without(listOf("op:CORE_TEXT")),
+        profile = Profile.MCU.without(listOf("op:CORE_TEXT")),
       )
     val folded = assertNotNull(PlayerFolding.fold(heading, player, bound = setOf("card.title")))
     val after = operations(folded.bytes)
@@ -83,15 +83,15 @@ class PlayerFoldingTest {
   @Test
   fun aPlayerIsADisplayAndAProfile() {
     assertEquals(
-      Player(Display(1f, 1.3f, 800, 480), Profile.KOBENTO_MCU),
+      Player(Display(1f, 1.3f, 800, 480), Profile.MCU),
       player(
         """{"display": {"density": 1, "fontScale": 1.3, "width": 800, "height": 480},
-            "profile": "kobento-mcu"}""",
+            "profile": "mcu"}""",
       ),
     )
     // The first form: a flat display, for the small player the wall API was made for.
     assertEquals(
-      Player(Display(width = 800, height = 480), Profile.KOBENTO_MCU),
+      Player(Display(width = 800, height = 480), Profile.MCU),
       player("""{"density": 1, "fontScale": 1, "width": 800, "height": 480}"""),
     )
     assertEquals(Profile("widgets-v6"), player("""{"profile": "widgets-v6"}""").profile)
@@ -115,8 +115,8 @@ class PlayerFoldingTest {
     )
     // A named family as a base keeps what it already lacks.
     assertEquals(
-      Profile.KOBENTO_MCU.withoutFeatures,
-      player("""{"profile": {"base": "kobento-mcu", "without": ["op:CORE_TEXT"]}}""")
+      Profile.MCU.withoutFeatures,
+      player("""{"profile": {"base": "mcu", "without": ["op:CORE_TEXT"]}}""")
         .profile
         .withoutFeatures,
     )
