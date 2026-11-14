@@ -272,7 +272,7 @@ private fun MarkdownLine(
   val wrapsAsOneText =
     !LocalSupportsFlowLayout.current &&
       links.size <= 1 &&
-      block.inlines.none { it is MarkdownInline.Image }
+      block.inlines.none { it is MarkdownInline.Image || it is MarkdownInline.Icon }
   if (!block.hasInlineMarkup || wrapsAsOneText) {
     val text = block.boundText ?: block.text.rs
     val linkClick =
