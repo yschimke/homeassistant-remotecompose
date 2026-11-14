@@ -473,6 +473,30 @@ static void test_a_switch_wins_over_a_layout_in_flight() {
   CHECK(ha.answers.empty());
 }
 
+static void test_an_empty_view_is_stepped_past() {
+  static const char *layout = R"({
+    "dashboard": "wall-panel", "title": "Wall panel", "etag": "e1",
+    "views": [
+      {"index": 0, "path": "home", "sections": [{"title": null, "cards": [
+        {"id": "v0.c0", "type": "tile", "w": 6, "h": 1, "entities": ["light.a"]}]}]},
+      {"index": 1, "path": "empty", "sections": [{"title": null, "cards": []}]},
+      {"index": 2, "path": "more", "sections": [{"title": null, "cards": [
+        {"id": "v2.c0", "type": "tile", "w": 6, "h": 1, "entities": ["light.b"]}]}]}
+    ]})";
+  FakeHa ha;
+  FakePlayer player;
+  WallClient client(ha, player, Config{});
+  ha.answer("/api/terrazzo/wall/v1/dashboards", 200, kList);
+  ha.answer("/api/terrazzo/wall/v1/dashboards/wall-panel", 200, layout);
+  ha.answer("/api/terrazzo/wall/v1/values/wall-panel?cards=v0.c0", 200, R"({"cursor": "1-1", "cards": {}})");
+  client.step();
+  CHECK(!client.switch_place(1));   // the empty view: nothing to show, but the panel is there
+  CHECK_EQ(client.view_index(), 1);
+  ha.answer("/api/terrazzo/wall/v1/values/wall-panel?cards=v2.c0&wait=0", 200, R"({"cursor": "1-2", "cards": {}})");
+  CHECK(client.switch_place(1));    // on past it, not back into it
+  CHECK_EQ(client.view_index(), 2);
+}
+
 static void test_switching_views_and_dashboards() {
   FakeHa ha;
   FakePlayer player;
@@ -651,6 +675,7 @@ int main() {
   test_screens();
   test_switching_views_and_dashboards();
   test_a_switch_wins_over_a_layout_in_flight();
+  test_an_empty_view_is_stepped_past();
   test_prefetch();
   test_refused_dashboard();
   test_switch_skips_refused();

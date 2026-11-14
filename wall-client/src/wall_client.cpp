@@ -514,10 +514,6 @@ bool WallClient::fetch_layout() {
     player_.status("the dashboard has no views");
     return false;
   }
-  if (cards.empty()) {
-    player_.status(config.card.empty() ? "this view has no cards" : "no card " + config.card);
-    return false;
-  }
   std::vector<std::string> titles;
   for (JsonVariantConst v : doc["views"].as<JsonArrayConst>()) titles.emplace_back(v["title"] | "");
   std::lock_guard<std::mutex> g(lock_);
@@ -525,6 +521,15 @@ bool WallClient::fetch_layout() {
   // Switched while this was in flight: the new place is loaded (or loading) already.
   if (place != place_) return true;
   view_titles_ = std::move(titles);
+  if (cards.empty()) {
+    // An empty view is still where the panel is: the next switch goes on past it.
+    view_index_ = view;
+    layout_json_ = std::move(r.body);
+    cards_.clear();
+    current_ = 0;
+    player_.status(config.card.empty() ? "this view has no cards" : "no card " + config.card);
+    return false;
+  }
   // A screen at a time: the first poll answers with the view's screens.
   if (screens_mode()) {
     const bool same_view = view == view_index_ && !layout_json_.empty();
