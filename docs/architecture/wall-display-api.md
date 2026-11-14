@@ -115,6 +115,8 @@ One endpoint does both the initial load and the updates, for many cards at once:
 | `since` | The `cursor` from the last answer; empty the first time. |
 | `wait` | Seconds to hold the request when nothing changed (default 25, max 55, 0 answers at once). |
 | `style`, `dark`, `palette` | The look: an `HaUberTheme` id (`classic` default), `dark=1`, a `ThemeStyle` palette. |
+| `screens` | A view's index, instead of `cards`: that view a screen at a time (needs `width` and `height`). The answer then carries `screens`, the view's screen ids in order, whenever they changed after `since`. |
+| `picture_max` | With `width` and `height`: the most of that screen one picture may take, in percent. A `picture-entity` card that would take more (at 16:9, the width it's drawn at) is drawn in a grid of as many columns as it takes to fit, so it's narrower and other cards fit with it. Its slots, and so `/actions` and `/pictures`, are unchanged. Without it, no picture is capped. |
 | `density`, `font_scale`, `width`, `height` | A small player's display (either alone is enough; the other is 1). Each design is then made for it on the design server (`PlayerFolding`): sizes written as numbers instead of expressions over the player's density and font size, `CoreText` as `TextLayout`, values the device won't push frozen, so a player that can't evaluate those (an ESP32 panel's rccore) draws it. Served under its own sha. `width` and `height` (dp, both or neither) also make each design's canvas the whole screen, for a device that shows one card at a time. With a `width`, a card whose layout depends on its width (a `grid`'s columns, a card's width tiers) is laid out for that width when its design is made, rather than by a size gate the player evaluates as it plays: the same picture, with fewer layout passes on a microcontroller. An ESPHome panel whose player lays out in dp sends `density=1&font_scale=1` and its screen's size in dp. |
 | `profile` | What the small player can play, by a name the design server knows: `kobento-mcu` (the default: AndroidX's operations, without variables in float fields such as paddings and without `TextLayout` colours by id), `androidx`, `widgets-v6`, `widgets-v7`, `wear-widgets`. The design server adapts each design to it with rc-players' `adaptTo`. Anything that isn't such a name is ignored. A resolve request may also give `{"base": …, "without": ["op:CORE_TEXT", "feature:variable-float-fields"]}`. |
 
@@ -127,16 +129,56 @@ One endpoint does both the initial load and the updates, for many cards at once:
     "v0.s0.c1": {"design": "9b2e…", "rc": "/api/terrazzo/wall/v1/blobs/9b2e….rc", "exact": true,
                  "values": {"light.s0.is_on": true, "light.s0.state": "On", "light.s0.name": "Kitchen"}},
     "v0.s0.c2": {"values": {"sensor.s0.state": "21.5 °C", "sensor.s0.numeric_state": 21.5}},
-    "v0.s0.c3": {"error": "No design draws this custom:foo card yet."}
+    "v0.s0.c3": {"error": "No design draws this custom:foo card yet."},
+    "v0.s0.c4": {"hidden": true}
   }
 }
 ```
 
+- A **`conditional`** card is drawn as its inner card while its conditions hold (the same
+  `state` / `state_not` / `numeric_state` / `and` / `or` / `not` the app evaluates; a condition
+  only Home Assistant can evaluate is an `error`). The entities its conditions read re-resolve it.
+  While they don't hold it answers `{"hidden": true}`: the device draws nothing for it (and skips
+  it when cycling cards). When they hold again it comes whole, as a new design does.
+- **Screens** (`screens=<view>`): the view's cards, in layout order, packed into screens of the
+  player's `height` (grid rows of 56 dp and 8 dp gaps) and at most `SCREEN_ENTITIES` (12) entities, each drawn as one `vertical-stack` of
+  its shelves (cards side by side on one row, as a `horizontal-stack`). Screens overlap: each
+  starts about 80% of a screen below the last (`SCROLL_STEP`), at a row of cards, so the last rows of
+  one are the first of the next and paging reads as one continuous view; where the rows fall so a
+  step would be under half a screen (a tall card), the next screen starts after this one. A heading
+  never ends a screen with more to come. A screen id names its run of the view's cards, `v<view>.p<first>-<last>`,
+  and is a card id everywhere else (`/cards`, `/actions`, `/pictures`). When a screen's stack has
+  no design, the hub sets apart its cards that don't draw in a stack, and packs the view again:
+  each such card is a screen of its own (`v0.p3-3`, drawn as that card), and the cards around it
+  fill whole screens before and after it. A card with no design even alone is left out, and the
+  view packed again without it: the screen runs on over it, and its id names it,
+  `v<view>.p<first>-<last>x<index>…` (`v0.p2-7x5` is cards 2 to 7 but 5), so `/actions` and
+  `/pictures` read the same stack the design was made from. A screen of headings alone is dropped. So a page is never an
+  `error` for a card no design draws, nor a thin run left over from a split.
+- **Section columns.** A sections view on a screen wide enough stands its sections side by side,
+  in as many columns as Home Assistant gives it: as many 320 dp columns (`SECTION_MIN_WIDTH`, with
+  32 dp gaps) as fit the player's `width`, at most the view's `max_columns`. An 800 × 480 panel
+  (776 dp left of its scroll bar) has two, so a section of half-width tiles shows four across the
+  screen. Sections fill rows of columns in order; one with a `column_span` above 1 has a row to
+  itself, across the screen. A row of sections is drawn as a `horizontal-stack` of its columns,
+  each the stack of its section's shelves, and a column with nothing on a screen holds an empty
+  heading, so the others keep their width (a short last row stays its column's width, as in Home
+  Assistant). Screens step down the rows as before, but end only where no card in any column runs
+  across, and hold `SCREEN_ENTITIES` entities a column. Their ids end in `c<columns>`
+  (`v0.p0-10c2`). Without a `width`, or with room for one column, sections stack as before.
+  A section spanning k of those columns holds its full-width cards k to a row (headings still
+  across, narrower cards as they are): a wide section's picture beside its tiles, rather than each
+  across a screen that has fewer columns than the dashboard was made for.
+- For a small player (`width`/`height`) each card is simplified to what its template draws: a
+  heading without its icon or badges, markdown without inline emphasis, links or images. An
+  entity that doesn't exist, or that the user can't read, is sent as `unavailable`, so its card
+  keeps its exact design, with that slot unavailable.
 - A card whose **design** is new to the cursor (first poll, or its shape changed: an entity went
   unavailable, a light gained brightness) comes whole: `design`, `rc`, every value.
 - Otherwise only **values that changed** after `since`. The names are the document's own named
-  slots (`<domain>.s<N>.<field>`, plus converter bindings like a gauge's range), so the device
-  pushes them into the player as they are. Types are JSON's: `true`/`false` booleans, integers
+  slots (`<domain>.s<N>.<field>`, plus converter bindings like a gauge's range). A document declares each in RemoteCompose's
+  user domain, so the device pushes `light.s0.state` as `USER:light.s0.state` (a shared `HA:`
+  value keeps its own domain). Types are JSON's: `true`/`false` booleans, integers
   without a point, floats with one, strings; `null` is a number with no JSON form (an
   unavailable reading, NaN).
 - A design may also read the values every home shares, `HA:sun.sun.*` (elevation, azimuth, the
@@ -225,13 +267,15 @@ read that entity, fetches its `entity_picture` (one Home Assistant serves, such 
 | `w`, `h` | The box in pixels, 1–2048. Either may be left out: the other side follows the picture's aspect ratio. A picture is never scaled up. |
 | `fit` | `contain` (default): all of it, inside the box. `cover`: the box filled, cropped at the centre. |
 | `format` | `jpeg` (default once scaled, quality 80, alpha flattened onto black) or `png`. With no query at all, the picture as it came. |
+| `fresh` | `1` fetches the picture from its source now (a tap on it). Otherwise one size of one entity's picture is fetched from its source at most once a minute, however many devices ask. |
 
 The `ETag` is the answer's hash, so `If-None-Match` gets a 304 when the picture didn't change. The
 long poll says when to fetch: every card value map also has a `<slot>.picture_url` for each slot
 whose entity has a picture, for example
 `/api/terrazzo/wall/v1/pictures/wall-panel/v0.c3/camera.s0?v=1a2b3c4d5e6f`. Its `v` changes with
-the entity's picture URL (a camera's still moves with its rotating token), and that URL is
-cacheable for a day. These names are the device's, not the document's: the player has no slot for
+the entity's picture URL (a camera's still moves with its rotating token). A camera's still
+also changes behind the same URL, so the answer is cacheable for a minute, as long as the endpoint
+serves it from its own cache; a device showing a picture asks again each minute. These names are the device's, not the document's: the player has no slot for
 them, so they aren't pushed into it.
 
 ## Why long poll, not a websocket

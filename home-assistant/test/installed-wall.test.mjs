@@ -75,6 +75,10 @@ test('a wall display lists, lays out and taps with a long-lived token in a heade
   assert.equal(dashboards[0].url_path, 'wall-panel', 'the chosen wall dashboard comes first');
   assert.equal(dashboards[0].default, true);
   assert.ok(dashboards.some((d) => d.url_path === 'second-panel'));
+  // Only dashboards a wall can lay out are listed: none answers 422 (no saved cards).
+  for (const d of dashboards) {
+    assert.equal((await fetch(`${base}${d.layout}`, {headers: auth})).status, 200, d.url_path);
+  }
 
   const response = await fetch(`${wall}/dashboards/wall-panel`, {headers: auth});
   assert.equal(response.status, 200);
