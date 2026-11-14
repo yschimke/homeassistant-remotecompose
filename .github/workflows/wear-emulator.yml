@@ -38,7 +38,7 @@ jobs:
           sudo udevadm settle
           ls -l /dev/kvm
           test -r /dev/kvm && test -w /dev/kvm
-      - uses: actions/setup-java@v6.2.0
+      - uses: actions/setup-java@v6.3.0
         with:
           distribution: temurin
           java-version: 21.0.13+9.0.LTS
