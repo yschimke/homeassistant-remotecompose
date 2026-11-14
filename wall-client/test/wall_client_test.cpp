@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <deque>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,9 @@ struct Call {
 struct FakeHa : Transport {
   std::deque<std::pair<std::string, Response>> answers;   // expected path prefix, answer
   std::vector<Call> calls;
+  // Runs once, as a GET for [on_get_path] arrives, before its answer is returned.
+  std::string on_get_path;
+  std::function<void(const std::string &)> on_get;
   void answer(const std::string &prefix, int status, const std::string &body, const std::string &etag = "") {
     answers.push_back({prefix, Response{status, body, etag}});
   }
@@ -51,7 +55,13 @@ struct FakeHa : Transport {
   }
   Response get(const std::string &path, int, const std::string &inm) override {
     calls.push_back({"GET", path, "", inm});
-    return next(path);
+    Response r = next(path);
+    if (on_get && path.compare(0, on_get_path.size(), on_get_path) == 0) {
+      auto hook = std::move(on_get);
+      on_get = nullptr;
+      hook(path);
+    }
+    return r;
   }
   Response post_json(const std::string &path, const std::string &json, int) override {
     calls.push_back({"POST", path, json, ""});
@@ -443,6 +453,26 @@ static void test_screens() {
   CHECK_EQ(client.current_card(), std::string("v0.p1-1"));
 }
 
+static void test_a_switch_wins_over_a_layout_in_flight() {
+  FakeHa ha;
+  FakePlayer player;
+  WallClient client(ha, player, Config{});
+  ha.answer("/api/terrazzo/wall/v1/dashboards", 200, kList);
+  ha.answer("/api/terrazzo/wall/v1/dashboards/wall-panel", 200, kLayout);
+  // While the first dashboard's layout is in flight, another task switches to the other one.
+  ha.on_get_path = "/api/terrazzo/wall/v1/dashboards/wall-panel";
+  ha.on_get = [&](const std::string &) {
+    ha.answer("/api/terrazzo/wall/v1/dashboards/lovelace", 200, kLayout);
+    ha.answer("/api/terrazzo/wall/v1/values/lovelace?cards=v0.s0.c0,v0.s0.c1&wait=0", 200, R"({"cursor": "2-1", "cards": {}})");
+    CHECK(client.switch_dashboard("lovelace"));
+    // The old layout arrives after the switch: dropped, so the poll asks for the new place.
+    ha.answer("/api/terrazzo/wall/v1/values/lovelace?cards=v0.s0.c0,v0.s0.c1&since=2-1", 200, R"({"cursor": "2-2", "cards": {}})");
+  };
+  client.step();
+  CHECK_EQ(client.dashboard(), std::string("lovelace"));
+  CHECK(ha.answers.empty());
+}
+
 static void test_switching_views_and_dashboards() {
   FakeHa ha;
   FakePlayer player;
@@ -620,6 +650,7 @@ static void test_switch_skips_refused() {
 int main() {
   test_screens();
   test_switching_views_and_dashboards();
+  test_a_switch_wins_over_a_layout_in_flight();
   test_prefetch();
   test_refused_dashboard();
   test_switch_skips_refused();

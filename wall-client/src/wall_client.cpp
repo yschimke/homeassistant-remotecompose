@@ -278,6 +278,7 @@ bool WallClient::switch_dashboard(const std::string &url_path) {
 }
 
 void WallClient::clear_place_locked() {
+  place_++;   // a layout fetched for the place before is stale: fetch_layout drops it
   relayout_ = true;
   from_cache_ = true;   // a layout fetched before will do: the values' etag says if it's old
   settled_ = false;
@@ -466,10 +467,14 @@ std::string WallClient::dashboard() const {
 bool WallClient::fetch_layout() {
   if (!resolve_dashboard()) return false;
   std::string etag, dash, cached;
+  Config config;
+  uint32_t place;
   {
     std::lock_guard<std::mutex> g(lock_);
     etag = layout_etag_.empty() || cards_.empty() ? "" : "\"" + layout_etag_ + "\"";
     dash = dash_;
+    config = config_;   // its view, read with the place: a switch may change both meanwhile
+    place = place_;
     // Just switched: the layout this dashboard had, or one fetched ahead, without a request.
     if (from_cache_) {
       from_cache_ = false;
@@ -487,7 +492,7 @@ bool WallClient::fetch_layout() {
   }
   if (r.status == 304) {
     std::lock_guard<std::mutex> g(lock_);
-    relayout_ = false;
+    if (place == place_) relayout_ = false;
     return true;
   }
   if (r.status != 200) {
@@ -505,19 +510,21 @@ bool WallClient::fetch_layout() {
   }
   std::vector<Card> cards;
   int view = 0;
-  if (!pick_cards(doc.as<JsonVariantConst>(), config_, cards, view)) {
+  if (!pick_cards(doc.as<JsonVariantConst>(), config, cards, view)) {
     player_.status("the dashboard has no views");
     return false;
   }
   if (cards.empty()) {
-    player_.status(config_.card.empty() ? "this view has no cards" : "no card " + config_.card);
+    player_.status(config.card.empty() ? "this view has no cards" : "no card " + config.card);
     return false;
   }
   std::vector<std::string> titles;
   for (JsonVariantConst v : doc["views"].as<JsonArrayConst>()) titles.emplace_back(v["title"] | "");
   std::lock_guard<std::mutex> g(lock_);
-  view_titles_ = std::move(titles);
   layouts_[dash] = r.body;
+  // Switched while this was in flight: the new place is loaded (or loading) already.
+  if (place != place_) return true;
+  view_titles_ = std::move(titles);
   // A screen at a time: the first poll answers with the view's screens.
   if (screens_mode()) {
     const bool same_view = view == view_index_ && !layout_json_.empty();

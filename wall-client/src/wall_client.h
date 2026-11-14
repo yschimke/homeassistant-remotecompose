@@ -197,6 +197,7 @@ class WallClient {
   static constexpr size_t kSpareBytes = 256 * 1024;
   bool settled_ = false;               // every design of the place on screen is here
   bool from_cache_ = false;            // the next fetch_layout may take the layout it has
+  uint32_t place_ = 0;                 // bumped by each switch (clear_place_locked)
   int view_index_ = 0;
   std::vector<Card> cards_;
   std::string cursor_;
