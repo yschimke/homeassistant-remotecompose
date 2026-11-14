@@ -27,14 +27,21 @@ class HeadingCardConverter : DesignedCardConverter() {
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 36
 
   /**
-   * A plain heading renders from a card design: its style is the one generation property, and the
-   * text is the `card.title` binding (its length doesn't change the font size).
+   * A plain heading renders from a card design: its style and icon are the generation properties,
+   * and the text is the `card.title` binding (its length doesn't change the font size).
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
     // No text means no `card.title` to push; the template would keep its placeholder.
     if (CardDesignSlots.cardTitle(card) == null) return null
-    return DesignProperties.build { string(HEADING_STYLE, styleOf(card).name.lowercase()) }
+    // The icon is the card's config, not a value: a heading with one is its own design. One MDI
+    // doesn't have can't be drawn by a design, so that card converts on its own.
+    val raw = card.raw["icon"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+    val icon = raw?.let { HaIconMap.mdiName(it) ?: return null }
+    return DesignProperties.build {
+      string(HEADING_STYLE, styleOf(card).name.lowercase())
+      if (icon != null) string(ICON, icon)
+    }
   }
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
@@ -47,6 +54,7 @@ class HeadingCardConverter : DesignedCardConverter() {
             put("type", cardType)
             put("heading", placeholderTitle(0))
             put(HEADING_STYLE, style)
+            properties[ICON]?.let { put("icon", "mdi:$it") }
           },
       )
     return DesignTemplateInput(card, HaSnapshot())
@@ -70,9 +78,12 @@ class HeadingCardConverter : DesignedCardConverter() {
     }
 
   internal companion object {
-    private val TEMPLATE_CONFIG_KEYS = setOf("type", "heading", "title", "heading_style")
+    private val TEMPLATE_CONFIG_KEYS = setOf("type", "heading", "title", "heading_style", "icon")
 
     const val HEADING_STYLE = "heading_style"
+
+    /** The heading's MDI icon (its `icon:` without `mdi:`), when it has one. */
+    const val ICON = "icon"
 
     /** Narrower than a two-column launcher widget. */
     const val NarrowWidthDp = 100
