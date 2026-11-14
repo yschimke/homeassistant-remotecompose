@@ -1,0 +1,11 @@
+# The smallest Home Assistant the backup and restore test needs: the frontend brings in auth,
+# onboarding, the REST API and the websocket API. No default_config, so it starts quickly and
+# makes no outbound calls.
+homeassistant:
+  name: Restore test
+  unit_system: metric
+  time_zone: UTC
+  country: GB
+  currency: GBP
+
+frontend:

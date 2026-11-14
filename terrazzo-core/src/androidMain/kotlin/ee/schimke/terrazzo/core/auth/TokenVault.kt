@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -41,11 +42,27 @@ class TokenVault(private val context: Context) {
     }
   }
 
+  /**
+   * The refresh token stored for [instanceId], or null when there is none, so the caller signs in
+   * again.
+   *
+   * A token this install can't decrypt also reads as null, and its slot is cleared. That happens
+   * after a restore from backup or a device transfer, which brings back the ciphertext but never
+   * its Keystore key ([isUnreadableCiphertext]). The backup rules (`data_extraction_rules.xml`)
+   * leave the vault out, so this mostly covers backups made before those rules existed.
+   */
   suspend fun get(instanceId: String): String? {
     val prefs = context.store.data.first()
-    val ciphertext = prefs[cipherKey(instanceId)]?.fromBase64() ?: return null
-    val iv = prefs[ivKey(instanceId)]?.fromBase64() ?: return null
-    return decrypt(iv, ciphertext).toString(Charsets.UTF_8)
+    val ciphertext = prefs[cipherKey(instanceId)] ?: return null
+    val iv = prefs[ivKey(instanceId)] ?: return null
+    return try {
+      decrypt(iv.fromBase64(), ciphertext.fromBase64()).toString(Charsets.UTF_8)
+    } catch (e: Exception) {
+      if (!e.isUnreadableCiphertext()) throw e
+      Log.w(TAG, "Stored refresh token can't be decrypted on this install; signing in again", e)
+      clear(instanceId)
+      null
+    }
   }
 
   suspend fun clear(instanceId: String) {
@@ -103,6 +120,7 @@ class TokenVault(private val context: Context) {
   }
 
   private companion object {
+    const val TAG = "TokenVault"
     const val KEYSTORE = "AndroidKeyStore"
     const val KEY_ALIAS = "terrazzo-token-vault-v1"
     const val TRANSFORMATION = "AES/GCM/NoPadding"
