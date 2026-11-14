@@ -21,9 +21,17 @@ internal class OfflineOnlySession(override val baseUrl: String) : HaSession {
   private val status = MutableStateFlow(SessionConnectionStatus.Connecting)
   override val connectionStatus: StateFlow<SessionConnectionStatus> = status
 
-  /** The resume couldn't mint a live session: no stored token, or Home Assistant unreachable. */
-  fun markUnreachable() {
+  private val reauth = MutableStateFlow(false)
+  override val needsReauth: StateFlow<Boolean> = reauth
+
+  /**
+   * The resume found no stored token for this instance (a restore from backup or a device transfer,
+   * which leaves the token vault behind). No reconnect can recover, so the app signs out and offers
+   * sign-in rather than showing the cache as offline for good.
+   */
+  fun markNeedsReauth() {
     status.value = SessionConnectionStatus.Failed
+    reauth.value = true
   }
 
   override suspend fun connect() = Unit

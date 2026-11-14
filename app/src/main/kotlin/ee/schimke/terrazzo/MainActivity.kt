@@ -250,7 +250,11 @@ private suspend fun resumeSession(
   } else if (initial != null) {
     val baseUrl = initial.baseUrl
     if (graph.tokenVault.get(baseUrl) == null) {
-      (initial as? CachedHaSession)?.markUnreachable()
+      // The cache knows the instance but there's no token to reach it with: a restore from backup
+      // or a device transfer (the token vault isn't backed up), or a token that couldn't be
+      // decrypted. Waiting can't fix that, so flag reauth: TerrazzoApp signs out to the sign-in
+      // screen, as it does when Home Assistant refuses a token.
+      (initial as? CachedHaSession)?.markNeedsReauth()
       return
     }
     // Live at once, without waiting for a token: the session mints one from the stored refresh

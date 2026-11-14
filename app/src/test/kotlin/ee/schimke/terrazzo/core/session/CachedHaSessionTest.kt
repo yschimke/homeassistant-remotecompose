@@ -119,6 +119,20 @@ class CachedHaSessionTest {
   }
 
   @Test
+  fun aCacheOnlySessionWithNoTokenAsksForSignIn() = runTest {
+    // A restored install: the cache knows the instance, the token vault wasn't restored.
+    val session = CachedHaSession.cacheOnly(baseUrl, storage())
+    assertEquals(false, session.needsReauth.value)
+
+    session.markNeedsReauth()
+
+    // TerrazzoApp signs out on this, to the sign-in screen, instead of showing the cache as
+    // offline.
+    assertTrue(session.needsReauth.value)
+    assertEquals(SessionConnectionStatus.Failed, session.connectionStatus.value)
+  }
+
+  @Test
   fun listDashboards_propagates_failure_when_cache_is_empty() = runTest {
     val cache = storage()
     val delegate = FakeSession(baseUrl = baseUrl, listProvider = { error("offline") })
