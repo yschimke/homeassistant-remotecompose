@@ -515,11 +515,12 @@ std::string WallClient::dashboard() const {
 
 bool WallClient::fetch_layout() {
   if (!resolve_dashboard()) return false;
-  std::string etag, dash, cached;
+  std::string etag, dash, cached, query;
   Config config;
   uint32_t place;
   {
     std::lock_guard<std::mutex> g(lock_);
+    query = settings_query_locked(dash_);
     etag = layout_etag_.empty() || cards_.empty() ? "" : "\"" + layout_etag_ + "\"";
     dash = dash_;
     config = config_;   // its view, read with the place: a switch may change both meanwhile
@@ -537,7 +538,7 @@ bool WallClient::fetch_layout() {
     r.status = 200;
     r.body = std::move(cached);
   } else {
-    r = http_.get(std::string(API) + "/dashboards/" + encode(dash), kLayoutTimeoutMs, etag);
+    r = http_.get(std::string(API) + "/dashboards/" + encode(dash) + query, kLayoutTimeoutMs, etag);
   }
   if (r.status == 304) {
     std::lock_guard<std::mutex> g(lock_);
@@ -625,6 +626,12 @@ std::string WallClient::values_path() const {
   // The first answer at once; then hold the request until something changes.
   p += "&wait=" + std::to_string(cursor_.empty() ? 0 : config_.wait_s);
   return p + display_query_locked();
+}
+
+std::string WallClient::settings_query_locked(const std::string &dash) const {
+  if (dash != kSettingsDashboard) return "";
+  const std::string q = display_query_locked();
+  return q.empty() ? "" : "?" + q.substr(1);
 }
 
 // How the design server should make designs for this display: the values query's tail.
@@ -902,7 +909,12 @@ int WallClient::post_action(const std::string &card_id, const std::string &actio
   }
   const std::string dash = dashboard();
   if (dash.empty()) return 0;   // no layout yet: nothing on screen to tap
-  Response r = http_.post_json(std::string(API) + "/actions/" + encode(dash) + "/" + encode(card_id),
+  std::string query;
+  {
+    std::lock_guard<std::mutex> g(lock_);
+    query = settings_query_locked(dash);   // the settings' slots are numbered for its look
+  }
+  Response r = http_.post_json(std::string(API) + "/actions/" + encode(dash) + "/" + encode(card_id) + query,
                                json, kActionTimeoutMs);
   if (r.status != 200) {
     player_.status("tap: " + http_reason(r));

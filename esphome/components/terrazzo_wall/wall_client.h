@@ -178,6 +178,9 @@ class WallClient {
   const std::vector<uint8_t> *blob_locked(const std::string &sha);
   void keep_spare_locked(const std::string &sha, std::vector<uint8_t> rc);
   std::string display_query_locked() const;
+  // For the settings dashboard, the query its layout and taps are made from (`?` + the display
+  // query: its look and home), so they match what /values made; empty for any other dashboard.
+  std::string settings_query_locked(const std::string &dash) const;
   // A dashboard whose layout the API refuses (an auto-generated one it can't lay out): left out
   // of the list from here on, so nothing offers or switches to it.
   static bool refuses(int status);

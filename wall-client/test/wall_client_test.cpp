@@ -557,11 +557,15 @@ static void test_settings() {
   ha.answer("/api/terrazzo/wall/v1/values/terrazzo-settings?cards=v0.s0.c0,v0.s0.c1&wait=0", 200, R"({"cursor": "2-1", "cards": {}})");
   CHECK(client.open_settings());
   CHECK(client.in_settings());
+  // Its layout is made from the panel's look and home, as /values is.
+  CHECK(ha.calls[ha.calls.size() - 2].path.find("/dashboards/terrazzo-settings?density=1") != std::string::npos);
 
   // A choice is the device's: handed over, and no place changes.
   ha.answer("/api/terrazzo/wall/v1/actions/terrazzo-settings/v0.s0.c0", 200,
             R"({"ran": null, "action": {"kind": "Navigate", "path": "/terrazzo-settings/set/theme/rugged"}})");
   client.post_action("v0.s0.c0", "");
+  // A tap's slots are numbered in the settings made for this look and home.
+  CHECK(ha.calls.back().path.find("/actions/terrazzo-settings/v0.s0.c0?density=1") != std::string::npos);
   CHECK_EQ(settings.size(), (size_t) 1);
   CHECK_EQ(settings[0].first, std::string("theme"));
   CHECK_EQ(settings[0].second, std::string("rugged"));
@@ -571,6 +575,7 @@ static void test_settings() {
   ha.answer("/api/terrazzo/wall/v1/dashboards/terrazzo-settings", 200, kLayout);
   ha.answer("/api/terrazzo/wall/v1/values/terrazzo-settings?cards=v0.s0.c0,v0.s0.c1&wait=0", 200, R"({"cursor": "3-1", "cards": {}})");
   CHECK(client.set_look("rugged", true, "lovelace"));
+  CHECK(ha.calls[ha.calls.size() - 2].path.find("/dashboards/terrazzo-settings?style=rugged&dark=1") != std::string::npos);
   CHECK(ha.calls.back().path.find("&style=rugged&dark=1") != std::string::npos);
   CHECK(ha.calls.back().path.find("&home=lovelace") != std::string::npos);
 
