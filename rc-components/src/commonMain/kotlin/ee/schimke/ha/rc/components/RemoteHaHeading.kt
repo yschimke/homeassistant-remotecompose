@@ -12,6 +12,7 @@ import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
 import ee.schimke.composeai.rccreation.compose.modifier.size
 import ee.schimke.composeai.rccreation.compose.state.RemoteTextUnit
 import ee.schimke.composeai.rccreation.compose.state.rdp
+import ee.schimke.composeai.rccreation.compose.state.rf
 import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
 import ee.schimke.composeai.rccreation.foundation.icon.RemoteBasicIcon
 
@@ -43,7 +44,10 @@ fun RemoteHaHeading(
         modifier = RemoteModifier.size(iconSize.rdp),
         tint = haTheme().primaryText,
       )
-      textSurfaces().Heading(cardTitle(data.title), textSize, data.style.weight, RemoteModifier)
+      // The rest of the row: a theme's heading that fills its width (a rule to the edge) is
+      // bounded by it, so every player measures it the same.
+      textSurfaces()
+        .Heading(cardTitle(data.title), textSize, data.style.weight, RemoteModifier.weight(1f.rf))
     }
   }
 }
