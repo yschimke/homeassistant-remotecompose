@@ -174,7 +174,8 @@ bool WallClient::resolve_dashboard() {
     return false;
   }
   std::lock_guard<std::mutex> g(lock_);
-  dash_ = chosen;
+  // A dashboard chosen while the list was in flight (switch_dashboard) stands.
+  if (dash_.empty()) dash_ = chosen;
   set_dashboards_locked(std::move(list));
   return true;
 }

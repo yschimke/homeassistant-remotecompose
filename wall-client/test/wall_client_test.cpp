@@ -520,6 +520,27 @@ static void test_a_navigate_wins_over_a_layout_in_flight() {
   CHECK(ha.answers.empty());
 }
 
+static void test_a_switch_wins_over_resolving_the_default() {
+  FakeHa ha;
+  FakePlayer player;
+  WallClient client(ha, player, Config{});   // dashboard "default"
+  ha.answer("/api/terrazzo/wall/v1/dashboards", 200, kList);
+  // While the default is being looked up, another task switches to Overview.
+  ha.on_get_path = "/api/terrazzo/wall/v1/dashboards";
+  ha.on_get = [&](const std::string &) {
+    ha.answer("/api/terrazzo/wall/v1/dashboards", 200, kList);
+    ha.answer("/api/terrazzo/wall/v1/dashboards/lovelace", 200, kLayout);
+    ha.answer("/api/terrazzo/wall/v1/values/lovelace?cards=v0.s0.c0,v0.s0.c1&wait=0", 200, R"({"cursor": "2-1", "cards": {}})");
+    CHECK(client.switch_dashboard("lovelace"));
+    // The step goes on with the dashboard switched to, not the default it looked up.
+    ha.answer("/api/terrazzo/wall/v1/dashboards/lovelace", 200, kLayout);
+    ha.answer("/api/terrazzo/wall/v1/values/lovelace?cards=v0.s0.c0,v0.s0.c1&wait=0", 200, R"({"cursor": "2-2", "cards": {}})");
+  };
+  client.step();
+  CHECK_EQ(client.dashboard(), std::string("lovelace"));   // not the default, wall-panel
+  CHECK(ha.answers.empty());
+}
+
 static void test_switching_views_and_dashboards() {
   FakeHa ha;
   FakePlayer player;
@@ -700,6 +721,7 @@ int main() {
   test_a_switch_wins_over_a_layout_in_flight();
   test_an_empty_view_is_stepped_past();
   test_a_navigate_wins_over_a_layout_in_flight();
+  test_a_switch_wins_over_resolving_the_default();
   test_prefetch();
   test_refused_dashboard();
   test_switch_skips_refused();
