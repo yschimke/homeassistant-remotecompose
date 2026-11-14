@@ -46,7 +46,7 @@ class DashboardSelect : public select::Select, public Parented<TerrazzoWall> {
 };
 class WallButton : public button::Button, public Parented<TerrazzoWall> {
  public:
-  enum Kind { NEXT_SCREEN, PREVIOUS_SCREEN, NEXT_VIEW, PREVIOUS_VIEW };
+  enum Kind { NEXT_SCREEN, PREVIOUS_SCREEN, NEXT_VIEW, PREVIOUS_VIEW, SETTINGS };
   void set_kind(int kind) { this->kind_ = kind; }
 
  protected:
@@ -179,6 +179,8 @@ class TerrazzoWall : public Component {
   void previous_dashboard() { this->switch_(-1, true); }
   void next_view() { this->switch_(1, false); }
   void previous_view() { this->switch_(-1, false); }
+  // The settings screen, opened (or, from it, closed): from the menu or Home Assistant.
+  void toggle_settings();
   void sleep() { this->screen_request_ = -1; }
   // Raster throughput, logged: the player's own frame buffer (PSRAM) and strips in internal RAM.
   void bench();

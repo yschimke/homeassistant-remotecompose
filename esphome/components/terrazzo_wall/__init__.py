@@ -55,6 +55,7 @@ CONF_HOME_ASSISTANT = "home_assistant"
 CONF_DASHBOARD_SELECT = "dashboard"
 CONF_PLACE = "place"
 CONF_NEXT_SCREEN = "next_screen"
+CONF_SETTINGS = "settings"
 CONF_PREVIOUS_SCREEN = "previous_screen"
 CONF_NEXT_VIEW = "next_view"
 CONF_PREVIOUS_VIEW = "previous_view"
@@ -110,6 +111,7 @@ _BUTTONS = {
     CONF_PREVIOUS_SCREEN: ("Previous screen", "mdi:chevron-left", 1),
     CONF_NEXT_VIEW: ("Next view", "mdi:page-next-outline", 2),
     CONF_PREVIOUS_VIEW: ("Previous view", "mdi:page-previous-outline", 3),
+    CONF_SETTINGS: ("Settings", "mdi:cog", 4),
 }
 
 # The panel in Home Assistant: the dashboard on show as a select (its options the dashboards

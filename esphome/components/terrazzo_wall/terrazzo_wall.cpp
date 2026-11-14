@@ -1109,9 +1109,7 @@ void TerrazzoWall::menu_tap(float x_dp, float y_dp) {
   // The top of the screen: the settings screen, opened (or, from it, closed); the menu closes.
   if (y_dp < this->config_.height_dp * 0.18f) {
     this->toggle_menu();
-    auto *msg = new ActionMsg{};
-    msg->settings = true;
-    if (s_actions == nullptr || xQueueSend(s_actions, &msg, 0) != pdTRUE) delete msg;
+    this->toggle_settings();
     return;
   }
   const float third = this->config_.width_dp / 3.0f;
@@ -1241,6 +1239,7 @@ void WallButton::press_action() {
     case PREVIOUS_SCREEN: this->parent_->previous_card(); break;
     case NEXT_VIEW: this->parent_->next_view(); break;
     case PREVIOUS_VIEW: this->parent_->previous_view(); break;
+    case SETTINGS: this->parent_->toggle_settings(); break;
   }
 }
 
@@ -1300,6 +1299,12 @@ void TerrazzoWall::apply_setting_(const std::string &key, const std::string &val
   }
   ESP_LOGI(TAG, "settings: %s = %s", key.c_str(), value.c_str());
   this->client_->set_look(this->config_.style, this->config_.dark, this->config_.home);
+}
+
+void TerrazzoWall::toggle_settings() {
+  auto *msg = new ActionMsg{};
+  msg->settings = true;
+  if (s_actions == nullptr || xQueueSend(s_actions, &msg, 0) != pdTRUE) delete msg;
 }
 
 void TerrazzoWall::show_dashboard_option(size_t index) {
