@@ -1557,6 +1557,9 @@ def preview_cards(config, limit=PREVIEW_CARDS):
     for card in cards:
         if card.get("type") in _PREVIEW_SKIP or not slot_entries(card):
             continue
+        # Small cards only: a list or a grid of them would push the theme's buttons off its screen.
+        if card.get("type") in ("grid", "vertical-stack", "horizontal-stack") or card_size(card)[1] > 2:
+            continue
         out.append({k: v for k, v in card.items() if k not in ("grid_options", "visibility")})
         if len(out) == limit:
             break

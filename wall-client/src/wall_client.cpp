@@ -393,6 +393,9 @@ std::string WallClient::prefetch(const std::function<bool()> &waiting) {
   {
     std::lock_guard<std::mutex> g(lock_);
     if (!settled_ || !screens_mode() || dash_.empty()) return "";
+    // Not from the settings screen: its views are a theme each, a design apiece, and fetching two
+    // dozen ahead is more than a panel holds. Each loads when it's chosen.
+    if (dash_ == kSettingsDashboard) return "";
     need_layout = dashboards_.empty();
   }
   if (need_layout) return load_dashboards() ? "dashboards" : "";   // which there are, first

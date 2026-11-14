@@ -641,6 +641,8 @@ class SettingsTest(unittest.TestCase):
         {'type': 'tile', 'entity': 'sensor.down', 'grid_options': {'columns': 6}},
         {'type': 'picture-entity', 'entity': 'camera.door'},
         {'type': 'tile', 'entity': 'sensor.up'},
+        {'type': 'grid', 'columns': 4, 'cards': [{'type': 'tile', 'entity': f'device_tracker.d{i}'} for i in range(8)]},
+        {'type': 'entities', 'entities': ['sensor.a', 'sensor.b', 'sensor.c', 'sensor.d']},
     ]}]}]}
 
     def config(self, home=None, style='classic', dark=True):
