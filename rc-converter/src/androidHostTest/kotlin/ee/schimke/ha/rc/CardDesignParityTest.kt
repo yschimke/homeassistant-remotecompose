@@ -356,6 +356,39 @@ class CardDesignParityTest {
     )
 
   @Test
+  fun headingIconIsItsOwnDesign() {
+    val plain = card("heading") { put("heading", "Broadband") }
+    val withIcon =
+      card("heading") {
+        put("heading", "Broadband")
+        put("icon", "mdi:speedometer")
+      }
+    val converter = registry.get("heading")!!
+    val properties = converter.designProperties(withIcon, HaSnapshot())
+    kotlin.test.assertEquals("speedometer", properties?.get("icon"))
+    kotlin.test.assertNotEquals(converter.designProperties(plain, HaSnapshot()), properties)
+    // An icon the app doesn't bundle can't be drawn by a design: the card converts on its own.
+    val unknown =
+      card("heading") {
+        put("heading", "Broadband")
+        put("icon", "mdi:no-such-icon-anywhere")
+      }
+    kotlin.test.assertNull(converter.designProperties(unknown, HaSnapshot()))
+  }
+
+  @Test
+  fun headingWithIcon() =
+    assertParity(
+      "heading-icon",
+      card("heading") {
+        put("heading", "Known devices")
+        put("icon", "mdi:account-multiple")
+      },
+      emptyList(),
+      dark = false,
+    )
+
+  @Test
   fun headingWithoutTextHasNoDesign() {
     val heading = card("heading") { put("heading_style", "subtitle") }
     kotlin.test.assertNull(registry.get("heading")?.designProperties(heading, HaSnapshot()))
