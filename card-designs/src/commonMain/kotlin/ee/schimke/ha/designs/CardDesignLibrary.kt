@@ -244,7 +244,7 @@ object CardDesignLibrary {
   fun generateBuiltIn(target: File, host: CaptureHost): Int {
     val keys = LinkedHashSet<DesignKey>()
     for (source in librarySources()) {
-      keysOf(source.card, source.snapshot).filterTo(keys) { it.theme in BUILT_IN_THEMES }
+      libraryKeysOf(source).filterTo(keys) { it.theme in BUILT_IN_THEMES }
     }
     check(keys.isNotEmpty()) { "the demo dashboards produce no built-in designs" }
     val built = keys.map { CheckedInCardDesigns.capture(host, it) }
@@ -289,7 +289,7 @@ object CardDesignLibrary {
   private fun examples(): LinkedHashMap<DesignKey, Example> {
     val examples = LinkedHashMap<DesignKey, Example>()
     for (source in librarySources()) {
-      for (key in keysOf(source.card, source.snapshot)) examples.getOrPut(key) { source }
+      for (key in libraryKeysOf(source)) examples.getOrPut(key) { source }
     }
     check(examples.isNotEmpty()) { "the demo dashboards produce no designs" }
     return examples
@@ -370,7 +370,7 @@ object CardDesignLibrary {
     LibraryFixtures.all.map { Example("fixture:${it.name}", it.card, it.snapshot) } +
       DASHBOARDS.flatMap { name ->
         val (dashboard, snapshot) = demoDashboard(name)
-        dashboard.allCards().map { Example("dashboard:$name", it, snapshot) }
+        dashboard.allCards().map { Example("$DASHBOARD_SOURCE$name", it, snapshot) }
       }
 
   /**
@@ -395,6 +395,22 @@ object CardDesignLibrary {
       }
     }
   }
+
+  /**
+   * The keys [source] puts in the library: [keysOf], less a demo dashboard card's design per
+   * heading icon. A heading's icon is its own design (an MDI name, one of thousands), so every icon
+   * the dashboards use, in every theme, took thousands of files the server's 50,000-file library
+   * limit has no room for. The library keeps the curated fixture's icon heading; the server
+   * captures any other on request (`DesignGenerator`).
+   */
+  fun libraryKeysOf(source: Example): List<DesignKey> =
+    keysOf(source.card, source.snapshot).filterNot { key ->
+      source.source.startsWith(DASHBOARD_SOURCE) &&
+        key.cardType == "heading" &&
+        "icon=" in key.shape
+    }
+
+  private const val DASHBOARD_SOURCE = "dashboard:"
 
   /** The demo dashboards bundled with the app (`terrazzo-core`'s `dashboards/`). */
   val DASHBOARDS =

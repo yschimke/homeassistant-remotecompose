@@ -81,6 +81,14 @@ object LibraryFixtures {
       ),
       fixture("heading-title", card("heading") { put("heading", "Living room") }, emptyList()),
       fixture(
+        "heading-icon",
+        card("heading") {
+          put("heading", "Known devices")
+          put("icon", "mdi:account-multiple")
+        },
+        emptyList(),
+      ),
+      fixture(
         "heading-subtitle",
         card("heading") {
           put("heading", "Lights and switches")
