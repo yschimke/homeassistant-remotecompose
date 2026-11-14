@@ -23,6 +23,7 @@ import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.LocalInCardContainer
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.ProvideChildCaptureShare
+import ee.schimke.ha.rc.ProvidePlaybackWidthShare
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.SystemHaClock
@@ -370,6 +371,8 @@ class GridCardConverter : DesignedCardConverter() {
           modifier,
         )
       } else {
+        // At a playback width known when it's captured, the breakpoint picks the tier now and the
+        // design carries only that layout (RemoteSizeBreakpoint).
         RemoteSizeBreakpoint(
           thresholdsDp = intArrayOf(threshold),
           modifier = modifier.fillMaxWidth(),
@@ -421,17 +424,23 @@ private fun GridCells(
     stretchLastRow = !keepColumns,
     fillHeight = fillHeight,
   ) { k ->
-    ProvideChildCardBindings(bindingIndices[k]) {
-      if (squareCells[k]) {
-        RemoteAspectRatioBox(1f, RemoteModifier.fillMaxWidth()) {
-          RenderChild(children[k], snapshot, RemoteModifier.fillMaxSize())
+    // A cell's share of a known playback width, for a nested grid: its row's, which a stretched
+    // short last row splits between fewer cells (RemoteHaGrid).
+    val rowStart = k / perRow * perRow
+    val slots = if (keepColumns) perRow else minOf(perRow, children.size - rowStart)
+    ProvidePlaybackWidthShare(parts = slots, gapDp = HaGridLayout.GAP_DP) {
+      ProvideChildCardBindings(bindingIndices[k]) {
+        if (squareCells[k]) {
+          RemoteAspectRatioBox(1f, RemoteModifier.fillMaxWidth()) {
+            RenderChild(children[k], snapshot, RemoteModifier.fillMaxSize())
+          }
+        } else {
+          RenderChild(
+            children[k],
+            snapshot,
+            if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
+          )
         }
-      } else {
-        RenderChild(
-          children[k],
-          snapshot,
-          if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
-        )
       }
     }
   }

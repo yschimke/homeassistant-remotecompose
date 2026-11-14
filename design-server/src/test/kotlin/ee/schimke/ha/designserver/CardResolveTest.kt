@@ -251,6 +251,65 @@ class CardResolveTest {
     System.getenv("PLAYER_FOLDING_TILE_OUT")?.let { File(it).writeBytes(bytes) }
   }
 
+  @Test
+  fun aPlayerThatKnowsItsWidthGetsAGridLaidOutForIt() = testApplication {
+    application { designServer(LibraryHolder(library().dir)) }
+    val lights = listOf("light.kitchen", "light.hall", "light.porch")
+    fun resolve(width: Int?): ByteArray {
+      val body = buildJsonObject {
+        put(
+          "card",
+          buildJsonObject {
+            put("type", "grid")
+            put("columns", 3)
+            put("square", false)
+            put(
+              "cards",
+              kotlinx.serialization.json.JsonArray(
+                lights.map { id ->
+                  buildJsonObject {
+                    put("type", "tile")
+                    put("entity", id)
+                  }
+                },
+              ),
+            )
+          },
+        )
+        put("states", buildJsonObject { lights.forEach { put(it, "on") } })
+        put(
+          "player",
+          buildJsonObject {
+            put("density", 1)
+            put("fontScale", 1)
+            if (width != null) {
+              put("width", width)
+              put("height", 432)
+            }
+          },
+        )
+      }
+      return runBlocking {
+        val response =
+          client.post("/api/cards/resolve") {
+            header(HttpHeaders.ContentType, "application/json")
+            setBody(body.toString())
+          }
+        assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+        val match = Json.decodeFromString(CardMatch.serializer(), response.bodyAsText())
+        client.get("/designs/v1/blobs/${match.sha256}.rc").readRawBytes()
+      }
+    }
+    fun stateLayouts(bytes: ByteArray) =
+      Regex("StateLayout")
+        .findAll(RcDocumentCodec.decode(bytes, RcWireLimits()).operations.toString())
+        .count()
+    // At any width the grid chooses its columns as it's played, by a state layout over its width;
+    // made for a 776 dp screen it has chosen them already, and carries one layout.
+    assertTrue(stateLayouts(resolve(width = null)) > 0, "a grid for any width has a size gate")
+    assertEquals(0, stateLayouts(resolve(width = 776)), "a grid for a known width has none")
+  }
+
   /** Whether this expression reads the density (27) or font size (33) system variable. */
   private fun RcFloatExpression.readsDisplay(): Boolean = expression.any {
     it.referencedId == DENSITY || it.referencedId == FONT_SIZE

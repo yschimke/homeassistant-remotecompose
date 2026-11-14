@@ -305,6 +305,9 @@ object CardDesignTemplates {
           LocalTemplateBindings provides TemplateBindings(),
           // The same bytes whenever it is captured; the client binds the real time.
           LocalHaClock provides TemplateHaClock,
+          // A player that knows the width it plays at (a wall panel's screen): width breakpoints
+          // pick their layout now (RemoteSizeBreakpoint).
+          LocalPlaybackWidthDp provides key.widthDp,
         ) {
           ProvideExpressionNames {
             ProvideCardRegistry(registry) {
