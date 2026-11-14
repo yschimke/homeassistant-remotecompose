@@ -33,9 +33,9 @@ enum class WidgetHost(val wire: String, val profile: RcTargetProfile) {
   Launcher("launcher-widgets", RcTargetProfiles.WIDGETS_V6),
 
   /**
-   * A wall panel on a microcontroller, whose player rasterises text slowly (some 6 ms a run on an
-   * ESP32-S3) and ships one face. Its text in the default family is drawn in
-   * [WidgetBitmapFonts.WALL_FAMILY] too, so the whole card comes from glyphs.
+   * A wall panel on a microcontroller, whose player rasterises text slowly and ships one face. Its
+   * text in the default family is drawn in [WidgetBitmapFonts.WALL_FAMILY] too, so the whole card
+   * comes from glyphs.
    */
   Wall("wall", RcTargetProfiles.ANDROIDX);
 

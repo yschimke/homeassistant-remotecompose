@@ -126,24 +126,15 @@ faces and serving their rasters.
 
 ## A small player
 
-What a microcontroller panel gains, measured on an ESP32-S3 7" panel at 800x480, density 1, with a
-vector rasteriser (ThorVG) on a 240 MHz core and the document and frame buffers in PSRAM:
+What fits a microcontroller panel:
 
-| | Text (outlines, cached as one image a run) | Everything else |
-|---|---|---|
-| a card loads (15 runs) | 75 ms | 52 ms doc + 99 ms raster |
-| a value changes (1 run) | 4.8 ms | 13.7 ms doc + 8.3 ms raster |
-
-Every wall screen set its text in six styles: Roboto Regular at 12, 13, 15, 17 and 22 px, Bold at
-16. What fits such a player:
-
-- **Rasters, not outlines.** Outlines are the rasteriser's work, the 75 ms. A run composed from
-  packed coverage is a copy: ~0.3 ms where outlines take ~5.
-- **Packs, not glyphs in documents.** The six styles' printable ASCII and the signs readings use
-  (~100 characters each) are some 25 KB at 4 bits, kept to their ink, once: no document grows, and
-  every card and dashboard draws from them.
-- **4 bits.** Indistinguishable from 8 at a panel's sizes for half the bytes; 2 bits saves another
-  ~10 KB for slightly rougher edges.
+- **Rasters, not outlines.** A run composed from packed coverage is a copy into the frame, where
+  outlines are a vector rasteriser's work on every new run.
+- **Packs, not glyphs in documents.** A few styles' printable ASCII and the signs readings use are
+  some tens of KB at 4 bits, kept to their ink, once: no document grows, and every card and
+  dashboard draws from them.
+- **4 bits.** Indistinguishable from 8 at a panel's sizes for half the bytes; 2 bits saves more
+  for slightly rougher edges.
 - **Built in, then fetched.** Packs for the styles a player always uses can be fetched when its
   firmware is built and embedded; a style or character a document needs that no pack has is
   fetched at run time (`GET /fonts/glyphs`) and kept, so new faces (`google:` families) and sizes
@@ -165,7 +156,7 @@ A panel asks only for what its fonts lack:
 `GET /api/terrazzo/wall/v1/glyphs?family=emoji&size=22&bits=32&chars=🚀📶` on Home Assistant, with
 its wall token. The integration passes the query to its add-on's `/designs/v1/fonts/glyphs` and
 the answer back as it is: a pack, or 404 when the add-on has no glyph route yet (the panel then
-draws without), or 503 with no design server. 🚀 and 📶 at 22 px are 25x25 px each, 5 KB together.
+draws without), or 503 with no design server.
 
 ## Rasters or outlines
 
@@ -182,7 +173,7 @@ of it clear; trimming halved every pack):
 | a subset font, kerning, no hinting | 9.2 KB TTF, 4.9 KB WOFF2 | | |
 
 - **Rasters** are smaller for a face at one or two sizes, and need nothing from the client but a
-  copy into the frame: what a low-power player (an ESP32-S3 panel draws a run in some 6 ms with a vector rasteriser)
+  copy into the frame: what a low-power player (a microcontroller draws outlines slowly)
   needs.
 - **Outlines** are one download for every size, and draw sharp at any scale or rotation, but the
   client rasterises every glyph. They pay off for a face at three or more sizes, on a client that
