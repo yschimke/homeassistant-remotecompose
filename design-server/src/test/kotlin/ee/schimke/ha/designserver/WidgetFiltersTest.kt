@@ -220,4 +220,69 @@ class WidgetFiltersTest {
         .status,
     )
   }
+
+  /**
+   * The wall panel's text is in the default family: the `wall` host draws it in the panel's Roboto,
+   * from glyphs, where a widget host leaves it as text.
+   */
+  @Test
+  fun aWallsDefaultFamilyTextIsDrawnInRobotoFromItsGlyphs() = testApplication {
+    routing { widgetFilterRoutes(API_BASE, WidgetFilters(CardFonts.fromClasspath())) }
+    val document =
+      RcDocumentCodec.encode(
+        RcDocument(
+          RcHeader(RcVersion(1, 1, 0)),
+          listOf(
+            RcTextData(42, "Kitchen"),
+            RcRootLayout(-1),
+            RcLayoutContent(-2),
+            *text(42, -7, -1).toTypedArray(),
+            end,
+            end,
+          ),
+        ),
+      )
+    for ((host, converted) in listOf("wall" to 1, "wear-widgets" to 0)) {
+      val response =
+        client.post("$API_BASE/filters/bitmap-fonts?host=$host&density=1") { setBody(document) }
+      assertEquals(HttpStatusCode.OK, response.status)
+      assertEquals("converted=$converted; skipped=0", response.headers["X-Bitmap-Fonts"], host)
+    }
+    val wall =
+      filtered(
+        client
+          .post("$API_BASE/filters/bitmap-fonts?host=wall&density=1") { setBody(document) }
+          .bodyAsBytes(),
+      )
+    val glyphs =
+      wall.operations.filterIsInstance<RcBitmapFontData>().flatMap { f ->
+        f.glyphs.map { it.chars }
+      }
+    assertEquals(setOf("K", "i", "t", "c", "h", "e", "n"), glyphs.toSet())
+  }
+
+  /**
+   * A local tool, not a check: `WALL_FILTER_DIR=<dir>` runs the `wall` filter over every `.rc` in
+   * it and writes each beside it as `.wall.rc`, for a panel player to compare.
+   */
+  @Test
+  fun filterLocalWallDocuments() = testApplication {
+    val dir = System.getenv("WALL_FILTER_DIR")?.let { java.io.File(it) } ?: return@testApplication
+    routing { widgetFilterRoutes(API_BASE, WidgetFilters(CardFonts.fromClasspath())) }
+    val maxLength = System.getenv("WALL_FILTER_MAX_LENGTH") ?: "16"
+    for (file in
+      dir.listFiles().orEmpty().filter {
+        it.name.endsWith(".rc") && !it.name.endsWith(".wall.rc")
+      }) {
+      val response =
+        client.post("$API_BASE/filters/bitmap-fonts?host=wall&density=1&maxLength=$maxLength") {
+          setBody(file.readBytes())
+        }
+      val out = java.io.File(dir, file.name.removeSuffix(".rc") + ".wall.rc")
+      out.writeBytes(response.bodyAsBytes())
+      println(
+        "wall filter ${file.name}: ${response.headers["X-Bitmap-Fonts"]}, ${file.length()} -> ${out.length()} bytes",
+      )
+    }
+  }
 }

@@ -1,14 +1,9 @@
 package ee.schimke.ha.designserver
 
-import ee.schimke.composeai.rcplayer.compose.RcComposeTextRasterizer
 import ee.schimke.composeai.rcplayer.edit.RcDisplay
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
-import ee.schimke.ha.client.design.CachedFontFace
 import ee.schimke.ha.client.design.Sha256
-import ee.schimke.ha.design.CardFontManifest
-import ee.schimke.ha.designs.JvmComposeGraphics
-import ee.schimke.ha.rc.HaFontLibrary
 import ee.schimke.ha.rc.LiveText
 import ee.schimke.ha.rc.WidgetBitmapFonts
 import ee.schimke.ha.rc.WidgetHost
@@ -22,7 +17,6 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.utils.io.readRemaining
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.io.readByteArray
 import kotlinx.serialization.json.Json
@@ -36,21 +30,14 @@ import kotlinx.serialization.json.jsonPrimitive
  * glyphs embedded in the document, for a host that can't load fonts. The glyphs are drawn here, on
  * the JVM, with the player's own text stack: neither a phone nor a watch can draw them yet.
  */
-internal class WidgetFilters(fonts: CardFonts) {
-  private val rasterizer = run {
-    // Compose's desktop text registers itself when a scene starts, and this server starts none.
-    JvmComposeGraphics.ensureRegistered()
-    val manifest = CardFontManifest.decode(fonts.manifest.decodeToString())
-    val faces =
-      manifest.faces.mapNotNull { (family, face) ->
-        val bytes = fonts.file(face.file) ?: return@mapNotNull null
-        CachedFontFace(family, face.weight, face.italic, Sha256.hex(bytes), bytes)
-      }
-    RcComposeTextRasterizer(HaFontLibrary.loader(faces.groupBy { it.family.lowercase() }))
-  }
+internal class WidgetFilters(private val text: ServerText) {
+  constructor(fonts: CardFonts) : this(ServerText(fonts))
 
-  /** One filter at a time: the text stack draws on one thread. */
-  private val lock = Mutex()
+  private val rasterizer
+    get() = text.rasterizer
+
+  private val lock
+    get() = text.lock
 
   /** Filtered documents by their whole input: designs repeat across clients. */
   private val cache =

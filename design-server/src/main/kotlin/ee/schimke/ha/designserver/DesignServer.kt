@@ -143,6 +143,10 @@ fun Application.designServer(
   /** Keeps `main` a copy of another server's library ([LibraryMirror]), every [mirrorPollMs]. */
   mirror: LibraryMirror? = null,
   mirrorPollMs: Long = 60 * 60 * 1000,
+  /**
+   * Where a `google:` family's glyphs come from ([GlyphRanges]); null serves only its own faces.
+   */
+  googleFonts: GoogleFonts? = null,
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -222,9 +226,14 @@ fun Application.designServer(
     val fonts = CardFonts.fromClasspath()
     cardFontRoutes(API_BASE, fonts)
     cardFontRoutes("$API_BASE/channels/{channel}", fonts)
-    val filters = WidgetFilters(fonts)
+    // One text stack for everything that rasterises glyphs: it draws on one thread.
+    val serverText = ServerText(fonts)
+    val filters = WidgetFilters(serverText)
     widgetFilterRoutes(API_BASE, filters)
     widgetFilterRoutes("$API_BASE/channels/{channel}", filters)
+    val glyphs = GlyphRanges(serverText, googleFonts)
+    glyphRangeRoutes(API_BASE, glyphs)
+    glyphRangeRoutes("$API_BASE/channels/{channel}", glyphs)
 
     get("/embed/v1/{name}") {
       val name = call.parameters["name"].orEmpty()
