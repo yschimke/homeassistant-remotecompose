@@ -955,6 +955,9 @@ _PANEL_KEYS = {
     # the card's own aspect ratio and camera view don't change what it shows. Its actions are
     # read from the card itself (/actions), never from what the design was made from.
     "picture-entity": {"type", "entity", "name", "icon", "show_name", "show_state"},
+    # A button with its own action (a navigate, a service) has the plain button's design: its
+    # action, like every card's, is read from the card itself (/actions).
+    "button": {"type", "entity", "name", "icon", "show_name"},
 }
 _INLINE_MARKUP = (
     (re.compile(r"!\[[^\]]*\]\([^)]*\)"), ""),
@@ -1466,3 +1469,189 @@ def parse_card_ids(raw, known):
         return list(known)
     wanted = [c for c in raw.split(",") if c]
     return [c for c in wanted if c in known]
+
+
+# ---------------------------------------------------------------------------------------------
+# Settings: a dashboard the integration makes for a panel, played like any other. Its choices tap
+# through as `navigate` to SETTINGS_PATH, which the device takes as a setting, not a place.
+# ---------------------------------------------------------------------------------------------
+
+SETTINGS_DASHBOARD = "terrazzo-settings"
+SETTINGS_PATH = f"/{SETTINGS_DASHBOARD}/set/"
+
+# A settings button's slot: a sensor the user can read (the integration picks one), so the button
+# has its plain entity design, which only light, switch, sensor and binary_sensor buttons have. Its
+# state, name and icon aren't shown; only its slot carries the tap to the button's own action.
+SETTINGS_ENTITY = "sensor.terrazzo_settings"
+
+# The card themes (`style=`) a panel can play, as `HaUberTheme.all` lists them in rc-components:
+# (id, name, the modes it draws in). A theme with one mode draws in it whatever the panel's mode.
+THEMES = (
+    ("classic", "Classic", ("light", "dark")),
+    ("home-assistant", "Home Assistant", ("light", "dark")),
+    ("expressive", "Material 3 Expressive", ("light", "dark")),
+    ("trinitron", "Trinitron", ("dark",)),
+    ("lcd", "LCD", ("light", "dark")),
+    ("braun", "Braun", ("light", "dark")),
+    ("nixie", "Nixie", ("dark",)),
+    ("console", "Console", ("dark",)),
+    ("ikea", "IKEA Showroom", ("light", "dark")),
+    ("mushroom", "Mushroom", ("light", "dark")),
+    ("bubble", "Bubble", ("light", "dark")),
+    ("minimalist", "UI Minimalist", ("light", "dark")),
+    ("cupertino", "Control Centre", ("light", "dark")),
+    ("catppuccin", "Catppuccin", ("light", "dark")),
+    ("obsidian", "Obsidian Minimal", ("light", "dark")),
+    ("noctis", "Noctis", ("light", "dark")),
+    ("lcars", "LCARS · Starship", ("light", "dark")),
+    ("arctic", "Arctic", ("light", "dark")),
+    ("aeon", "Aeon", ("light", "dark")),
+    ("ev-dash", "EV Dash", ("light", "dark")),
+    ("aurora", "Aurora", ("light", "dark")),
+    ("engineered", "Engineered", ("light", "dark")),
+    ("cockpit", "Cockpit", ("dark",)),
+    ("rugged", "Rugged Digital", ("light", "dark")),
+)
+
+# A card's own theme in the settings dashboard: its screen is resolved in it, not the panel's.
+THEME_KEY = "terrazzo_theme"
+DARK_KEY = "terrazzo_dark"
+
+# Cards from the home dashboard each theme draws, as its preview.
+PREVIEW_CARDS = 4
+_PREVIEW_SKIP = {"heading", "picture-entity", "picture", "picture-glance", CONDITIONAL_CARD, "markdown"}
+
+
+def setting_path(key, value):
+    """The `navigate` path a settings choice taps through as."""
+    return f"{SETTINGS_PATH}{key}/{value}"
+
+
+def parse_setting(path):
+    """(key, value) for a [path] from [setting_path], or None for any other."""
+    if not isinstance(path, str) or not path.startswith(SETTINGS_PATH):
+        return None
+    key, _, value = path[len(SETTINGS_PATH) :].partition("/")
+    return (key, value) if key and value else None
+
+
+def drawn_dark(theme_id, dark):
+    """Whether [theme_id] draws dark on a panel set to [dark]: its own mode when it has one."""
+    for tid, _, modes in THEMES:
+        if tid == theme_id:
+            return dark if len(modes) > 1 else modes[0] == "dark"
+    return dark
+
+
+def preview_cards(config, limit=PREVIEW_CARDS):
+    """The first cards of [config]'s first view that show entities, for a theme to draw."""
+    views = config.get("views") if isinstance(config, dict) else None
+    if not isinstance(views, list) or not views or not isinstance(views[0], dict):
+        return []
+    view = views[0]
+    cards = []
+    for section in view.get("sections") or [{"cards": view.get("cards") or []}]:
+        if isinstance(section, dict):
+            cards.extend(c for c in section.get("cards") or [] if isinstance(c, dict))
+    out = []
+
+    def walk(cards):
+        for card in cards:
+            if len(out) == limit:
+                return
+            if not isinstance(card, dict) or card.get("type") in _PREVIEW_SKIP:
+                continue
+            # Into grids and stacks for their cards: a whole one would push the theme's buttons off
+            # its screen, as would a list taller than two rows.
+            if card.get("type") in ("grid", "vertical-stack", "horizontal-stack"):
+                walk(card.get("cards") or [])
+            elif slot_entries(card) and card_size(card)[1] <= 2:
+                out.append({k: v for k, v in card.items() if k not in ("grid_options", "visibility")})
+
+    walk(cards)
+    return out
+
+
+def _choice(name, icon, chosen, key, value, entity=SETTINGS_ENTITY):
+    return {
+        "type": "button",
+        "entity": entity,
+        "name": name,
+        "icon": "mdi:check-circle" if chosen else icon,
+        "tap_action": {"action": "navigate", "navigation_path": setting_path(key, value)},
+    }
+
+
+def _choices(cards):
+    # Four across: a dozen dashboards stay two rows, so their heading shares their screen.
+    return {"type": "grid", "columns": 4, "square": False, "cards": cards}
+
+
+def settings_config(dashboards, home, style, dark, preview, entity=SETTINGS_ENTITY):
+    """The settings dashboard: a first view with the home dashboard, the mode and a button per
+    theme, then a view per theme drawing [preview] (cards from the home dashboard) in it, with a
+    button to use it and one back to the list. A view per theme, not a screen: a panel loads every
+    screen of the view it shows, and two dozen previews at once are more than one holds.
+
+    [dashboards] is [dashboard_list]'s; [home] the panel's home url_path (None: the list's
+    default); [style] and [dark] the panel's theme and mode now; [entity] the sensor its buttons
+    are bound to."""
+    home = home or next((d["url_path"] for d in dashboards if d.get("default")), None)
+
+    def go(name, icon, path, chosen=False):
+        card = _choice(name, icon, chosen, "", "", entity)
+        card["tap_action"] = {"action": "navigate", "navigation_path": f"/{SETTINGS_DASHBOARD}/{path}"}
+        return card
+
+    current = next((name for tid, name, _ in THEMES if tid == style), style)
+    general = [
+        {"type": "heading", "heading": "Home dashboard"},
+        _choices(
+            [
+                _choice(d["title"], "mdi:view-dashboard-outline", d["url_path"] == home, "home", d["url_path"], entity)
+                for d in dashboards
+            ]
+        ),
+        {"type": "heading", "heading": "Mode"},
+        _choices(
+            [
+                _choice("Light", "mdi:weather-sunny", not dark, "dark", "0", entity),
+                _choice("Dark", "mdi:weather-night", dark, "dark", "1", entity),
+            ]
+        ),
+        {"type": "heading", "heading": f"Theme · {current}"},
+        # Eight a grid, two rows: the heading stays with the first, and the screens cut between.
+        *[
+            _choices([go(name, "mdi:palette-outline", tid, tid == style) for tid, name, _ in THEMES[i : i + 8]])
+            for i in range(0, len(THEMES), 8)
+        ],
+    ]
+    views = [{"title": "Settings", "path": "settings", "type": "sections", "max_columns": 1, "sections": [{"cards": general}]}]
+    for tid, name, _ in THEMES:
+        chosen = tid == style
+        stack = {
+            "type": "vertical-stack",
+            THEME_KEY: tid,
+            DARK_KEY: drawn_dark(tid, dark),
+            "cards": [
+                {"type": "heading", "heading": f"{name} · in use" if chosen else name},
+                *([{"type": "grid", "columns": 2, "square": False, "cards": preview}] if preview else []),
+                _choices(
+                    [
+                        _choice("In use" if chosen else f"Use {name}", "mdi:palette-outline", chosen, "theme", tid, entity),
+                        go("All themes", "mdi:arrow-left", "settings"),
+                    ]
+                ),
+            ],
+        }
+        views.append({"title": name, "path": tid, "type": "sections", "max_columns": 1, "sections": [{"cards": [stack]}]})
+    return {"title": "Settings", "views": views}
+
+
+def theme_of(card):
+    """(theme, dark) a settings card is drawn in, or None: its own, not the panel's. [card] is
+    returned without the keys that say so, as the design server takes it."""
+    if not isinstance(card, dict) or THEME_KEY not in card:
+        return None, card
+    theme = (card.get(THEME_KEY), bool(card.get(DARK_KEY)))
+    return theme, {k: v for k, v in card.items() if k not in (THEME_KEY, DARK_KEY)}

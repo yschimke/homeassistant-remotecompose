@@ -631,3 +631,85 @@ class ScreensTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SettingsTest(unittest.TestCase):
+    DASHBOARDS = [{'url_path': 'dashboard-networks', 'title': 'Networks', 'default': True},
+                  {'url_path': 'dashboard-energy', 'title': 'Energy', 'default': False}]
+    HOME = {'views': [{'type': 'sections', 'sections': [{'cards': [
+        {'type': 'heading', 'heading': 'Speeds'},
+        {'type': 'tile', 'entity': 'sensor.down', 'grid_options': {'columns': 6}},
+        {'type': 'picture-entity', 'entity': 'camera.door'},
+        {'type': 'tile', 'entity': 'sensor.up'},
+        {'type': 'grid', 'columns': 4, 'cards': [{'type': 'tile', 'entity': f'device_tracker.d{i}'} for i in range(8)]},
+        {'type': 'entities', 'entities': ['sensor.a', 'sensor.b', 'sensor.c', 'sensor.d']},
+    ]}]}]}
+
+    def config(self, home=None, style='classic', dark=True):
+        preview = wall.preview_cards(self.HOME)
+        return wall.settings_config(self.DASHBOARDS, home, style, dark, preview)
+
+    def test_a_setting_taps_through_as_a_navigate_the_device_reads(self):
+        path = wall.setting_path('theme', 'rugged')
+        self.assertEqual(wall.parse_setting(path), ('theme', 'rugged'))
+        self.assertIsNone(wall.parse_setting('/dashboard-networks/0'))
+        self.assertIsNone(wall.parse_setting(wall.SETTINGS_PATH + 'theme'))
+
+    def test_the_preview_is_the_home_dashboards_entity_cards(self):
+        cards = wall.preview_cards(self.HOME)
+        self.assertEqual([c['entity'] for c in cards], ['sensor.down', 'sensor.up', 'device_tracker.d0', 'device_tracker.d1'])
+        self.assertNotIn('grid_options', cards[0])
+
+    def test_the_home_and_mode_choices_mark_the_current_one(self):
+        general = self.config(home='dashboard-energy', dark=False)['views'][0]['sections'][0]['cards']
+        homes = general[1]['cards']
+        self.assertEqual([b['icon'] for b in homes], ['mdi:view-dashboard-outline', 'mdi:check-circle'])
+        self.assertEqual(homes[0]['tap_action']['navigation_path'], wall.setting_path('home', 'dashboard-networks'))
+        light, dark = general[3]['cards']
+        self.assertEqual(light['icon'], 'mdi:check-circle')
+        # No home set: the list's default is home.
+        homes = self.config()['views'][0]['sections'][0]['cards'][1]['cards']
+        self.assertEqual(homes[0]['icon'], 'mdi:check-circle')
+
+    def test_the_home_choices_share_a_screen_with_their_heading(self):
+        dashboards = [{'url_path': f'd{i}', 'title': f'D{i}', 'default': i == 0} for i in range(8)]
+        config = wall.settings_config(dashboards, None, 'classic', True, [])
+        screens = wall.screens(wall.layout(config, wall.SETTINGS_DASHBOARD), 432, width=776)['views'][0]['screens']
+        self.assertTrue(screens[0]['id'].startswith('v0.p0-'), screens[0]['id'])
+        # The first view stays a few screens: a panel loads every screen of a view at once.
+        self.assertLessEqual(len(screens), 5)
+        # The theme heading shares a screen with the first themes.
+        themes = [s for s in screens if 'Theme' in str(wall.find_card(config, s['id']))]
+        self.assertTrue(themes)
+
+    def test_each_theme_is_a_view_drawn_in_it(self):
+        config = self.config(style='rugged', dark=False)
+        self.assertEqual(len(config['views']), 1 + len(wall.THEMES))
+        general = config['views'][0]['sections'][0]['cards']
+        self.assertEqual(general[4]['heading'], 'Theme · Rugged Digital')
+        rugged_button = [b for g in general[5:] for b in g['cards'] if b['icon'] == 'mdi:check-circle'][0]
+        self.assertEqual(rugged_button['tap_action']['navigation_path'], '/terrazzo-settings/rugged')
+        lay = wall.layout(config, wall.SETTINGS_DASHBOARD)
+        index = 1 + [t[0] for t in wall.THEMES].index('rugged')
+        self.assertEqual(lay['views'][index]['path'], 'rugged')
+        screens = wall.screens(lay, 432, width=776)['views'][index]['screens']
+        self.assertEqual(len(screens), 1)
+        card = wall.find_card(config, screens[0]['id'])
+        theme, plain = wall.theme_of(card)
+        self.assertEqual(theme, ('rugged', False))
+        self.assertNotIn(wall.THEME_KEY, plain)
+        self.assertEqual(plain['cards'][0]['heading'], 'Rugged Digital · in use')
+        use, back = plain['cards'][-1]['cards']
+        self.assertEqual(use['tap_action']['navigation_path'], wall.setting_path('theme', 'rugged'))
+        self.assertEqual(back['tap_action']['navigation_path'], '/terrazzo-settings/settings')
+        # A dark-only theme draws dark on a light panel.
+        nixie = config['views'][1 + [t[0] for t in wall.THEMES].index('nixie')]['sections'][0]['cards'][0]
+        self.assertTrue(nixie[wall.DARK_KEY])
+        self.assertEqual(wall.theme_of({'type': 'tile'}), (None, {'type': 'tile'}))
+
+    def test_a_button_with_its_own_action_has_the_plain_buttons_design(self):
+        button = {'type': 'button', 'entity': 'sun.sun', 'name': 'Home',
+                  'tap_action': {'action': 'navigate', 'navigation_path': '/x'}}
+        self.assertEqual(wall.panel_card(button), {'type': 'button', 'entity': 'sun.sun', 'name': 'Home'})
+        # Its tap is still its own.
+        self.assertEqual(wall.resolve_tap(button)['kind'], 'Navigate')

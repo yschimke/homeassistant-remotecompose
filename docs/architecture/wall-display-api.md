@@ -117,6 +117,7 @@ One endpoint does both the initial load and the updates, for many cards at once:
 | `style`, `dark`, `palette` | The look: an `HaUberTheme` id (`classic` default), `dark=1`, a `ThemeStyle` palette. |
 | `screens` | A view's index, instead of `cards`: that view a screen at a time (needs `width` and `height`). The answer then carries `screens`, the view's screen ids in order, whenever they changed after `since`. |
 | `picture_max` | With `width` and `height`: the most of that screen one picture may take, in percent. A `picture-entity` card that would take more (at 16:9, the width it's drawn at) is drawn in a grid of as many columns as it takes to fit, so it's narrower and other cards fit with it. Its slots, and so `/actions` and `/pictures`, are unchanged. Without it, no picture is capped. |
+| `home` | The panel's home dashboard (a `url_path`): the settings dashboard marks it. Other dashboards ignore it. |
 | `density`, `font_scale`, `width`, `height` | A small player's display (either alone is enough; the other is 1). Each design is then made for it on the design server (`PlayerFolding`): sizes written as numbers instead of expressions over the player's density and font size, `CoreText` as `TextLayout`, values the device won't push frozen, so a player that can't evaluate those (an ESP32 panel's rccore) draws it. Served under its own sha. `width` and `height` (dp, both or neither) also make each design's canvas the whole screen, for a device that shows one card at a time. With a `width`, a card whose layout depends on its width (a `grid`'s columns, a card's width tiers) is laid out for that width when its design is made, rather than by a size gate the player evaluates as it plays: the same picture, with fewer layout passes on a microcontroller. An ESPHome panel whose player lays out in dp sends `density=1&font_scale=1` and its screen's size in dp. |
 | `profile` | What the small player can play, by a name the design server knows: `kobento-mcu` (the default: AndroidX's operations, without variables in float fields such as paddings and without `TextLayout` colours by id), `androidx`, `widgets-v6`, `widgets-v7`, `wear-widgets`. The design server adapts each design to it with rc-players' `adaptTo`. Anything that isn't such a name is ignored. A resolve request may also give `{"base": …, "without": ["op:CORE_TEXT", "feature:variable-float-fields"]}`. |
 
@@ -231,6 +232,25 @@ switches, locks, …; more-info otherwise). A template can never choose the serv
 `ran: null` is an action the device handles itself, from the card's config: `MoreInfo` (show
 something or nothing), `Navigate` (switch view when the path is this dashboard's), `Url`. 403 is a
 service the user may not call. The state change it causes reaches the device through its poll.
+
+## The settings dashboard
+
+`terrazzo-settings` is a dashboard the integration makes for each request rather than one a user
+saved: `/dashboards` doesn't list it, but `/dashboards/terrazzo-settings`, `/values`, `/actions`
+and `/cards` all answer for it, so a panel plays it like any other. It is one view:
+
+- **Home dashboard** and **Mode**: a button for each dashboard the user can see and for light and
+  dark, the panel's current one (`home=`, `dark=`) ticked.
+- **A screen per theme** (24, as `HaUberTheme.all` lists them, `wall_api.THEMES`): the theme's name,
+  the first cards with entities from the home dashboard's first view drawn in that theme, and a
+  button to use it. Each screen is resolved in its own theme (and in its only mode, for a theme
+  with one), not the panel's: the preview is the real thing.
+
+A choice taps through as a `navigate` to `/terrazzo-settings/set/<key>/<value>` (`home`
+`<url_path>`, `theme` `<style>`, `dark` `0`/`1`), which the device keeps and applies itself: the
+integration stores nothing. A `button` with its own `tap_action` is drawn from the plain button's
+design, as a `picture-entity` is: its action is read from the card (`/actions`), never from the
+design.
 
 ## Icons, fonts and pictures
 

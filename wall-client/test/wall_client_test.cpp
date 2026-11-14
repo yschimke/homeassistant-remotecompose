@@ -541,6 +541,47 @@ static void test_a_switch_wins_over_resolving_the_default() {
   CHECK(ha.answers.empty());
 }
 
+static void test_settings() {
+  FakeHa ha;
+  FakePlayer player;
+  WallClient client(ha, player, Config{});
+  std::vector<std::pair<std::string, std::string>> settings;
+  client.on_setting([&](const std::string &k, const std::string &v) { settings.emplace_back(k, v); });
+  ha.answer("/api/terrazzo/wall/v1/dashboards", 200, kList);
+  ha.answer("/api/terrazzo/wall/v1/dashboards/wall-panel", 200, kLayout);
+  ha.answer("/api/terrazzo/wall/v1/values/wall-panel?cards=v0.s0.c0,v0.s0.c1", 200, R"({"cursor": "1-1", "cards": {}})");
+  client.step();
+
+  // Open: the settings dashboard, though no list names it.
+  ha.answer("/api/terrazzo/wall/v1/dashboards/terrazzo-settings", 200, kLayout);
+  ha.answer("/api/terrazzo/wall/v1/values/terrazzo-settings?cards=v0.s0.c0,v0.s0.c1&wait=0", 200, R"({"cursor": "2-1", "cards": {}})");
+  CHECK(client.open_settings());
+  CHECK(client.in_settings());
+
+  // A choice is the device's: handed over, and no place changes.
+  ha.answer("/api/terrazzo/wall/v1/actions/terrazzo-settings/v0.s0.c0", 200,
+            R"({"ran": null, "action": {"kind": "Navigate", "path": "/terrazzo-settings/set/theme/rugged"}})");
+  client.post_action("v0.s0.c0", "");
+  CHECK_EQ(settings.size(), (size_t) 1);
+  CHECK_EQ(settings[0].first, std::string("theme"));
+  CHECK_EQ(settings[0].second, std::string("rugged"));
+  CHECK(client.in_settings());
+
+  // A new look: the settings screen again, made for it, and every request carries it.
+  ha.answer("/api/terrazzo/wall/v1/dashboards/terrazzo-settings", 200, kLayout);
+  ha.answer("/api/terrazzo/wall/v1/values/terrazzo-settings?cards=v0.s0.c0,v0.s0.c1&wait=0", 200, R"({"cursor": "3-1", "cards": {}})");
+  CHECK(client.set_look("rugged", true, "lovelace"));
+  CHECK(ha.calls.back().path.find("&style=rugged&dark=1") != std::string::npos);
+  CHECK(ha.calls.back().path.find("&home=lovelace") != std::string::npos);
+
+  // Close: back where the panel was.
+  ha.answer("/api/terrazzo/wall/v1/values/wall-panel?cards=v0.s0.c0,v0.s0.c1&wait=0", 200, R"({"cursor": "4-1", "cards": {}})");
+  CHECK(client.close_settings());
+  CHECK_EQ(client.dashboard(), std::string("wall-panel"));
+  CHECK(!client.in_settings());
+  CHECK(ha.answers.empty());
+}
+
 static void test_switching_views_and_dashboards() {
   FakeHa ha;
   FakePlayer player;
@@ -718,6 +759,7 @@ static void test_switch_skips_refused() {
 int main() {
   test_screens();
   test_switching_views_and_dashboards();
+  test_settings();
   test_a_switch_wins_over_a_layout_in_flight();
   test_an_empty_view_is_stepped_past();
   test_a_navigate_wins_over_a_layout_in_flight();

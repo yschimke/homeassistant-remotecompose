@@ -253,7 +253,7 @@ bool WallClient::switch_dashboard(const std::string &url_path) {
   std::string from;
   {
     std::lock_guard<std::mutex> g(lock_);
-    bool known = false;
+    bool known = url_path == kSettingsDashboard;   // not listed, but always there
     for (auto &d : dashboards_) known |= d.first == url_path;
     if (!known) return false;
     from = dash_;
@@ -276,6 +276,51 @@ bool WallClient::switch_dashboard(const std::string &url_path) {
   }
   load_place();
   return false;
+}
+
+bool WallClient::open_settings() {
+  {
+    std::lock_guard<std::mutex> g(lock_);
+    if (dash_ == kSettingsDashboard) return true;
+    settings_return_ = dash_;
+  }
+  return switch_dashboard(kSettingsDashboard);
+}
+
+bool WallClient::close_settings() {
+  std::string back;
+  {
+    std::lock_guard<std::mutex> g(lock_);
+    if (dash_ != kSettingsDashboard) return true;
+    back = settings_return_.empty() ? config_.dashboard : settings_return_;
+  }
+  if (back.empty() || back == "default") {
+    std::lock_guard<std::mutex> g(lock_);
+    for (auto &d : dashboards_) back = back.empty() || back == "default" ? d.first : back;
+  }
+  return switch_dashboard(back);
+}
+
+bool WallClient::in_settings() const {
+  std::lock_guard<std::mutex> g(lock_);
+  return dash_ == kSettingsDashboard;
+}
+
+bool WallClient::set_look(const std::string &style, bool dark, const std::string &home) {
+  std::lock_guard<std::mutex> one(switch_lock_);
+  {
+    std::lock_guard<std::mutex> g(lock_);
+    if (config_.style == style && config_.dark == dark && config_.home == home) return true;
+    config_.style = style;
+    config_.dark = dark;
+    config_.home = home;
+    // The settings screen marks the look: its layout is made for it.
+    layouts_.erase(kSettingsDashboard);
+    if (dash_ == kSettingsDashboard) layout_json_.clear();
+    ahead_done_.clear();   // what was fetched ahead was in the old look
+    clear_place_locked();
+  }
+  return load_place();
 }
 
 void WallClient::clear_place_locked() {
@@ -348,6 +393,9 @@ std::string WallClient::prefetch(const std::function<bool()> &waiting) {
   {
     std::lock_guard<std::mutex> g(lock_);
     if (!settled_ || !screens_mode() || dash_.empty()) return "";
+    // Not from the settings screen: its views are a theme each, a design apiece, and fetching two
+    // dozen ahead is more than a panel holds. Each loads when it's chosen.
+    if (dash_ == kSettingsDashboard) return "";
     need_layout = dashboards_.empty();
   }
   if (need_layout) return load_dashboards() ? "dashboards" : "";   // which there are, first
@@ -593,6 +641,7 @@ std::string WallClient::display_query_locked() const {
   if (config_.width_dp > 0 && config_.height_dp > 0)
     p += "&width=" + std::to_string(config_.width_dp) + "&height=" + std::to_string(config_.height_dp);
   if (config_.picture_max > 0) p += "&picture_max=" + std::to_string(config_.picture_max);
+  if (!config_.home.empty()) p += "&home=" + encode(config_.home);
   return p;
 }
 
@@ -866,6 +915,19 @@ int WallClient::post_action(const std::string &card_id, const std::string &actio
   JsonVariantConst a = doc["action"];
   if (std::string(a["kind"] | "") != "Navigate" || !config_.card.empty()) return r.status;
   std::string path = a["path"] | "";
+  // A settings choice: the device's, not a place.
+  if (path.rfind(kSettingsPath, 0) == 0) {
+    const std::string rest = path.substr(strlen(kSettingsPath));
+    const size_t slash = rest.find('/');
+    std::function<void(const std::string &, const std::string &)> hook;
+    {
+      std::lock_guard<std::mutex> g(lock_);
+      hook = on_setting_;
+    }
+    if (slash != std::string::npos && slash > 0 && slash + 1 < rest.size() && hook)
+      hook(rest.substr(0, slash), rest.substr(slash + 1));
+    return r.status;
+  }
   std::lock_guard<std::mutex> g(lock_);
   const std::string prefix = "/" + dashboard_url_path_ + "/";
   if (dashboard_url_path_.empty() || path.compare(0, prefix.size(), prefix) != 0) return r.status;
