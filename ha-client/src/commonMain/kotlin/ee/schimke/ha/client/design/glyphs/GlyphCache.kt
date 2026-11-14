@@ -8,6 +8,8 @@ import io.ktor.client.statement.bodyAsBytes
 import io.ktor.http.HttpHeaders
 import io.ktor.http.encodeURLParameter
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /** A face at a size, and the characters wanted from it. */
 data class GlyphRequest(
@@ -84,7 +86,12 @@ class GlyphCache(
    * can't draw, it has what it has: check [GlyphPack.chars]. Null when nothing is stored or
    * fetched.
    */
-  suspend fun glyphs(request: GlyphRequest): GlyphPack? {
+  suspend fun glyphs(request: GlyphRequest): GlyphPack? =
+    // One read-fetch-merge-write at a time a face and size: two cards asking for different
+    // characters at once would each merge into the same stored pack, and the last write win.
+    lockFor(request.key).withLock { fill(request) }
+
+  private suspend fun fill(request: GlyphRequest): GlyphPack? {
     val stored = stored(request)
     val missing = request.chars - stored?.chars.orEmpty() - absent[request.key].orEmpty()
     if (missing.isEmpty()) return stored
@@ -97,6 +104,13 @@ class GlyphCache(
   }
 
   private val absent = mutableMapOf<String, MutableSet<String>>()
+
+  private val locksLock = Mutex()
+  private val locks = mutableMapOf<String, Mutex>()
+
+  private suspend fun lockFor(key: String): Mutex = locksLock.withLock {
+    locks.getOrPut(key) { Mutex() }
+  }
 
   private suspend fun fetch(request: GlyphRequest): GlyphPack? {
     val url = buildString {

@@ -12,7 +12,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 
 class GlyphCacheTest {
   /**
@@ -125,6 +128,7 @@ class GlyphCacheTest {
     HttpClient(
       MockEngine { request ->
         requests += request.url.toString()
+        yield() // Lets another request's fetch start meanwhile.
         if (offline()) return@MockEngine respond("", HttpStatusCode.ServiceUnavailable)
         val chars = GlyphRequest.charsOf(request.url.parameters["chars"].orEmpty())
         // A face with no glyph for "?".
@@ -177,5 +181,14 @@ class GlyphCacheTest {
     offline = true
     val cache = GlyphCache("https://example.test", store, server(requests) { offline })
     assertEquals(setOf("a", "b"), cache.glyphs(request("abc"))!!.chars)
+  }
+
+  @Test
+  fun concurrentRequestsForOneFaceKeepBothFetches() = runTest {
+    val store = InMemoryGlyphStore()
+    val cache = GlyphCache("https://example.test", store, server(mutableListOf()))
+    listOf("a", "b").map { async { cache.glyphs(request(it)) } }.awaitAll()
+    val kept = assertNotNull(store.read(request("a").key)?.let(GlyphPackCodec::decode))
+    assertEquals(setOf("a", "b"), kept.chars, "neither write lost the other's glyphs")
   }
 }
