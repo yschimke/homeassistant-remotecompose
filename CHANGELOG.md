@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.95](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.94...v0.1.95) (2026-11-14)
+
+
+### Features
+
+* a heading with an icon renders from its own card design ([#1608](https://github.com/yschimke/homeassistant-remotecompose/issues/1608)) ([dc64ec5](https://github.com/yschimke/homeassistant-remotecompose/commit/dc64ec535eaef76f7135e6f524bccdfc10b77e83))
+* a wall panel client toolkit for ESP32 RemoteCompose players ([#1607](https://github.com/yschimke/homeassistant-remotecompose/issues/1607)) ([7603f11](https://github.com/yschimke/homeassistant-remotecompose/commit/7603f11675c9d18bdcc9ff908fce4e8a11306041))
+* adopt mdi-icons for MDI glyphs, headings, and markdown ([#1593](https://github.com/yschimke/homeassistant-remotecompose/issues/1593)) ([8cc22cb](https://github.com/yschimke/homeassistant-remotecompose/commit/8cc22cbef67db803a064f9d9dbcb3c48d8c88f94))
+* offer sign-in again to the restored instance, keeping its dashboards ([#1604](https://github.com/yschimke/homeassistant-remotecompose/issues/1604)) ([26aa5e1](https://github.com/yschimke/homeassistant-remotecompose/commit/26aa5e195199be5e01589314fe2a5417f1fc287b))
+* the design server serves a face's glyphs as packs a small player caches ([#1606](https://github.com/yschimke/homeassistant-remotecompose/issues/1606)) ([d586dc3](https://github.com/yschimke/homeassistant-remotecompose/commit/d586dc30e8cbd6fb12eefd2144fc1c0601dd837d))
+* the wall API packs a view into screens for a small panel ([#1605](https://github.com/yschimke/homeassistant-remotecompose/issues/1605)) ([0f7df16](https://github.com/yschimke/homeassistant-remotecompose/commit/0f7df1689d0ac602a7a9326405dcff8990306e1c))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools to v2.92.0 ([#1598](https://github.com/yschimke/homeassistant-remotecompose/issues/1598)) ([dcd83b4](https://github.com/yschimke/homeassistant-remotecompose/commit/dcd83b4eb1445bbbdeb1e86182738af66a1822b4))
+* **deps:** update dependency ch.qos.logback:logback-classic to v1.6.7 ([#1610](https://github.com/yschimke/homeassistant-remotecompose/issues/1610)) ([3c52a13](https://github.com/yschimke/homeassistant-remotecompose/commit/3c52a132cdb1f91896fc972195d2f4eab08c9394))
+* **rc-converter:** use TRIM_MEMORY_UI_HIDDEN instead of deprecated TRIM_MEMORY_RUNNING_LOW ([#1596](https://github.com/yschimke/homeassistant-remotecompose/issues/1596)) ([d4b0a40](https://github.com/yschimke/homeassistant-remotecompose/commit/d4b0a4055f5051e4b1eb99a300e3ab477b614b13))
+* sign out cleanly when a restore brings back undecryptable tokens ([#1597](https://github.com/yschimke/homeassistant-remotecompose/issues/1597)) ([a1b83ed](https://github.com/yschimke/homeassistant-remotecompose/commit/a1b83ed6587f739966e13c77a9dfa0286fb3fab8))
+
+
+### Performance Improvements
+
+* a design made for a known screen width lays its grids out for it ([#1601](https://github.com/yschimke/homeassistant-remotecompose/issues/1601)) ([69b4f02](https://github.com/yschimke/homeassistant-remotecompose/commit/69b4f02b470781a98b77a4745fc9a0a3cb6bdcc6))
+* **terrazzo-core:** move TokenVault from preferencesDataStore to AtomicFile in noBackupFilesDir ([#1599](https://github.com/yschimke/homeassistant-remotecompose/issues/1599)) ([0620c47](https://github.com/yschimke/homeassistant-remotecompose/commit/0620c47afecf826191fe1ada7e2240dafe6c389f))
+
 ## [0.1.94](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.93...v0.1.94) (2026-11-13)
 
 
