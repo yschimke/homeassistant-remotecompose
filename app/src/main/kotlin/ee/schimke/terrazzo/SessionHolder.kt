@@ -22,6 +22,14 @@ import kotlinx.coroutines.launch
 class SessionHolder(private val closeScope: CoroutineScope) : ViewModel() {
   var session: HaSession? by mutableStateOf(null)
 
+  /**
+   * The instance this install knows (its dashboard cache was restored) but holds no token for: a
+   * restore from backup or a device transfer, which leaves the token vault behind. Set by the
+   * cold-start resume in place of a session. The sign-in screen offers it pre-filled, and its cache
+   * is kept so signing in again shows the dashboards at once. Cleared when anything signs in.
+   */
+  var reauthBaseUrl: String? by mutableStateOf(null)
+
   private var started = false
 
   /**

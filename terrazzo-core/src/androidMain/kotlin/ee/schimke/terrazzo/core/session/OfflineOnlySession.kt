@@ -16,23 +16,11 @@ import kotlinx.coroutines.flow.StateFlow
 internal class OfflineOnlySession(override val baseUrl: String) : HaSession {
   override val refreshIntervalMillis: Long? = null
 
-  // Connecting until the resume gives up: the stub stands in for a session being minted, so a cold
-  // start opened on "Can't reach Home Assistant" for the moment before the live one replaced it.
-  private val status = MutableStateFlow(SessionConnectionStatus.Connecting)
-  override val connectionStatus: StateFlow<SessionConnectionStatus> = status
-
-  private val reauth = MutableStateFlow(false)
-  override val needsReauth: StateFlow<Boolean> = reauth
-
-  /**
-   * The resume found no stored token for this instance (a restore from backup or a device transfer,
-   * which leaves the token vault behind). No reconnect can recover, so the app signs out and offers
-   * sign-in rather than showing the cache as offline for good.
-   */
-  fun markNeedsReauth() {
-    status.value = SessionConnectionStatus.Failed
-    reauth.value = true
-  }
+  // Connecting for as long as it shows: the stub stands in for a session being minted, and the
+  // cold-start resume replaces it with a live one, or with sign-in when there's no token. As
+  // "Failed", a cold start opened on "Can't reach Home Assistant" for the moment before that.
+  override val connectionStatus: StateFlow<SessionConnectionStatus> =
+    MutableStateFlow(SessionConnectionStatus.Connecting)
 
   override suspend fun connect() = Unit
 

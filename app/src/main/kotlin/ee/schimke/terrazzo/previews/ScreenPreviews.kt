@@ -257,6 +257,29 @@ fun Screen_Discovery_LiveDemo() = PhoneHost {
   )
 }
 
+/**
+ * The connect screen after a restore from backup: the install knows its Home Assistant but not the
+ * sign-in, so the URL is filled in and a line says why.
+ */
+@Preview(
+  name = "discovery · sign in again",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_Discovery_SignInAgain() = PhoneHost {
+  ee.schimke.terrazzo.discovery.DiscoveryForm(
+    instances = emptyList(),
+    host = "http://192.168.1.50:8123",
+    onHostChange = {},
+    onConnect = {},
+    onInstancePicked = {},
+    onDemoSelected = {},
+    reauthBaseUrl = "http://192.168.1.50:8123",
+  )
+}
+
 @Preview(
   name = "discovery · theme",
   showBackground = false,

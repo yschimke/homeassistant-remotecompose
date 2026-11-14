@@ -67,6 +67,10 @@ import java.net.URI
  *
  * The mDNS scan is cold: scrolling away from the screen / login completing cancels the discovery
  * via the underlying `NsdManager.stopServiceDiscovery` call in [HaDiscovery.scan].
+ *
+ * [reauthBaseUrl] is an instance this install already knows but holds no token for (a restore from
+ * backup or a device transfer): the URL field starts with it, and a line above says why, so signing
+ * in again is one tap.
  */
 @Composable
 fun DiscoveryScreen(
@@ -74,9 +78,10 @@ fun DiscoveryScreen(
   onDemoSelected: () -> Unit = {},
   onLiveDemo: (username: String, password: String) -> Unit = { _, _ -> },
   liveDemoSigningIn: Boolean = false,
+  reauthBaseUrl: String? = null,
   snackbarHost: @Composable () -> Unit = {},
 ) {
-  var host by rememberSaveable { mutableStateOf(DEFAULT_HOST) }
+  var host by rememberSaveable(reauthBaseUrl) { mutableStateOf(reauthBaseUrl ?: DEFAULT_HOST) }
   val context = LocalContext.current
   // Signed out, this screen is all a launch shows: fully drawn (`timeToFullDisplayMs`).
   ReportDrawn()
@@ -125,6 +130,7 @@ fun DiscoveryScreen(
     onDemoSelected = onDemoSelected,
     onLiveDemo = onLiveDemo,
     liveDemoSigningIn = liveDemoSigningIn,
+    reauthBaseUrl = reauthBaseUrl,
     snackbarHost = snackbarHost,
   )
 }
@@ -141,6 +147,7 @@ internal fun DiscoveryForm(
   onLiveDemo: (username: String, password: String) -> Unit = { _, _ -> },
   liveDemoSigningIn: Boolean = false,
   initiallyShowLiveDemo: Boolean = false,
+  reauthBaseUrl: String? = null,
   snackbarHost: @Composable () -> Unit = {},
 ) {
   val urlIntoView = remember { BringIntoViewRequester() }
@@ -163,6 +170,14 @@ internal fun DiscoveryForm(
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
       Text("Connect to Home Assistant", style = MaterialTheme.typography.headlineMedium)
+
+      if (reauthBaseUrl != null) {
+        Text(
+          "This device has your dashboards from ${displayHost(reauthBaseUrl)}, but not your " +
+            "sign-in. Sign in again to continue.",
+          style = MaterialTheme.typography.bodyLarge,
+        )
+      }
 
       if (instances.isNotEmpty()) {
         Text(
@@ -330,6 +345,13 @@ private fun needsLocalNetworkPermission(context: Context, baseUrl: String): Bool
 // String literal so we can reference it on devices below API 36 without
 // triggering the lint check on Manifest.permission.ACCESS_LOCAL_NETWORK.
 private const val ACCESS_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
+
+/** [baseUrl] as a person reads it: the host and port, without the scheme. */
+internal fun displayHost(baseUrl: String): String =
+  runCatching { URI(baseUrl) }
+    .getOrNull()
+    ?.takeIf { it.host != null }
+    ?.let { uri -> if (uri.port == -1) uri.host else "${uri.host}:${uri.port}" } ?: baseUrl
 
 /** Standard HAOS / supervisor LAN hostname; matches the official HA companion app default. */
 private const val DEFAULT_HOST = "http://homeassistant:8123"
