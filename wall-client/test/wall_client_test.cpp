@@ -497,6 +497,29 @@ static void test_an_empty_view_is_stepped_past() {
   CHECK_EQ(client.view_index(), 2);
 }
 
+static void test_a_navigate_wins_over_a_layout_in_flight() {
+  FakeHa ha;
+  FakePlayer player;
+  WallClient client(ha, player, Config{});
+  ha.answer("/api/terrazzo/wall/v1/dashboards", 200, kList);
+  ha.answer("/api/terrazzo/wall/v1/dashboards/wall-panel", 200, kLayout);
+  // The dashboard was edited: the next step fetches its layout again.
+  ha.answer("/api/terrazzo/wall/v1/values/wall-panel?cards=v0.s0.c0,v0.s0.c1", 200, R"({"cursor": "1-1", "etag": "e2", "cards": {}})");
+  client.step();
+  // While that layout is in flight, a tap navigates to the other view.
+  ha.on_get_path = "/api/terrazzo/wall/v1/dashboards/wall-panel";
+  ha.on_get = [&](const std::string &) {
+    ha.answer("/api/terrazzo/wall/v1/actions/", 200, R"({"ran": null, "action": {"kind": "Navigate", "path": "/wall-panel/lights"}})");
+    client.post_action("v0.s0.c0", "");
+    // The old view's layout arrives after: dropped, so the poll asks for the view navigated to.
+    ha.answer("/api/terrazzo/wall/v1/values/wall-panel?cards=v1.c0&wait=0", 200, R"({"cursor": "1-2", "etag": "e2", "cards": {}})");
+  };
+  ha.answer("/api/terrazzo/wall/v1/dashboards/wall-panel", 200, kLayout);
+  client.step();
+  CHECK_EQ(client.view_index(), 1);
+  CHECK(ha.answers.empty());
+}
+
 static void test_switching_views_and_dashboards() {
   FakeHa ha;
   FakePlayer player;
@@ -676,6 +699,7 @@ int main() {
   test_switching_views_and_dashboards();
   test_a_switch_wins_over_a_layout_in_flight();
   test_an_empty_view_is_stepped_past();
+  test_a_navigate_wins_over_a_layout_in_flight();
   test_prefetch();
   test_refused_dashboard();
   test_switch_skips_refused();

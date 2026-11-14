@@ -881,6 +881,7 @@ int WallClient::post_action(const std::string &card_id, const std::string &actio
       if (old.id == c.id) c = old;
   cards_ = std::move(cards);
   view_index_ = view;
+  place_++;   // a layout fetched for the view before is stale: fetch_layout drops it
   current_ = 0;
   cursor_.clear();   // the next poll is a full one for this view's cards
   shown_design_.clear();
