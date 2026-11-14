@@ -230,3 +230,21 @@ internal fun ProvideChildCaptureShare(
     content = content,
   )
 }
+
+/**
+ * Runs [content] with a known playback width ([LocalPlaybackWidthDp]) narrowed to one of [parts]
+ * equal shares with [gapDp] between them: a grid cell's, from its own row (a stretched short last
+ * row has fewer, wider cells). No-op when the width isn't known.
+ */
+@Composable
+internal fun ProvidePlaybackWidthShare(parts: Int, gapDp: Int, content: @Composable () -> Unit) {
+  val width = LocalPlaybackWidthDp.current
+  if (width == null || parts < 1) {
+    content()
+    return
+  }
+  CompositionLocalProvider(
+    LocalPlaybackWidthDp provides ((width - gapDp * (parts - 1)) / parts).coerceAtLeast(0),
+    content = content,
+  )
+}
