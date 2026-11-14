@@ -19,7 +19,7 @@ class IdfTransport : public Transport {
   Response get(const std::string &path, int timeout_ms, const std::string &if_none_match) override;
   Response post_json(const std::string &path, const std::string &json, int timeout_ms) override;
 
-  // The most of a body kept (a picture, a glyph pack); past it the rest isn't read.
+  // The most of a body taken (a picture, a glyph pack): a longer one fails the request.
   size_t max_body = SIZE_MAX;
 
  private:

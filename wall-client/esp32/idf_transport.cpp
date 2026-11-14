@@ -73,7 +73,7 @@ Response IdfTransport::request_(int method, const std::string &path, const std::
       r.status = 0;
     } else {
       char buf[1024];
-      int n;
+      int n = 0;
       while ((n = esp_http_client_read(c, buf, sizeof buf)) > 0 && r.body.size() < max_body) {
         if (r.body.size() + n > r.body.capacity() && !reserve_room(r.body, (r.body.size() + n) * 2)) {
           ESP_LOGW(TAG, "%s: no room past %u bytes", path.c_str(), (unsigned) r.body.size());
@@ -82,6 +82,13 @@ Response IdfTransport::request_(int method, const std::string &path, const std::
           break;
         }
         r.body.append(buf, n);
+      }
+      // Only a whole body is an answer: a connection dropped part way, or a body past max_body,
+      // would otherwise be a truncated document cached under its sha.
+      if (r.status != 0 && (n < 0 || !esp_http_client_is_complete_data_received(c))) {
+        ESP_LOGW(TAG, "%s: incomplete after %u bytes", path.c_str(), (unsigned) r.body.size());
+        r.status = 0;
+        r.body.clear();
       }
     }
   }
