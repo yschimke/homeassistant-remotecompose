@@ -10,6 +10,7 @@ renderer and no platform code: a device brings both.
 | [`src/glyph_packs.h`](src/glyph_packs.h) | Header-only reader for glyph packs, the coverage rasters the design server serves a face's glyphs as ([glyph-range-fonts.md](../docs/architecture/glyph-range-fonts.md)), and the store of what a player has and still wants. |
 | [`tools/glyph_packs.py`](tools/glyph_packs.py) | Draws a pack from a font file with FreeType, in the same wire form, for packs built into a firmware. |
 | [`test/`](test) | Host tests for both, with fakes for the device side. |
+| [`esp32/`](esp32) | ESP-IDF parts any player on an ESP32 can use (below). |
 
 ## The device side
 
@@ -27,6 +28,23 @@ back-off after errors). `page()` is safe from any task; `switch_place()`, `switc
 and `prefetch()` block, so run them off the player's task.
 
 JSON is [ArduinoJson](https://arduinojson.org/) 7, as ESPHome's `json` component ships.
+
+## ESP32 parts
+
+[`esp32/`](esp32) is an ESP-IDF component (`CMakeLists.txt`, `idf_component.yml`) with the
+client and what a panel needs around it that doesn't depend on its player:
+
+| File | What it is |
+|---|---|
+| `idf_transport` | `Transport` over `esp_http_client`, one handle a request; a body grows only into memory that's there. |
+| `pictures` | `PictureCache`: a card's pictures (cameras, `picture-entity`) fetched at the size they're drawn, kept as JPEG, refreshed each minute or on a tap, and decoded 16 rows at a time straight into an ARGB8888 frame where they're drawn. |
+| `glyph_fetcher` | `GlyphFetcher`: the glyphs a player lacks, fetched from the design server into `GlyphPacks` and kept in NVS across boots. |
+| `screen_jpeg` | An RGB565 frame buffer as a JPEG, for a screenshot (an ESPHome camera, a debug route). |
+| `sockets` | The lwIP sockets open and what holds each, for when `CONFIG_LWIP_MAX_SOCKETS` runs out. |
+
+A player plugs in through `Player` (show a document, set a named value), `PictureCache::Hooks`
+(the card on screen, draw again) and `GlyphFetcher`'s callback (lay text out again). They build
+with ESP-IDF 5.5; nothing here is tested on a device yet.
 
 ## Tests
 
