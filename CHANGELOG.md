@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.97](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.96...v0.1.97) (2026-11-15)
+
+
+### Bug Fixes
+
+* every card plays in the Compose player, with no AndroidX fallback ([#1620](https://github.com/yschimke/homeassistant-remotecompose/issues/1620)) ([c685ce5](https://github.com/yschimke/homeassistant-remotecompose/commit/c685ce54a21c9fca62086f72973d7feb47685ba2))
+
 ## [0.1.96](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.95...v0.1.96) (2026-11-14)
 
 
