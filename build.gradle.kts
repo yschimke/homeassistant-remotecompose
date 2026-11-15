@@ -240,6 +240,9 @@ val verifyYschimkeBoms by
           "**/node_modules/**",
           ".claude/**",
           ".worktrees/**",
+          "compose-ai-tools/**",
+          "rc-players/**",
+          "_*/**",
         )
       },
     )
