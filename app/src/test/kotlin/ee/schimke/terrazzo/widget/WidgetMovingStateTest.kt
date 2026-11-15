@@ -222,7 +222,11 @@ class WidgetMovingStateTest {
         withTimeout(2_000L) {
           while (
             graph.offlineCache.latestSnapshot(BASE_URL)?.states?.get("cover.garage")?.state !=
-              "closing"
+              "closing" ||
+              app.wearSync.pushedSnapshots.none {
+                it.states["cover.garage"]?.state == "closing"
+              } ||
+              widgetBroadcastIds().none { 11 in it }
           ) {
             delay(10L)
           }
