@@ -16,9 +16,10 @@ import org.testcontainers.DockerClientFactory
  *    phone with a screen lock does.
  * 4. Uninstall the app, which deletes its AndroidKeyStore keys as a new phone would not have them.
  *    Reinstall it and restore the backup.
- * 5. On the "new phone" (`BackupRestoreSteps.signedOutAfterRestore`), the app still knows its home.
- *    The token vault and the mobile_app registration were not restored, nothing throws, and signing
- *    in again works.
+ * 5. On the reinstalled app (`BackupRestoreSteps.signedOutAfterRestore`), the app still knows its
+ *    home. The token vault's ciphertext is restored but its key isn't (the uninstall deleted the
+ *    restore credential that escrows it), the mobile_app registration was not restored, nothing
+ *    throws, and signing in again works.
  *
  * Needs Docker and one booted emulator. Run it with `./gradlew :app-container-tests:test
  * -PcontainerTests=true`.

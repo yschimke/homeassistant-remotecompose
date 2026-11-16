@@ -8,11 +8,16 @@
   transferred, so on the new device that ciphertext can't be decrypted. Restoring it would only
   hand the app a token it can't read (TokenVault and MobileAppStore treat that as absent, and
   covered backups made before these rules existed).
-  - terrazzo_token_vault: the legacy DataStore copy of the Home Assistant refresh tokens. TokenVault
-    now keeps them in noBackupFilesDir, which is never backed up; this keeps a legacy file that
-    hasn't migrated yet out too. The restored app asks the user to sign in again.
+  - terrazzo_token_vault: the legacy DataStore copy of the Home Assistant refresh tokens, from
+    before TokenVault moved them. This keeps a legacy file that hasn't migrated yet out.
   - terrazzo_mobile_app: the mobile_app webhook registration. A restored phone registers as a new
     device instead of sharing the old phone's webhook.
+
+  Kept: files/terrazzo_token_vault_backup.json, the refresh tokens encrypted under the vault's own
+  data key. The backup alone can't read it: the data key is wrapped by the Keystore in
+  noBackupFilesDir on this phone, and reaches a new phone separately, escrowed in Credential
+  Manager's Restore Credentials (RestoreKeyEscrow). That is Google Play's zero-tap sign-in
+  restoration: the restored app is signed in to every instance.
 
   Cloud backups are made only when they are end-to-end encrypted (a screen lock is set).
   Device-to-device transfer is always end-to-end, so it has no such flag.

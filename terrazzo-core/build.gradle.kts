@@ -44,6 +44,8 @@ kotlin {
       implementation(libs.androidx.datastore)
       implementation(libs.androidx.datastore.preferences)
       implementation(libs.appauth)
+      implementation(libs.androidx.credentials)
+      implementation(libs.androidx.credentials.play.services.auth)
       implementation(libs.ktor.client.okhttp)
     }
   }

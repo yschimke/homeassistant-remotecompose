@@ -108,6 +108,7 @@ jetbrains-markdown = "0.7.18"
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
 play-services-wearable = "20.0.1"
+androidx-credentials = "1.6.0"
 play-app-update = "2.1.0"
 
 # Firebase Crashlytics (opt-in — only resolved when a google-services.json
@@ -264,6 +265,10 @@ androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runt
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.1" }
 androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.4.0" }
 appauth = { module = "net.openid:appauth", version = "0.11.1" }
+# Credential Manager Restore Credentials: escrows the token vault's key for zero-tap sign-in
+# restoration on a new phone (TokenVault, RestoreKeyEscrow).
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
 compose-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
