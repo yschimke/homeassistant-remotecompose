@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import ee.schimke.terrazzo.TerrazzoGraphProvider
+import ee.schimke.terrazzo.core.auth.RestoreKeyEscrow
+import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistration
 import java.security.KeyStore
 import kotlinx.coroutines.runBlocking
@@ -22,32 +24,37 @@ import org.junit.runner.RunWith
  * `:app-container-tests` covers that end to end), but a backup made before those rules still
  * carries them, and so does a key the OS invalidates. Deleting the key here reproduces the loss
  * without a backup round trip.
+ *
+ * The token vault here has no restore-key escrow, as on a phone without Play services or after an
+ * uninstall: `RestoreKeyEscrowTest` covers the key coming back from the escrow.
  */
 @RunWith(AndroidJUnit4::class)
 class KeystoreKeyLossTest {
 
   private val graph =
     (ApplicationProvider.getApplicationContext<Context>() as TerrazzoGraphProvider).graph
+  private val tokenVault =
+    TokenVault(ApplicationProvider.getApplicationContext(), RestoreKeyEscrow.Disabled)
 
   @After
   fun tearDown(): Unit = runBlocking {
-    graph.tokenVault.clear(INSTANCE)
+    tokenVault.clear(INSTANCE)
     graph.mobileAppStore.clear(INSTANCE)
   }
 
   @Test
   fun refreshTokenWithoutItsKeyReadsAsSignedOut(): Unit = runBlocking {
-    graph.tokenVault.put(INSTANCE, "refresh-before")
-    assertEquals("refresh-before", graph.tokenVault.get(INSTANCE))
+    tokenVault.put(INSTANCE, "refresh-before")
+    assertEquals("refresh-before", tokenVault.get(INSTANCE))
 
     deleteKeystoreKey(TOKEN_VAULT_KEY_ALIAS)
 
-    assertNull(graph.tokenVault.get(INSTANCE))
+    assertNull(tokenVault.get(INSTANCE))
     // The unreadable slot was cleared, so the next read is an ordinary miss.
-    assertNull(graph.tokenVault.get(INSTANCE))
+    assertNull(tokenVault.get(INSTANCE))
     // A fresh sign-in stores and reads back under the new key.
-    graph.tokenVault.put(INSTANCE, "refresh-after")
-    assertEquals("refresh-after", graph.tokenVault.get(INSTANCE))
+    tokenVault.put(INSTANCE, "refresh-after")
+    assertEquals("refresh-after", tokenVault.get(INSTANCE))
   }
 
   @Test

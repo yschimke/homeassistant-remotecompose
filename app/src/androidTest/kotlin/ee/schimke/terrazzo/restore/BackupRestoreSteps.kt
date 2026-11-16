@@ -64,9 +64,13 @@ class BackupRestoreSteps {
   }
 
   /**
-   * After the reinstall and restore, which is what a new phone sees: the app still knows its home,
-   * holds no token it can't read, opens on sign-in with that home filled in and its dashboards
-   * kept, and signs in again normally.
+   * After the reinstall and restore: the app still knows its home, holds no token it can't read,
+   * opens on sign-in with that home filled in and its dashboards kept, and signs in again normally.
+   *
+   * The vault's ciphertext is restored, but the uninstall deleted the restore credential that
+   * escrows its key, so it can't be read: a reinstall on the same phone signs in again. A real new
+   * phone gets the key back from Play services and is signed in with no taps
+   * (`RestoreKeyEscrowTest` covers that half).
    */
   @Test
   fun signedOutAfterRestore(): Unit = runBlocking {
@@ -80,12 +84,12 @@ class BackupRestoreSteps {
     )
 
     assertFalse(
-      "The token vault is left out of backups",
+      "The legacy DataStore token vault is left out of backups",
       datastoreFile("terrazzo_token_vault").exists(),
     )
     assertFalse(
-      "The token vault in noBackupFilesDir is never backed up",
-      File(context.noBackupFilesDir, "terrazzo_token_vault.json").exists(),
+      "The vault's wrapped data key in noBackupFilesDir is never backed up",
+      File(context.noBackupFilesDir, "terrazzo_vault_dek.json").exists(),
     )
     assertFalse(
       "The mobile_app registration is left out of backups",
