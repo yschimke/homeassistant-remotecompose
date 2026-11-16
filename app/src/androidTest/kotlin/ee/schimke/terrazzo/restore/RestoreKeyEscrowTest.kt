@@ -95,6 +95,21 @@ class RestoreKeyEscrowTest {
   }
 
   @Test
+  fun aFailedEscrowIsRetriedOnTheNextSignedInRead(): Unit = runBlocking {
+    escrow.failStores = true
+    tokenVault.put(HOME, "home-refresh")
+    assertNull("Credential Manager was unavailable at sign-in", escrow.key)
+
+    escrow.failStores = false
+    // A later launch, signed in without a new sign-in or a rotated token.
+    assertEquals("home-refresh", TokenVault(context, escrow).get(HOME))
+    assertNotNull("The signed-in read escrowed the key", escrow.key)
+
+    moveToNewPhone()
+    assertEquals("home-refresh", TokenVault(context, escrow).get(HOME))
+  }
+
+  @Test
   fun signingOutOfEverythingClearsTheEscrow(): Unit = runBlocking {
     tokenVault.put(HOME, "home-refresh")
     tokenVault.put(CABIN, "cabin-refresh")
@@ -108,14 +123,17 @@ class RestoreKeyEscrowTest {
   private fun moveToNewPhone() {
     KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(KEY_ALIAS)
     File(context.noBackupFilesDir, DATA_KEY_FILE).delete()
+    File(context.noBackupFilesDir, ESCROWED_FILE).delete()
   }
 
   private class InMemoryEscrow : RestoreKeyEscrow {
     var key: ByteArray? = null
     var unavailable = false
+    var failStores = false
     var recoveries = 0
 
     override suspend fun store(key: ByteArray): Boolean {
+      if (failStores) return false
       this.key = key.copyOf()
       return true
     }
@@ -139,5 +157,6 @@ class RestoreKeyEscrowTest {
     // TokenVault's private names; renaming one makes moveToNewPhone keep the key, and these fail.
     const val KEY_ALIAS = "terrazzo-token-vault-v1"
     const val DATA_KEY_FILE = "terrazzo_vault_dek.json"
+    const val ESCROWED_FILE = "terrazzo_vault_dek.escrowed"
   }
 }

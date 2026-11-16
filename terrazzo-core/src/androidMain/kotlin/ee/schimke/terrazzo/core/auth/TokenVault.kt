@@ -64,11 +64,18 @@ class TokenVault(private val context: Context, private val escrow: RestoreKeyEsc
   private val json = Json { ignoreUnknownKeys = true }
   private val random = SecureRandom()
 
+  /** Whether this process already retried an escrow that hadn't succeeded ([escrowedFile]). */
+  private var escrowRetried = false
+
   private val vaultFile: File
     get() = File(context.applicationContext.filesDir, VAULT_FILE_NAME)
 
   private val dataKeyFile: File
     get() = File(context.applicationContext.noBackupFilesDir, DATA_KEY_FILE_NAME)
+
+  /** Present once the current data key is escrowed; missing means escrow is still owed. */
+  private val escrowedFile: File
+    get() = File(context.applicationContext.noBackupFilesDir, ESCROWED_FILE_NAME)
 
   /** The vault before the data key: tokens encrypted directly under the Keystore key. */
   private val legacyVaultFile: File
@@ -86,7 +93,7 @@ class TokenVault(private val context: Context, private val escrow: RestoreKeyEsc
     }
     // Every sign-in escrows again: cheap, and it heals an escrow that failed before (Play services
     // updated since, say) or that a newer data key replaced.
-    escrow.store(dataKey.raw)
+    escrowLocked(dataKey)
   }
 
   /**
@@ -105,6 +112,15 @@ class TokenVault(private val context: Context, private val escrow: RestoreKeyEsc
     try {
       open(dataKey.key, instanceId, iv.fromBase64(), ciphertext.fromBase64())
         .toString(Charsets.UTF_8)
+        .also {
+          // A signed-in read whose key isn't escrowed yet (it failed at sign-in or migration, or
+          // the key was just recovered on a new phone) escrows it, once per process, so a token
+          // that is never rotated doesn't leave the vault unrecoverable on the next phone.
+          if (!escrowRetried && !escrowedFile.exists()) {
+            escrowRetried = true
+            escrowLocked(dataKey)
+          }
+        }
     } catch (e: Exception) {
       if (!e.isUnreadableCiphertext()) throw e
       Log.w(TAG, "Stored refresh token can't be decrypted on this install; signing in again", e)
@@ -146,6 +162,7 @@ class TokenVault(private val context: Context, private val escrow: RestoreKeyEsc
       // Signed out of everything: forget the data key, here and in the escrow, so a later restore
       // doesn't sign the user back in. The next sign-in makes a new one.
       dataKeyFile.delete()
+      escrowedFile.delete()
       escrow.clear()
     }
   }
@@ -221,7 +238,17 @@ class TokenVault(private val context: Context, private val escrow: RestoreKeyEsc
     }
   }
 
+  private suspend fun escrowLocked(dataKey: DataKey) {
+    if (escrow.store(dataKey.raw)) {
+      escrowedFile.createNewFile()
+    } else {
+      escrowedFile.delete()
+    }
+  }
+
   private fun wrapAndStoreLocked(dataKey: DataKey) {
+    // A newly made or recovered key: not known to be escrowed until escrowLocked says so.
+    escrowedFile.delete()
     val (iv, ciphertext) = keystoreEncrypt(dataKey.raw)
     writeAtomically(
       dataKeyFile,
@@ -320,7 +347,7 @@ class TokenVault(private val context: Context, private val escrow: RestoreKeyEsc
     writeVaultLocked(VaultData(tokens))
     legacyJson.delete()
     legacyStore.delete()
-    dataKey?.let { escrow.store(it.raw) }
+    dataKey?.let { escrowLocked(it) }
   }
 
   private fun readLegacyJson(file: File): VaultData =
@@ -453,6 +480,9 @@ class TokenVault(private val context: Context, private val escrow: RestoreKeyEsc
 
     /** In `noBackupFilesDir`: the data key, wrapped by the Keystore key. */
     const val DATA_KEY_FILE_NAME = "terrazzo_vault_dek.json"
+
+    /** In `noBackupFilesDir`: marks [DATA_KEY_FILE_NAME]'s key as escrowed. */
+    const val ESCROWED_FILE_NAME = "terrazzo_vault_dek.escrowed"
 
     /** In `noBackupFilesDir`: tokens under the Keystore key, before the data key existed. */
     const val LEGACY_VAULT_FILE_NAME = "terrazzo_token_vault.json"
