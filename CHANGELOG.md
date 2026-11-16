@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.98](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.97...v0.1.98) (2026-11-16)
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1627](https://github.com/yschimke/homeassistant-remotecompose/issues/1627)) ([3f2a149](https://github.com/yschimke/homeassistant-remotecompose/commit/3f2a149040f2a1baa3c9c4fac43225d275e2838a))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-daemon-bom to v3.28.0 ([#1625](https://github.com/yschimke/homeassistant-remotecompose/issues/1625)) ([d720c57](https://github.com/yschimke/homeassistant-remotecompose/commit/d720c5708004b58bf9e877a36bdbd6baa859a716))
+* **deps:** update dependency ee.schimke.composeai:rc-players-bom to v3.5.3 ([#1628](https://github.com/yschimke/homeassistant-remotecompose/issues/1628)) ([c5f62ff](https://github.com/yschimke/homeassistant-remotecompose/commit/c5f62ff4e56a8ce95326a318d81b1bbc31ec657f))
+
 ## [0.1.97](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.96...v0.1.97) (2026-11-15)
 
 
