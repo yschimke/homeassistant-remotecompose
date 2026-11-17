@@ -4,9 +4,12 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import com.meta.spatial.compose.ComposeFeature
@@ -16,6 +19,7 @@ import com.meta.spatial.core.SpatialFeature
 import com.meta.spatial.mruk.MRUKFeature
 import com.meta.spatial.mruk.MRUKLoadDeviceResult
 import com.meta.spatial.mruk.SceneModel
+import com.meta.spatial.runtime.SessionState
 import com.meta.spatial.toolkit.AppSystemActivity
 import com.meta.spatial.toolkit.DpPerMeterDisplayOptions
 import com.meta.spatial.toolkit.Grabbable
@@ -30,6 +34,7 @@ import ee.schimke.terrazzo.room.RoomPin
 import ee.schimke.terrazzo.room.airPlacement
 import ee.schimke.terrazzo.room.nearestPinnedEntity
 import ee.schimke.terrazzo.room.pinnedEntity
+import ee.schimke.terrazzo.room.rotateY
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -47,6 +52,10 @@ class QuestActivity : AppSystemActivity() {
     QuestRoomModel(this, getSharedPreferences("quest_room", Context.MODE_PRIVATE))
   }
   private lateinit var mruk: MRUKFeature
+  private var roomPanel: Entity? = null
+  private var sceneReady = false
+  private var sessionFocused = false
+  private var placementPending = true
 
   // Compose state: the panels may compose before the scene is ready or a pin's entity is mapped,
   // and
@@ -57,12 +66,14 @@ class QuestActivity : AppSystemActivity() {
   private var sceneLoaded by mutableStateOf(false)
 
   /** The panel entity on each placed pin, by anchor id, and the pin behind each panel entity. */
+  private val deviceIds = mutableStateMapOf<Long, String>()
+  private val occupiedSlots = mutableSetOf<Int>()
   private val pinPanels = mutableMapOf<String, Entity>()
   private val panelPins = mutableStateMapOf<Long, RoomPin>()
 
   override fun registerFeatures(): List<SpatialFeature> {
     val base = listOf(VRFeature(this), ComposeFeature())
-    // Room mapping and passthrough need the Android-14 Horizon OS path. Older supported Quest
+    // Room mapping needs the Android-14 Horizon OS path. Older supported Quest
     // firmware still gets a movable room-control panel, just without Space Setup anchors/pins.
     if (!supportsRoomMapping) return base
     mruk = MRUKFeature(this, systemManager)
@@ -103,18 +114,10 @@ class QuestActivity : AppSystemActivity() {
 
   override fun onSceneReady() {
     super.onSceneReady()
-    if (supportsRoomMapping) scene.enablePassthrough(true)
-    val head = scene.getViewerPose()
-    // The room panel a little over arm's length ahead, facing the user.
-    val place =
-      airPlacement(head.t.toVec3(), head.forward().toVec3(), distance = ROOM_PANEL_DISTANCE)
-    Entity.create(
-      listOf(
-        Panel(R.id.room_panel),
-        Transform(panelPose(place.position, place.facing)),
-        Grabbable(),
-      ),
-    )
+    if (packageManager.hasSystemFeature("com.oculus.feature.PASSTHROUGH")) {
+      scene.enablePassthrough(true)
+    }
+    sceneReady = true
     if (supportsRoomMapping) {
       anchors = QuestRoomAnchors(scene, mruk)
       if (checkSelfPermission(SCENE_PERMISSION) == PackageManager.PERMISSION_GRANTED) loadScene()
@@ -130,6 +133,31 @@ class QuestActivity : AppSystemActivity() {
         delay(NEAREST_PIN_INTERVAL_MS)
       }
     }
+  }
+
+  override fun onSessionStateChanged(state: SessionState) {
+    super.onSessionStateChanged(state)
+    sessionFocused = state == SessionState.FOCUSED
+  }
+
+  override fun onRecenter(isUserInitiated: Boolean) {
+    super.onRecenter(isUserInitiated)
+    if (isUserInitiated) placementPending = true
+  }
+
+  override fun onSceneTick() {
+    super.onSceneTick()
+    if (!placementPending || !sceneReady || !sessionFocused) return
+    val head = scene.getViewerPose()
+    val place = airPlacement(head.t.toVec3(), head.forward().toVec3(), ROOM_PANEL_DISTANCE)
+    val transform = Transform(panelPose(place.position, place.facing))
+    val panel = roomPanel
+    if (panel == null) {
+      roomPanel = Entity.create(listOf(Panel(R.id.room_panel), transform, Grabbable()))
+    } else {
+      panel.setComponent(transform)
+    }
+    placementPending = false
   }
 
   override fun onDestroy() {
@@ -151,6 +179,26 @@ class QuestActivity : AppSystemActivity() {
         },
       ),
       ComposeViewPanelRegistration(
+        R.id.device_panel,
+        { entity, context ->
+          composeView(context) {
+            val id = deviceIds[entity.id]
+            val entities = roomContent().deviceGroups()[id]
+            if (entities != null && model.connection == QuestConnection.Connected) {
+              QuestDeviceCard(
+                entities,
+                model.snapshot,
+                model.controlsLocked,
+                model::toggle,
+                if (sceneLoaded) ::pin else null,
+                model.pins.map { it.entityId }.toSet(),
+              )
+            }
+          }
+        },
+        { UIPanelSettings(QuadShapeOptions(0.36f, 0.32f), DpPerMeterDisplayOptions(DP_PER_METRE)) },
+      ),
+      ComposeViewPanelRegistration(
         R.id.pinned_panel,
         { entity, context -> composeView(context) { PinnedPanel(panelPins[entity.id]) } },
         {
@@ -170,25 +218,31 @@ class QuestActivity : AppSystemActivity() {
     val anchors = anchors
     when (val connection = model.connection) {
       QuestConnection.Connected ->
-        QuestRoomPanel(
-          content =
-            roomContent(
-              onPin = anchors?.takeIf { sceneLoaded }?.let { { entityId -> pin(entityId) } },
-            ),
-          lostPins = model.pins.filter { anchors != null && it.anchorId in anchors.lost },
-          onRemoveLost = ::unpin,
-          onSignOut = model::signOut,
-          controlsLocked = model.controlsLocked,
-          onControlsLocked = model::updateControlsLocked,
-          pinningHint =
-            when {
-              !supportsRoomMapping ->
-                "This room panel can still be moved. Pinning individual controls requires Horizon OS Android 14 or newer."
-              !sceneLoaded ->
-                "This room panel can still be moved. Allow Space Setup access to pin individual controls around your room."
-              else -> null
-            },
-        )
+        key(model.state?.controls?.area?.id) {
+          val content = roomContent()
+          val visible = remember { mutableStateMapOf<String, Boolean>() }
+          for (id in content.deviceGroups().keys) {
+            if (visible[id] == true) key(id) { DisplayDevice(id) }
+          }
+          QuestRoomPanel(
+            content = content,
+            visibleDevices = visible.keys,
+            onDisplayDevice = { id, show -> if (show) visible[id] = true else visible.remove(id) },
+            lostPins = model.pins.filter { anchors != null && it.anchorId in anchors.lost },
+            onRemoveLost = ::unpin,
+            onSignOut = model::signOut,
+            controlsLocked = model.controlsLocked,
+            onControlsLocked = model::updateControlsLocked,
+            pinningHint =
+              when {
+                !supportsRoomMapping ->
+                  "This room panel can still be moved. Pinning individual controls requires Horizon OS Android 14 or newer."
+                !sceneLoaded ->
+                  "This room panel can still be moved. Allow Space Setup access to pin individual controls around your room."
+                else -> null
+              },
+          )
+        }
       else ->
         QuestSignInPanel(
           connection = connection,
@@ -211,24 +265,43 @@ class QuestActivity : AppSystemActivity() {
     )
   }
 
-  private fun roomContent(onPin: ((String) -> Unit)?) =
-    RoomContent(
-      state = model.state,
-      snapshot = model.snapshot,
-      tracker = model.tracker,
-      onPick = model::pick,
-      onFollow = model::follow,
-      entityCard = { entity, modifier ->
-        QuestEntityCard(
-          entity = entity,
-          snapshot = model.snapshot,
-          onToggle = model::toggle,
-          onPin = onPin,
-          pinned = model.pins.any { it.entityId == entity.entityId },
-          controlsLocked = model.controlsLocked,
-          modifier = modifier,
+  @Composable
+  private fun DisplayDevice(id: String) {
+    DisposableEffect(id) {
+      val slot = generateSequence(0) { it + 1 }.first { it !in occupiedSlots }
+      occupiedSlots.add(slot)
+      val head = scene.getViewerPose()
+      val direction =
+        rotateY(
+          head.forward().toVec3(),
+          (if (slot % 2 == 0) 1 else -1) * (0.66f + (slot / 2) * 0.34f),
         )
-      },
+      val place = airPlacement(head.t.toVec3(), direction, ROOM_PANEL_DISTANCE)
+      val panel =
+        Entity.create(
+          listOf(
+            Panel(R.id.device_panel),
+            Transform(panelPose(place.position, place.facing)),
+            Grabbable(),
+          ),
+        )
+      deviceIds[panel.id] = id
+      onDispose {
+        deviceIds.remove(panel.id)
+        occupiedSlots.remove(slot)
+        panel.destroy()
+      }
+    }
+  }
+
+  private fun roomContent() =
+    RoomContent(
+      model.state,
+      model.snapshot,
+      model.tracker,
+      model::pick,
+      model::follow,
+      entityCard = { _, _ -> },
     )
 
   private fun loadScene() {
@@ -278,7 +351,7 @@ class QuestActivity : AppSystemActivity() {
   }
 
   private companion object {
-    /** Android 14 is the first Horizon OS version with this room-mapping/passthrough route. */
+    /** Android 14 is the first Horizon OS version with this room-mapping route. */
     val supportsRoomMapping: Boolean
       get() = supportsQuestRoomMapping()
 

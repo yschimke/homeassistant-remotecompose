@@ -2,5 +2,6 @@
 <resources>
     <!-- Spatial SDK panel registrations: the room panel, and one per pinned control. -->
     <item name="room_panel" type="id" />
+    <item name="device_panel" type="id" />
     <item name="pinned_panel" type="id" />
 </resources>

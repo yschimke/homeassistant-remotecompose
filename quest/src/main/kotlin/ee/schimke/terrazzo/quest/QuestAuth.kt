@@ -6,6 +6,8 @@ import android.net.Uri
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import java.net.HttpURLConnection
+import java.net.URL
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -14,6 +16,7 @@ import javax.crypto.spec.GCMParameterSpec
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
+import net.openid.appauth.AppAuthConfiguration
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
@@ -22,13 +25,30 @@ import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ResponseTypeValues
 import net.openid.appauth.TokenRequest
 import net.openid.appauth.TokenResponse
+import net.openid.appauth.connectivity.DefaultConnectionBuilder
 
 /**
  * Home Assistant OAuth for Quest. This intentionally lives outside `:terrazzo-core`: that module
  * has API-35-only Remote Compose features, while Horizon OS Quest builds must stay on API 34.
  */
 class QuestAuth(context: Context) : AutoCloseable {
-  private val service = AuthorizationService(context.applicationContext)
+  private val service =
+    AuthorizationService(
+      context.applicationContext,
+      AppAuthConfiguration.Builder()
+        .setConnectionBuilder { uri ->
+          if (uri.scheme == "http") {
+            (URL(uri.toString()).openConnection() as HttpURLConnection).apply {
+              connectTimeout = 15_000
+              readTimeout = 10_000
+              instanceFollowRedirects = false
+            }
+          } else {
+            DefaultConnectionBuilder.INSTANCE.openConnection(uri)
+          }
+        }
+        .build(),
+    )
 
   fun authorizationIntent(baseUrl: String): Intent {
     val request =
@@ -80,7 +100,7 @@ class QuestAuth(context: Context) : AutoCloseable {
   private fun configuration(baseUrl: String): AuthorizationServiceConfiguration {
     val origin = baseUrl.trim().removeSuffix("/")
     require(origin.startsWith("https://") || origin.startsWith("http://")) {
-      "Enter a full Home Assistant URL, including https://"
+      "Enter a full Home Assistant URL, including http:// or https://"
     }
     return AuthorizationServiceConfiguration(
       Uri.parse("$origin/auth/authorize"),

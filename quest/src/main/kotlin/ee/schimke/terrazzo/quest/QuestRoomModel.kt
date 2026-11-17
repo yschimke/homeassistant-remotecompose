@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.stateSnapshots
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.room.DashboardImportance
 import ee.schimke.ha.room.dashboardImportance
@@ -154,10 +155,18 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     if (controlsLocked) return
     val entity = snapshot?.states?.get(entityId) ?: return
     val domain = entityId.substringBefore('.', missingDelimiterValue = "")
-    if (domain.isEmpty()) return
+    if (
+      domain !in ee.schimke.terrazzo.room.TOGGLE_DOMAINS ||
+        !HaLiveBindings.isAvailable(entity.state)
+    )
+      return
     scope.launch {
       try {
-        client?.callService(domain, if (entity.state == "on") "turn_off" else "turn_on", entityId)
+        client?.callService(
+          domain,
+          if (HaLiveBindings.isOn(entityId, entity.state)) "turn_off" else "turn_on",
+          entityId,
+        )
       } catch (e: CancellationException) {
         throw e
       } catch (_: Exception) {

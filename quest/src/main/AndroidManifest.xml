@@ -7,9 +7,12 @@
     <uses-feature android:name="android.hardware.vr.headtracking" android:required="true" />
     <uses-permission android:name="com.oculus.permission.USE_SCENE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="false" />
+    <uses-feature android:name="oculus.software.overlay_keyboard" android:required="false" />
 
     <application
         android:label="Terrazzo"
+        android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
         <meta-data android:name="com.oculus.supportedDevices" android:value="quest2|questpro|quest3|quest3s" />

@@ -25,7 +25,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -33,21 +32,17 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.meta.spatial.uiset.button.BorderlessButton
 import com.meta.spatial.uiset.control.SpatialSwitch
 import com.meta.spatial.uiset.theme.SpatialTheme
 import com.meta.spatial.uiset.theme.darkSpatialColorScheme
-import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.room.RoomEntity
 import ee.schimke.terrazzo.room.LostPins
 import ee.schimke.terrazzo.room.RoomContent
 import ee.schimke.terrazzo.room.RoomHeader
 import ee.schimke.terrazzo.room.RoomPin
-import ee.schimke.terrazzo.room.TOGGLE_DOMAINS
 
 /**
  * The room panels in Meta's Horizon OS look: the Spatial SDK's UI set, dark. The shared room parts
@@ -76,25 +71,16 @@ fun QuestPinnedPanel(
     modifier.fillMaxSize().background(SpatialTheme.colorScheme.panel, RoundedCornerShape(24.dp)),
     contentAlignment = Alignment.Center,
   ) {
-    QuestEntityCard(
-      entity = entity,
-      snapshot = snapshot,
-      onToggle = onToggle,
-      onPin = null,
-      controlsLocked = controlsLocked,
-      onUnpin = onUnpin,
-    )
+    QuestDeviceCard(listOf(entity), snapshot, controlsLocked, onToggle, null, emptySet(), onUnpin)
   }
 }
 
-/**
- * The room panel: the room's name and where it came from, the rooms to switch to, then each control
- * ([RoomContent.entityCard]), the dashboards' first. The pins the headset couldn't find again are
- * listed at the end, to remove.
- */
+/** Device visibility switches and settings for the current room. */
 @Composable
 fun QuestRoomPanel(
   content: RoomContent,
+  visibleDevices: Set<String> = emptySet(),
+  onDisplayDevice: (String, Boolean) -> Unit = { _, _ -> },
   lostPins: List<RoomPin> = emptyList(),
   onRemoveLost: (RoomPin) -> Unit = {},
   onSignOut: () -> Unit = {},
@@ -103,7 +89,9 @@ fun QuestRoomPanel(
   pinningHint: String? = null,
   modifier: Modifier = Modifier,
 ) {
+  var settings by rememberSaveable { mutableStateOf(false) }
   val controls = content.state?.controls
+  val groups = content.deviceGroups()
   LazyVerticalGrid(
     columns = GridCells.Adaptive(300.dp),
     modifier = modifier.fillMaxSize().background(SpatialTheme.colorScheme.panel),
@@ -118,42 +106,57 @@ fun QuestRoomPanel(
           style = SpatialTheme.typography.headline1Strong,
           color = QuestText,
         )
-        RoomHeader(content)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-          Column(Modifier.weight(1f)) {
-            Text("Controls", style = SpatialTheme.typography.body1Strong, color = QuestText)
+        NamedButton(if (settings) "Close room settings" else "Room settings", "Room settings") {
+          settings = !settings
+        }
+        if (settings) {
+          RoomHeader(content)
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+              Text("Controls", style = SpatialTheme.typography.body1Strong, color = QuestText)
+              Text(
+                if (controlsLocked) "Locked — view only" else "Unlocked — actions are live",
+                style = SpatialTheme.typography.body2,
+                color = QuestTextSecondary,
+              )
+            }
+            SpatialSwitch(
+              !controlsLocked,
+              { enabled -> onControlsLocked(!enabled) },
+              Modifier.semantics {
+                contentDescription =
+                  if (controlsLocked) "Unlock Home Assistant controls"
+                  else "Lock Home Assistant controls"
+              },
+            )
+          }
+          pinningHint?.let { hint ->
             Text(
-              if (controlsLocked) "Locked — view only" else "Unlocked — actions are live",
+              hint,
               style = SpatialTheme.typography.body2,
               color = QuestTextSecondary,
             )
           }
-          SpatialSwitch(
-            !controlsLocked,
-            { enabled -> onControlsLocked(!enabled) },
-            Modifier.semantics {
-              contentDescription =
-                if (controlsLocked) "Unlock Home Assistant controls"
-                else "Lock Home Assistant controls"
-            },
-          )
+          NamedButton("Sign out", "Sign out of Home Assistant", onSignOut)
         }
-        pinningHint?.let { hint ->
-          Text(
-            hint,
-            style = SpatialTheme.typography.body2,
-            color = QuestTextSecondary,
-          )
-        }
-        NamedButton("Sign out", "Sign out of Home Assistant", onSignOut)
       }
     }
-    if (controls != null) {
-      items(controls.primary + controls.more, key = { it.entityId }) {
-        content.entityCard(it, Modifier)
+    items(groups.keys.toList(), key = { it }) { id ->
+      val label = groups.getValue(id).first().name
+      Row(
+        Modifier.fillMaxWidth().padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Text(label, modifier = Modifier.weight(1f), color = QuestText)
+        SpatialSwitch(
+          id in visibleDevices,
+          { onDisplayDevice(id, it) },
+          Modifier.semantics { contentDescription = "Display card for $label" },
+        )
       }
     }
-    if (lostPins.isNotEmpty()) {
+    if (groups.isEmpty()) item { Text("No devices in this room", color = QuestTextSecondary) }
+    if (settings && lostPins.isNotEmpty()) {
       item(span = { GridItemSpan(maxLineSpan) }) {
         LostPins(lostPins, content.snapshot, onRemoveLost)
       }
@@ -168,7 +171,7 @@ fun QuestSignInPanel(
   onSignIn: (String) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  var url by rememberSaveable { mutableStateOf("") }
+  var url by rememberSaveable { mutableStateOf("http://homeassistant.local:8123/") }
   Column(
     modifier.fillMaxSize().background(SpatialTheme.colorScheme.panel).padding(48.dp),
     verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -183,7 +186,6 @@ fun QuestSignInPanel(
       value = url,
       onValueChange = { url = it },
       label = { Text("Home Assistant URL") },
-      placeholder = { Text("https://homeassistant.local:8123") },
       singleLine = true,
       modifier = Modifier.fillMaxWidth(),
     )
@@ -196,63 +198,6 @@ fun QuestSignInPanel(
       else -> Unit
     }
     NamedButton("Sign in", "Sign in to Home Assistant") { onSignIn(url) }
-  }
-}
-
-/**
- * One control on Quest: its name and current state, a switch for one that turns on and off, and
- * "Pin here" (or "Move here" for an existing pin) to place it where the user looks ([onPin], null
- * where pinning isn't available) or "Unpin" on a pinned panel ([onUnpin]).
- */
-@Composable
-fun QuestEntityCard(
-  entity: RoomEntity,
-  snapshot: HaSnapshot?,
-  onToggle: (entityId: String) -> Unit,
-  onPin: ((entityId: String) -> Unit)?,
-  pinned: Boolean = false,
-  controlsLocked: Boolean = false,
-  modifier: Modifier = Modifier,
-  onUnpin: (() -> Unit)? = null,
-) {
-  val state = snapshot?.states?.get(entity.entityId)
-  Column(
-    modifier.fillMaxWidth().background(QuestCard, RoundedCornerShape(24.dp)).padding(20.dp),
-    verticalArrangement = Arrangement.spacedBy(12.dp),
-  ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-      Column(Modifier.weight(1f)) {
-        Text(
-          entity.name,
-          style = SpatialTheme.typography.body1Strong,
-          color = QuestText,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-          state?.let { formatState(it, snapshot) } ?: "Unavailable",
-          style = SpatialTheme.typography.body2,
-          color = QuestTextSecondary,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-      }
-      if (state != null && entity.domain in TOGGLE_DOMAINS) {
-        SpatialSwitch(
-          HaLiveBindings.isOn(entity.entityId, state.state),
-          { onToggle(entity.entityId) },
-          Modifier.alpha(if (controlsLocked) LOCKED_CONTROL_ALPHA else 1f).semantics {
-            contentDescription =
-              if (controlsLocked) "${entity.name}, controls locked" else entity.name
-          },
-        )
-      }
-    }
-    onPin?.let { pin ->
-      val action = if (pinned) "Move here" else "Pin here"
-      NamedButton(action, "$action ${entity.name}") { pin(entity.entityId) }
-    }
-    onUnpin?.let { NamedButton("Unpin", "Unpin ${entity.name}", it) }
   }
 }
 
@@ -277,7 +222,5 @@ private fun NamedButton(label: String, description: String, onClick: () -> Unit)
   }
 }
 
-private val QuestCard = Color(0x26FFFFFF)
-private val QuestText = Color(0xFFFFFFFF)
+private val QuestText = Color.White
 private val QuestTextSecondary = Color(0xB3FFFFFF)
-private const val LOCKED_CONTROL_ALPHA = 0.45f

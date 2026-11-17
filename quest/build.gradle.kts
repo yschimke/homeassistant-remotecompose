@@ -36,6 +36,9 @@ android {
 }
 
 dependencies {
+  implementation(project(":rc-player-ui"))
+  implementation(platform(libs.rc.players.bom))
+  implementation(libs.rc.creation.compose)
   implementation(project(":room-ui"))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))

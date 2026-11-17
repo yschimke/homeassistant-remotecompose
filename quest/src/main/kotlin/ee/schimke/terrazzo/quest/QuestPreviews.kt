@@ -24,6 +24,12 @@ import ee.schimke.terrazzo.room.rotateY
  * puts them.
  */
 
+@Preview(name = "Quest: sign in", device = "spec:width=1000dp,height=700dp,dpi=160")
+@Composable
+fun QuestSignInPanelPreview() {
+  QuestTheme { QuestSignInPanel(QuestConnection.SignedOut, onSignIn = {}) }
+}
+
 @Preview(name = "Quest: room panel", device = "spec:width=1000dp,height=700dp,dpi=160")
 @Composable
 fun QuestRoomPanelPreview() {
@@ -88,9 +94,7 @@ private fun previewContent(): RoomContent =
     tracker = null,
     onPick = {},
     onFollow = {},
-    entityCard = { entity, modifier ->
-      QuestEntityCard(entity, PreviewSnapshot, onToggle = {}, onPin = {}, modifier = modifier)
-    },
+    entityCard = { _, _ -> },
   )
 
 private val PreviewSnapshot = DemoHouse.snapshot
