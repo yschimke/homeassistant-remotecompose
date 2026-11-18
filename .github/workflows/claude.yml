@@ -55,7 +55,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
-      - uses: anthropics/claude-code-action@cc98b3ae241b0fcfb6a42a2690751afffecb4452 # v1.0.278
+      - uses: anthropics/claude-code-action@469588f42e6b1e94cd14ad09dccfeaec772ce0fd # v1.0.280
         with:
           # Bills the Claude subscription's included usage (shared with
           # interactive Claude Code sessions) rather than per-token API spend.
