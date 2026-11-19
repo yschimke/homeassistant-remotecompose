@@ -52,7 +52,7 @@ fontbox = "3.0.8"
 kotlinx-serialization = "1.13.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
-logback = "1.6.7"
+logback = "1.6.8"
 junit = "4.13.2"
 testcontainers = "2.0.5"
 # Robolectric 4.17's exact API 35 provider jar. Android-all versions identify platform images,
