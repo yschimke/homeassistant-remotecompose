@@ -7,6 +7,7 @@ import ee.schimke.composeai.dwf.WffSeverity
 import ee.schimke.composeai.dwf.WffValue
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.designs.JvmComposeGraphics
 import io.ktor.client.HttpClient
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
@@ -98,6 +99,7 @@ class WatchFaces(
     val version: Long,
     val px: Int,
     val sweep: Boolean,
+    val seconds: Boolean,
   )
 
   private val listings = mutableMapOf<String, Listing>()
@@ -139,13 +141,14 @@ class WatchFaces(
     faceId: String,
     px: Int = DEFAULT_PX,
     sweep: Boolean = true,
+    seconds: Boolean = true,
   ): Compiled {
     val base = allowedServer(server)
     require(px in MIN_PX..MAX_PX) { "size must be $MIN_PX..$MAX_PX" }
     val face =
       faces(base).firstOrNull { it.id == faceId }
         ?: throw Problem(HttpStatusCode.NotFound, "$base publishes no watch face \"$faceId\"")
-    val key = CompileKey(base, face.id, face.version, px, sweep)
+    val key = CompileKey(base, face.id, face.version, px, sweep, seconds)
     lock.withLock {
       compiled[key]?.let {
         return it.also { WatchFaceBlobs.put(it) }
@@ -164,10 +167,15 @@ class WatchFaces(
     val bundle =
       WatchFaceApk.read(apk)
         ?: throw Problem(HttpStatusCode.UnprocessableEntity, "\"$faceId\" has no watch face XML")
+    // The translator decodes and draws the face's images through Compose's graphics, which a
+    // server that has captured nothing yet hasn't registered (#1464).
+    JvmComposeGraphics.ensureRegistered()
     val result =
       withContext(Dispatchers.Default) {
         WffRemoteCompose.compile(
-          if (sweep) bundle.xml else withoutSweep(bundle.xml),
+          bundle.xml
+            .let { if (sweep) it else withoutSweep(it) }
+            .let { if (seconds) it else withoutSecondHands(it) },
           WffResourceSource.of(bundle.resources),
           WffCompileOptions(
             widthPx = px,
@@ -225,7 +233,10 @@ class WatchFaces(
       throw Problem(HttpStatusCode.BadRequest, "`size` must be $MIN_PX..$MAX_PX")
     }
     val sweep = (card["sweep"] as? JsonPrimitive)?.booleanOrNull ?: !smallPlayer
-    val face = compile(server, faceId, px, sweep)
+    // A host that redraws only now and then (a launcher widget, pushed once a minute) has no use
+    // for a second hand that would stand still between pushes.
+    val seconds = (card["seconds"] as? JsonPrimitive)?.booleanOrNull ?: true
+    val face = compile(server, faceId, px, sweep, seconds)
     return CardMatch(
       design = "$CARD_TYPE:${face.face.id}",
       sha256 = face.sha256,
@@ -236,7 +247,9 @@ class WatchFaces(
           surface = DesignSurface.MobileApp,
           rcApiLevel = 0,
           shape =
-            "face=${face.face.id};version=${face.face.version};px=$px" + if (sweep) "" else ";tick",
+            "face=${face.face.id};version=${face.face.version};px=$px" +
+              (if (sweep) "" else ";tick") +
+              if (seconds) "" else ";no-seconds",
           theme = "style:$CARD_TYPE:dark",
         ),
       exact = true,
@@ -336,6 +349,15 @@ class WatchFaces(
      * seconds and needs one a second, the way a watch's own ambient-off tick hand does.
      */
     internal fun withoutSweep(xml: String): String = SWEEP.replace(xml, "")
+
+    private val SECOND_HAND =
+      Regex("""<SecondHand\b[^>]*?(/>|>.*?</SecondHand\s*>)""", RegexOption.DOT_MATCHES_ALL)
+
+    /**
+     * [xml] without its `<SecondHand>` elements, for `seconds: false`. A face whose hour and minute
+     * hands still read `[SECOND]` keeps moving them smoothly; only the hand is gone.
+     */
+    internal fun withoutSecondHands(xml: String): String = SECOND_HAND.replace(xml, "")
 
     private fun text(card: JsonObject, name: String) =
       (card[name] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull

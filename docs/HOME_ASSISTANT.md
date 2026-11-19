@@ -292,6 +292,8 @@ card:
   face: aurora               # the design id the site lists at /api/watchface-push/v1/designs
   # server: https://ui.coo.ee # optional: ui.coo.ee (default) or preview.coo.ee
   # size: 450                 # optional: the face's side in pixels, 64 to 1024
+  # sweep: false              # optional: tick the second hand (wall panels do by default)
+  # seconds: false            # optional: leave the second hand out
 ```
 
 The design server downloads the face's APK, checks it against the hash the site published,

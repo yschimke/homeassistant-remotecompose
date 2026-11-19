@@ -140,6 +140,30 @@ class WatchFacesTest {
   }
 
   @Test
+  fun aFaceCanDropItsSecondHand() = runBlocking {
+    val faces = WatchFaces(FakeSite(listing(), apk))
+    val withHand = assertNotNull(faces.resolve(card()))
+    val without = buildJsonObject {
+      put("type", "watchface")
+      put("face", "simple_analog")
+      put("seconds", false)
+    }
+    val match = assertNotNull(faces.resolve(without))
+    assertTrue(match.key.shape.endsWith(";no-seconds"), match.key.shape)
+    assertTrue(match.sha256 != withHand.sha256)
+    // Sweeping second hands are the face's only continuous-clock readers.
+    val document =
+      RcDocumentCodec.decode(assertNotNull(WatchFaceBlobs.blob(match.sha256)), RcWireLimits())
+    assertTrue(!document.referencesContinuousSystemVariable())
+    assertEquals(
+      "<AnalogClock></AnalogClock>",
+      WatchFaces.withoutSecondHands(
+        "<AnalogClock><SecondHand x=\"1\"><Sweep/></SecondHand></AnalogClock>",
+      ),
+    )
+  }
+
+  @Test
   fun sweepElementsAreRemovedWhateverTheirForm() {
     val xml =
       """
