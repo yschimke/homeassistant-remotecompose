@@ -144,7 +144,7 @@ fun main(args: Array<String>) {
     if (System.getenv("WATCHFACES") == "off") null
     else
       WatchFaces(
-        WatchFaces.httpFetcher(HttpClient(io.ktor.client.engine.cio.CIO)),
+        WatchFaces.httpFetcher(WatchFaces.httpClient()),
         WatchFaces.serversFrom(System.getenv("WATCHFACE_SERVERS")),
       )
   println("watch faces: ${watchFaces?.servers?.joinToString() ?: "off"}")

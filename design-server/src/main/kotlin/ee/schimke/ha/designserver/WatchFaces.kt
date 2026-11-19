@@ -8,9 +8,10 @@ import ee.schimke.composeai.dwf.WffValue
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
 import io.ktor.client.HttpClient
-import io.ktor.client.request.get
+import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentLength
 import io.ktor.http.isSuccess
 import io.ktor.utils.io.readAvailable
 import java.io.ByteArrayInputStream
@@ -297,21 +298,35 @@ class WatchFaces(
         ?.mapNotNull { it.takeIf(String::isNotBlank)?.let(::normalize) }
         ?.takeIf { it.isNotEmpty() } ?: DEFAULT_SERVERS
 
-    /** A [Fetcher] over Ktor that stops reading at the cap. */
+    /**
+     * A [Fetcher] over Ktor that streams the body and stops reading at the cap, so an oversized
+     * answer is never held whole. [http] must not follow redirects ([httpClient]): only the URL
+     * [WatchFaces] checked is fetched, never where an answer points.
+     */
     fun httpFetcher(http: HttpClient) = Fetcher { url, maxBytes ->
-      val response = http.get(url)
-      if (!response.status.isSuccess()) return@Fetcher null
-      val channel = response.bodyAsChannel()
-      val out = ByteArrayOutputStream()
-      val buffer = ByteArray(16 * 1024)
-      while (true) {
-        val n = channel.readAvailable(buffer)
-        if (n < 0) break
-        if (out.size() + n > maxBytes) throw Problem(HttpStatusCode.BadGateway, "$url is too large")
-        out.write(buffer, 0, n)
+      http.prepareGet(url).execute { response ->
+        if (!response.status.isSuccess()) return@execute null
+        response.contentLength()?.let {
+          if (it > maxBytes) throw Problem(HttpStatusCode.BadGateway, "$url is too large")
+        }
+        val channel = response.bodyAsChannel()
+        val out = ByteArrayOutputStream()
+        val buffer = ByteArray(16 * 1024)
+        while (true) {
+          val n = channel.readAvailable(buffer)
+          if (n < 0) break
+          if (out.size() + n > maxBytes) {
+            throw Problem(HttpStatusCode.BadGateway, "$url is too large")
+          }
+          out.write(buffer, 0, n)
+        }
+        out.toByteArray()
       }
-      out.toByteArray()
     }
+
+    /** The client [httpFetcher] needs: redirects are answers, never followed. */
+    fun httpClient(): HttpClient =
+      HttpClient(io.ktor.client.engine.cio.CIO) { followRedirects = false }
 
     private val SWEEP = Regex("""<Sweep\b[^>]*?(/>|>.*?</Sweep\s*>)""", RegexOption.DOT_MATCHES_ALL)
 

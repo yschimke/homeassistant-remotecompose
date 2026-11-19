@@ -5,12 +5,17 @@ import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.composeai.rcplayer.protocol.referencesContinuousSystemVariable
 import ee.schimke.composeai.rcplayer.protocol.referencesMovingSystemVariable
 import ee.schimke.ha.client.design.DesignPublisher
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.readRawBytes
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
 import io.ktor.server.testing.testApplication
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -172,6 +177,29 @@ class WatchFacesTest {
       assertFailsWith<WatchFaces.Problem> { faces.resolve(card()) }.status,
     )
     assertTrue(fake.fetched.none { "elsewhere" in it || "evil" in it }, fake.fetched.toString())
+  }
+
+  @Test
+  fun theHttpFetcherStopsAtItsCapAndNeverFollowsARedirect() = runBlocking {
+    val requested = mutableListOf<String>()
+    val engine = MockEngine { request ->
+      requested += request.url.toString()
+      when (request.url.encodedPath) {
+        "/big" -> respond(ByteArray(64 * 1024), HttpStatusCode.OK)
+        "/moved" ->
+          respond(
+            "",
+            HttpStatusCode.Found,
+            headersOf(HttpHeaders.Location, "https://internal.example/secret"),
+          )
+        else -> respond("ok", HttpStatusCode.OK)
+      }
+    }
+    val fetcher = WatchFaces.httpFetcher(HttpClient(engine) { followRedirects = false })
+    assertEquals("ok", fetcher.get("$site/small", 1024)?.decodeToString())
+    assertFailsWith<WatchFaces.Problem> { fetcher.get("$site/big", 1024) }
+    assertNull(fetcher.get("$site/moved", 1024))
+    assertTrue(requested.none { "internal.example" in it }, requested.toString())
   }
 
   @Test
