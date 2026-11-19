@@ -117,7 +117,7 @@ firebase-bom = "35.2.0"
 
 
 cmp-navigation3 = "1.2.0"
-cmp-navigation3-runtime = "1.2.1"
+cmp-navigation3-runtime = "1.2.2"
 cmp-icons = "1.7.3"
 cmp-adaptive = "1.3.0"
 # The BOM is the release coordinate; each module can retain an older version on a partial release.
@@ -264,8 +264,8 @@ androidx-datastore = { module = "androidx.datastore:datastore", version = "1.2.1
 androidx-appfunctions = { module = "androidx.appfunctions:appfunctions", version.ref = "androidx-appfunctions" }
 androidx-appfunctions-compiler = { module = "androidx.appfunctions:appfunctions-compiler", version.ref = "androidx-appfunctions" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.12.0" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.1" }
-androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.1" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.2" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.2" }
 androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.4.0" }
 appauth = { module = "net.openid:appauth", version = "0.11.1" }
 # Credential Manager Restore Credentials: escrows the token vault's key for zero-tap sign-in
@@ -345,10 +345,10 @@ horologist-datalayer-phone = { module = "com.google.android.horologist:horologis
 # bytes a protoc / Wire output would produce. Schema lives as
 # documentation in `wear/src/main/proto/wear_sync.proto`.
 kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
-androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.11.0" }
-androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version = "2.11.0" }
-androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version = "2.11.0" }
-androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version = "2.11.0" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.11.1" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version = "2.11.1" }
+androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version = "2.11.1" }
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version = "2.11.1" }
 
 # Test
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
