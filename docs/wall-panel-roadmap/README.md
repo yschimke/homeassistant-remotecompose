@@ -10,6 +10,7 @@ on this hardware.
 | [hardware.md](hardware.md) | The Waveshare ESP32-S3-Touch-LCD-7: where its time and memory go, the board settings that matter, the dead ends, and the numbers a finished panel reaches. |
 | [rendering-design.md](rendering-design.md) | How to play RC documents of Home Assistant cards fast on a microcontroller: layout, paint, damage, text, icons, images, transitions and live data. |
 | [protocol-and-server.md](protocol-and-server.md) | What the panel asks Home Assistant and the design server for, and what the server must do so the panel doesn't have to. |
+| [watch-faces.md](watch-faces.md) | Playing published Wear OS watch faces on the panel: how often a face needs a frame, the per-tick budget, and what the player and the server must do to keep it at 1 Hz. |
 | [testing-and-verification.md](testing-and-verification.md) | Proving each step on a desktop first, then on the device, without fooling yourself with screenshots. |
 
 The short version:

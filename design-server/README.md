@@ -32,6 +32,11 @@ unsupported combinations link to available modes while preserving the other filt
   the states of every entity the card shows, the server runs its converter: the exact design
   (captured if the library lacks it) and the converter's own values (`exact: true`). Without
   them, when several shapes fit it picks the first (`exact: false`)
+- Watch faces: `POST /api/cards/resolve` with a `{"type": "watchface", "face": "<id>"}` card
+  answers with a Wear OS face published on a Watch Face Push site, compiled to `.rc` with
+  compose-ai-tools' `dwf-remote-compose` and served from `/designs/v1/blobs/` (`WatchFaces`).
+  `WATCHFACE_SERVERS` (comma-separated, https only) lists the sites it may fetch from, by default
+  `https://ui.coo.ee,https://preview.coo.ee`; `WATCHFACES=off` turns it off
 - Design source: `/api/designs/<id>/source.uid`, a UI Builder document to fork a library design
   from. For a card type drawn from a checked-in design (`card-designs/ui-builder/designs/`), it is
   that design, exactly what the library draws. For the others, it is the card rebuilt from

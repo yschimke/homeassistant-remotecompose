@@ -114,6 +114,11 @@ dependencies {
   // Decodes templates for the browser: their bindings, size and op-set validation; and makes a
   // design for a player's profile (`PlayerFolding`).
   implementation(libs.rc.player.edit)
+  // Plays published Wear OS watch faces as cards: their Watch Face Format XML compiled to `.rc`
+  // (WatchFaces). Plain JVM; Skia, which it decodes the face's PNGs with, comes with Compose
+  // Desktop above.
+  implementation(platform(libs.composeai.tools.bom))
+  implementation(libs.composeai.dwf.remote.compose)
 
   implementation(libs.ktor.server.core)
   implementation(libs.ktor.server.cio)

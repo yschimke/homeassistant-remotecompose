@@ -59,3 +59,22 @@ test('invalid URL settings fail before changing an existing HA card', () => {
   }
   assert.throws(() => card.setConfig({ ...config, template_url: '/local/tile.rc', design: 'a'.repeat(64) }), /not both/);
 });
+
+test('a watchface card plays a published face without host bindings, square by default', () => {
+  const card = host();
+  card.setConfig(config);
+  assert.ok(card.attributes.has('require-host-bindings'));
+  card.setConfig({ card: { type: 'watchface', face: 'aurora' } });
+  assert.equal(card.attributes.has('require-host-bindings'), false);
+  assert.equal(card.attributes.get('height'), '450');
+  card.setConfig({ card: { type: 'watchface', face: 'aurora', size: 300 } });
+  assert.equal(card.attributes.get('height'), '300');
+  card.setConfig({ card: { type: 'watchface', face: 'aurora' }, height: 200 });
+  assert.equal(card.attributes.get('height'), '200');
+  for (const face of [undefined, '', '  ', 7]) {
+    assert.throws(() => card.setConfig({ card: { type: 'watchface', face } }), /face/);
+  }
+  for (const size of [0, 63, 1025, 1.5, '300']) {
+    assert.throws(() => card.setConfig({ card: { type: 'watchface', face: 'aurora', size } }), /size/);
+  }
+});

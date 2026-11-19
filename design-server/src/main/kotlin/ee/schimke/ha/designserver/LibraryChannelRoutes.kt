@@ -94,6 +94,8 @@ internal fun Route.libraryProtocolRoutes(
           ?: userDesigns?.blob(it)
           // A design made for a small player (POST /api/cards/resolve with `player`).
           ?: PlayerFolding.blob(it)
+          // A published watch face compiled for a `watchface` card (WatchFaces).
+          ?: WatchFaceBlobs.blob(it)
       } ?: return@get call.notFound()
     (holder.current().entry(sha!!) ?: userDesigns?.entry(sha))?.let {
       usage?.blobFetched(

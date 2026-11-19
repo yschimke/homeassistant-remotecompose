@@ -280,6 +280,28 @@ confirmation, more-info, same-origin navigation and HTTP(S) URL actions are hand
 by the adapter. Unsupported actions resolve to no action. Only tap is supported
 by the current RC templates; hold and double-tap are not implemented.
 
+### Watch faces
+
+A card can also play a Wear OS watch face someone published on
+[ui.coo.ee](https://ui.coo.ee) (the Watch Face Push site the Faces app installs from):
+
+```yaml
+type: custom:remote-compose-card
+card:
+  type: watchface
+  face: aurora               # the design id the site lists at /api/watchface-push/v1/designs
+  # server: https://ui.coo.ee # optional: ui.coo.ee (default) or preview.coo.ee
+  # size: 450                 # optional: the face's side in pixels, 64 to 1024
+```
+
+The design server downloads the face's APK, checks it against the hash the site published,
+compiles its Watch Face Format XML to a Remote Compose document and serves that by its SHA-256.
+The face reads the player's own clock, so it ticks with nothing pushed from Home Assistant; what a
+watch would supply (battery, steps, heart rate, complications) shows the face's defaults. Only
+public faces are listed, and only from the sites the design server allows (`WATCHFACE_SERVERS`).
+Wall displays draw the same card, made for their player like any other (a 6 x 6 grid cell by
+default). The card is square: `height` defaults to `size`.
+
 ## Authorization and lifecycle
 
 The integration serves public **static code**, like HA's frontend. It holds no
