@@ -27,15 +27,15 @@ compose-bom = "2026.11.00"
 # 1.0.0-alpha15 and `glance-wear` 1.0.0-alpha22 both declare
 # `androidx.compose.remote:remote-creation*:1.0.0-alpha23`, which is what keeps
 # this set consistent.
-remote-compose = "1.0.0-alpha23"
-remote-material3 = "1.0.0-alpha15"
+remote-compose = "1.0.0-alpha24"
+remote-material3 = "1.0.0-alpha16"
 # The version `remote-material3` 1.0.0-alpha15 declares: rc-components draws icons with its
 # `RemoteBasicIcon` directly, so it moves with the set above.
-remote-foundation = "1.0.0-alpha06"
+remote-foundation = "1.0.0-alpha07"
 
 # AndroidX Glance Wear (runtime feature gated on Wear OS 7+ / API 37 inside the
 # library; we use it for the per-slot wear widgets). Lockstep — see above.
-glance-wear = "1.0.0-alpha22"
+glance-wear = "1.0.0-alpha23"
 
 # Baseline profiles + macrobenchmarks (`:app-benchmark`, `:wear-benchmark`). The
 # Gradle plugin and the macrobenchmark runtime ship together; keep them on one version.
