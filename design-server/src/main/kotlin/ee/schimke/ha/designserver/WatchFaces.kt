@@ -408,10 +408,12 @@ internal object WatchFaceApk {
       while (true) {
         val entry = zip.nextEntry ?: break
         val name = entry.name
-        if (entry.isDirectory || !name.startsWith("res/") || ".." in name) continue
+        // Every entry is inflated, kept or not (the next getNextEntry drains it), so every entry
+        // is read under the caps: an entry outside res/ is no way around them.
         val bytes = readCapped(zip) ?: return null
         total += bytes.size
         if (total > MAX_TOTAL_BYTES) return null
+        if (entry.isDirectory || !name.startsWith("res/") || ".." in name) continue
         val path = name.removePrefix("res/")
         if (path.endsWith(".xml") && isBinaryXml(bytes)) {
           skipped++

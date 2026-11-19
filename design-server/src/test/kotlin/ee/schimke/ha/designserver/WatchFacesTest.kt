@@ -252,6 +252,38 @@ class WatchFacesTest {
   }
 
   @Test
+  fun anApkThatInflatesPastItsCapIsRefusedWhereverTheBytesAre() {
+    fun apkWith(vararg entries: Pair<String, Int>): ByteArray {
+      val out = ByteArrayOutputStream()
+      ZipOutputStream(out).use { zip ->
+        zip.putNextEntry(ZipEntry("res/raw/watchface.xml"))
+        zip.write("<WatchFace width=\"450\" height=\"450\"/>".encodeToByteArray())
+        val zeros = ByteArray(1024 * 1024)
+        for ((name, megabytes) in entries) {
+          zip.putNextEntry(ZipEntry(name))
+          repeat(megabytes) { zip.write(zeros) }
+        }
+      }
+      return out.toByteArray()
+    }
+    assertNotNull(WatchFaceApk.read(apkWith("assets/small" to 1)))
+    // Megabytes of zeros compress to almost nothing; outside res/ they are still inflated.
+    val bomb =
+      apkWith(
+        "assets/a" to 7,
+        "assets/b" to 7,
+        "assets/c" to 7,
+        "assets/d" to 7,
+        "assets/e" to 7,
+        "assets/f" to 7,
+        "assets/g" to 7,
+      )
+    assertTrue(bomb.size < 1024 * 1024, "${bomb.size}")
+    assertNull(WatchFaceApk.read(bomb))
+    assertNull(WatchFaceApk.read(apkWith("assets/huge" to 9)))
+  }
+
+  @Test
   fun serverAddressesAreNormalised() {
     assertEquals(site, WatchFaces.normalize("ui.coo.ee"))
     assertEquals(site, WatchFaces.normalize(" https://UI.coo.ee:443/ "))
