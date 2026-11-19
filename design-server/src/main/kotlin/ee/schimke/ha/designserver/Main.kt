@@ -138,6 +138,16 @@ fun main(args: Array<String>) {
             ?.let { File(it, "google-fonts") },
       )
   println("google fonts: ${if (googleFonts == null) "off" else "on"}")
+  // Published Wear OS faces as `watchface` cards, from WATCHFACE_SERVERS (default ui.coo.ee and
+  // preview.coo.ee), unless WATCHFACES=off.
+  val watchFaces =
+    if (System.getenv("WATCHFACES") == "off") null
+    else
+      WatchFaces(
+        WatchFaces.httpFetcher(WatchFaces.httpClient()),
+        WatchFaces.serversFrom(System.getenv("WATCHFACE_SERVERS")),
+      )
+  println("watch faces: ${watchFaces?.servers?.joinToString() ?: "off"}")
   embeddedServer(CIO, port = port, host = host) {
       install(CallLogging)
       designServer(
@@ -156,6 +166,7 @@ fun main(args: Array<String>) {
         mirrorPollMs =
           (System.getenv("LIBRARY_UPSTREAM_POLL_SECONDS")?.toLongOrNull() ?: 3_600L) * 1_000,
         googleFonts = googleFonts,
+        watchFaces = watchFaces,
       )
     }
     .start(wait = true)

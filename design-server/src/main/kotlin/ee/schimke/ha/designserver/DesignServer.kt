@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * The library a running server serves: reloaded when `manifest.json` changes on disk (checked at
@@ -147,6 +148,8 @@ fun Application.designServer(
    * Where a `google:` family's glyphs come from ([GlyphRanges]); null serves only its own faces.
    */
   googleFonts: GoogleFonts? = null,
+  /** Draws `watchface` cards from published Wear OS faces ([WatchFaces]); null refuses them. */
+  watchFaces: WatchFaces? = null,
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -355,9 +358,34 @@ fun Application.designServer(
             status = HttpStatusCode.BadRequest,
           )
         }
+      // A published watch face (WatchFaces): not a Lovelace card, so neither resolve knows it.
+      val face =
+        if (
+          request.card["type"]?.let { (it as? JsonPrimitive)?.contentOrNull } !=
+            WatchFaces.CARD_TYPE
+        ) {
+          null
+        } else if (watchFaces == null) {
+          return@post call.respondText(
+            "this server doesn't draw watch faces",
+            status = HttpStatusCode.NotFound,
+          )
+        } else {
+          try {
+            watchFaces.resolve(request.card, smallPlayer = request.player != null)
+          } catch (problem: WatchFaces.Problem) {
+            return@post call.respondText(problem.message.orEmpty(), status = problem.status)
+          } catch (problem: IllegalArgumentException) {
+            return@post call.respondText(
+              problem.message.orEmpty(),
+              status = HttpStatusCode.BadRequest,
+            )
+          }
+        }
       // The card's exact design when its states say what it is; the closest library one if not.
       val match =
-        runCatching { CardResolve.resolveExact(generator, request) }.getOrNull()
+        face
+          ?: runCatching { CardResolve.resolveExact(generator, request) }.getOrNull()
           ?: CardResolve.resolve(holder.current(), request)
           ?: return@post call.respondText(
             "no library design draws this card in ${request.cardStyle}",
@@ -366,7 +394,10 @@ fun Application.designServer(
       // A small player gets the design made for it (PlayerFolding), served under its own sha.
       val served =
         request.player?.let { player ->
-          val bytes = holder.current().blob(match.sha256) ?: generator.blob(match.sha256)
+          val bytes =
+            holder.current().blob(match.sha256)
+              ?: generator.blob(match.sha256)
+              ?: WatchFaceBlobs.blob(match.sha256)
           val folded = bytes?.let {
             PlayerFolding.forPlayer(match.sha256, it, player, match.bindings.keys)
           }

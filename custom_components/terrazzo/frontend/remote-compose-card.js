@@ -1,11 +1,26 @@
 import { HaCardElement, serviceCallFor, MESSAGE_CARD_TYPE, MESSAGE_SUBMIT, messageInputs, messageAction } from './ha-card.js?register=false';
 
+/** A published Wear OS watch face as a card (`face`, optional `server` and `size`). */
+export const WATCH_FACE_CARD_TYPE = 'watchface';
+const WATCH_FACE_DEFAULT_SIZE = 450;
+
 // Register a distinct tag: HA already owns <ha-card> for its card chrome.
 export class RemoteComposeCard extends HaCardElement {
   static get observedAttributes() { return HaCardElement.observedAttributes; }
   setConfig(config) {
-    if (!config.card || !['tile', 'button', 'entity', 'gauge', MESSAGE_CARD_TYPE].includes(config.card.type)) {
-      throw new Error('Remote Compose requires a tile, button, entity or gauge card with live bindings.');
+    const watchFace = config.card?.type === WATCH_FACE_CARD_TYPE;
+    if (!config.card || !(watchFace || ['tile', 'button', 'entity', 'gauge', MESSAGE_CARD_TYPE].includes(config.card.type))) {
+      throw new Error('Remote Compose requires a tile, button, entity, gauge or watchface card.');
+    }
+    if (watchFace) {
+      // A published Wear OS face (design server WatchFaces): it ticks on the player's clock and
+      // carries its own defaults for what a watch would push, so no host bindings are needed.
+      if (typeof config.card.face !== 'string' || !config.card.face.trim()) {
+        throw new Error('A watchface card needs `face`: a design id published on ui.coo.ee.');
+      }
+      if (config.card.size != null && !(Number.isInteger(config.card.size) && config.card.size >= 64 && config.card.size <= 1024)) {
+        throw new Error('A watchface card\'s `size` is a whole number of pixels, 64 to 1024.');
+      }
     }
     if (config.template_url != null) {
       if (typeof config.template_url !== 'string' || !config.template_url.trim()) {
@@ -20,7 +35,8 @@ export class RemoteComposeCard extends HaCardElement {
     const previous = JSON.stringify(this.config?.card);
     if (previous !== JSON.stringify(config.card)) this.inputDrafts?.clear();
     this.config = structuredClone(config);
-    this.setAttribute('require-host-bindings', '');
+    if (watchFace) this.removeAttribute('require-host-bindings');
+    else this.setAttribute('require-host-bindings', '');
     // Set local mode before attributes can trigger an asynchronous start/OAuth.
     this.setStates(this._hass?.states ?? {});
     const attrs = {
@@ -29,7 +45,8 @@ export class RemoteComposeCard extends HaCardElement {
       design: config.design,
       'template-url': config.template_url,
       'card-style': config.card_style ?? 'classic',
-      height: config.height,
+      // A face is square: by default as tall as the document is wide.
+      height: config.height ?? (watchFace ? (config.card.size ?? WATCH_FACE_DEFAULT_SIZE) : undefined),
       theme: this._hass?.themes?.darkMode ? 'dark' : 'light',
     };
     for (const [name, value] of Object.entries(attrs)) {

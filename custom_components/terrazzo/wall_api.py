@@ -46,6 +46,8 @@ DEFAULT_SIZES = {
     "humidifier": (6, 6),
     "clock": (6, 2),
     "heading": (12, 1),
+    # A published Wear OS face (design server WatchFaces): square.
+    "watchface": (6, 6),
 }
 
 

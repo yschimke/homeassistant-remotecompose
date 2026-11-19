@@ -206,6 +206,9 @@ composeai-preview-annotations = { module = "ee.schimke.composeai:preview-annotat
 composeai-preview-overrides = { module = "ee.schimke.composeai:data-preview-overrides-runtime" }
 composeai-tools-bom = { module = "ee.schimke.composeai:compose-ai-tools-bom", version.ref = "compose-ai-tools" }
 composeai-preview-discovery = { module = "ee.schimke.composeai:preview-discovery" }
+# Watch Face Format XML to Remote Compose (versionless through composeai-tools-bom): the design
+# server plays published watch faces as cards (design-server WatchFaces).
+composeai-dwf-remote-compose = { module = "ee.schimke.composeai:dwf-remote-compose" }
 composeai-ui-builder-bom = { module = "ee.schimke.composeai:compose-preview-ui-builder-bom", version.ref = "compose-ui-builder" }
 composeai-ui-builder-runtime = { module = "ee.schimke.composeai:compose-preview-ui-builder-runtime" }
 
