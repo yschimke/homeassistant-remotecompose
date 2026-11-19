@@ -164,6 +164,31 @@ class WatchFacesTest {
   }
 
   @Test
+  fun aFaceWithoutSecondsPlaysAsAnAndroid17LauncherWidget() = runBlocking {
+    // What watchface-tools' Faces phone app asks for: ticking, no second hand, its widget's size.
+    val widget = buildJsonObject {
+      put("type", "watchface")
+      put("face", "simple_analog")
+      put("size", 416)
+      put("sweep", false)
+      put("seconds", false)
+    }
+    val match = assertNotNull(WatchFaces(FakeSite(listing(), apk)).resolve(widget))
+    val bytes = assertNotNull(WatchFaceBlobs.blob(match.sha256))
+    fun fold(profile: String) =
+      assertNotNull(
+        PlayerFolding.fold(
+          bytes,
+          PlayerFolding.parsePlayer(buildJsonObject { put("profile", profile) }),
+          match.bindings.keys,
+        ),
+      )
+    // API 37's launcher player plays it as is; Android 16's has no DRAW_TO_BITMAP.
+    assertEquals(emptyList(), fold("widgets-v7").notes)
+    assertTrue(fold("widgets-v6").notes.any { "DRAW_TO_BITMAP" in it })
+  }
+
+  @Test
   fun sweepElementsAreRemovedWhateverTheirForm() {
     val xml =
       """
