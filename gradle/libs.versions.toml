@@ -240,8 +240,8 @@ meta-spatial-sdk-mruk = { module = "com.meta.spatial:meta-spatial-sdk-mruk", ver
 meta-spatial-sdk-uiset = { module = "com.meta.spatial:meta-spatial-sdk-uiset", version.ref = "meta-spatial" }
 
 # Wear Compose (stub module — full app lands later)
-wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.7.1" }
-wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.7.1" }
+wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.7.2" }
+wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.7.2" }
 wear-tooling-preview = { module = "androidx.wear:wear-tooling-preview", version = "1.0.0" }
 
 # AndroidX Glance Wear — Wear OS widget framework (alpha).
