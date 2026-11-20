@@ -16,7 +16,7 @@ ksp = "2.3.14"
 # Compose: the alpha-channel BOM, for the Compose 1.13 line (1.13.0-beta02 in 2026.10.01). Compose
 # Multiplatform 1.13 already pulled the Android modules onto 1.13, past the stable BOM's 1.12, and
 # Glimmer needs 1.13; this lines every module up on one 1.13 release.
-compose-bom = "2026.11.00"
+compose-bom = "2026.11.01"
 
 # RemoteCompose + the Wear widget stack that sits on it (APIs change per alpha).
 # These three move in lockstep — `remote-material3` and `glance-wear` both
@@ -220,7 +220,7 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 # MaterialKolor currently raises Material 3 above the stable BOM mapping. Keep
 # that alpha aligned with Foundation 1.12's CustomStyle ABI.
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-rc01" }
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 # Jetpack Compose for XR: the room controls' spatial panels on Android XR headsets (`app/.../room`).
@@ -266,7 +266,7 @@ androidx-appfunctions-compiler = { module = "androidx.appfunctions:appfunctions-
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.12.0" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.2" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.2" }
-androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.4.0" }
+androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.5.0" }
 appauth = { module = "net.openid:appauth", version = "0.11.1" }
 # Credential Manager Restore Credentials: escrows the token vault's key for zero-tap sign-in
 # restoration on a new phone (TokenVault, RestoreKeyEscrow).
