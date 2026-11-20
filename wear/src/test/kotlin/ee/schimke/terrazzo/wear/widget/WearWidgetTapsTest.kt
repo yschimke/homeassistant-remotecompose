@@ -5,7 +5,7 @@ package ee.schimke.terrazzo.wear.widget
 import android.app.PendingIntent
 import android.os.Bundle
 import androidx.compose.remote.creation.compose.action.PendingIntentAction
-import androidx.compose.remote.creation.compose.action.pendingIntentAction
+import androidx.compose.remote.creation.compose.action.rememberPendingIntentAction
 import androidx.compose.remote.creation.compose.layout.RemoteBox as AndroidxRemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier as AndroidxRemoteModifier
 import androidx.compose.remote.creation.compose.modifier.clickable as androidxClickable
@@ -126,7 +126,7 @@ class WearWidgetTapsTest {
     val reference = runBlocking {
       WearWidgetDocument(WearWidgetBrush.Companion) {
           // Glance Wear's capture is AndroidX's creation API, as `pendingIntentAction` is.
-          val action = pendingIntentAction { openIntent() }
+          val action = rememberPendingIntentAction { openIntent() }
           AndroidxRemoteBox(
             AndroidxRemoteModifier.androidxSize(80.androidxRdp).androidxClickable(action),
           ) {}
