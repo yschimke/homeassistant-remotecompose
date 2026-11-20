@@ -13,7 +13,7 @@ kotlin {
   android {
     namespace = "ee.schimke.terrazzo.core"
     compileSdk {
-      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
     }
     // RemoteCompose widget needs API 35+; align with :app so Android
     // sources can reference the same platform APIs.

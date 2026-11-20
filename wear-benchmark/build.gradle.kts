@@ -17,7 +17,7 @@ plugins {
 android {
   namespace = "ee.schimke.terrazzo.wear.benchmark"
   compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
   }
   defaultConfig {
     // `:wear` allows 30; profile capture without root needs 33.

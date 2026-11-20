@@ -14,7 +14,7 @@ android {
   // compiles against the catalog SDK. Its runtime target remains API 34, with newer Quest APIs
   // guarded in code so Horizon OS API-34 firmware keeps its supported fallback path.
   compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
   }
   defaultConfig {
     applicationId = "ee.schimke.terrazzo.quest"

@@ -16,7 +16,7 @@ kotlin {
   android {
     namespace = "ee.schimke.rc.m3"
     compileSdk {
-      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
     }
     minSdk = libs.versions.android.minSdk.get().toInt()
     withHostTest {}

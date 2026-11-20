@@ -7,7 +7,7 @@ plugins {
 android {
   namespace = "ee.schimke.terrazzo.tv"
   compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
   }
   defaultConfig {
     applicationId = "ee.schimke.terrazzo.tv"

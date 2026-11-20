@@ -13,7 +13,7 @@ plugins {
 android {
   namespace = "ee.schimke.terrazzo.glasses"
   compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
   }
   defaultConfig {
     applicationId = "ee.schimke.terrazzo.glasses"
