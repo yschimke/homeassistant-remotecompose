@@ -24,7 +24,7 @@ kotlin {
   android {
     namespace = "ee.schimke.ha.designs"
     compileSdk {
-      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
     }
     minSdk = libs.versions.android.minSdk.get().toInt()
     withHostTest { isIncludeAndroidResources = true }

@@ -16,7 +16,7 @@ plugins {
 android {
   namespace = "ee.schimke.terrazzo.benchmark"
   compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
   }
   defaultConfig {
     // Same floor as `:app`.

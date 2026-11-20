@@ -7,7 +7,7 @@ plugins {
 android {
   namespace = "ee.schimke.catalog.host"
   compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
   }
   defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
   compileOptions {

@@ -7,7 +7,7 @@ plugins {
 android {
   namespace = "ee.schimke.ha.rc.ui"
   compileSdk {
-    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
   }
   defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
   buildFeatures { compose = true }

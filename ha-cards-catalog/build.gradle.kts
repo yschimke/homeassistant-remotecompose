@@ -42,7 +42,7 @@ kotlin {
   android {
     namespace = "ee.schimke.ha.cards"
     compileSdk {
-      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
     }
     minSdk = libs.versions.android.minSdk.get().toInt()
     androidResources { enable = true }

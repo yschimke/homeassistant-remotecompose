@@ -10,7 +10,7 @@ kotlin {
   android {
     namespace = "ee.schimke.terrazzo.player.shared"
     compileSdk {
-      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
     }
     minSdk = libs.versions.android.minSdk.get().toInt()
     withHostTest {}
