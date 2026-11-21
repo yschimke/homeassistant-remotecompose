@@ -162,9 +162,21 @@ host-themable, also shrinks it.
 | HA, through the integration | `/api/terrazzo/designs/livery/v1/...` (add `livery/v1/` to `design_route.py`'s allowed paths); HA auth as today |
 | Discovery | `terrazzo/design_server` (WS) adds `{livery: {manifest, keys}}`, so the app finds the catalog on whichever HA it is connected to, with no setting |
 
-- **Library channel.** These are static files, so the existing `LibraryChannels` store, dedup
-  upload and `LibraryMirror` keep working unchanged. A mirrored manifest keeps the upstream's
-  detached signature, which covers its exact bytes, so the add-on serves a library it cannot alter.
+- **Library channel.** The channel store has to change before it can carry a signed catalog. Today
+  `LibraryChannels.install` re-encodes `manifest.json` with a server-stamped serial, TTL and expiry
+  (`LibraryChannels.kt:170-180`). That breaks a detached signature over the manifest's exact bytes.
+  Its `LIBRARY_FILE` allowlist also rejects `manifest.sig.json` and `assets/` on upload, and drops
+  them from the mirror index.
+
+  Step 3 therefore adds a Livery channel kind to the store:
+  - The manifest is stored and served byte for byte. The serial, TTL and expiry are set by the
+    publisher before signing, and the server checks the serial only to refuse a rollback.
+  - `manifest.sig.json`, `assets/` and `previews/` are allowed in upload, `files.json` and
+    mirroring.
+
+  With that, the dedup upload and `LibraryMirror` work as before. A mirrored manifest keeps the
+  upstream's signature, so the add-on serves a library it cannot alter. `LibraryEditPublisher`
+  saves, which the server stamps today, then need the signing decision under Risks.
 - **Personal catalog** (`ha-cards-user`, one per HA user or GitHub login). Today, private designs
   are folded into a per-caller manifest, which drops the signature. Instead:
   - Serve each user's `OnRequest` designs as a **separate catalog**.
