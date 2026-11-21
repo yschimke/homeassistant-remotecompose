@@ -23,6 +23,9 @@ MAX_SESSIONS = 50
 MAX_DRAFTS = 10
 MAX_NOTES = 50
 MAX_MESSAGES = 50
+# The built-in agent's steps (its tool calls) kept per session, newest last.
+MAX_STEPS = 100
+MAX_STEP_TEXT = 500
 MAX_STATUS = 120
 MAX_TEXT = 2000
 MAX_DRAFT_BYTES = 512 * 1024
@@ -361,6 +364,22 @@ class EditSessions:
         self._touch(session, now)
         return note
 
+    def agent_step(self, session_id, tool, arguments, output, ok, now):
+        """One step the agent took (a tool it called, what it asked and what it got), in the same
+        sequence as notes and messages, so the person sees the agent work between replies."""
+        session = self._open(session_id, now)
+        step = {
+            "tool": _text(tool, "The tool", required=True)[:64],
+            "arguments": _text(arguments, "The arguments")[:MAX_STEP_TEXT],
+            "output": _text(output, "The output")[:MAX_STEP_TEXT],
+            "ok": bool(ok),
+            "at": now,
+        }
+        step["seq"] = self._next_seq(session)
+        session["steps"] = (session.get("steps", []) + [step])[-MAX_STEPS:]
+        self._touch(session, now)
+        return step
+
     def agent_message(self, session_id, text, user_id, now):
         """Something the agent says to the person: a question, or what it changed."""
         session = self._open(session_id, now)
@@ -521,6 +540,7 @@ def summary(session, with_configs=False):
         "expires_at": session["expires_at"],
         "notes": session["notes"],
         "messages": session.get("messages", []),
+        "steps": session.get("steps", []),
         "agent": session.get("agent"),
         "seq": session.get("seq", 0),
         "applied": session["applied"],

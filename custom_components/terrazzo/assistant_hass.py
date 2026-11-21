@@ -185,9 +185,17 @@ class Assistant:
                     payload = {"error": (await response.text())[:300]}
                 return assistant.completion_message(response.status, payload)
 
+        def on_step(tool, arguments, output, ok):
+            store = edits.edits_of(hass)
+            try:
+                store.sessions.agent_step(session_id, tool, arguments, output, ok, edits._now())
+                store.changed(store.sessions.get(session_id, edits._now()))
+            except edit_sessions.SessionError:
+                pass
+
         set_status("Thinking")
         try:
-            reply = await assistant.run_turn(session, home, complete, set_status)
+            reply = await assistant.run_turn(session, home, complete, set_status, on_step=on_step)
         except assistant.ModelError as failure:
             reply = f"Sorry, I couldn't answer: {failure}"
             self._failed(session_id, str(failure))

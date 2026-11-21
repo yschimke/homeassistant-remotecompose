@@ -221,6 +221,49 @@ def conversation(session):
     return turns
 
 
+def describe_step(name, arguments, result):
+    """A tool call as the person sees it in the chat: (what it asked, what it got, whether it
+    worked), in a few words rather than the raw JSON."""
+    arguments = arguments if isinstance(arguments, dict) else {}
+    result = result if isinstance(result, dict) else {}
+    if "error" in result:
+        return _step_arguments(name, arguments), str(result["error"]), False
+    if name == "find_entities":
+        found = result.get("entities") or []
+        shown = ", ".join(e.get("name") or e.get("entity_id", "") for e in found[:5])
+        more = f" and {len(found) - 5} more" if len(found) > 5 else ""
+        output = f"{len(found)} found: {shown}{more}" if found else "Nothing found"
+    elif name == "get_entity_state":
+        unit = result.get("unit") or ""
+        output = f"{result.get('name', '')}: {result.get('state', '')}{(' ' + unit) if unit else ''}"
+    elif name == "home_overview":
+        areas = result.get("areas") or []
+        output = f"{len(areas)} areas: " + ", ".join(a.get("area", "") for a in areas[:8])
+    elif name == "list_dashboards":
+        dashboards = result.get("dashboards") or []
+        output = ", ".join(d.get("title", "") for d in dashboards[:8]) or "None"
+    elif name == "get_dashboard":
+        views = ((result.get("config") or {}).get("views")) or []
+        output = f"{len(views)} view{'' if len(views) == 1 else 's'}"
+    elif name == "submit_draft":
+        output = "Draft submitted"
+    else:
+        output = "Done"
+    return _step_arguments(name, arguments), output, True
+
+
+def _step_arguments(name, arguments):
+    if name == "submit_draft":
+        summary = arguments.get("summary")
+        return summary if isinstance(summary, str) else ""
+    shown = []
+    for key in ("query", "domain", "entity_id", "url_path"):
+        value = arguments.get(key)
+        if isinstance(value, str) and value:
+            shown.append(value)
+    return " · ".join(shown)
+
+
 def _clip(text, limit):
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
@@ -260,12 +303,13 @@ def _arguments(call):
     return parsed if isinstance(parsed, dict) else None
 
 
-async def run_turn(session, home, complete, set_status=None, max_steps=MAX_STEPS):
+async def run_turn(session, home, complete, set_status=None, max_steps=MAX_STEPS, on_step=None):
     """Answer the person's newest notes in [session]: returns the reply to post (may be empty).
 
     [complete] is `async (messages, tools) -> assistant message` in OpenAI's shape, [home] is the
     MCP server's home bound to the person (with `overview()` and a session-aware
-    `submit_draft`), and [set_status] shows what the agent is doing."""
+    `submit_draft`), [set_status] shows what the agent is doing, and [on_step] gets each tool
+    call as `(tool, arguments, output, ok)` in words (`describe_step`) for the person's chat."""
     current = await home.current_config(session)
     messages = [{"role": "system", "content": system_prompt(session, home.name, current)}]
     messages += conversation(session)
@@ -294,6 +338,8 @@ async def run_turn(session, home, complete, set_status=None, max_steps=MAX_STEPS
                 result = await _run_tool(home, session["id"], name, arguments)
                 if name == "submit_draft" and "error" not in result:
                     drafted = True
+            if on_step is not None:
+                on_step(name, *describe_step(name, arguments, result))
             messages.append(
                 {
                     "role": "tool",
