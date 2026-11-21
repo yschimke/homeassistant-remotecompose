@@ -61,3 +61,15 @@ test('no design for the card is an error saying why', async () => {
     /the resolver returned no design/,
   );
 });
+
+test('a chosen design goes to the resolver by id, and is its own cache entry', async () => {
+  const seen = [];
+  const ok = fakeFetch(200, { sha256: SHA, bindings: {} }, seen);
+  const printer = { type: 'tile', entity: 'light.printer_chamber' };
+  await resolveDesign('https://chosen.test/r', printer, {}, ok);
+  await resolveDesign('https://chosen.test/r', printer, { designId: 'user:printer' }, ok);
+  await resolveDesign('https://chosen.test/r', printer, { designId: 'user:printer' }, ok);
+  assert.equal(seen.length, 2);
+  assert.deepEqual(JSON.parse(seen[0].init.body), { card: printer, cardStyle: 'classic', dark: false });
+  assert.deepEqual(JSON.parse(seen[1].init.body), { card: printer, cardStyle: 'classic', dark: false, designId: 'user:printer' });
+});

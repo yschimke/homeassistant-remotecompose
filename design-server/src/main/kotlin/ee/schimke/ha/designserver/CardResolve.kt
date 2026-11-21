@@ -95,6 +95,11 @@ data class ResolveRequest(
    * is the one made for it, under its own sha. Null for a full player.
    */
   val player: PlayerFolding.Player? = null,
+  /**
+   * The design the card was set to (`library:tile`, a device design's id): its entry for the card's
+   * key is served when the library has one, else the card resolves as if none were chosen.
+   */
+  val designId: String? = null,
 ) {
   /** The clock values are computed with: now, in [timeZone]. */
   val clock: HaClock
@@ -111,7 +116,7 @@ data class ResolveRequest(
   companion object {
     /**
      * [CardSchema.parseRequest]'s body, plus optional `cardStyle`, `dark`, `palette`, `shapeHint`,
-     * `timeZone`, `player`.
+     * `timeZone`, `player`, `designId`.
      */
     fun parse(body: JsonElement): ResolveRequest {
       val (card, states) = CardSchema.parseRequest(body)
@@ -133,6 +138,7 @@ data class ResolveRequest(
         shapeHint = shapeHint,
         timeZone = text("timeZone"),
         player = (obj["player"] as? JsonObject)?.let(PlayerFolding::parsePlayer),
+        designId = text("designId")?.takeIf { it.isNotBlank() },
       )
     }
   }
@@ -260,12 +266,28 @@ object CardResolve {
     }
   }
 
+  /**
+   * The chosen design's ([ResolveRequest.designId]) entry for [request]'s card, or null when there
+   * is no choice or the library has no entry of that design that draws it.
+   */
+  fun resolveChosen(library: DesignLibrary, request: ResolveRequest): CardMatch? =
+    request.designId?.let { resolve(library, request, onlyDesign = it) }
+
   /** The design [request]'s card renders as, or null when no library design has its slots. */
-  fun resolve(library: DesignLibrary, request: ResolveRequest): CardMatch? {
+  fun resolve(library: DesignLibrary, request: ResolveRequest): CardMatch? =
+    resolve(library, request, onlyDesign = null)
+
+  private fun resolve(
+    library: DesignLibrary,
+    request: ResolveRequest,
+    onlyDesign: String?,
+  ): CardMatch? {
     val schema = CardSchema.fromCard(request.card, request.states, library)
     val candidates =
       CardSchema.templatesWithSlots(library, schema.cardType, schema.slots.map { it.slot }).filter {
-        it.key.surface == DesignSurface.MobileApp && !it.entry.revoked
+        it.key.surface == DesignSurface.MobileApp &&
+          !it.entry.revoked &&
+          (onlyDesign == null || it.entry.stableDesignId == onlyDesign)
       }
     if (candidates.isEmpty()) return null
 

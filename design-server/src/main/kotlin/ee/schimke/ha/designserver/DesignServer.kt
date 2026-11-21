@@ -385,6 +385,8 @@ fun Application.designServer(
       // The card's exact design when its states say what it is; the closest library one if not.
       val match =
         face
+          // A design the card was set to, ahead of the one its config would pick.
+          ?: CardResolve.resolveChosen(holder.current(), request)
           ?: runCatching { CardResolve.resolveExact(generator, request) }.getOrNull()
           ?: CardResolve.resolve(holder.current(), request)
           ?: return@post call.respondText(
