@@ -162,9 +162,11 @@ Proposed:
   command-name constants, wall `v1` DTOs.
 - **`terrazzo-client`**: move `TerrazzoInfo` and `detectTerrazzo` there, over a small
   `HaWebSocketTransport` interface (which `HaClient` implements).
-- **`HaSession`:** `LiveHaSession` still probes each command and catches `unknown_command`. It
-  should call `detectTerrazzo()` once per connection and gate each Terrazzo member on its
-  capability; the members then become capability interfaces checked with `as?`.
+- **`HaSession`:** done for gating. `LiveHaSession` asks `terrazzo/info` once per connection
+  (`terrazzoIntegration()`, reset on reconnect). A capability the integration leaves out for this
+  user is answered without a round trip; an integration older than the handshake is still tried
+  command by command. Still open: turning the Terrazzo members into capability interfaces checked
+  with `as?`, and surfacing `Absent`/`TooOld`/`Unsupported` in the UI.
 - **Add-on and design server:** mirror `terrazzo/info` as `GET /v1/info`.
 
 ### Dependencies, and supplying a configured HTTP client per platform

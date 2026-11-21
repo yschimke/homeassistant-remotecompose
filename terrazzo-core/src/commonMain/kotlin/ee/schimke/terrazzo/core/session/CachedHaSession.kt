@@ -143,6 +143,8 @@ class CachedHaSession(
   override val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits?
     get() = delegate.agentEdits
 
+  override suspend fun terrazzoIntegration() = delegate.terrazzoIntegration()
+
   override suspend fun builtInAgent() = delegate.builtInAgent()
 
   override fun cloudAgentEdits(
