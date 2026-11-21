@@ -18,6 +18,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.liveDashboardSnapshots
+import ee.schimke.terrazzo.core.session.terrazzo
 import ee.schimke.terrazzo.shared.AgentOnThisDevice
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.JsonObject
@@ -45,17 +46,14 @@ internal fun rememberPhoneAgentEdits(
     remember(session, relayServer, builtInAgent) {
       if (builtInAgent) null
       else
-        session.cloudAgentEdits(relayServer, AgentOnThisDevice.dashboardGrants()) {
+        session.terrazzo?.cloudAgentEdits(relayServer, AgentOnThisDevice.dashboardGrants()) {
           AgentOnThisDevice.link(relayServer)
         }
     }
   DisposableEffect(cloudEdits) { onDispose { cloudEdits?.close() } }
   return remember(session, cloudEdits) {
-    when {
-      cloudEdits != null -> PhoneAgentEdits(cloudEdits, relayServer)
-      session.agentEdits != null -> PhoneAgentEdits(session.agentEdits!!, null)
-      else -> null
-    }
+    cloudEdits?.let { PhoneAgentEdits(it, relayServer) }
+      ?: session.terrazzo?.agentEdits?.let { PhoneAgentEdits(it, null) }
   }
 }
 

@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.TerrazzoIntegration
+import ee.schimke.ha.client.cache.OfflineCacheStorage
 import ee.schimke.ha.client.dashboard.BuiltInAgent
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
@@ -10,10 +11,13 @@ import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
@@ -172,5 +176,48 @@ class LiveHaSessionTerrazzoTest {
     } finally {
       session.close()
     }
+  }
+
+  @Test
+  fun aCachedSessionForwardsEveryTerrazzoCommand() = testApplication {
+    val sent = CopyOnWriteArrayList<String>()
+    fakeHa(sent) { type, id ->
+      when (type) {
+        "terrazzo/info" ->
+          ok(
+            id,
+            """{"protocol":1,"min_client":1,"version":"0.1.99","capabilities":
+              {"design_selections":1,"design_server":{"available":true}}}""",
+          )
+        "terrazzo/design_selections/get" -> ok(id, """{"cards":{"card-1":"design-1"}}""")
+        "terrazzo/design_selections/set" -> ok(id, "{}")
+        else -> unknown(id)
+      }
+    }
+    val live = session()
+    val cached = CachedHaSession(live, OfflineCacheStorage(createTempDirectory("cache").toFile()))
+    try {
+      live.connect()
+      val terrazzo = assertNotNull(cached.terrazzo)
+      assertEquals(mapOf("card-1" to "design-1"), terrazzo.sharedDesignSelections())
+      terrazzo.setSharedDesignSelection("card-1", "design-2")
+      assertEquals(
+        listOf("terrazzo/info", "terrazzo/design_selections/get", "terrazzo/design_selections/set"),
+        sent.terrazzo(),
+      )
+    } finally {
+      live.close()
+    }
+  }
+
+  @Test
+  fun aSessionWithNoHomeAssistantBehindItHasNoTerrazzoCommands() = runTest {
+    val store = OfflineCacheStorage(createTempDirectory("cache").toFile())
+    assertNull(DemoHaSession().terrazzo)
+    // Cached around nothing live: it can be asked, and answers as without the integration.
+    val cacheOnly = assertNotNull(CachedHaSession.cacheOnly("http://ha.test", store).terrazzo)
+    assertNull(cacheOnly.terrazzoIntegration())
+    assertNull(cacheOnly.sharedDesignSelections())
+    assertEquals(BuiltInAgent.Off, cacheOnly.builtInAgent())
   }
 }

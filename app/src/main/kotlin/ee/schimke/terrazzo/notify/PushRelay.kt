@@ -6,6 +6,7 @@ import ee.schimke.terrazzo.BuildConfig
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.mobileapp.PushTarget
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.terrazzo
 import ee.schimke.terrazzo.widget.WidgetActionRunner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
@@ -56,14 +57,16 @@ object PushRelay {
     fcmToken: String? = null,
   ) {
     val relay = BuildConfig.PUSH_RELAY_URL.ifEmpty { null } ?: return
+    // Silent push is the Terrazzo integration's; a session that can't reach it has none.
+    val terrazzo = session.terrazzo ?: return
     val token = fcmToken ?: fcmToken() ?: return
     try {
-      val (url, secret) = session.registerSilentPush(webhookId, token, relay) ?: return
+      val (url, secret) = terrazzo.registerSilentPush(webhookId, token, relay) ?: return
       val stored = graph.mobileAppStore.get(session.baseUrl)
       if (stored != null && (stored.pushUrl != url || stored.pushToken != secret)) {
         graph.mobileAppRegistrar.updatePush(session.baseUrl, PushTarget(url, secret))
       }
-      val held = session.takeHeldNotifications(webhookId)
+      val held = terrazzo.takeHeldNotifications(webhookId)
       // Taken is gone from the integration: post every one, even if the connection drops now.
       withContext(NonCancellable) {
         for (notification in held) HaPushReceiver.post(context, session, notification, watchHasApp)

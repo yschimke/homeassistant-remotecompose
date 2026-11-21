@@ -152,8 +152,8 @@ But:
   `/v1/snapshot` and `/v1/stream`, and several `/api/studio/dashboard/*` routes have no Kotlin
   client.
 - **Mixed into the HA client.** The `terrazzo/*` methods sit in the 1296-line `HaClient` next to the
-  core HA commands. `HaSession` (in the unpublished `terrazzo-core`) exposes them as members every
-  implementation has to carry.
+  core HA commands. `HaSession` (in the unpublished `terrazzo-core`) exposed them as members every
+  implementation had to carry, until `TerrazzoSession` (below).
 
 Proposed:
 
@@ -168,8 +168,15 @@ Proposed:
   command by command. Settings shows the answer on Android and in the shared app
   (`TerrazzoIntegrationStatus`): installed, missing or too old (with an install or update link), or
   newer than the app. The shared app gates its edit sessions, built-in agent and design server on
-  the same handshake. Still open: turning the Terrazzo members into capability interfaces checked
-  with `as?`.
+  the same handshake.
+- **Terrazzo members off `HaSession`:** done. They are on `TerrazzoSession`, which `LiveHaSession`
+  and `CachedHaSession` implement; callers ask `session.terrazzo` (an `as?`). `DemoHaSession`,
+  `OfflineOnlySession` and an app's own `HaSession` over Core carry none of them. One interface
+  rather than the review's three (agent, design selections, push): every session that can reach
+  Home Assistant can ask for all of them, so a type per group would only add casts. Whether each is
+  actually offered is the runtime answer, from `terrazzoIntegration()`. Moving them showed that
+  `CachedHaSession` never forwarded shared design selections, so a cached session (the Android
+  app's) answered them as unsupported; it forwards them now.
 - **Add-on and design server:** done. Both answer an info endpoint in `terrazzo/info`'s shape
   (`protocol`, `min_client`, `version`, `capabilities`; a capability left out is not served):
   - the add-on: `GET /v1/info` (`AddonInfo`, `AddonClient.info()`). It leaves `cards` out while

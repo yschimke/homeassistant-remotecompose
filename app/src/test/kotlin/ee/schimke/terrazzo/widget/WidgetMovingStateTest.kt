@@ -31,6 +31,7 @@ import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LiveHaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
+import ee.schimke.terrazzo.core.session.TerrazzoSession
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.monitor.createMonitor
@@ -860,7 +861,7 @@ class WidgetMovingStateTest {
       { _, _, lease ->
         lease
       },
-  ) : HaSession {
+  ) : HaSession, TerrazzoSession {
     private val _status = MutableStateFlow(initialStatus)
     override val connectionStatus: StateFlow<SessionConnectionStatus> = _status
 

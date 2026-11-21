@@ -90,6 +90,7 @@ import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.prefs.WidgetCardFontsPref
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.terrazzo
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
@@ -211,7 +212,7 @@ internal fun SettingsScreen(
             produceState<TerrazzoIntegration?>(null, session) {
               value =
                 try {
-                  session.terrazzoIntegration()
+                  session.terrazzo?.terrazzoIntegration()
                 } catch (e: CancellationException) {
                   throw e
                 } catch (_: Exception) {
