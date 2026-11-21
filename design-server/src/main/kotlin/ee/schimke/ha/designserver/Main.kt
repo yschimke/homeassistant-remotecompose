@@ -167,6 +167,7 @@ fun main(args: Array<String>) {
           (System.getenv("LIBRARY_UPSTREAM_POLL_SECONDS")?.toLongOrNull() ?: 3_600L) * 1_000,
         googleFonts = googleFonts,
         watchFaces = watchFaces,
+        version = System.getenv("DESIGN_SERVER_VERSION")?.takeIf { it.isNotBlank() },
       )
     }
     .start(wait = true)

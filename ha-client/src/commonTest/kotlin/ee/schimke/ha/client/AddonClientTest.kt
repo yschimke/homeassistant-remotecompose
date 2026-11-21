@@ -141,4 +141,35 @@ class AddonClientTest {
       client.close()
     }
   }
+
+  @Test
+  fun info_readsCapabilitiesAndIgnoresOnesItDoesNotKnow() = runTest {
+    val engine = MockEngine { request ->
+      assertEquals("/v1/info", request.url.encodedPath)
+      respond(
+        """{"protocol":1,"min_client":1,"version":"0.2.0",
+          "capabilities":{"dashboards":1,"stream":2,"thumbnails":1}}""",
+        headers = headersOf("Content-Type", "application/json"),
+      )
+    }
+    val client = AddonClient("http://addon", engine = engine)
+    try {
+      val info = assertNotNull(client.info())
+      assertEquals("0.2.0", info.version)
+      assertEquals(AddonCapabilities(dashboards = 1, stream = 2), info.capabilities)
+    } finally {
+      client.close()
+    }
+  }
+
+  @Test
+  fun info_isNullForAnAddonOlderThanTheEndpoint() = runTest {
+    val client =
+      AddonClient("http://addon", engine = MockEngine { respondError(HttpStatusCode.NotFound) })
+    try {
+      assertNull(client.info())
+    } finally {
+      client.close()
+    }
+  }
 }

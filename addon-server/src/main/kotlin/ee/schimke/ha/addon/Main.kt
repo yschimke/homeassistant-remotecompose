@@ -9,6 +9,7 @@ import ee.schimke.ha.addon.auth.SupervisorCoreUrl
 import ee.schimke.ha.addon.bridge.HaSupervisorBridge
 import ee.schimke.ha.addon.routes.dashboardRoutes
 import ee.schimke.ha.addon.routes.healthRoutes
+import ee.schimke.ha.addon.routes.infoRoute
 import ee.schimke.ha.addon.routes.streamRoute
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO as ClientCIO
@@ -59,7 +60,7 @@ fun main() {
 
   val server =
     embeddedServer(CIO, port = cfg.port, host = "0.0.0.0") {
-      configure(bridge) {
+      configure(bridge, version = System.getenv("ADDON_VERSION")?.takeIf { it.isNotBlank() }) {
         trustedProxyAddresses = trustedProxies
         tokenValidator = validator
       }
@@ -76,7 +77,12 @@ fun main() {
   server.start(wait = true)
 }
 
-internal fun Application.configure(bridge: HaSupervisorBridge, auth: AddonAuthConfig.() -> Unit) {
+internal fun Application.configure(
+  bridge: HaSupervisorBridge,
+  /** This build's release, for `/v1/info`; null when it wasn't built with one. */
+  version: String? = null,
+  auth: AddonAuthConfig.() -> Unit,
+) {
   install(DefaultHeaders) { header("X-Powered-By", "ha-remotecompose") }
   install(CallLogging)
   install(AddonAuth, auth)
@@ -102,6 +108,7 @@ internal fun Application.configure(bridge: HaSupervisorBridge, auth: AddonAuthCo
 
   routing {
     healthRoutes(bridge)
+    infoRoute(version)
     dashboardRoutes(bridge)
     streamRoute(bridge)
   }

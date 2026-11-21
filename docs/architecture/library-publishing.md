@@ -167,7 +167,14 @@ Proposed:
   user is answered without a round trip; an integration older than the handshake is still tried
   command by command. Still open: turning the Terrazzo members into capability interfaces checked
   with `as?`, and surfacing `Absent`/`TooOld`/`Unsupported` in the UI.
-- **Add-on and design server:** mirror `terrazzo/info` as `GET /v1/info`.
+- **Add-on and design server:** done. Both answer an info endpoint in `terrazzo/info`'s shape
+  (`protocol`, `min_client`, `version`, `capabilities`; a capability left out is not served):
+  - the add-on: `GET /v1/info` (`AddonInfo`, `AddonClient.info()`). It leaves `cards` out while
+    `/v1/cards/{key}.rc` answers 501.
+  - the design server: `GET /designs/v1/info`, and each channel's (`DesignLibraryInfo`,
+    `DesignRepository.info()`). Public like the manifest: it describes the server, not the
+    caller. A static host answers 404, as an older server does, so null means "manifest and blobs
+    only".
 
 ### Dependencies, and supplying a configured HTTP client per platform
 

@@ -1,5 +1,8 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.client.design.DesignChannelsCapability
+import ee.schimke.ha.client.design.DesignLibraryCapabilities
+import ee.schimke.ha.client.design.DesignLibraryInfo
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.client.design.DesignRepository
 import ee.schimke.ha.client.design.DesignServerConfig
@@ -51,6 +54,20 @@ class ClientCompatibilityTest {
     assertContentEquals(template, assertNotNull(repository.resolve(key)).bytes)
     // The second refresh revalidates the manifest by ETag.
     assertEquals(RefreshResult.NotModified, repository.refresh(force = true))
+    // What a plain server offers: no publishing, no private designs, no watch faces.
+    val info = assertNotNull(repository.info())
+    assertEquals(DesignLibraryInfo.PROTOCOL, info.protocol)
+    assertEquals(
+      DesignLibraryCapabilities(
+        manifest = 1,
+        generate = 1,
+        fonts = 1,
+        glyphRanges = 1,
+        bitmapFonts = 1,
+        channels = DesignChannelsCapability(publish = false),
+      ),
+      info.capabilities,
+    )
   }
 
   @Test
@@ -102,5 +119,8 @@ class ClientCompatibilityTest {
     val own = repository(github.deviceToken("octocat"))
     assertEquals(RefreshResult.Updated, own.refresh(force = true))
     assertContentEquals(template, assertNotNull(own.resolve(garage)).bytes)
+    // The same answer for both: it describes the server, not the caller.
+    assertEquals(1, assertNotNull(anonymous.info()).capabilities.privateDesigns)
+    assertEquals(anonymous.info(), own.info())
   }
 }

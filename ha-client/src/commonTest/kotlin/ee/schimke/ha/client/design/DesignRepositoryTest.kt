@@ -838,4 +838,28 @@ class DesignRepositoryTest {
     val repository = DesignRepository(DesignServerConfig.Off, InMemoryDesignStore(), null) { now }
     assertEquals(false, repository.generate(unlisted))
   }
+
+  @Test
+  fun infoReadsWhatTheServerServes_andAStaticHostHasNone() = runTest {
+    val server =
+      FakeHost(
+        mapOf(
+          "info" to
+            """{"protocol":1,"min_client":1,"capabilities":
+              {"manifest":1,"generate":1,"channels":{"publish":false},"later":3}}"""
+              .encodeToByteArray(),
+        ),
+      )
+    assertEquals(
+      DesignLibraryCapabilities(
+        manifest = 1,
+        generate = 1,
+        channels = DesignChannelsCapability(publish = false),
+      ),
+      assertNotNull(repo(server).info()).capabilities,
+    )
+    // manifest.json and blobs only, as a static host serves them.
+    assertNull(repo(FakeHost(published().files)).info())
+    assertNull(repo(null).info())
+  }
 }
