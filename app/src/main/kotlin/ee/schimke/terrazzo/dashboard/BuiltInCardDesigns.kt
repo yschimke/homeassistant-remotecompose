@@ -2,7 +2,7 @@ package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
 import android.util.Log
-import ee.schimke.ha.client.design.BundledDesigns
+import ee.schimke.ha.design.BundledDesigns
 import java.io.File
 import java.io.FileNotFoundException
 

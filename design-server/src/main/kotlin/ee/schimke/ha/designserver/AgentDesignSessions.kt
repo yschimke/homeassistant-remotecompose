@@ -1,7 +1,7 @@
 package ee.schimke.ha.designserver
 
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.validateCardDraft
+import ee.schimke.ha.design.Sha256
 import java.util.Base64
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

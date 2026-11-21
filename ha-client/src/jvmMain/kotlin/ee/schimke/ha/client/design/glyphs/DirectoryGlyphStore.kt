@@ -1,6 +1,7 @@
 package ee.schimke.ha.client.design.glyphs
 
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
+import ee.schimke.ha.design.glyphs.GlyphStore
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -2,9 +2,9 @@ package ee.schimke.ha.designserver
 
 import ee.schimke.composeai.rcplayer.compose.RcComposeTextRasterizer
 import ee.schimke.composeai.rcplayer.runtime.RcTextRasterizer
-import ee.schimke.ha.client.design.CachedFontFace
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.CachedFontFace
 import ee.schimke.ha.design.CardFontManifest
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.designs.JvmComposeGraphics
 import ee.schimke.ha.rc.HaFontLibrary
 import ee.schimke.ha.rc.WidgetBitmapFonts

@@ -1,8 +1,8 @@
 package ee.schimke.terrazzo.dashboard
 
-import ee.schimke.ha.client.design.CardDesignOverride
-import ee.schimke.ha.client.design.CardDesignScope
-import ee.schimke.ha.client.design.cardFingerprint
+import ee.schimke.ha.design.CardDesignOverride
+import ee.schimke.ha.design.CardDesignScope
+import ee.schimke.ha.design.cardFingerprint
 import ee.schimke.ha.model.CardConfig
 import java.io.File
 import kotlin.io.path.createTempDirectory

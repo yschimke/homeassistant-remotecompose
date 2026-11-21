@@ -31,7 +31,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcTextData
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.composeai.rcplayer.runtime.RcRasterizedText
 import ee.schimke.composeai.rcplayer.runtime.RcTextRasterizer
-import ee.schimke.ha.client.design.CachedFontFace
+import ee.schimke.ha.design.CachedFontFace
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot

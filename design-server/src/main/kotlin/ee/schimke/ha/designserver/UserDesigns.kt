@@ -1,9 +1,9 @@
 package ee.schimke.ha.designserver
 
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DeviceMatch
+import ee.schimke.ha.design.Sha256
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption

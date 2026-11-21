@@ -1,6 +1,6 @@
 package ee.schimke.ha.designserver
 
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
 import java.io.ByteArrayOutputStream
 import org.apache.fontbox.ttf.TTFParser
 import org.apache.fontbox.ttf.TTFSubsetter

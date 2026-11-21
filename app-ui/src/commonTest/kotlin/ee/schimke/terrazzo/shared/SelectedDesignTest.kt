@@ -1,10 +1,10 @@
 package ee.schimke.terrazzo.shared
 
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot

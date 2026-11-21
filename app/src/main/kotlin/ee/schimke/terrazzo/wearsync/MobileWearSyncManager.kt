@@ -11,7 +11,7 @@ import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.data.WearDataLayerRegistry
-import ee.schimke.ha.client.design.CardDesignOverrides
+import ee.schimke.ha.design.CardDesignOverrides
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.model.CardConfig
@@ -729,7 +729,7 @@ class MobileWearSyncManager(
           val keyed =
             pinned +
               all.map {
-                ee.schimke.ha.client.design.cardFingerprint(resolveBambuDevices(it, snapshot)) to it
+                ee.schimke.ha.design.cardFingerprint(resolveBambuDevices(it, snapshot)) to it
               }
           // Designs naming a card font go through the server's bitmap-font filter first: the
           // watch's widget host can't load the fonts the app fetches.

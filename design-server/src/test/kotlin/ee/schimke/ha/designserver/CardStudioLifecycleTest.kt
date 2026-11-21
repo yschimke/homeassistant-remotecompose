@@ -3,7 +3,7 @@ package ee.schimke.ha.designserver
 import ee.schimke.ha.client.design.CardStudioClient
 import ee.schimke.ha.client.design.CardStudioException
 import ee.schimke.ha.client.design.DesignPublisher
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot

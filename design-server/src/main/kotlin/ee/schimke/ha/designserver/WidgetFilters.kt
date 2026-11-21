@@ -3,7 +3,7 @@ package ee.schimke.ha.designserver
 import ee.schimke.composeai.rcplayer.edit.RcDisplay
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.rc.LiveText
 import ee.schimke.ha.rc.WidgetBitmapFonts
 import ee.schimke.ha.rc.WidgetHost

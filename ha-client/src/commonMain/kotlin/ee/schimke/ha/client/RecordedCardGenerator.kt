@@ -2,8 +2,10 @@ package ee.schimke.ha.client
 
 import ee.schimke.ha.model.CardBytes
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.CardGenerator
 import ee.schimke.ha.model.CardKey
 import ee.schimke.ha.model.CardSize
+import ee.schimke.ha.model.CardSource
 import ee.schimke.ha.model.ClientProfile
 import ee.schimke.ha.model.HaSnapshot
 

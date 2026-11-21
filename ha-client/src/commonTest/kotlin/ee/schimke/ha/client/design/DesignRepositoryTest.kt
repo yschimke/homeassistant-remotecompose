@@ -1,11 +1,19 @@
 package ee.schimke.ha.client.design
 
+import ee.schimke.ha.design.BuiltDesign
+import ee.schimke.ha.design.BundledDesigns
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignQuery
+import ee.schimke.ha.design.DesignSourceKind
+import ee.schimke.ha.design.DesignStore
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DeviceMatch
+import ee.schimke.ha.design.InMemoryDesignStore
+import ee.schimke.ha.design.InbuiltDesigns
+import ee.schimke.ha.design.Sha256
+import ee.schimke.ha.design.StoredManifest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

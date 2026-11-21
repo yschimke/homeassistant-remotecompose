@@ -3,9 +3,9 @@
 package ee.schimke.ha.rc
 
 import android.content.Context
-import ee.schimke.ha.client.CardGenerator
 import ee.schimke.ha.model.CardBytes
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.CardGenerator
 import ee.schimke.ha.model.CardKey
 import ee.schimke.ha.model.CardSize
 import ee.schimke.ha.model.ClientProfile

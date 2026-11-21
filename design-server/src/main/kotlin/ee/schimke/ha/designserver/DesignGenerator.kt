@@ -1,11 +1,11 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.cards.CardDesignDocument
-import ee.schimke.ha.client.design.BuiltDesign
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.GeneratedDesign
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.designs.CheckedInCardDesigns
 import ee.schimke.ha.designs.JvmComposeGraphics
 import ee.schimke.ha.designs.LibraryCaptureProfile

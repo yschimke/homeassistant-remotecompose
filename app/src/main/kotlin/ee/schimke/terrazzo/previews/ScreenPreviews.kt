@@ -389,7 +389,7 @@ fun Screen_CardDisabled() = PhoneHost {
 fun Screen_CardStyle() = PhoneHost {
   ee.schimke.terrazzo.dashboard.CardStylePicker(
     card = HISTORY_SAMPLE_CARD,
-    overrides = ee.schimke.ha.client.design.CardDesignOverrides(),
+    overrides = ee.schimke.ha.design.CardDesignOverrides(),
     dashboardStyle = ee.schimke.ha.rc.components.HaUberTheme.Classic,
     onPick = { _, _ -> },
     onDone = {},
@@ -414,12 +414,12 @@ fun Screen_CardStyle_Skins() = PhoneHost {
   ee.schimke.terrazzo.dashboard.CardStylePicker(
     card = HISTORY_SAMPLE_CARD,
     overrides =
-      ee.schimke.ha.client.design
+      ee.schimke.ha.design
         .CardDesignOverrides()
         .with(
-          ee.schimke.ha.client.design.CardDesignScope.Card,
+          ee.schimke.ha.design.CardDesignScope.Card,
           HISTORY_SAMPLE_CARD,
-          ee.schimke.ha.client.design.CardDesignOverride(designId = boilerDial),
+          ee.schimke.ha.design.CardDesignOverride(designId = boilerDial),
         ),
     dashboardStyle = ee.schimke.ha.rc.components.HaUberTheme.Classic,
     onPick = { _, _ -> },

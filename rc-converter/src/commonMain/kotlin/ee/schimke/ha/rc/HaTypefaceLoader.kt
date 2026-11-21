@@ -4,9 +4,9 @@ import ee.schimke.composeai.rcplayer.compose.RcBundledTypefaceLoader
 import ee.schimke.composeai.rcplayer.compose.RcFontFace
 import ee.schimke.composeai.rcplayer.compose.RcFontFaces
 import ee.schimke.composeai.rcplayer.compose.RcTypefaceLoader
-import ee.schimke.ha.client.design.CachedFontFace
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.CachedFontFace
 import ee.schimke.ha.design.CardFontManifest
+import ee.schimke.ha.design.Sha256
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

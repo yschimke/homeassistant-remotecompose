@@ -1,7 +1,7 @@
 package ee.schimke.ha.designserver
 
-import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
+import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignCatalogEntry
 import ee.schimke.ha.design.DesignExample

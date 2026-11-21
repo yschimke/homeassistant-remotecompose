@@ -14,7 +14,7 @@ import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.optimize
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
-import ee.schimke.ha.client.design.BuiltDesign
+import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey

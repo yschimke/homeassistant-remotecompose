@@ -1,7 +1,7 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.cards.CardDesignDocument
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.designs.CardDesignLibrary
 import ee.schimke.ha.designs.JvmCardPreviewRenderer
 import ee.schimke.ha.designs.LibraryCaptureProfile

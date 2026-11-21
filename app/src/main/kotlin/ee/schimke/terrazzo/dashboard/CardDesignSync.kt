@@ -14,10 +14,10 @@ import androidx.work.WorkerParameters
 import ee.schimke.ha.client.design.DesignRepository
 import ee.schimke.ha.client.design.DesignServerConfig
 import ee.schimke.ha.client.design.RefreshResult
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.cachedDesignRepository
 import ee.schimke.ha.client.design.createDesignRepository
 import ee.schimke.ha.design.DesignTags
+import ee.schimke.ha.design.Sha256
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.toThemeStyle

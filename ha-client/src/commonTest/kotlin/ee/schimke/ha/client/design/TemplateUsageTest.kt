@@ -1,7 +1,9 @@
 package ee.schimke.ha.client.design
 
+import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.InMemoryDesignStore
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

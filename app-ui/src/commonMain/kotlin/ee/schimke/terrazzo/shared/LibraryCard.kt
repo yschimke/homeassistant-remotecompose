@@ -16,8 +16,6 @@ import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 import ee.schimke.ha.client.design.DesignRepository
 import ee.schimke.ha.client.design.DesignServerConfig
-import ee.schimke.ha.client.design.InMemoryDesignStore
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
@@ -25,6 +23,8 @@ import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.design.GeneratedDesign
 import ee.schimke.ha.design.HaSharedValues
+import ee.schimke.ha.design.InMemoryDesignStore
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates

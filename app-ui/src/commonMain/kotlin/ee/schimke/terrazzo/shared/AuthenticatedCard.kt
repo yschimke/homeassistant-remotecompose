@@ -6,8 +6,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.design.UsageSource
-import ee.schimke.ha.client.design.cardFingerprint
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.cardFingerprint
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot

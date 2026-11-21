@@ -2,7 +2,7 @@ package ee.schimke.terrazzo.wearsync
 
 import android.content.Context
 import ee.schimke.ha.client.design.DesignFilters
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.rc.LiveText
 import ee.schimke.ha.rc.OnDeviceWidgetFonts
 import ee.schimke.ha.rc.WidgetBitmapFonts

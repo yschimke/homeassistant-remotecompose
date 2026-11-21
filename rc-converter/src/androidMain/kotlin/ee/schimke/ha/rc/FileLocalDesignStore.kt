@@ -1,8 +1,8 @@
 package ee.schimke.ha.rc
 
 import android.content.Context
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.Sha256
 import java.io.File
 import kotlinx.serialization.json.Json
 

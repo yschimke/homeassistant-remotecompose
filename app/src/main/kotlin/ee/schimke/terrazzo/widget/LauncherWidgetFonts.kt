@@ -3,7 +3,7 @@ package ee.schimke.terrazzo.widget
 import android.content.Context
 import android.os.SystemClock
 import ee.schimke.ha.client.design.DesignFilters
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.rc.LauncherFontFilter
 import ee.schimke.ha.rc.LiveText
 import ee.schimke.ha.rc.OnDeviceWidgetFonts
