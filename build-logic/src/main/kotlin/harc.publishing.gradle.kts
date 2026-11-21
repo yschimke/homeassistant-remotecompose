@@ -69,6 +69,9 @@ fun harcLibraryVersion(): String {
       return it
     }
   val manifest = rootDir.resolve(".github/.release-please-manifest.json")
+  // Builds from a partial checkout have no manifest: the add-on image copies only the modules it
+  // builds (addon-server/addon/Dockerfile). They publish nothing, so any snapshot version will do.
+  if (!manifest.isFile) return "0.0.0-SNAPSHOT"
   val current =
     Regex(""""\.":\s*"(\d+)\.(\d+)\.(\d+)"""").find(manifest.readText())
       ?: error("No root version in $manifest")
