@@ -315,7 +315,12 @@ fun AgentEditScreen(
               live =
                 shownLive(
                   relayed = live?.live(current.id)?.collectAsState()?.value,
-                  direct = directLive(current, sinceReply),
+                  direct =
+                    directLive(
+                      current,
+                      sinceReply,
+                      builtInAgent.shortName.takeIf { builtInAgent.enabled } ?: "Agent",
+                    ),
                 ) ?: pendingLive(current, current.agentListening && sinceReply < LISTENING_SECONDS),
               liveBusy = busy,
               onComment = { text, target ->
@@ -484,6 +489,8 @@ private fun SessionReview(
     session.drafts.firstOrNull { it.id == (shown ?: session.applied?.draftId) }
       ?: session.latestDraft
   val headerScroll = rememberScrollState()
+  val building = session.scope?.isNewDashboard == true
+  val canWrite = !busy && writeBlockedReason == null
   Column(Modifier.fillMaxSize()) {
     Column(
       Modifier.fillMaxWidth()
@@ -494,7 +501,6 @@ private fun SessionReview(
       verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       compactBar?.invoke()
-      val building = session.scope?.isNewDashboard == true
       Text(
         when {
           session.isApplied && building -> "The dashboard is created. Undo deletes it."
@@ -520,7 +526,6 @@ private fun SessionReview(
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
       }
-      val canWrite = !busy && writeBlockedReason == null
       if (session.isOpen) {
         AgentLivePanel(
           state = live,
@@ -539,6 +544,12 @@ private fun SessionReview(
           compact = compactBar != null,
         )
       }
+    }
+    // Outside the scrolling header: Use it stays in reach however long the conversation gets.
+    Column(
+      Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+      verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
       if (session.drafts.size > 1) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           session.drafts.forEachIndexed { i, d ->
@@ -606,7 +617,7 @@ private fun SessionReview(
               shape = MaterialTheme.shapes.small,
               modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
             ) {
-              TextButton(onClick = { target = cardLabel(key, card) }) { Text("Comment") }
+              TextButton(onClick = { target = cardLabel(key, card, snapshot) }) { Text("Comment") }
             }
           }
         else renderCard(key, card)
@@ -663,11 +674,22 @@ internal fun pendingLive(session: AgentEditSession, agentListening: Boolean) =
     linked = agentListening,
   )
 
-/** How a message names a card for the agent: its title or entity, and where it sits. */
-internal fun cardLabel(key: CardKey, card: CardConfig): String {
+/**
+ * How a message names a card, for the person and the agent: its title, else its entity's name as
+ * Home Assistant shows it ([snapshot]), else the entity id; and where it sits.
+ */
+internal fun cardLabel(key: CardKey, card: CardConfig, snapshot: HaSnapshot? = null): String {
   fun field(name: String) =
     (card.raw[name] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
-  val name = field("title") ?: field("name") ?: field("heading") ?: field("entity") ?: card.type
+  val entity = field("entity")
+  val friendly =
+    entity
+      ?.let { snapshot?.states?.get(it)?.attributes?.get("friendly_name") }
+      ?.let { it as? kotlinx.serialization.json.JsonPrimitive }
+      ?.takeIf { it.isString }
+      ?.content
+      ?.takeIf { it.isNotBlank() }
+  val name = field("title") ?: field("name") ?: field("heading") ?: friendly ?: entity ?: card.type
   val where = buildString {
     // A view without a path of its own gets a made-up one ("view-0"): name it by position.
     key.viewPath?.let { path ->
@@ -685,7 +707,12 @@ internal fun cardLabel(key: CardKey, card: CardConfig): String {
  * until the agent has been active, so the prompt to hand it shows until then. Presence counts as
  * connected for a minute and a half after the agent's last call, by Home Assistant's clock.
  */
-internal fun directLive(session: AgentEditSession, sinceReply: Double = 0.0): AgentRelayState? {
+internal fun directLive(
+  session: AgentEditSession,
+  sinceReply: Double = 0.0,
+  /** How the agent is named: the built-in agent's model family, else just "Agent". */
+  name: String = "Agent",
+): AgentRelayState? {
   val agent = session.agent ?: return null
   val idle = session.agentIdleSeconds?.let { it + sinceReply }
   return AgentRelayState(
@@ -697,7 +724,7 @@ internal fun directLive(session: AgentEditSession, sinceReply: Double = 0.0): Ag
       AgentPresence(
         joined = true,
         connected = idle != null && idle < 90,
-        name = "Agent",
+        name = name,
         status = agent.status,
         lastSeenSecondsAgo = idle?.toLong(),
       ),
