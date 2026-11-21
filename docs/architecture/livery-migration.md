@@ -64,17 +64,18 @@ binds.
 
 | Contract part | From |
 | --- | --- |
-| `inputs` | every named value a converter's `designBindings` + `CardDesignSlots.slotBindings` can write, **under today's names** (`light.s0.is_on`, `card.name`, `s0.picture`), so the 36 `.uid` designs and every captured template stay valid without a recapture. Types come from the binding's `NamedValue` type; `maxLength` and ranges from the schema where known |
+| `lists` | `slots`: a **reference list** into `ha/entity@1` (see [Slots are references to entities](#slots-are-references-to-entities)). A template reads `slots.0.is_on`, and the host pins slot 0 to a real entity when the card plays |
+| `inputs` | the card-scoped values only: what a converter's `designBindings` (or its recipe) computes from the card config (`card.name`, `card.min`, `card.range`), plus a slot's `name:` override. Types come from the binding's `NamedValue` type; `maxLength` and ranges from the schema where known |
 | `inputs` (images) | slot and entity pictures as `image` inputs (today's `rc-slot://` becomes `livery:value/<input>`), resolved by `ImageResolver`'s `app:` callback, which fetches entity pictures through the HA connection |
 | `actions` | `s<N>.tap`, `s<N>.hold`, `s<N>.double_tap` and the input submits (message, input_text, select), all of kind **`app:ha-action`** with a `slot` arg. The handler resolves the card's own Lovelace action locally, as `CardTemplatePlayback.resolveTap` does today: a template never carries a service call |
 | `examples` | the demo fixtures already used for previews (`scripts/fixtures/demo`) |
 | `dataSource` | `App` |
 
-**Shared values.** `HA:sun.sun.*` and `host.ambient` are not part of any card's contract. They form
-a **vocabulary**, `ha/home@1`: values in the `HA` domain that the host supplies once for all cards.
-A template declares which vocabularies it uses, and the publisher works that out from the document
-itself. See [Runtime contracts, vocabularies and discovery](#runtime-contracts-vocabularies-and-discovery)
-(L2).
+**Shared values.** `HA:sun.sun.*` is no longer special. It is an entity in the same `HA:` store
+that slots point into, one of the vocabulary's few **fixed entities**: those any design may read
+without a slot. `host.ambient` belongs to a small Livery-owned host vocabulary. The publisher works
+out which vocabularies a template uses from the document itself. See
+[Runtime contracts, vocabularies and discovery](#runtime-contracts-vocabularies-and-discovery) (L2).
 
 **Structure-only fields.** The ~19 converters with a `dataSignature` keep it for the fields
 `card-update-audit.md` justifies. A template for such a card is keyed by that structure (a `shape`
@@ -266,7 +267,7 @@ convenience on top.
    revision, cached by the contract's hash (L1b):
    - an interned name table;
    - the type and limits per name;
-   - list-name patterns.
+   - reference lists and the vocabularies they point into.
 3. **From the document.** A bare `.rc` that arrives without a catalog can still be understood:
    - It can carry its sidecar embedded as one named string, `livery.sidecar`, holding the contract
      ref, vocabularies, reads, emits and an optional recipe. This is how harc's
@@ -289,25 +290,32 @@ convenience on top.
   - After that, each state change re-checks only the keys that changed. That is O(changed), not
     O(contract), which matters for a dashboard getting `state_changed` events many times a second.
   - `forAppDataNow` feeds it.
-- **Vocabulary values are bound once per host, not once per card.** They are pushed only to the
-  slots whose entry `uses` them, and only under the names that entry reads.
+- **Entity values are computed once per entity, not once per card.** A `state_changed` event
+  updates one entry in the host's `HA:` store, and every card, widget and watch slot reading that
+  entity sees it. Only the names a template reads are pushed into its player.
 
 ### Vocabularies: reads outside the card's contract
 
 A **vocabulary** is a contract with a named-value `domain` other than `USER` and
-`dataSource: Host`. Examples:
+`dataSource: Host`. There are two kinds:
 
-- `ha/home@1` is domain `HA`, holding `sun.sun.elevation`, `sun.sun.next_rising` and the rest.
-- Livery itself could own generic ones such as `livery/clock@1` and `livery/device@1` (ambient,
-  battery, network).
+- **Keyed.** `ha/entity@1` is domain `HA`, and its values are keyed by an id: the fields `state`,
+  `is_on`, `state_int`, `status`, `last_changed`, `attributes.<key>` of any entity, named
+  `HA:<entity_id>.<field>`.
+  - A design never names an entity id. It reaches entities through its slots (below), plus the
+    vocabulary's **fixed entities**, the ids every Home Assistant has: `sun.sun` today.
+  - So the garage card's `HA:sun.sun.elevation` is a read of a fixed entity, not a special shared
+    value.
+- **Plain.** Values with fixed names, such as a Livery-owned `livery/device@1` (`host.ambient`,
+  battery, network) or `livery/clock@1`.
 
 A vocabulary is the same `Contract` type with one extra field, so the binder, evolution rules
 (`since`, minors) and conformance fixtures all apply unchanged (L2):
 
-- A template entry gains `uses: ["ha/home@1"]`. **The publisher computes it** by grouping the
+- A template entry gains `uses: ["ha/entity@1"]`. **The publisher computes it** by grouping the
   document's non-`USER` reads by domain and matching each group against known vocabularies. An
   unknown domain or name is refused, as an undeclared `USER` read is today.
-- `PlayerCapabilities` gains `provides: ["ha/home@1", …]`.
+- `PlayerCapabilities` gains `provides: ["ha/entity@1", …]`.
 - Selection treats `uses ⊄ provides` like a missing feature: the template is ineligible, and the
   next one in order is chosen (§5).
 
@@ -317,11 +325,12 @@ A vocabulary is the same `Contract` type with one extra field, so the binder, ev
 
 - which contracts the document **implements**: its `USER` reads are inside the contract's inputs,
   with matching types, and its emits are inside the contract's actions;
-- the leftover reads grouped by vocabulary, for example `ha/home@1: [sun.sun.elevation]`;
+- the leftover reads grouped by vocabulary, for example `ha/entity@1: [sun.sun.elevation]`;
 - anything unexplained.
 
 For a garage-door design that draws a standard tile but shades its door by the sun's elevation, the
-answer is: implements `ha-card/tile@1`, uses `ha/home@1` (`sun.sun.elevation`).
+answer is: implements `ha-card/tile@1` (its slot 0 is the door), uses `ha/entity@1` (the fixed
+entity `sun.sun`, field `elevation`).
 
 It runs in four places:
 
@@ -330,32 +339,76 @@ It runs in four places:
 | `livery import` / `livery build` | Writes `contract` and `uses` into the sidecar, so an author never has to declare them. UI Builder saves and agent drafts get the same treatment |
 | `livery-mcp` `validate_template` | Tells an agent which contract its draft implements and what else it reads |
 | On the device, for a bare document | The same answer, from the cached facts |
-| Selection | A host that provides `ha/home@1` gets the garage design. One that doesn't (the embed on a foreign page, a third-party Livery client) gets the plain tile design. Never a blank card, never a card computing with NaN |
+| Selection | A host that provides `ha/entity@1` gets the garage design. One that doesn't (the embed on a foreign page, a third-party Livery client) gets the plain tile design. Never a blank card, never a card computing with NaN |
 
 **One document can implement several contracts.** A minimal tile implements `ha-card/tile@1` and,
 by inclusion, a generic `livery/status-tile@1`. The publisher can list both in `implements`, so a
 non-HA Livery app can play an HA design with its own data. Selection still binds one contract per
 slot.
 
-### Contracts generated from a card, at runtime
+### Slots are references to entities
 
-harc's slot names are positional with the domain inside the name (`light.s0.is_on`,
-`cover.s1.position`). A card's shape fixes its domain sequence, so for any one template the names
-are fixed. Across a card type, though, they aren't.
+**Where `light.s0.is_on` comes from.** It is not from Lovelace: a card config only says
+`entity: light.kitchen`. It is harc's own naming, built in two layers:
 
-Two ways to declare them:
+1. `LiveValues` (`rc-components/.../LiveValues.kt`) names every bound value `<entityId>.<field>` in
+   the RC `USER` domain. So a converter capture reads `light.kitchen.is_on`.
+2. `CardDesignSlots` makes a template reusable by capturing against fake entity ids: the domain is
+   kept, and the object id becomes the slot index. So `light.s0.is_on` means "the card's first
+   entity, which is a light, is on". At play time `slotBindings` computes every field of every
+   slot for every card and pushes it under the slot names.
 
-- **Expand.** Generate every domain × slot × field up to a maximum. That is finite, but hundreds of
-  inputs per contract.
-- **Pattern** (recommended, L2b). Add `ListSpec.names`, a flattening pattern that defaults to
-  `{list}.{i}.{field}`. harc's `slots` list would use `{domain}.s{i}.{field}`, where `domain` is a
-  key field of the item, and items could be sparse.
+Options for declaring that in a contract:
 
-  Binding, inspection and evolution all go through the one pattern. The rest of Livery's flat-list
-  model is unchanged, and a feed that wants `items.0.title` keeps the default.
+| | What a template reads | Livery change | Cost |
+| --- | --- | --- | --- |
+| Expand | `light.s0.is_on` | none | hundreds of inputs per contract (domain × slot × field) |
+| Naming pattern | `light.s0.is_on` | `ListSpec.names = "{domain}.s{i}.{field}"` | a protocol addition only harc uses |
+| Neutral slots | `slots.0.is_on`; the domain becomes the `shape` tag | none | recapture (build output) and migrate the `.uid` designs |
+| **References** (chosen) | `slots.0.is_on`, pinned at play time to `HA:light.kitchen.is_on` | reference lists (L2b) | the most Livery work, and the most harc code removed |
 
-Either way the contract is plain data, so the design server can generate one for a new card type at
-release time, and a client built before it plays it.
+**References.** The contract's `slots` list is `ListSpec(ref = "ha/entity@1")`: each item is
+**an entity id, not a set of values**.
+
+- **Binding.** The host binds the card's slot map (`0 → light.kitchen`, `1 → cover.garage`, from
+  `slotEntries`), checked by `ContractBinder` like any other data: ids in the vocabulary's id
+  format, at most `max` items.
+- **Values come from one store per home.** Entity-derived fields live in the host's `HA:` store,
+  computed once per entity from the `state_changed` stream. Per-card `slotBindings` goes away.
+  Only card-scoped values (`card.*`, a slot's `name:` override) stay card inputs.
+- **Live players are fed from the store.** In-app, desktop and Wear-app players keep **one
+  prepared document per template**. The document still reads `slots.0.is_on`.
+  - Each card has a reference table (`slots.0 → light.kitchen`). Through it, its named-value map is
+    fed from the store: on a change, only the cards referencing that entity are written, and only
+    the names their template reads.
+  - The player needs no aliasing support, and values are seeded before the first frame, as now.
+  - Rewriting the bytes per card would give every card its own document and break
+    `LiveryResources`' sharing, and with it the no-visible-redraws rule.
+- **Instantiate paths rewrite.** The launcher, Wear widgets, the wall API and server resolve already
+  produce one document per instance. They rewrite the named-variable table to
+  `HA:<entity_id>.<field>` (or bake the values), at no extra cost. A wall panel's long-poll can then
+  be per entity instead of per card.
+- **Trust.** A published template never names a real entity id: the publisher refuses an `HA:`
+  read that is neither a slot field nor a fixed entity. Only the host decides what a slot points at,
+  so a design can't read an arbitrary entity in the home.
+- **One server per document.** A document is pinned by one host, for one server's entities, when it
+  plays. A dashboard mixing servers has separate cards, each played by its own server's host, so no
+  document needs a server-qualified domain. The app keeps one store per server.
+- **Old templates.** The reference list declares today's flattened names as a legacy mapping
+  (`"{domain}.s{i}.{field}"`), used only to read templates captured before the change. Published
+  `user:` skins and old library entries keep playing, with no flag day; the build recaptures the
+  library with the new names.
+
+The contract is plain data either way, so the design server can generate one for a new card type at
+release time, and a client built before it plays it. Livery's side is
+[its reference-list proposal](https://github.com/yschimke/livery/blob/main/docs/REFERENCE_LISTS.md),
+which also covers vocabularies (L2) and discovery (L2c).
+
+**Two things to confirm in step 1:**
+- the CMP and AndroidX View players read host-pushed values in a non-`USER` domain. Only fixed-entity
+  reads (`HA:sun.sun.*`) need it; `HaSharedValues` relies on it already;
+- rc-player-edit has, or gains, a pass that renames named variables, beside `hardcodeNamedValues`.
+  Only the per-entity wall API needs it; the other instantiate paths bake values.
 
 **The binding recipe becomes Livery's.** `CardBindingRecipe` is a small, host-evaluated expression
 language that maps a source dataset to a contract's inputs. Today it has a Kotlin copy and a
@@ -452,8 +505,8 @@ Assistant.
 | --- | --- | --- | --- |
 | **L1** | **Several catalogs in one host**: `LayeredRepository(personal, library, pr-channel)`. A `designId` resolves in its own source first, and automatic selection takes the union. Pure selection; conformance | step 4 | the per-caller manifest folding in `UserDesignRoutes`, which also drops the signature |
 | **L1b** | **Compiled contracts and incremental binding** (`CompiledContract`, `BindSession`) | step 5 | — (performance) |
-| **L2** | **Vocabularies**: `Contract.domain`, `dataSource: Host`, `TemplateEntry.uses`, `PlayerCapabilities.provides`, an eligibility rule, publisher inference | step 1 | `HaSharedValues` keeps only its values; the plumbing goes |
-| L2b | `ListSpec.names` flattening pattern, sparse items | step 1 | hand-expanded slot names |
+| **L2** | **Vocabularies**: `Contract.domain`, `dataSource: Host`, keyed vocabularies with fixed ids, `TemplateEntry.uses`, `PlayerCapabilities.provides`, an eligibility rule, publisher inference | step 1 | `HaSharedValues` keeps only its values; the plumbing goes |
+| **L2b** | **Reference lists**: `ListSpec.ref`, binding ids, a host value store, store-fed named values in `LiveryTemplate`, resolving or renaming in `livery-instantiate` | step 1 | `CardDesignSlots.slotBindings` and the per-card copies of entity values |
 | **L2c** | **Discovery**: `TemplateInspector.conformance`, `implements`, the embedded `livery.sidecar` | step 2 | `meta.binding_recipe`, and the embed's own document sniffing |
 | L3 | **`livery-recipes`**: data-to-inputs expressions, Kotlin, Swift and TS | step 7 | `CardBindingRecipe` (317) and its JS copy in `ha-card.js` |
 | **L4** | **Devices and transforms**: `display` and `player` capabilities, named transforms, derivations, the `derive/` route, receipts | steps 6–7 | `PlayerFolding` (320), `forDisplay`, `WearWidgetTemplate` + `CardDesignWearTemplate` (546), launcher recapture, `GlyphRanges` + `WidgetFilters` (577), most of `/generate` |
@@ -490,7 +543,8 @@ Each step is one PR (or a short series) that keeps every surface working, with a
    - Align Remote Compose, rc-players and CMP versions with livery (in whichever direction is
      newer). Add `livery-bom`.
 1. **Contracts** (needs L2, L2b).
-   - Generate the `ha/home@1` vocabulary from `HaSharedValues`.
+   - Generate the `ha/entity@1` vocabulary from `LiveValues`' fields, with `sun.sun` as its fixed
+     entity.
    - Generate `ha-card/<type>@1` from the converters.
    - Add the inspector test over every blob in today's library.
    - Add a one-way converter `DesignManifest` → Livery `Manifest`. It is used only to count entries
@@ -546,7 +600,9 @@ users see a change, and both sit behind the flag.
 - **Protocol compatibility for vocabularies and derivations.**
   - An older Livery client ignores `uses`. It could select a template that reads `HA:` values it
     never pushes, and that template would then draw with the document's own defaults. For
-    `ha/home@1` that is safe by design, since every shared value defaults to its daytime value.
+    `ha/entity@1` that is safe for the fixed entities, since every `sun.sun` value defaults to its
+    daytime value. An aliased slot read is not: an old client never fills it, so L2b raises the
+    level its templates need (`requiresLevel`).
   - In general it isn't, so L2 must make such entries ineligible below the new protocol level: a
     per-entry `requiresLevel`, or `minClient` in strict mode, mirroring how `requiresMinor` works.
   - Derivations are additive. An old client sees only native templates.
