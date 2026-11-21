@@ -39,6 +39,7 @@ import androidx.navigation3.ui.NavDisplay
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.UnsupportedDashboardException
+import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
@@ -50,12 +51,15 @@ import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.icons.mdi.MdiIcons
 import ee.schimke.terrazzo.dashboard.AgentEditScreen
+import ee.schimke.terrazzo.dashboard.CHAT_WITH_AGENT
 import ee.schimke.terrazzo.dashboard.DashboardAgentDraft
 import ee.schimke.terrazzo.dashboard.DashboardDraftEditor
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.EditorScope
+import ee.schimke.terrazzo.dashboard.NewDashboardDialog
+import ee.schimke.terrazzo.dashboard.NewDashboardSessions
 import ee.schimke.terrazzo.dashboard.preferredDashboardPath
 import io.github.timoptr.mdiicons.Mdi
 import io.github.timoptr.mdiicons.generated.Fullscreen
@@ -401,6 +405,8 @@ private fun DashboardShell(
   desktopCommands: DesktopCommands?,
 ) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
+  // Bumped to read the list again: a dashboard the built-in agent built was just created.
+  var dashboardListGeneration by remember(connection) { mutableIntStateOf(0) }
   var home by remember { mutableStateOf<NavKey>(DashboardDestination(initialDashboardPath)) }
   val stack = remember { mutableStateListOf(home) }
   var startupResolved by remember { mutableStateOf(initialDashboardPath != null) }
@@ -475,7 +481,7 @@ private fun DashboardShell(
       } else connectionError = "Connection lost. Retrying…"
     }
   }
-  LaunchedEffect(connection) {
+  LaunchedEffect(connection, dashboardListGeneration) {
     connection.client.state.collectLatest { state ->
       if (state != HaClient.ConnectionState.Ready) return@collectLatest
       try {
@@ -489,6 +495,8 @@ private fun DashboardShell(
   }
   // Edit sessions need the Terrazzo integration, which serves the panel itself.
   var integrationInstalled by remember(connection) { mutableStateOf(false) }
+  // With the integration's own agent on, editing is a chat with it: no manual editor, no relay.
+  var builtInAgent by remember(connection) { mutableStateOf(BuiltInAgent.Off) }
   var privateDesignServer by remember(connection) { mutableStateOf(false) }
   var dashboardRefreshGeneration by remember(connection) { mutableIntStateOf(0) }
   LaunchedEffect(connection) {
@@ -497,6 +505,16 @@ private fun DashboardShell(
       integrationInstalled =
         runCatching { TERRAZZO_DOMAIN in connection.client.fetchConfig().components }
           .getOrDefault(integrationInstalled)
+      builtInAgent =
+        if (!integrationInstalled) BuiltInAgent.Off
+        else
+          try {
+            connection.client.terrazzoBuiltInAgent()
+          } catch (e: CancellationException) {
+            throw e
+          } catch (_: Exception) {
+            builtInAgent
+          }
       privateDesignServer =
         try {
           (connection.client.terrazzoDesignServer()["available"] as? JsonPrimitive)
@@ -538,7 +556,10 @@ private fun DashboardShell(
         if (currentDestination is DashboardDestination)
           ({
             (stack.lastOrNull() as? DashboardDestination)?.let {
-              stack.add(DashboardEditDestination(it.path))
+              stack.add(
+                if (builtInAgent.enabled) AgentEditDestination(it.path)
+                else DashboardEditDestination(it.path),
+              )
             }
           })
         else null,
@@ -596,6 +617,17 @@ private fun DashboardShell(
                   DashboardPickerScreen(
                     list,
                     onDashboardPicked = { stack.add(DashboardDestination(it)) },
+                    header =
+                      if (builtInAgent.enabled)
+                        ({
+                          NewDashboardSessions(
+                            connection.client.agentEdits,
+                            builtInAgent,
+                            onOpen = { stack.add(AgentEditDestination(it.urlPath, it.id)) },
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                          )
+                        })
+                      else null,
                   )
                 }
               }
@@ -649,6 +681,17 @@ private fun DashboardShell(
             }
             entry<DashboardDestination> { route ->
               var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
+              var newDashboard by remember { mutableStateOf(false) }
+              if (newDashboard)
+                NewDashboardDialog(
+                  connection.client.agentEdits,
+                  builtInAgent,
+                  onDismiss = { newDashboard = false },
+                  onStarted = {
+                    newDashboard = false
+                    stack.add(AgentEditDestination(it.urlPath, it.id))
+                  },
+                )
               Scaffold(
                 topBar = {
                   TopAppBar(
@@ -666,12 +709,19 @@ private fun DashboardShell(
                       if (customizing)
                         TextButton(onClick = { customizing = false }) { Text("Done customizing") }
                       DashboardMoreMenu(
-                        onEdit = { stack.add(DashboardEditDestination(route.path)) },
+                        // The integration's built-in agent replaces the manual editor.
+                        onEdit =
+                          if (builtInAgent.enabled) null
+                          else ({ stack.add(DashboardEditDestination(route.path)) }),
                         // The Home Assistant integration's own agent (its MCP user) answers this.
                         onAskAgent =
                           if (integrationInstalled)
                             ({ stack.add(AgentEditDestination(route.path)) })
                           else null,
+                        askAgentLabel =
+                          if (builtInAgent.enabled) CHAT_WITH_AGENT else "Ask your agent",
+                        onNewDashboard =
+                          if (builtInAgent.enabled) ({ newDashboard = true }) else null,
                         onCustomize = if (customizing) null else ({ customizing = true }),
                       )
                       headerActions()
@@ -704,7 +754,7 @@ private fun DashboardShell(
                     designServer,
                     cardStyle,
                     dark,
-                    cloudDashboardEdits,
+                    cloudDashboardEdits.takeUnless { builtInAgent.enabled },
                     dashboardModifier,
                     onOpenSession = { id -> stack.add(AgentEditDestination(route.path, id)) },
                     onApplied = { dashboardRefreshGeneration++ },
@@ -742,9 +792,15 @@ private fun DashboardShell(
                 designServer = designServer,
                 cardStyle = cardStyle,
                 dark = dark,
-                cloudEdits = cloudDashboardEdits,
+                // The built-in agent works in Home Assistant's sessions: no design server relay.
+                cloudEdits = cloudDashboardEdits.takeUnless { builtInAgent.enabled },
+                builtInAgent = builtInAgent,
                 sessionId = route.sessionId,
-                onApplied = { dashboardRefreshGeneration++ },
+                onApplied = {
+                  dashboardRefreshGeneration++
+                  // A new dashboard is in the list once it's created.
+                  dashboardListGeneration++
+                },
                 onBack = { if (stack.size > 1) stack.removeLastOrNull() },
               )
             }
@@ -768,6 +824,7 @@ private fun AgentEditEntry(
   cardStyle: String,
   dark: Boolean,
   cloudEdits: CloudDashboardAgentEdits?,
+  builtInAgent: BuiltInAgent,
   sessionId: String?,
   onApplied: () -> Unit,
   onBack: () -> Unit,
@@ -789,6 +846,7 @@ private fun AgentEditEntry(
     initialSessionId = sessionId,
     // The dashboard below shows the session's drafts as they come (DashboardDraftEntry).
     onDashboard = onBack,
+    builtInAgent = builtInAgent,
   ) { _, card ->
     preview(card, snapshot)
   }
@@ -951,9 +1009,11 @@ internal fun HeaderActions(
 /** A dashboard's less frequent actions, behind one "More options" button. */
 @Composable
 internal fun DashboardMoreMenu(
-  onEdit: () -> Unit,
+  onEdit: (() -> Unit)?,
   onAskAgent: (() -> Unit)?,
   onCustomize: (() -> Unit)?,
+  askAgentLabel: String = "Ask your agent",
+  onNewDashboard: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
   Box {
@@ -961,19 +1021,28 @@ internal fun DashboardMoreMenu(
       Icon(Icons.Filled.MoreVert, contentDescription = "More options")
     }
     DropdownMenu(expanded, { expanded = false }) {
-      DropdownMenuItem(
-        text = { Text("Edit dashboard") },
-        onClick = {
-          expanded = false
-          onEdit()
-        },
-      )
+      if (onEdit != null)
+        DropdownMenuItem(
+          text = { Text("Edit dashboard") },
+          onClick = {
+            expanded = false
+            onEdit()
+          },
+        )
       if (onAskAgent != null)
         DropdownMenuItem(
-          text = { Text("Ask your agent") },
+          text = { Text(askAgentLabel) },
           onClick = {
             expanded = false
             onAskAgent()
+          },
+        )
+      if (onNewDashboard != null)
+        DropdownMenuItem(
+          text = { Text("New dashboard") },
+          onClick = {
+            expanded = false
+            onNewDashboard()
           },
         )
       if (onCustomize != null)

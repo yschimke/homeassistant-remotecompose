@@ -111,6 +111,8 @@ jobs:
           node --test home-assistant/test/installed-mcp.test.mjs
           node --test home-assistant/test/installed-edits.test.mjs
           node --test home-assistant/test/installed-agent-live.test.mjs
+          # The built-in agent against a fake OpenAI-compatible model this test serves.
+          node --test home-assistant/test/installed-agent-builtin.test.mjs
           # A real design server relays a cloud agent's session, through a restart of its own.
           DESIGN_SERVER_BIN="$PWD/design-server/build/install/design-server/bin/design-server" \
             node --test home-assistant/test/installed-agent-cloud.test.mjs

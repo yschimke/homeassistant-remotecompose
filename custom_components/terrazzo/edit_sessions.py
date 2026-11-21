@@ -11,6 +11,7 @@ dashboards; the tests drive this with plain data.
 import copy
 import json
 import secrets
+import unicodedata
 
 OPEN = "open"
 APPLIED = "applied"
@@ -120,7 +121,49 @@ def cloud_for(session, user_id):
 
 DASHBOARD = "dashboard"
 SECTION = "section"
+# A dashboard that doesn't exist yet: its session starts from an empty one, and applying its draft
+# creates it (url_path is the path it will get).
+NEW_DASHBOARD = "new_dashboard"
 MAX_SCOPE_LABEL = 200
+MAX_TITLE = 100
+
+
+def is_new_dashboard(session):
+    return (session.get("scope") or {}).get("kind") == NEW_DASHBOARD
+
+
+def new_dashboard_scope(title, icon=None):
+    title = _text(title, "The new dashboard's title", required=True)[:MAX_TITLE]
+    scope = {"kind": NEW_DASHBOARD, "title": title, "label": title}
+    if icon:
+        icon = _text(icon, "The icon")[:64]
+        if not icon.startswith("mdi:"):
+            raise SessionError("An icon is an mdi: name, e.g. mdi:flower")
+        scope["icon"] = icon
+    return scope
+
+
+def new_dashboard_baseline(title):
+    """What a new dashboard's session starts from: one empty sections view."""
+    return {"title": title, "views": [{"title": title, "type": "sections", "sections": []}]}
+
+
+def new_dashboard_path(title, taken):
+    """A url_path for a dashboard titled [title] that isn't in [taken]. Home Assistant wants a
+    hyphen in every dashboard's url_path."""
+    plain = unicodedata.normalize("NFKD", title.casefold())
+    base = "".join(
+        char if char.isascii() and char.isalnum() else "-"
+        for char in plain
+        if not unicodedata.combining(char)
+    )
+    base = "-".join(part for part in base.split("-") if part)[:40] or "new-dashboard"
+    if "-" not in base:
+        base = f"dashboard-{base}"
+    path, n = base, 2
+    while path in taken:
+        path, n = f"{base}-{n}", n + 1
+    return path
 
 
 def _section_of(config, view, section):
@@ -146,6 +189,8 @@ def validate_scope(scope, baseline):
     ({"kind": "section", "view": i, "section": j, "label": ...}) that the dashboard has."""
     if scope is None:
         return None
+    if isinstance(scope, dict) and scope.get("kind") == NEW_DASHBOARD:
+        return new_dashboard_scope(scope.get("title"), scope.get("icon"))
     if not isinstance(scope, dict) or scope.get("kind") not in (DASHBOARD, SECTION):
         raise SessionError("A scope is a dashboard or one of its sections")
     label = scope.get("label")
@@ -224,6 +269,8 @@ class EditSessions:
             "messages": [],
             "agent": None,
             "scope": scope,
+            # The built-in agent's progress: the newest note it has answered (assistant.py).
+            "assistant": None,
         }
         self._sessions[session["id"]] = session
         self.prune(now)  # After adding: the oldest goes, never the new one.
@@ -384,6 +431,42 @@ class EditSessions:
         self.prune(now)
         return [s for s in self._sessions.values() if s["status"] == OPEN and s.get("cloud")]
 
+    def new_dashboards(self, user_id, now, is_admin=False):
+        """Open sessions building a dashboard that doesn't exist yet, that [user_id] may see:
+        their own, or every one for an administrator."""
+        self.prune(now)
+        return sorted(
+            (s for s in self._sessions.values()
+             if s["status"] == OPEN and is_new_dashboard(s) and (is_admin or s["created_by"] == user_id)),
+            key=lambda s: s["updated_at"],
+            reverse=True,
+        )
+
+    @staticmethod
+    def assistant_pending(session):
+        """Whether the built-in agent owes [session] a turn: it is open and the person has said
+        something since the agent last answered, or it's new and nobody has answered yet."""
+        if session["status"] != OPEN:
+            return False
+        handled = (session.get("assistant") or {}).get("handled")
+        newest = max((n.get("seq", 0) for n in session["notes"]), default=0)
+        if handled is None:
+            # Not answered before: a fresh session (or one an outside agent hasn't touched).
+            return newest > 0 or not (session.get("messages") or session["drafts"])
+        return newest > handled
+
+    def assistant_started(self, session_id, now):
+        """The built-in agent takes the notes so far: a note after this runs another turn."""
+        session = self.get(session_id, now)
+        newest = max((n.get("seq", 0) for n in session["notes"]), default=0)
+        session["assistant"] = {**(session.get("assistant") or {}), "handled": newest, "error": None}
+        return session
+
+    def assistant_failed(self, session_id, error, now):
+        session = self.get(session_id, now)
+        session["assistant"] = {**(session.get("assistant") or {}), "error": _text(error, "The error")[:300]}
+        return session
+
     def draft(self, session, draft_id):
         found = next((d for d in session["drafts"] if d["id"] == draft_id), None)
         if found is None:
@@ -442,6 +525,7 @@ def summary(session, with_configs=False):
         "seq": session.get("seq", 0),
         "applied": session["applied"],
         "scope": session.get("scope"),
+        "assistant_error": (session.get("assistant") or {}).get("error"),
         "drafts": [
             {key: draft[key] for key in ("id", "summary", "by", "at")}
             | ({"relay_id": draft["relay_id"]} if draft.get("relay_id") else {})

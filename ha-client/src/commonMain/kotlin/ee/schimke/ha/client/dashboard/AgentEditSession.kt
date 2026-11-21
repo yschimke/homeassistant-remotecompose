@@ -41,6 +41,11 @@ data class AgentEditSession(
   val cloud: CloudLink? = null,
   /** What the session is about: the whole dashboard (null) or one section of it. */
   val scope: EditScope? = null,
+  /**
+   * Why the integration's built-in agent couldn't answer the last note (a refused key, its service
+   * out of reach), until its next turn; null when it answered or isn't on.
+   */
+  @SerialName("assistant_error") val assistantError: String? = null,
 ) {
   /** Seconds since the agent was last active, by Home Assistant's clock; null before it joined. */
   val agentIdleSeconds: Double?
@@ -116,21 +121,37 @@ data class EditScope(
   val view: Int? = null,
   val section: Int? = null,
   val label: String? = null,
+  /** A new dashboard's title ([NEW_DASHBOARD]): what Home Assistant names it when applied. */
+  val title: String? = null,
+  /** A new dashboard's `mdi:` icon, when one was asked for. */
+  val icon: String? = null,
 ) {
   val isSection: Boolean
     get() = kind == SECTION && view != null && section != null
 
+  /**
+   * A dashboard that doesn't exist yet: the session starts from an empty one, and applying its
+   * draft creates it at the session's `url_path`.
+   */
+  val isNewDashboard: Boolean
+    get() = kind == NEW_DASHBOARD
+
   companion object {
     const val DASHBOARD = "dashboard"
     const val SECTION = "section"
+    const val NEW_DASHBOARD = "new_dashboard"
 
     fun section(view: Int, section: Int, label: String?) = EditScope(SECTION, view, section, label)
+
+    fun newDashboard(title: String, icon: String? = null) =
+      EditScope(NEW_DASHBOARD, label = title, title = title, icon = icon)
   }
 }
 
 /** How a session is named in a list or a title: its section's label, or the dashboard's. */
 fun AgentEditSession.scopeLabel(dashboardTitle: String?): String =
-  scope?.takeIf { it.isSection }?.let { it.label ?: "Section ${(it.section ?: 0) + 1}" }
+  scope?.takeIf { it.isNewDashboard }?.let { it.title ?: it.label ?: "New dashboard" }
+    ?: scope?.takeIf { it.isSection }?.let { it.label ?: "Section ${(it.section ?: 0) + 1}" }
     ?: dashboardTitle
     ?: "Dashboard"
 
@@ -139,11 +160,36 @@ fun AgentEditSession.scopeLabel(dashboardTitle: String?): String =
  * conversation and on the preview.
  */
 fun EditScope?.openingRequest(dashboardTitle: String?): String {
+  if (this?.isNewDashboard == true)
+    return "Build a new dashboard called ${title ?: label ?: "New dashboard"} with me, from this " +
+      "home's entities. Start with any comments I've left; if there are none yet, propose a " +
+      "first layout."
   val what =
     this?.takeIf { it.isSection }?.let { "the ${it.label ?: "section"} section of " }.orEmpty() +
       (dashboardTitle?.let { "the $it dashboard" } ?: "this dashboard")
   return "Work on $what with me. Start with any comments I've left on the preview; if there are " +
     "none yet, say hello and follow my comments as they come."
+}
+
+/**
+ * The Terrazzo integration's built-in dashboard agent (`terrazzo/agent/info`): when [enabled], Home
+ * Assistant itself answers every edit session with [model] from [providerLabel], so the apps offer
+ * a chat with it in place of their manual editors. The API key never leaves Home Assistant.
+ */
+@Serializable
+data class BuiltInAgent(
+  val enabled: Boolean = false,
+  val provider: String? = null,
+  @SerialName("provider_label") val providerLabel: String? = null,
+  val model: String? = null,
+) {
+  /** How the apps name it: "Gemini (gemini-flash-latest)". */
+  val displayName: String
+    get() = listOfNotNull(providerLabel ?: "Your agent", model?.let { "($it)" }).joinToString(" ")
+
+  companion object {
+    val Off = BuiltInAgent()
+  }
 }
 
 /**
@@ -168,6 +214,13 @@ interface AgentEdits {
 
   /** The open sessions on [urlPath] and the recently applied or discarded ones, newest first. */
   suspend fun recent(urlPath: String?): List<AgentEditSession> = open(urlPath)
+
+  /**
+   * The open sessions building dashboards that don't exist yet ([EditScope.isNewDashboard]): this
+   * person's, or everyone's for an administrator. Start one with [start] and
+   * [EditScope.newDashboard]; Home Assistant picks its url_path.
+   */
+  suspend fun newDashboards(): List<AgentEditSession> = emptyList()
 
   /**
    * What to hand one or more agents so they join [sessionId]: the same text for each, so several

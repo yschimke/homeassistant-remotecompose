@@ -12,7 +12,8 @@ permissions of the person who made it.
 - **Anything further needs the Terrazzo integration** (`custom_components/terrazzo`, installed
   from the Marketplace). It hosts the web panel and the MCP endpoint, and holds agent edit sessions.
 - **No new credentials.** Each caller signs in the way it already does (below); nobody hands a
-  general-purpose token to an agent.
+  general-purpose token to an agent. The one optional secret is an AI service's API key for the
+  [built-in agent](#built-in-agent), which stays in Home Assistant and grants nothing in it.
 - **An agent never saves.** It submits drafts; a person previews them with real cards and applies
   them with their own session.
 
@@ -41,6 +42,57 @@ Assistant is the editor in practice.
 | Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install from the Marketplace** card | Light edits; **Ask your agent** from the editor's top bar (dashboard or section sessions, copy a prompt); preview, apply or discard agent drafts, or **Adjust** one: it comes back into the editor as an unsaved edit to move and resize by hand and save |
 | Web panel | — | Full editor (add cards, sections and views, card settings); **Ask your agent** and the same draft preview |
 | Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session |
+
+## Built-in agent
+
+With an API key in the integration's options (**Dashboard agent**: Gemini, OpenRouter, or any
+OpenAI-compatible service), Home Assistant runs the agent itself, and the apps change their
+assumption about editing: a dashboard is changed by chatting with that agent, not by hand.
+
+| | Built-in agent off | Built-in agent on |
+| --- | --- | --- |
+| Phone | Light editor; **Ask your agent** (relay or MCP) | **Chat with your agent** in place of **Edit dashboard**; **New dashboard**; a section heading's long press opens that section's chat |
+| Web panel, desktop | Full editor; **Ask your agent** | **Chat with your agent**, no **Edit dashboard**; **New dashboard** in the menu and on the dashboard list |
+| Sessions | Design server relay when an agent is linked | Home Assistant's own sessions only: no relay, no prompt to copy, no **Adjust** |
+
+How it works (`assistant.py`, `assistant_hass.py`):
+
+- **When.** The integration watches every edit session. A session nobody has answered gets a
+  turn as soon as it starts; after that, each note the person leaves (a message, or a comment
+  pinned to a card) gets one. A session's `assistant.handled` records the newest note a turn has
+  taken, so a note that arrives during a turn runs another; one turn runs at a time per session.
+  A session an outside agent already answered gets no greeting, but its later notes are answered.
+- **As whom.** A turn acts as the person who started the session, through the same home object
+  the MCP server uses (`mcp_view.HassHome`): only the entities and dashboards they can see, and a
+  draft naming any other entity is refused. Nothing a turn does saves a dashboard.
+- **The turn.** The conversation is rebuilt from the session each time (the request, notes,
+  messages and drafts in order), with a system prompt holding the card guide, the scope, and the
+  dashboard as it stands: the newest draft, else the saved dashboard. The model calls
+  `find_entities`, `get_entity_state`, `home_overview` (areas and their entities, counts per
+  domain), `list_dashboards`, `get_dashboard` and `submit_draft` (the config as JSON text, which
+  every provider's schema rules accept); a refused draft goes back to it with the reason. Its
+  final text is posted as the agent's message; the tool it is running is its live status. At most
+  12 model calls per turn.
+- **Providers.** All speak OpenAI's chat completions with tools: Gemini through
+  `generativelanguage.googleapis.com/v1beta/openai`, OpenRouter at `openrouter.ai/api/v1`, or the
+  person's own base URL. A refused key, a rate limit or an unreachable service is said in the
+  chat and kept as the session's `assistant_error` until the next turn.
+- **What clients see.** `terrazzo/agent/info` returns `enabled`, `provider`, `provider_label` and
+  `model`, never the key; `HaClient.terrazzoBuiltInAgent()` reads it (off for an older
+  integration).
+
+### New dashboards
+
+A session can build a dashboard that doesn't exist yet: `terrazzo/edit/start` with `scope`
+`{"kind": "new_dashboard", "title": ..., "icon"?: ...}` (MCP: `start_edit_session` with
+`new_dashboard_title`). Home Assistant picks its `url_path` from the title (with the hyphen
+Lovelace requires, and not one in use or being built), and the session starts from one empty
+sections view. Until it is created, only the person who started it and administrators can see it;
+`terrazzo/edit/list` with `new_dashboards: true` lists them. Applying a draft creates the
+dashboard with Lovelace's own `lovelace/dashboards/create`, run in-process as the administrator
+applying it (its schema and admin check included), then saves the draft into it; if a dashboard
+took that path meanwhile, apply is a conflict. Undo deletes it with `lovelace/dashboards/delete`
+while it still holds the applied draft.
 
 ## Edit sessions
 

@@ -58,7 +58,9 @@ with nothing to copy, and the app tells them you're picking it up. Otherwise a h
 prompt names the MCP endpoint, a `session_id` and the request. Without one,
 call `list_edit_sessions` to find an existing open request and its notes on a visible dashboard. If
 there is no relevant request, call `start_edit_session` with the dashboard's `url_path` (from
-`list_dashboards`; the default dashboard has none) and the request. The person then sees the
+`list_dashboards`; the default dashboard has none) and the request. To build a dashboard that
+doesn't exist yet, pass `new_dashboard_title` instead of `url_path`: the session starts from an
+empty dashboard, and applying your draft creates it. The person then sees the
 session in the phone app or the panel.
 
 1. `get_edit_session` with the `session_id`: the request, the session's `scope`, the dashboard as

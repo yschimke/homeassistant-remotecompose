@@ -119,37 +119,82 @@ def _now():
     return time.time()
 
 
+def _not_created(hass, session):
+    """Whether [session] builds a dashboard Home Assistant doesn't have (yet)."""
+    if not edit_sessions.is_new_dashboard(session):
+        return False
+    return session["url_path"] not in _all_dashboard_paths(hass)
+
+
+def _all_dashboard_paths(hass):
+    data = hass.data.get("lovelace")
+    dashboards = getattr(data, "dashboards", None)
+    if dashboards is None and isinstance(data, dict):
+        dashboards = data.get("dashboards")
+    return {None if path in (None, "lovelace") else path for path in (dashboards or {})}
+
+
 def _visible_session(hass, user, session_id):
-    """A session, if [user] may see the dashboard it edits."""
+    """A session, if [user] may see the dashboard it edits. A dashboard still being built is the
+    business of whoever started it, and of administrators."""
     edits = edits_of(hass)
     session = edits.sessions.get(session_id, _now())
-    dashboard_for(hass, user, session["url_path"])
+    if _not_created(hass, session):
+        if session["created_by"] != user.id and not user.is_admin:
+            raise SessionError(f"No edit session {session_id}; it may have expired")
+    else:
+        dashboard_for(hass, user, session["url_path"])
     return edits, session
 
 
 async def async_start(hass, user, url_path, request, scope=None):
     edits = edits_of(hass)
-    baseline = await current_config(dashboard_for(hass, user, url_path), url_path)
-    session = edits.sessions.create(url_path or None, request, baseline, user.id, _now(), scope)
+    if isinstance(scope, dict) and scope.get("kind") == edit_sessions.NEW_DASHBOARD:
+        clean = edit_sessions.new_dashboard_scope(scope.get("title"), scope.get("icon"))
+        # Not a path Home Assistant has, nor one another new dashboard is about to take.
+        taken = _all_dashboard_paths(hass) | {
+            s["url_path"] for s in edits.sessions.new_dashboards(user.id, _now(), is_admin=True)
+        }
+        path = edit_sessions.new_dashboard_path(clean["title"], taken)
+        baseline = edit_sessions.new_dashboard_baseline(clean["title"])
+        session = edits.sessions.create(path, request, baseline, user.id, _now(), clean)
+    else:
+        baseline = await current_config(dashboard_for(hass, user, url_path), url_path)
+        session = edits.sessions.create(url_path or None, request, baseline, user.id, _now(), scope)
     edits.changed(session)
     return session
 
 
+async def async_session_config(hass, user, session):
+    """The dashboard [session] edits as it is now: for one not created yet, its empty start."""
+    if _not_created(hass, session):
+        return session["baseline"]
+    return await current_config(dashboard_for(hass, user, session["url_path"]), session["url_path"])
+
+
 def open_sessions_for_agent(hass, user):
-    """Open sessions on visible dashboards, without stored dashboard configs."""
+    """Open sessions on visible dashboards and new ones, without stored dashboard configs."""
+    return [edit_sessions.summary(session) for session in _open_for(hass, user, _now())]
+
+
+def _open_for(hass, user, now):
+    """Open sessions [user] may see: on visible dashboards, and building ones not created yet."""
     sessions = edits_of(hass).sessions
-    now = _now()
-    visible = visible_dashboards(hass, user)
-    return [edit_sessions.summary(session) for session in sessions.for_dashboards(visible, now)]
+    found = sessions.for_dashboards(visible_dashboards(hass, user), now)
+    seen = {s["id"] for s in found}
+    found += [
+        s for s in sessions.new_dashboards(user.id, now, user.is_admin)
+        if s["id"] not in seen and _not_created(hass, s)
+    ]
+    return sorted(found, key=lambda s: s["updated_at"], reverse=True)
 
 
 async def async_session_for_agent(hass, user, session_id):
     """What an agent reads: the session without its stored configs, the dashboard as it is now,
     and the newest draft."""
     _, session = _visible_session(hass, user, session_id)
-    dashboard = dashboard_for(hass, user, session["url_path"])
     result = edit_sessions.summary(session)
-    result["dashboard"] = await current_config(dashboard, session["url_path"])
+    result["dashboard"] = await async_session_config(hass, user, session)
     result["latest_draft"] = session["drafts"][-1]["config"] if session["drafts"] else None
     result["next"] = edit_sessions.next_step(session)
     return result
@@ -201,8 +246,7 @@ async def async_await_request(hass, user, since, timeout=FEEDBACK_WAIT_SECONDS):
         deadline = time.monotonic() + max(0, min(timeout, FEEDBACK_WAIT_SECONDS))
         while True:
             edits.listening_at = _now()
-            visible = visible_dashboards(hass, user)
-            fresh = [s for s in edits.sessions.for_dashboards(visible, _now()) if s["created_at"] > since]
+            fresh = [s for s in _open_for(hass, user, _now()) if s["created_at"] > since]
             left = deadline - time.monotonic()
             if fresh or left <= 0:
                 break
@@ -331,6 +375,8 @@ async def async_apply(hass, user, session_id, draft_id):
     if not user.is_admin:
         raise SessionError("Only an administrator can apply a dashboard draft")
     edits, session = _visible_session(hass, user, session_id)
+    if edit_sessions.is_new_dashboard(session):
+        return await _async_apply_new(hass, user, edits, session, draft_id)
     dashboard = dashboard_for(hass, user, session["url_path"])
     if getattr(dashboard, "mode", None) != "storage":
         raise SessionError("This dashboard is a YAML file; copy the draft into the file instead")
@@ -346,6 +392,8 @@ async def async_undo(hass, user, session_id):
     if not user.is_admin:
         raise SessionError("Only an administrator can undo an applied draft")
     edits, session = _visible_session(hass, user, session_id)
+    if edit_sessions.is_new_dashboard(session):
+        return await _async_undo_new(hass, user, edits, session)
     dashboard = dashboard_for(hass, user, session["url_path"])
     current = await current_config(dashboard, session["url_path"])
     baseline = edits.sessions.check_undo(session_id, current, _now())
@@ -355,6 +403,103 @@ async def async_undo(hass, user, session_id):
     if session.get("cloud"):
         async_start_relay(hass, session_id)
     return edits.sessions.get(session_id, _now())
+
+
+# --- New dashboards -------------------------------------------------------------------------
+
+
+class _CommandReply:
+    """Stands in for a WebSocket connection to run one of Home Assistant's own commands as
+    [user]: its schema, its admin check and its handler, exactly as a client's call would."""
+
+    def __init__(self, hass, user):
+        self.hass = hass
+        self.user = user
+        self.result = hass.loop.create_future()
+        self.subscriptions = {}
+
+    def context(self, msg):
+        from homeassistant.core import Context
+
+        return Context(user_id=self.user.id)
+
+    def send_result(self, msg_id, result=None):
+        if not self.result.done():
+            self.result.set_result(result)
+
+    def send_error(self, msg_id, code, message, *args, **kwargs):
+        if not self.result.done():
+            self.result.set_exception(SessionError(f"Home Assistant refused: {message}"))
+
+    def async_handle_exception(self, msg, err):
+        if not self.result.done():
+            self.result.set_exception(SessionError(f"Home Assistant refused: {err}"))
+
+    def send_message(self, message):
+        pass
+
+
+async def _async_ha_command(hass, user, command):
+    """Run Home Assistant's WebSocket command [command] (a message without its id) as [user]."""
+    handlers = hass.data.get("websocket_api") or {}
+    found = handlers.get(command["type"])
+    if not found:
+        raise SessionError(f"This Home Assistant has no {command['type']}")
+    handler, schema = found
+    msg = {"id": 1, **command}
+    if schema is not False and schema is not None:
+        try:
+            msg = schema(msg)
+        except vol.Invalid as failure:
+            raise SessionError(f"Home Assistant refused: {failure}") from failure
+    reply = _CommandReply(hass, user)
+    try:
+        handler(hass, reply, msg)
+    except Exception as failure:  # noqa: BLE001 - the command's own refusal, such as Unauthorized
+        raise SessionError(f"Home Assistant refused {command['type']}: {failure}") from failure
+    return await asyncio.wait_for(reply.result, 30)
+
+
+async def _async_apply_new(hass, user, edits, session, draft_id):
+    """Create the dashboard a new-dashboard session built, with [draft_id] as its config. It is
+    created by Lovelace's own `lovelace/dashboards/create`, as the administrator applying it."""
+    path = session["url_path"]
+    if path in _all_dashboard_paths(hass):
+        raise Conflict(
+            f"A dashboard at /{path} exists now. Start a new session to build it under another name."
+        )
+    session_id = session["id"]
+    config = edits.sessions.check_apply(session_id, draft_id, session["baseline"], _now())
+    scope = session["scope"]
+    command = {
+        "type": "lovelace/dashboards/create",
+        "url_path": path,
+        "title": scope.get("title") or path,
+        "mode": "storage",
+        "show_in_sidebar": True,
+        "require_admin": False,
+    }
+    if scope.get("icon"):
+        command["icon"] = scope["icon"]
+    await _async_ha_command(hass, user, command)
+    dashboard = dashboard_for(hass, user, path)
+    await dashboard.async_save(copy.deepcopy(config))
+    edits.changed(edits.sessions.applied(session_id, draft_id, user.id, _now()))
+    return edits.sessions.get(session_id, _now())
+
+
+async def _async_undo_new(hass, user, edits, session):
+    """Delete the dashboard a new-dashboard session created, if it still holds the draft."""
+    path = session["url_path"]
+    dashboard = dashboard_for(hass, user, path)
+    current = await current_config(dashboard, path)
+    edits.sessions.check_undo(session["id"], current, _now())
+    dashboard_id = (getattr(dashboard, "config", None) or {}).get("id")
+    if not dashboard_id:
+        raise SessionError("Home Assistant doesn't say which dashboard to delete; delete it in Settings")
+    await _async_ha_command(hass, user, {"type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id})
+    edits.changed(edits.sessions.undone(session["id"], _now()))
+    return edits.sessions.get(session["id"], _now())
 
 
 # --- Cloud relay ----------------------------------------------------------------------------
@@ -497,13 +642,34 @@ async def ws_start(hass, connection, msg):
         vol.Required("type"): "terrazzo/edit/list",
         vol.Optional("url_path"): vol.Any(None, str),
         vol.Optional("include_closed"): bool,
+        # The open sessions building dashboards that don't exist yet, instead of one dashboard's.
+        vol.Optional("new_dashboards"): bool,
     }
 )
 @callback
 def ws_list(hass, connection, msg):
+    user = connection.user
     try:
         edits = edits_of(hass)
-        dashboard_for(hass, connection.user, msg.get("url_path"))
+        if msg.get("new_dashboards"):
+            sessions = [
+                s for s in edits.sessions.new_dashboards(user.id, _now(), user.is_admin)
+                if _not_created(hass, s)
+            ]
+            connection.send_result(msg["id"], {"sessions": [_summary_for(s, user) for s in sessions]})
+            return
+        url_path = msg.get("url_path") or None
+        if url_path not in _all_dashboard_paths(hass) and url_path is not None:
+            # A dashboard still being built: its own sessions only.
+            sessions = [
+                s for s in edits.sessions.for_dashboard(url_path, _now(), msg.get("include_closed", False))
+                if edit_sessions.is_new_dashboard(s) and (s["created_by"] == user.id or user.is_admin)
+            ]
+            if not sessions:
+                raise SessionError(f"No dashboard {url_path}")
+            connection.send_result(msg["id"], {"sessions": [_summary_for(s, user) for s in sessions]})
+            return
+        dashboard_for(hass, user, url_path)
     except SessionError as failure:
         _send_failure(connection, msg, failure)
         return
