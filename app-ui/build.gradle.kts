@@ -74,6 +74,9 @@ kotlin {
       implementation(libs.compose.multiplatform.ui.test.junit4)
       // Captures designs by key as the design server does (ExactDesignKeyTest).
       implementation(project(":card-designs"))
+      // A fake Home Assistant on a real socket (FakeHomeAssistant).
+      implementation(libs.ktor.server.cio)
+      implementation(libs.ktor.server.websockets)
     }
     commonTest.dependencies {
       implementation(libs.kotlin.test)

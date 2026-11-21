@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import ee.schimke.ha.client.TerrazzoIntegration
 import ee.schimke.ha.client.design.UsageSharing
 import ee.schimke.ha.client.design.privateDesignServerUrl
 import ee.schimke.ha.design.DesignEntry
@@ -99,11 +100,13 @@ import ee.schimke.terrazzo.dashboard.CardStyles
 import ee.schimke.terrazzo.notify.HaNotifications
 import ee.schimke.terrazzo.notify.TestNotification
 import ee.schimke.terrazzo.shared.ReportFeedbackButton
+import ee.schimke.terrazzo.shared.TerrazzoIntegrationStatus
 import ee.schimke.terrazzo.shared.isPlayUpdateTester
 import ee.schimke.terrazzo.shared.setPlayUpdateTester
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
@@ -201,6 +204,21 @@ internal fun SettingsScreen(
               Text(url, style = MaterialTheme.typography.bodyMedium)
             }
           }
+        }
+        if (!isDemo) {
+          // The terrazzo/info handshake, asked once per connection (LiveHaSession caches it).
+          val integration by
+            produceState<TerrazzoIntegration?>(null, session) {
+              value =
+                try {
+                  session.terrazzoIntegration()
+                } catch (e: CancellationException) {
+                  throw e
+                } catch (_: Exception) {
+                  null
+                }
+            }
+          TerrazzoIntegrationStatus(integration)
         }
         HaNotificationsSetting(session)
       }
