@@ -1,7 +1,7 @@
 package ee.schimke.ha.designserver
 
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.validateCardDraft
+import ee.schimke.ha.design.Sha256
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode

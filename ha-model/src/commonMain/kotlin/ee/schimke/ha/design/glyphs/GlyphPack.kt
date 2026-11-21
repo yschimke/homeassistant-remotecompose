@@ -1,4 +1,4 @@
-package ee.schimke.ha.client.design.glyphs
+package ee.schimke.ha.design.glyphs
 
 /**
  * One face at one size as glyph images: what `GET <base>/fonts/glyphs` returns

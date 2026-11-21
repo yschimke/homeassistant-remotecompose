@@ -40,10 +40,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import ee.schimke.ha.client.design.CardDesignOverride
-import ee.schimke.ha.client.design.CardDesignOverrides
-import ee.schimke.ha.client.design.CardDesignScope
 import ee.schimke.ha.client.design.DesignOption
+import ee.schimke.ha.design.CardDesignOverride
+import ee.schimke.ha.design.CardDesignOverrides
+import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig

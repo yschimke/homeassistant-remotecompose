@@ -7,7 +7,6 @@ import ee.schimke.composeai.rcplayer.edit.validateFor
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignCatalogEntry
@@ -15,6 +14,7 @@ import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignProperties
+import ee.schimke.ha.design.Sha256
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.json.Json

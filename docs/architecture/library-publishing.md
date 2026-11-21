@@ -19,13 +19,13 @@ dependencies {
 
 | Module | Targets | What it is for | Pulls in |
 |---|---|---|---|
-| `ha-model` | Android, JVM, Wasm, iOS | Dashboard, card config and state types; state formatting, Jinja, section grid | kotlinx-serialization, datetime |
+| `ha-model` | Android, JVM, Wasm, iOS | Dashboard, card config and state types; state formatting, Jinja, section grid; design, font and glyph stores and value types | kotlinx-serialization, datetime |
 | `ha-client` | Android, JVM, Wasm, iOS | Home Assistant WebSocket + REST client; Terrazzo integration, design-library and card-source clients | ha-model, Ktor (one engine per target), coroutines |
 | `rc-mdi-icons` | Android, JVM, Wasm, iOS | MDI icons by name for Remote Compose | MDI catalog |
 | `rc-material3-motion` | Android, JVM, Wasm, iOS | Material 3 motion tokens for RC creation | RC creation |
 | `rc-components` | Android, JVM, Wasm, iOS | RC card components and themes, HA-model-free | RC creation, rc-players, materialkolor |
 | `rc-player-ui` | Android, JVM, Wasm, iOS | `RemoteComposeCard(bytes, bindings)` | rc-players Compose player |
-| `rc-converter` | Android, JVM, Wasm, iOS | `CardConverter`, `CardRegistry`, built-in converters, bundled designs, template capture/playback | everything above |
+| `rc-converter` | Android, JVM, Wasm, iOS | `CardConverter`, `CardRegistry`, built-in converters, bundled designs, template capture/playback | ha-model, rc-components, rc-mdi-icons, rc-player-ui (no ha-client) |
 | `room-ui` | Android, JVM, Wasm | Room state from a snapshot, and its UI | ha-model, CMP |
 | `ha-bom` | platform | Version constraints for all of the above | |
 
@@ -91,11 +91,18 @@ Fonts and glyphs work offline: `InMemoryFontStore` + `HaFontLibrary.install(face
 
 What stops it being a clean local library:
 
-- **It pulls in Ktor.** `rc-converter` needs `ha-client` for four network-free types: `BuiltDesign`,
-  `CachedFontFace`, `Sha256`, `GlyphPack`. So do the stores (`DesignStore`, `FontStore`,
-  `GlyphStore`). Move them, plus `BundledDesigns`, `InbuiltDesigns` and `GeneratedDesigns`, into
-  `ha-model` (or `ha-design-model`), and drop `rc-converter → ha-client`. `rc-converter` declares
-  `ha-client` as `api` now, so consumers see the real dependency rather than a hidden one.
+- **Done: it no longer pulls in Ktor.** The network-free design types now live in `ha-model`:
+  - `ee.schimke.ha.design`: `BuiltDesign`, `Sha256`, `DesignStore` and `InMemoryDesignStore`,
+    `StoredManifest`, `GeneratedDesigns`, `InbuiltDesigns`, `DesignBlob`, `BundledDesigns`,
+    `FontStore`, `InMemoryFontStore`, `CachedFontFace` and `CardDesignOverrides`;
+  - `ee.schimke.ha.design.glyphs`: `GlyphPack`, `GlyphPackCodec`, `GlyphStore`,
+    `InMemoryGlyphStore` and `GlyphRequest`;
+  - `ee.schimke.ha.model`: the `CardGenerator` / `CardSource` chain.
+
+  `rc-converter` no longer depends on `ha-client`; `ha-client` keeps the network half
+  (`DesignRepository`, `DesignFonts`, `GlyphCache`, `DesignPublisher`, `CardStudioClient`). A
+  consumer that only renders gets no Home Assistant client. It still resolves Ktor, through
+  rc-players' `rc-player-compose`; dropping that is rc-players' change to make.
 - **The glue from bindings to player is private.** The `CardSnapshotBindings` → `RcNamedValue` map
   is private in `app-ui` (`LibraryCard.kt:340`). The only player that wires taps and bindings
   together is `CachedCardPreview`, and it is androidMain only. Publish `toNamedValues()` and a
@@ -172,8 +179,9 @@ Changed in this PR:
   connection pool or its dispatcher. They now go through the platform factory like the other
   clients.
 - **`api` where types are public:** `ha-client` exposes Ktor core and coroutines;
-  `rc-converter` exposes `ha-model` and `ha-client`. Both were `implementation` while their types
-  sat in public signatures, which compiled only because every consumer happened to add them itself.
+  `rc-converter` exposes `ha-model`. Both were `implementation` while their types sat in public
+  signatures, which compiled only because every consumer happened to add them itself.
+  (`rc-converter` briefly exposed `ha-client` too, until the design types moved to `ha-model`.)
 - **Fixed: common metadata didn't compile.** `TemplateBindings` used
   `RegexOption.DOT_MATCHES_ALL`, which isn't in common Kotlin; `ha-model` built per target but not
   as a published multiplatform library.
@@ -188,7 +196,6 @@ Still to do:
 - Each target ships one fixed engine as `implementation`: OkHttp on Android, CIO on the JVM, Darwin
   on Apple, Js on Wasm. A JVM app that uses the Java engine still gets CIO on its classpath. That's
   acceptable now; if it matters, move the default engines to a separate `ha-client-engines` artifact.
-- `rc-converter → ha-client` drags Ktor into rendering-only consumers (see the template section).
 - `rc-components` puts `material-icons-extended` on the main classpath for about 26 glyphs, which
   is large on Wasm and iOS. `MdiIcons` is a closed `object`; add an `IconResolver`.
 

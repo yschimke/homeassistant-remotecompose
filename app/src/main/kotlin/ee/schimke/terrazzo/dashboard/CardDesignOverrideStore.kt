@@ -1,9 +1,9 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
-import ee.schimke.ha.client.design.CardDesignOverride
-import ee.schimke.ha.client.design.CardDesignOverrides
-import ee.schimke.ha.client.design.CardDesignScope
+import ee.schimke.ha.design.CardDesignOverride
+import ee.schimke.ha.design.CardDesignOverrides
+import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
 import java.io.File
 import kotlinx.coroutines.Dispatchers

@@ -175,7 +175,7 @@ private fun WearRemoteCardContent(
   // at capture, see WEAR_ON_PROPERTY) without changing the design, frame or, untinted, the tint.
   val shape = remember(design, snapshot) { wearTemplateShape(design, snapshot, registry) }
   val synced = remember(card, frame, revision) { store.syncedCardDesign(card, frame.container) }
-  val syncedSha = synced?.let { ee.schimke.ha.client.design.Sha256.hex(it) }
+  val syncedSha = synced?.let { ee.schimke.ha.design.Sha256.hex(it) }
   val template =
     remember(design, shape, look, style, frame, tint, syncedSha, paletteKey) {
       (synced?.let { syncedWearAppTemplate(it, frame, tint) }
@@ -291,7 +291,7 @@ private fun WearRemoteCardContent(
 
 /** The phone-selected template, shared by pinned, section and dashboard cards. */
 internal fun WearOfflineStore.syncedCardDesign(card: CardConfig, container: String): ByteArray? {
-  val key = ee.schimke.ha.client.design.cardFingerprint(card)
+  val key = ee.schimke.ha.design.cardFingerprint(card)
   return readSlotDesigns()
     ?.designs
     ?.firstOrNull { it.cardKey == key && it.container == container }

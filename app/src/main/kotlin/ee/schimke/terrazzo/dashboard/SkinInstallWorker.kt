@@ -9,7 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import ee.schimke.ha.client.design.cardFingerprint
+import ee.schimke.ha.design.cardFingerprint
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler

@@ -43,9 +43,9 @@ import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
-import ee.schimke.ha.client.design.cardFingerprint
 import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
+import ee.schimke.ha.design.cardFingerprint
 import ee.schimke.ha.model.*
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -165,7 +165,7 @@ fun TerrazzoMultiplatformApp(
     // player under the app resolves it here, and draws again when it arrives. This host keeps no
     // design server of its own, so it fetches the public one's on each start.
     LaunchedEffect(Unit) {
-      val store = ee.schimke.ha.client.design.InMemoryFontStore()
+      val store = ee.schimke.ha.design.InMemoryFontStore()
       val fetched = runCatching {
         ee.schimke.ha.client.design.DesignFonts.refresh(
           ee.schimke.ha.client.design.DesignFonts.PUBLIC_SERVER,

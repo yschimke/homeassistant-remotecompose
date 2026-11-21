@@ -1,8 +1,8 @@
 package ee.schimke.terrazzo.dashboard
 
-import ee.schimke.ha.client.design.CardDesignOverride
-import ee.schimke.ha.client.design.CardDesignOverrides
-import ee.schimke.ha.client.design.CardDesignScope
+import ee.schimke.ha.design.CardDesignOverride
+import ee.schimke.ha.design.CardDesignOverrides
+import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignQuery

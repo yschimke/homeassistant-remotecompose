@@ -2,7 +2,7 @@ package ee.schimke.terrazzo.wear.sync
 
 import ee.schimke.composeai.rcplayer.protocol.*
 import ee.schimke.ha.client.HaAuthInvalidException
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.terrazzo.wearsync.proto.EntityValue

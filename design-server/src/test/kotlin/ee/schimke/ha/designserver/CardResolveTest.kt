@@ -3,8 +3,8 @@ package ee.schimke.ha.designserver
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcFloatExpression
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
-import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
+import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignCatalogEntry
 import ee.schimke.ha.design.DesignExample

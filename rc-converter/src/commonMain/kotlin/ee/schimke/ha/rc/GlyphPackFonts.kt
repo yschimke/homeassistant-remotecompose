@@ -4,7 +4,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
 import ee.schimke.composeai.rcplayer.protocol.RcBitmapFontData
 import ee.schimke.composeai.rcplayer.protocol.RcBitmapFontGlyph
 import ee.schimke.composeai.rcplayer.protocol.RcOperation
-import ee.schimke.ha.client.design.glyphs.GlyphPack
+import ee.schimke.ha.design.glyphs.GlyphPack
 
 /**
  * [this] pack as a RemoteCompose bitmap font: a `RAW8` bitmap a glyph (its coverage, a white mask

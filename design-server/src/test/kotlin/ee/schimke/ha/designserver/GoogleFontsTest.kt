@@ -1,6 +1,6 @@
 package ee.schimke.ha.designserver
 
-import ee.schimke.ha.client.design.glyphs.GlyphPackCodec
+import ee.schimke.ha.design.glyphs.GlyphPackCodec
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

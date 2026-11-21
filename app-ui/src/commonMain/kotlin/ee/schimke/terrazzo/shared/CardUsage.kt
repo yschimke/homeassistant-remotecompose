@@ -18,7 +18,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.TemplateUsage
 import ee.schimke.ha.client.design.UsageKey
 import ee.schimke.ha.client.design.UsageSharing
@@ -27,6 +26,7 @@ import ee.schimke.ha.client.design.UsageStore
 import ee.schimke.ha.client.design.UsageUserAgent
 import ee.schimke.ha.client.design.uploadWithDefaultClient
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope

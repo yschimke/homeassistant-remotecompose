@@ -2,8 +2,8 @@ package ee.schimke.ha.designserver
 
 import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
 import ee.schimke.composeai.rcplayer.protocol.RcBitmapFontData
-import ee.schimke.ha.client.design.glyphs.GlyphPack
-import ee.schimke.ha.client.design.glyphs.GlyphPackCodec
+import ee.schimke.ha.design.glyphs.GlyphPack
+import ee.schimke.ha.design.glyphs.GlyphPackCodec
 import ee.schimke.ha.rc.toBitmapFont
 import io.ktor.client.request.get
 import io.ktor.client.request.header

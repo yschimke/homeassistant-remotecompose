@@ -108,12 +108,11 @@ kotlin {
       // HaIconMap's glyphs: Material Design Icons by name.
       api(project(":rc-mdi-icons"))
       // Public API: `CardConverter.Render(CardConfig, HaSnapshot)` and the registry take ha-model
-      // types, and `CardDesignTemplates` / `HaFontLibrary` return ha-client's `BuiltDesign` and
-      // `CachedFontFace`. `api` so a consumer compiles against what it is handed; moving those
-      // value types out of ha-client (and dropping it here) is the planned fix, see
-      // docs/architecture/library-adoption-review.md.
+      // types, as do `CardDesignTemplates` (`BuiltDesign`) and `HaFontLibrary` (`CachedFontFace`).
+      // Nothing here needs `ha-client`: rendering, bundled designs and the design, font and glyph
+      // stores are network-free, so a consumer that only renders never resolves Ktor. Fetching
+      // designs from a server is `ha-client`'s `DesignRepository`, which an app adds itself.
       api(project(":ha-model"))
-      api(project(":ha-client"))
       // RcErrorBoundary: each player disables a document that throws, instead of the screen.
       implementation(project(":rc-player-ui"))
       implementation(libs.kotlinx.coroutines.core)
@@ -141,6 +140,8 @@ kotlin {
       implementation(libs.remote.player.view)
     }
     getByName("androidHostTest").dependencies {
+      // The end-to-end test publishes and refreshes through the real DesignRepository.
+      implementation(project(":ha-client"))
       implementation(libs.kotlin.test)
       implementation(libs.kotlin.test.junit)
       implementation(libs.kotlinx.coroutines.test)

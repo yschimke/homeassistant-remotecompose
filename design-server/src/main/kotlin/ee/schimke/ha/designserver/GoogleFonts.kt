@@ -1,6 +1,6 @@
 package ee.schimke.ha.designserver
 
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.Sha256
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header

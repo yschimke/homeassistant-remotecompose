@@ -3,10 +3,10 @@ package ee.schimke.terrazzo.dashboard
 import ee.schimke.ha.client.design.DesignedBlob
 import ee.schimke.ha.client.design.DesignsById
 import ee.schimke.ha.client.design.ResolvedDesigns
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.design.DeviceMatch
+import ee.schimke.ha.design.Sha256
 import ee.schimke.terrazzo.BuildConfig
 import java.io.File
 import kotlinx.serialization.ExperimentalSerializationApi

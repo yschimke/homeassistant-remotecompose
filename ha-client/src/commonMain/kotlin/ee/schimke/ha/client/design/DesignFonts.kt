@@ -1,7 +1,10 @@
 package ee.schimke.ha.client.design
 
 import ee.schimke.ha.client.HaHttpClientFactory
+import ee.schimke.ha.design.CachedFontFace
 import ee.schimke.ha.design.CardFontManifest
+import ee.schimke.ha.design.FontStore
+import ee.schimke.ha.design.Sha256
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
@@ -10,26 +13,6 @@ import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
-
-/** Where a device keeps the fonts its design server serves: the manifest and each face by hash. */
-interface FontStore {
-  suspend fun readManifest(): String?
-
-  suspend fun writeManifest(manifest: String)
-
-  suspend fun readFace(sha256: String): ByteArray?
-
-  suspend fun writeFace(sha256: String, bytes: ByteArray)
-}
-
-/** A face a card can name, from the store: its [family] name, [weight], slant and [bytes]. */
-class CachedFontFace(
-  val family: String,
-  val weight: Int,
-  val italic: Boolean,
-  val sha256: String,
-  val bytes: ByteArray,
-)
 
 /**
  * The fonts card designs name, fetched from the design server beside its designs
@@ -122,22 +105,4 @@ object DesignFonts {
   const val PUBLIC_SERVER: String = "https://ha.coo.ee/designs/v1"
 
   private val SHA256 = Regex("[0-9a-f]{64}")
-}
-
-/** A [FontStore] in memory, for a host that fetches its fonts on each start. */
-class InMemoryFontStore : FontStore {
-  private var manifest: String? = null
-  private val faces = mutableMapOf<String, ByteArray>()
-
-  override suspend fun readManifest(): String? = manifest
-
-  override suspend fun writeManifest(manifest: String) {
-    this.manifest = manifest
-  }
-
-  override suspend fun readFace(sha256: String): ByteArray? = faces[sha256]
-
-  override suspend fun writeFace(sha256: String, bytes: ByteArray) {
-    faces[sha256] = bytes
-  }
 }

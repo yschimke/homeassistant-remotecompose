@@ -1,6 +1,5 @@
-package ee.schimke.ha.client.design
+package ee.schimke.ha.design
 
-import ee.schimke.ha.design.DesignManifest
 import kotlinx.serialization.json.Json
 
 /**

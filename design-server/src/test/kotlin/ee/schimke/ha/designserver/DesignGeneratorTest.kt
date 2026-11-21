@@ -1,12 +1,12 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
-import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.GeneratedDesign
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot

@@ -172,13 +172,13 @@ class WearCardWarmupTest {
         ),
       )
     val bytes = CardDesignTemplates.capture(context, key).bytes
-    val sha = ee.schimke.ha.client.design.Sha256.hex(bytes)
+    val sha = ee.schimke.ha.design.Sha256.hex(bytes)
     offline.writeDesign(ee.schimke.terrazzo.wearsync.proto.WearDesignBlob(sha, bytes))
     offline.writeSlotDesigns(
       ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns(
         ee.schimke.ha.design.DesignKey.WEAR_CONTAINERS.map {
           ee.schimke.terrazzo.wearsync.proto.WearSlotDesign(
-            ee.schimke.ha.client.design.cardFingerprint(card),
+            ee.schimke.ha.design.cardFingerprint(card),
             it,
             sha,
           )

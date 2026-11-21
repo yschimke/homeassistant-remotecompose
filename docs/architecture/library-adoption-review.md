@@ -314,8 +314,11 @@ Ordered so each phase is independently shippable and unblocks the next. Effort i
 5. Move `CachedHaSession`, `DemoHaSession`, `OfflineOnlySession`, `OfflineCacheStorage` to
    `commonMain` (inject a clock; load demo dashboards as resources).
 6. Extract `wear-sync-proto`; delete the copy.
-7. Move `BuiltDesign`, `CachedFontFace`, `GlyphPack`, `Sha256`, `CardGenerator` to
-   `ha-design-model`; drop `rc-converter → ha-client`; move `LocalCardGenerator` to a glue module.
+7. ~~Move `BuiltDesign`, `CachedFontFace`, `GlyphPack`, `Sha256`, `CardGenerator` to
+   `ha-design-model`; drop `rc-converter → ha-client`.~~ Done: moved into `ha-model`
+   (`ee.schimke.ha.design`, `ee.schimke.ha.design.glyphs`, `ee.schimke.ha.model`); see
+   [library-publishing.md](library-publishing.md). Moving `LocalCardGenerator` to a glue module is
+   still open.
 
 **Phase 2: the data-source contract (medium).**
 8. `ha-session-api`: slim `HaSession` + capability interfaces, `HaTokenProvider`,
