@@ -1,5 +1,50 @@
 # Changelog
 
+## [0.1.99](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.98...v0.1.99) (2026-11-21)
+
+
+### Features
+
+* built-in dashboard agent in the Terrazzo integration ([#1689](https://github.com/yschimke/homeassistant-remotecompose/issues/1689)) ([1cec407](https://github.com/yschimke/homeassistant-remotecompose/commit/1cec407324d831c52ecc3aa77e5ab73825958a73))
+* info endpoints, integration status in Settings, TerrazzoSession ([#1709](https://github.com/yschimke/homeassistant-remotecompose/issues/1709)) ([e5cfd4c](https://github.com/yschimke/homeassistant-remotecompose/commit/e5cfd4c310e46376921300439bb8d9cac4fabb49))
+* LiveHaSession gates Terrazzo calls on the terrazzo/info handshake ([#1708](https://github.com/yschimke/homeassistant-remotecompose/issues/1708)) ([e3967f9](https://github.com/yschimke/homeassistant-remotecompose/commit/e3967f9702fa89e32e1ed55a83e2b27db01ef4d6))
+* **lovelace:** suggest Remote Compose cards in Home Assistant's card picker ([#1710](https://github.com/yschimke/homeassistant-remotecompose/issues/1710)) ([cb4e8ce](https://github.com/yschimke/homeassistant-remotecompose/commit/cb4e8ce751ac443909f6bd942230c285b4aa2c78))
+* play published Wear OS watch faces as cards ([#1661](https://github.com/yschimke/homeassistant-remotecompose/issues/1661)) ([40278ca](https://github.com/yschimke/homeassistant-remotecompose/commit/40278ca3b959b78057a972f75dd62e07508f046e))
+* restore sign-in on a new phone via Restore Credentials ([#1636](https://github.com/yschimke/homeassistant-remotecompose/issues/1636)) ([0c742ae](https://github.com/yschimke/homeassistant-remotecompose/commit/0c742aed7d1b080b2bb364c6a509105ac576e9f2))
+* show the agent's steps in the chat and @-mention cards and entities ([#1700](https://github.com/yschimke/homeassistant-remotecompose/issues/1700)) ([27a545f](https://github.com/yschimke/homeassistant-remotecompose/commit/27a545fecaa5896b6252cabb3ee55953e3a27875))
+* terrazzo/info handshake, desktop offline cache, common demo house, Quest on terrazzo-core ([#1705](https://github.com/yschimke/homeassistant-remotecompose/issues/1705)) ([5991e89](https://github.com/yschimke/homeassistant-remotecompose/commit/5991e89ef15a286b86a0c886d7169e8e511e5382))
+
+
+### Bug Fixes
+
+* agent chat keeps Use it in reach and names the agent and cards plainly ([#1694](https://github.com/yschimke/homeassistant-remotecompose/issues/1694)) ([845ae07](https://github.com/yschimke/homeassistant-remotecompose/commit/845ae078eccf8b6c55bbca88e5ae3fee08e3d6f2))
+* **deps:** update androidx ([#1654](https://github.com/yschimke/homeassistant-remotecompose/issues/1654)) ([933f702](https://github.com/yschimke/homeassistant-remotecompose/commit/933f70222925079a69ba86bdac6838580969f3fe))
+* **deps:** update androidx ([#1663](https://github.com/yschimke/homeassistant-remotecompose/issues/1663)) ([08e760f](https://github.com/yschimke/homeassistant-remotecompose/commit/08e760f0c750d6cf2274149775e703f71d84a7b9))
+* **deps:** update androidx-compose ([#1667](https://github.com/yschimke/homeassistant-remotecompose/issues/1667)) ([19ad3d9](https://github.com/yschimke/homeassistant-remotecompose/commit/19ad3d962a2c9cd48e93cbe8256eedc919027e38))
+* **deps:** update androidx-wear to v1.7.2 ([#1664](https://github.com/yschimke/homeassistant-remotecompose/issues/1664)) ([35a900c](https://github.com/yschimke/homeassistant-remotecompose/commit/35a900cd7c8a4bd2c143d6e099d6c65b4dd333f1))
+* **deps:** update compose-ai-tools ([#1634](https://github.com/yschimke/homeassistant-remotecompose/issues/1634)) ([44ddd91](https://github.com/yschimke/homeassistant-remotecompose/commit/44ddd91ae5c876cb56e6080e6215b9e8a43a5d07))
+* **deps:** update compose-ai-tools ([#1640](https://github.com/yschimke/homeassistant-remotecompose/issues/1640)) ([5658f3d](https://github.com/yschimke/homeassistant-remotecompose/commit/5658f3db6f450cf9224e9309e823fd35dd23351c))
+* **deps:** update compose-ai-tools ([#1644](https://github.com/yschimke/homeassistant-remotecompose/issues/1644)) ([1ebf6cd](https://github.com/yschimke/homeassistant-remotecompose/commit/1ebf6cdd5f0f1fe2af18a212e0c20f10b3fd28a0))
+* **deps:** update compose-ai-tools ([#1648](https://github.com/yschimke/homeassistant-remotecompose/issues/1648)) ([4e238f3](https://github.com/yschimke/homeassistant-remotecompose/commit/4e238f38fc13e0a0a876ea39f173c1ff4ff60eb0))
+* **deps:** update compose-ai-tools ([#1650](https://github.com/yschimke/homeassistant-remotecompose/issues/1650)) ([73e93f4](https://github.com/yschimke/homeassistant-remotecompose/commit/73e93f4cdb26638e0881d278f8319707325eefc9))
+* **deps:** update compose-ai-tools ([#1655](https://github.com/yschimke/homeassistant-remotecompose/issues/1655)) ([0bbecd6](https://github.com/yschimke/homeassistant-remotecompose/commit/0bbecd68f1410c3afe0fa4f9f6e1364f28a84931))
+* **deps:** update compose-ai-tools ([#1660](https://github.com/yschimke/homeassistant-remotecompose/issues/1660)) ([6c993b7](https://github.com/yschimke/homeassistant-remotecompose/commit/6c993b7147ab5baa0232a2d726654fdcb24a4395))
+* **deps:** update compose-ai-tools ([#1672](https://github.com/yschimke/homeassistant-remotecompose/issues/1672)) ([86a0ab6](https://github.com/yschimke/homeassistant-remotecompose/commit/86a0ab6ee181401a23a2ea39154b01c4631c9614))
+* **deps:** update compose-multiplatform to v1.13.0-rc01 ([#1651](https://github.com/yschimke/homeassistant-remotecompose/issues/1651)) ([0d40b69](https://github.com/yschimke/homeassistant-remotecompose/commit/0d40b69dfb2892f7c6a0535538f150b0edf06332))
+* **deps:** update dependency ch.qos.logback:logback-classic to v1.6.8 ([#1665](https://github.com/yschimke/homeassistant-remotecompose/issues/1665)) ([c280421](https://github.com/yschimke/homeassistant-remotecompose/commit/c2804219672c28f96dd1a5458c969045e1c1108a))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-contracts-bom to v3.44.0 ([#1668](https://github.com/yschimke/homeassistant-remotecompose/issues/1668)) ([5fb227f](https://github.com/yschimke/homeassistant-remotecompose/commit/5fb227f32ef2c50e83f4bc015a9223ea49097fc4))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-contracts-bom to v3.45.0 ([#1686](https://github.com/yschimke/homeassistant-remotecompose/issues/1686)) ([1740edd](https://github.com/yschimke/homeassistant-remotecompose/commit/1740edd440968535f3414f464c139b74d45047ec))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-daemon-bom to v3.28.1 ([#1673](https://github.com/yschimke/homeassistant-remotecompose/issues/1673)) ([8facee5](https://github.com/yschimke/homeassistant-remotecompose/commit/8facee5f969c6b70520658f8095e37df64bf38ad))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-daemon-bom to v3.28.2 ([#1698](https://github.com/yschimke/homeassistant-remotecompose/issues/1698)) ([2bd7557](https://github.com/yschimke/homeassistant-remotecompose/commit/2bd755703023b72782899f5d4a89d13676d9a386))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.131.0 ([#1645](https://github.com/yschimke/homeassistant-remotecompose/issues/1645)) ([91b3bf9](https://github.com/yschimke/homeassistant-remotecompose/commit/91b3bf9caf8b640fb05ad84a0d8c4d929b800030))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.134.0 ([#1656](https://github.com/yschimke/homeassistant-remotecompose/issues/1656)) ([a455555](https://github.com/yschimke/homeassistant-remotecompose/commit/a455555d740d3884fe06386619627e41157c6165))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.139.0 ([#1669](https://github.com/yschimke/homeassistant-remotecompose/issues/1669)) ([d3ff1a5](https://github.com/yschimke/homeassistant-remotecompose/commit/d3ff1a5df38bf730940de6f30291c1bf8555604b))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.141.0 ([#1674](https://github.com/yschimke/homeassistant-remotecompose/issues/1674)) ([e9357e1](https://github.com/yschimke/homeassistant-remotecompose/commit/e9357e1b3e212c95113fb8013fa699065276d135))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.143.0 ([#1681](https://github.com/yschimke/homeassistant-remotecompose/issues/1681)) ([a032d23](https://github.com/yschimke/homeassistant-remotecompose/commit/a032d235adbf33c2587a1d500db3776063a3c820))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.144.0 ([#1690](https://github.com/yschimke/homeassistant-remotecompose/issues/1690)) ([3f7304d](https://github.com/yschimke/homeassistant-remotecompose/commit/3f7304d1ed1d9504a3cadc3e62e3859b52098601))
+* **deps:** update mockserver to v9.4.0 ([#1682](https://github.com/yschimke/homeassistant-remotecompose/issues/1682)) ([fe7c670](https://github.com/yschimke/homeassistant-remotecompose/commit/fe7c670708b50f5ad4c99735691b2c2989b62924))
+* **deps:** update remote-compose ([#1666](https://github.com/yschimke/homeassistant-remotecompose/issues/1666)) ([052972d](https://github.com/yschimke/homeassistant-remotecompose/commit/052972d27de021222cce41a086a25453ded66abb))
+
 ## [0.1.98](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.97...v0.1.98) (2026-11-16)
 
 
