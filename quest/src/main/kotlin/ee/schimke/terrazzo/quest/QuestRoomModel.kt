@@ -12,6 +12,12 @@ import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.room.DashboardImportance
 import ee.schimke.ha.room.dashboardImportance
+import ee.schimke.terrazzo.core.auth.HaAuthService
+import ee.schimke.terrazzo.core.auth.RestoreKeyEscrow
+import ee.schimke.terrazzo.core.auth.TokenVault
+import ee.schimke.terrazzo.core.network.HttpEngineFactory
+import ee.schimke.terrazzo.core.network.LanConnectionPolicy
+import ee.schimke.terrazzo.core.network.RemoteUrlStore
 import ee.schimke.terrazzo.room.RoomPin
 import ee.schimke.terrazzo.room.RoomState
 import ee.schimke.terrazzo.room.decodeRoomPins
@@ -23,15 +29,24 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
+import net.openid.appauth.AuthorizationException
+import net.openid.appauth.AuthorizationResponse
 
 /**
- * Quest's authenticated room state. It owns the Home Assistant WebSocket because the shared session
- * layer is API-35-only; Quest remains installable on Horizon OS API 34.
+ * Quest's authenticated room state. Sign-in and the refresh token are `:terrazzo-core`'s, as on the
+ * phone: [HaAuthService] for the OAuth code and refresh grants, [TokenVault] for the
+ * Keystore-sealed refresh token (with no Credential Manager escrow: Horizon OS has no Play
+ * services). The WebSocket stays here, because the room view also reads areas and dashboard
+ * importance, which the shared session doesn't carry.
  */
 class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
   private val scope = MainScope()
-  private val auth = QuestAuth(context)
-  private val tokenStore = QuestTokenStore(context)
+  private val auth =
+    HaAuthService(
+      context,
+      HttpEngineFactory(LanConnectionPolicy(context), RemoteUrlStore(context)),
+    )
+  private val vault = TokenVault(context, RestoreKeyEscrow.Disabled)
   private var client: HaClient? = null
   private var baseUrl: String? = null
   private var pendingSignInUrl: String? = null
@@ -67,15 +82,11 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
 
   /** Restore a prior OAuth sign-in, minting a fresh short-lived access token first. */
   fun restore() {
-    val credential = tokenStore.load() ?: return
+    val signedIn = prefs.getString(BASE_URL, null) ?: return
     val generation = ++connectionGeneration
     scope.launch {
-      connect(
-        credential.baseUrl,
-        accessToken = null,
-        refreshToken = credential.refreshToken,
-        generation = generation,
-      )
+      val refreshToken = vault.get(signedIn) ?: return@launch
+      connect(signedIn, accessToken = null, refreshToken = refreshToken, generation = generation)
     }
   }
 
@@ -83,13 +94,17 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     val normalized = url.trim().removeSuffix("/")
     pendingSignInUrl = normalized
     return try {
-      val intent = auth.authorizationIntent(normalized)
+      require(normalized.startsWith("https://") || normalized.startsWith("http://")) {
+        "Enter a full Home Assistant URL, including https://"
+      }
+      val intent = auth.prepareAuthIntent(normalized)
       // A restored session may still be refreshing in the background. Once the user starts a new
       // sign-in it must not be allowed to publish its old instance, snapshot or refresh token.
       pendingSignInGeneration = ++connectionGeneration
       connection = QuestConnection.SigningIn
       intent
-    } catch (e: IllegalArgumentException) {
+    } catch (e: Exception) {
+      // An invalid URL, or no browser to sign in with (BrowserSignInUnavailableException).
       pendingSignInUrl = null
       pendingSignInGeneration = null
       connection = QuestConnection.Error(e.message ?: "Enter a Home Assistant URL")
@@ -100,7 +115,11 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
   fun authorizationResult(data: Intent?) {
     scope.launch {
       try {
-        val tokens = auth.exchangeResult(data)
+        data?.let(AuthorizationException::fromIntent)?.let { throw it }
+        val response =
+          data?.let(AuthorizationResponse::fromIntent)
+            ?: error("Home Assistant sign-in returned no authorization response")
+        val tokens = auth.exchangeCode(response)
         val url = pendingSignInUrl ?: error("No Home Assistant URL was pending")
         val generation = pendingSignInGeneration ?: error("Home Assistant sign-in was cancelled")
         connect(url, tokens.accessToken, tokens.refreshToken, generation)
@@ -120,6 +139,7 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     pendingSignInUrl = null
     pendingSignInGeneration = null
     val closing = client
+    val signedOut = baseUrl ?: prefs.getString(BASE_URL, null)
     client = null
     baseUrl = null
     snapshot = null
@@ -128,7 +148,8 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     connection = QuestConnection.SignedOut
     scope.launch {
       closing?.close()
-      tokenStore.clear()
+      prefs.edit().remove(BASE_URL).apply()
+      signedOut?.let { vault.clear(it) }
     }
   }
 
@@ -193,11 +214,15 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     var opened: HaClient? = null
     try {
       val refreshed =
-        if (accessToken == null) refreshToken?.let { auth.refresh(normalized, it) } else null
+        if (accessToken == null) refreshToken?.let { auth.refreshAccessToken(normalized, it) }
+        else null
       val token =
         accessToken ?: refreshed?.accessToken ?: error("Home Assistant returned no access token")
       if (!ownsConnection(generation)) return
-      (refreshed?.refreshToken ?: refreshToken)?.let { tokenStore.save(normalized, it) }
+      (refreshed?.refreshToken ?: refreshToken)?.let {
+        vault.put(normalized, it)
+        prefs.edit().putString(BASE_URL, normalized).apply()
+      }
       val connected = HaClient(HaConfig(normalized, token))
       opened = connected
       connected.connect()
@@ -249,6 +274,7 @@ class QuestRoomModel(context: Context, private val prefs: SharedPreferences) {
     const val TRACKER = "room_tracker"
     const val CONTROLS_LOCKED = "room_controls_locked"
     const val PINS = "room_pins"
+    const val BASE_URL = "room_base_url"
   }
 
   private fun ownsConnection(generation: Int): Boolean = generation == connectionGeneration
