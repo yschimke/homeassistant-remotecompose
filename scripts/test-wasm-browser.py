@@ -70,6 +70,13 @@ def route_socket(socket):
                    'config/entity_registry/list_for_display': {'entity_categories': {}, 'entities': [
                        {'ei': 'switch.lamp', 'pl': 'demo', 'di': 'lamp-device'}]},
                    'config/device_registry/list': [{'id': 'lamp-device', 'manufacturer': 'Demo', 'model': 'Lamp'}]}
+        # A Home Assistant without the Terrazzo integration: Core doesn't know terrazzo/info, and
+        # has no manifest for it, which is how the app tells "not installed" from "too old".
+        refused = {'terrazzo/info': 'unknown_command', 'manifest/get': 'not_found'}
+        if kind in refused:
+            socket.send(json.dumps({'id': message['id'], 'type': 'result', 'success': False,
+                                    'error': {'code': refused[kind], 'message': refused[kind]}}))
+            return
         assert kind in results, f'Unexpected Home Assistant command: {kind}'
         if kind == 'subscribe_events':
             assert message['event_type'] == 'state_changed'

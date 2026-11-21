@@ -2,7 +2,10 @@ package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaInstanceConfig
+import ee.schimke.ha.client.agent.AgentGrantStore
 import ee.schimke.ha.client.cache.OfflineCacheStore
+import ee.schimke.ha.client.dashboard.AgentEdits
+import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
@@ -31,7 +34,7 @@ class CachedHaSession(
   private val delegate: HaSession,
   private val cache: OfflineCacheStore,
   private val nowMs: () -> Long = { Clock.System.now().toEpochMilliseconds() },
-) : HaSession {
+) : HaSession, TerrazzoSession {
 
   override val baseUrl: String
     get() = delegate.baseUrl
@@ -139,18 +142,6 @@ class CachedHaSession(
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()
 
-  // Edit sessions live in Home Assistant; there is nothing to cache.
-  override val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits?
-    get() = delegate.agentEdits
-
-  override suspend fun builtInAgent() = delegate.builtInAgent()
-
-  override fun cloudAgentEdits(
-    server: String,
-    grants: ee.schimke.ha.client.agent.AgentGrantStore,
-    agentLink: () -> String?,
-  ) = delegate.cloudAgentEdits(server, grants, agentLink)
-
   override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String? =
     delegate.createLongLivedToken(clientName, lifespanDays)
 
@@ -216,22 +207,48 @@ class CachedHaSession(
 
   override fun pushNotifications(webhookId: String) = delegate.pushNotifications(webhookId)
 
+  override suspend fun fireEvent(eventType: String, eventData: JsonObject) =
+    delegate.fireEvent(eventType, eventData)
+
+  // The Terrazzo integration lives in Home Assistant; there is nothing to cache. Around a session
+  // that can't reach it (cacheOnly), each answers as without the integration.
+  private val terrazzo: TerrazzoSession?
+    get() = delegate.terrazzo
+
+  override suspend fun terrazzoIntegration() = terrazzo?.terrazzoIntegration()
+
+  override val agentEdits: AgentEdits?
+    get() = terrazzo?.agentEdits
+
+  override suspend fun builtInAgent() = terrazzo?.builtInAgent() ?: BuiltInAgent.Off
+
+  override fun cloudAgentEdits(
+    server: String,
+    grants: AgentGrantStore,
+    agentLink: () -> String?,
+  ) = terrazzo?.cloudAgentEdits(server, grants, agentLink)
+
   override suspend fun registerSilentPush(webhookId: String, fcmToken: String, relayUrl: String) =
-    delegate.registerSilentPush(webhookId, fcmToken, relayUrl)
+    terrazzo?.registerSilentPush(webhookId, fcmToken, relayUrl)
 
   override suspend fun takeHeldNotifications(webhookId: String) =
-    delegate.takeHeldNotifications(webhookId)
-
-  override suspend fun privateDesignServer() = delegate.privateDesignServer()
-
-  override suspend fun privateDesignLink(path: String) = delegate.privateDesignLink(path)
+    terrazzo?.takeHeldNotifications(webhookId).orEmpty()
 
   override suspend fun watchStates(
     webhookId: String,
     entityIds: Collection<String>,
     leaseSeconds: Int,
-  ) = delegate.watchStates(webhookId, entityIds, leaseSeconds)
+  ) = terrazzo?.watchStates(webhookId, entityIds, leaseSeconds)
 
-  override suspend fun fireEvent(eventType: String, eventData: JsonObject) =
-    delegate.fireEvent(eventType, eventData)
+  override suspend fun privateDesignServer() = terrazzo?.privateDesignServer() == true
+
+  override suspend fun sharedDesignSelections() = terrazzo?.sharedDesignSelections()
+
+  override suspend fun setSharedDesignSelection(card: String, designId: String) {
+    val live =
+      terrazzo ?: throw UnsupportedOperationException("Shared card selections are unavailable")
+    live.setSharedDesignSelection(card, designId)
+  }
+
+  override suspend fun privateDesignLink(path: String) = terrazzo?.privateDesignLink(path)
 }

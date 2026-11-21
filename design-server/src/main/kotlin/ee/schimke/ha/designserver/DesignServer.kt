@@ -117,6 +117,7 @@ class LibraryHolder(
  *   `/embed/v1/demo.html` — its demo page (docs/architecture/card-embedding.md). The embed reads
  *   the manifest and blobs from other origins, so those, like the scripts, allow any origin: they
  *   hold no user data.
+ * - `/designs/v1/info` (and each channel's) — what this server serves ([ServerInfo]).
  * - `/healthz`.
  */
 fun Application.designServer(
@@ -150,6 +151,8 @@ fun Application.designServer(
   googleFonts: GoogleFonts? = null,
   /** Draws `watchface` cards from published Wear OS faces ([WatchFaces]); null refuses them. */
   watchFaces: WatchFaces? = null,
+  /** This build's release, for `<base>/info`; null when it wasn't built with one. */
+  version: String? = null,
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -225,6 +228,19 @@ fun Application.designServer(
       call.parameters["channel"]?.takeIf { it != LibraryPaths.MAIN }?.let(channels::holder)
     }
     libraryChannelRoutes(channels, generators, publishToken)
+    val info =
+      ServerInfo.of(
+        version = version,
+        privateDesigns = userDesigns != null && github != null,
+        publish = publishToken != null && channels.publishable,
+        watchFaces = watchFaces != null,
+      )
+    serverInfoRoutes(API_BASE, info) { channels.main }
+    // A channel's protocol routes serve no private designs (no user store, no sign-in).
+    val channelInfo = info.copy(capabilities = info.capabilities.copy(privateDesigns = null))
+    serverInfoRoutes("$API_BASE/channels/{channel}", channelInfo) { call ->
+      call.parameters["channel"]?.takeIf { it != LibraryPaths.MAIN }?.let(channels::holder)
+    }
     // The fonts designs name, beside the designs: the same for `main` and every channel.
     val fonts = CardFonts.fromClasspath()
     cardFontRoutes(API_BASE, fonts)
@@ -385,6 +401,8 @@ fun Application.designServer(
       // The card's exact design when its states say what it is; the closest library one if not.
       val match =
         face
+          // A design the card was set to, ahead of the one its config would pick.
+          ?: CardResolve.resolveChosen(holder.current(), request)
           ?: runCatching { CardResolve.resolveExact(generator, request) }.getOrNull()
           ?: CardResolve.resolve(holder.current(), request)
           ?: return@post call.respondText(

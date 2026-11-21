@@ -1396,12 +1396,12 @@ async function fetchTemplate(library, design, designKey) {
  * slot values come live from [slotBindings], and the answer's other values are the library
  * example's, not this card's, so a template's own placeholders are left to show instead.
  */
-export async function resolveDesign(resolveUrl, card, { cardStyle = 'classic', dark = false } = {}, fetchImpl = fetch) {
+export async function resolveDesign(resolveUrl, card, { cardStyle = 'classic', dark = false, designId = null } = {}, fetchImpl = fetch) {
   // An element restarts as its attributes arrive: ask once per card, style and mode. A failure
   // is forgotten, so a later start asks again.
-  const key = JSON.stringify([String(resolveUrl), card, cardStyle, dark]);
+  const key = JSON.stringify([String(resolveUrl), card, cardStyle, dark, designId]);
   if (!resolved.has(key)) {
-    const pending = askResolver(resolveUrl, card, cardStyle, dark, fetchImpl);
+    const pending = askResolver(resolveUrl, card, cardStyle, dark, designId, fetchImpl);
     resolved.set(key, pending);
     pending.catch(() => resolved.delete(key));
   }
@@ -1410,12 +1410,13 @@ export async function resolveDesign(resolveUrl, card, { cardStyle = 'classic', d
 
 const resolved = new Map();
 
-async function askResolver(resolveUrl, card, cardStyle, dark, fetchImpl) {
+async function askResolver(resolveUrl, card, cardStyle, dark, designId, fetchImpl) {
   const response = await fetchImpl(resolveUrl, {
     method: 'POST',
     // A simple request: no CORS preflight.
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ card, cardStyle, dark }),
+    // A chosen design (`design-id`) is sent by id only: never the device facts it was matched on.
+    body: JSON.stringify(designId ? { card, cardStyle, dark, designId } : { card, cardStyle, dark }),
   });
   if (!response.ok) {
     const reason = (await response.text()).trim();
@@ -1494,6 +1495,8 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  * - `design`: the template's sha256 in the library; or `design-key`, a DesignKey as JSON. With
  *   neither, the design server picks the design that draws the card (`POST /api/cards/resolve`).
  * - `card-style`: with neither, the card style to draw in (an `HaUberTheme` id; default `classic`).
+ * - `design-id`: with neither, the design the card was set to (`library:tile`, a device design's
+ *   id), sent to the resolver by id; a library with no entry of it for the card picks as usual.
  * - `library`: the design library (default: `/designs/v1/` on the host serving this script).
  * - `template-url`: a direct HTTP(S) RC template URL, relative to the embedding page if needed.
  *   Bypasses library lookup; cannot be combined with `design` or `design-key`.
@@ -1512,7 +1515,7 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  */
 export class HaCardElement extends BaseElement {
   static get observedAttributes() {
-    return ['hass', 'card', 'design', 'design-key', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings', 'read-only', 'ambient'];
+    return ['hass', 'card', 'design', 'design-key', 'design-id', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings', 'read-only', 'ambient'];
   }
 
   constructor() {
@@ -1667,6 +1670,7 @@ export class HaCardElement extends BaseElement {
         const resolved = await resolveDesign(new URL('/api/cards/resolve', library), card, {
           cardStyle: this.getAttribute('card-style') ?? 'classic',
           dark,
+          designId: this.getAttribute('design-id'),
         });
         if (!current()) return;
         design = resolved.sha256;

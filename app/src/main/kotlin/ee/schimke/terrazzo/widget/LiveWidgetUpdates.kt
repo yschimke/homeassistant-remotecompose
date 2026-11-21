@@ -12,6 +12,7 @@ import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.ReconnectBackoff
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
+import ee.schimke.terrazzo.core.session.terrazzo
 import ee.schimke.terrazzo.terrazzoGraph
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
@@ -129,7 +130,9 @@ object LiveWidgetUpdates {
         val webhookId = appContext.terrazzoGraph().mobileAppStore.get(baseUrl)?.webhookId
         if (webhookId != null) {
           val ids = watchedEntities(appContext, baseUrl)
-          withTimeoutOrNull(2_000L) { runCatching { session.watchStates(webhookId, ids, 0) } }
+          withTimeoutOrNull(2_000L) {
+            runCatching { session.terrazzo?.watchStates(webhookId, ids, 0) }
+          }
         }
       }
     }
@@ -196,7 +199,7 @@ object LiveWidgetUpdates {
         return
       }
       try {
-        leased = session.watchStates(hook, ids, LEASE_SECONDS) != null
+        leased = session.terrazzo?.watchStates(hook, ids, LEASE_SECONDS) != null
       } catch (cancelled: CancellationException) {
         throw cancelled
       } catch (failure: Exception) {
@@ -268,7 +271,7 @@ object LiveWidgetUpdates {
       val hook = activeWebhookId
       if (hook != null && session.connectionStatus.value == SessionConnectionStatus.Connected) {
         withContext(NonCancellable) {
-          withTimeoutOrNull(2_000L) { runCatching { session.watchStates(hook, ids, 0) } }
+          withTimeoutOrNull(2_000L) { runCatching { session.terrazzo?.watchStates(hook, ids, 0) } }
         }
       }
     }

@@ -12,11 +12,12 @@ globalThis.window = {};
 globalThis.document = { baseURI: 'https://ha.test/lovelace/home' };
 // Reproduce the packaged layout: the integration bundles the shared embed beside its adapter.
 const directory = mkdtempSync(join(tmpdir(), 'ha-card-config-'));
-let RemoteComposeCard;
+let RemoteComposeCard, card;
 try {
   copyFileSync(new URL('../../embed/ha-card.js', import.meta.url), join(directory, 'ha-card.js'));
   copyFileSync(new URL('../../custom_components/terrazzo/frontend/remote-compose-card.js', import.meta.url), join(directory, 'remote-compose-card.js'));
-  ({ RemoteComposeCard } = await import(pathToFileURL(join(directory, 'remote-compose-card.js'))));
+  card = await import(pathToFileURL(join(directory, 'remote-compose-card.js')));
+  ({ RemoteComposeCard } = card);
 } finally {
   rmSync(directory, { recursive: true, force: true });
 }
@@ -77,4 +78,123 @@ test('a watchface card plays a published face without host bindings, square by d
   for (const size of [0, 63, 1025, 1.5, '300']) {
     assert.throws(() => card.setConfig({ card: { type: 'watchface', face: 'aurora', size } }), /size/);
   }
+});
+
+// The card picker (`window.customCards`, `getStubConfig`, `getConfigForm`, `getEntitySuggestion`).
+const printerHass = {
+  states: { 'light.printer_chamber': { state: 'on', attributes: {} }, 'light.kitchen': { state: 'off', attributes: {} } },
+  entities: {
+    'light.printer_chamber': { entity_id: 'light.printer_chamber', device_id: 'd1', platform: 'bambu_lab', translation_key: 'chamber_light' },
+    'light.kitchen': { entity_id: 'light.kitchen', device_id: 'd2', platform: 'hue' },
+    'sensor.no_device': { entity_id: 'sensor.no_device', platform: 'template' },
+  },
+  devices: {
+    d1: { id: 'd1', manufacturer: 'Bambu Lab', model: 'X1 Carbon' },
+    d2: { id: 'd2', manufacturer: 'Signify', model: 'LCT015' },
+  },
+};
+const printerIndex = {
+  serial: 3,
+  designs: [
+    { designId: 'user:chamber', cardType: 'tile', device: { integration: 'bambu_lab', model: 'x1*', translationKey: 'chamber_light' }, title: 'Chamber light' },
+    { designId: 'user:printer', cardType: 'tile', device: { integration: 'bambu_lab' }, title: 'Bambu printer' },
+    { designId: 'user:printer', cardType: 'tile', device: { manufacturer: 'bambu lab' }, title: 'Bambu printer' },
+    { designId: 'user:printer-graph', cardType: 'history-graph', device: { integration: 'bambu_lab' } },
+    { designId: 'user:p1', cardType: 'tile', device: { integration: 'bambu_lab', model: 'P1*' } },
+    { designId: 'user:untitled', cardType: 'gauge', device: { manufacturer: 'Bambu Lab' } },
+  ],
+};
+
+test('the picker lists the card with a live preview, its documentation and suggestions', () => {
+  const entry = globalThis.window.customCards.find((c) => c.type === 'remote-compose-card');
+  assert.equal(entry.preview, true);
+  assert.match(entry.documentationURL, /^https:\/\/github\.com\/yschimke\/homeassistant-remotecompose\//);
+  assert.equal(entry.getEntitySuggestion, card.getEntitySuggestion);
+});
+
+test('device facts come from the registries Home Assistant already holds', () => {
+  assert.deepEqual(card.deviceInfo(printerHass, 'light.printer_chamber'), {
+    integration: 'bambu_lab', manufacturer: 'Bambu Lab', model: 'X1 Carbon', translationKey: 'chamber_light',
+  });
+  assert.deepEqual(card.deviceInfo(printerHass, 'sensor.no_device'), {
+    integration: 'template', manufacturer: null, model: null, translationKey: null,
+  });
+  assert.equal(card.deviceInfo(printerHass, 'light.unknown'), null);
+  assert.equal(card.deviceInfo({ states: {} }, 'light.kitchen'), null);
+});
+
+test('device matching follows DeviceMatch: every set field, without case, a model glob', () => {
+  const device = card.deviceInfo(printerHass, 'light.printer_chamber');
+  assert.ok(card.deviceMatches({ integration: 'BAMBU_LAB' }, device));
+  assert.ok(card.deviceMatches({ model: 'x1*' }, device));
+  assert.ok(card.deviceMatches({ model: '*carbon' }, device));
+  assert.ok(!card.deviceMatches({ model: 'x1' }, device), 'a model without a wildcard is whole');
+  assert.ok(!card.deviceMatches({ model: 'X1 (Carbon' }, device), 'regex characters are literal');
+  assert.ok(!card.deviceMatches({ integration: 'bambu_lab', manufacturer: 'Prusa' }, device));
+  assert.ok(!card.deviceMatches({}, device), 'an empty match matches nothing');
+  assert.ok(!card.deviceMatches({ manufacturer: 'Bambu Lab' }, card.deviceInfo(printerHass, 'sensor.no_device')));
+});
+
+test('an entity is offered the designs made for its device, most specific first', () => {
+  const suggestions = card.entitySuggestions(printerHass, 'light.printer_chamber', printerIndex);
+  assert.deepEqual(suggestions, [
+    { config: { type: 'custom:remote-compose-card', card: { type: 'tile', entity: 'light.printer_chamber' }, design_id: 'user:chamber' }, label: 'Chamber light' },
+    { config: { type: 'custom:remote-compose-card', card: { type: 'tile', entity: 'light.printer_chamber' }, design_id: 'user:printer' }, label: 'Bambu printer' },
+    { config: { type: 'custom:remote-compose-card', card: { type: 'gauge', entity: 'light.printer_chamber' }, design_id: 'user:untitled' }, label: 'Made for this device (gauge)' },
+  ]);
+  // Each suggestion is a config the card accepts as it is.
+  for (const { config } of suggestions) host().setConfig(config);
+});
+
+test('an entity with nothing made for its device gets no suggestions', () => {
+  assert.deepEqual(card.entitySuggestions(printerHass, 'light.kitchen', printerIndex), []);
+  assert.deepEqual(card.entitySuggestions(printerHass, 'sensor.no_device', printerIndex), []);
+  assert.deepEqual(card.entitySuggestions(printerHass, 'light.printer_chamber', null), []);
+  assert.deepEqual(card.entitySuggestions(printerHass, 'light.printer_chamber', { designs: 'nope' }), []);
+  assert.equal(card.getEntitySuggestion(printerHass, 'light.kitchen'), null);
+});
+
+test('the device index is fetched once, without credentials, and a failure leaves no suggestions', async () => {
+  const seen = [];
+  const fetcher = async (url, init) => { seen.push({ url, init }); return { ok: true, json: async () => printerIndex }; };
+  const library = 'https://designs.test/designs/v1/';
+  assert.deepEqual(await card.loadSuggestionIndex(library, fetcher), printerIndex);
+  await card.loadSuggestionIndex(library, fetcher);
+  assert.equal(seen.length, 1);
+  assert.equal(seen[0].url, 'https://designs.test/designs/v1/suggestions.json');
+  assert.deepEqual(seen[0].init, { credentials: 'omit', referrerPolicy: 'no-referrer' });
+  const failing = async () => { throw new Error('offline'); };
+  assert.equal(await card.loadSuggestionIndex('https://down.test/designs/v1/', failing), null);
+});
+
+test('a new card starts as a tile of an unused entity a tile shows well', () => {
+  const stub = RemoteComposeCard.getStubConfig(printerHass, ['sensor.no_device', 'light.kitchen'], []);
+  assert.deepEqual(stub, { card: { type: 'tile', entity: 'light.kitchen' } });
+  assert.equal(card.stubEntity({ states: {} }, [], ['switch.fan']), 'switch.fan');
+  assert.equal(card.stubEntity({ states: { 'sensor.t': {} } }), 'sensor.t');
+  assert.equal(card.stubEntity(undefined), 'sun.sun');
+  host().setConfig(stub);
+});
+
+test('the visual editor edits the HA card and its style, and leaves other cards to YAML', () => {
+  const form = RemoteComposeCard.getConfigForm();
+  assert.equal(form.schema[0].name, 'card');
+  assert.deepEqual(form.schema[0].schema.map((f) => f.name), ['type', 'entity', 'name']);
+  assert.ok(form.schema[1].selector.select.options.some((o) => o.value === 'lcd'));
+  form.assertConfig({ card: { type: 'gauge', entity: 'sensor.t' }, design_id: 'library:gauge' });
+  assert.throws(() => form.assertConfig({ card: { type: 'watchface', face: 'aurora' } }), /YAML/);
+  assert.throws(() => form.assertConfig({ ...config, template_url: '/local/a.rc' }), /YAML/);
+});
+
+test('a card set to a design sends its id to the resolver, and only on its own', () => {
+  const element = host();
+  element.setConfig({ ...config, design_id: 'user:chamber' });
+  assert.equal(element.attributes.get('design-id'), 'user:chamber');
+  element.setConfig(config);
+  assert.equal(element.attributes.has('design-id'), false);
+  for (const design_id of ['', ' ', 7, 'a\nb', 'x'.repeat(257)]) {
+    assert.throws(() => element.setConfig({ ...config, design_id }), /design_id/);
+  }
+  assert.throws(() => element.setConfig({ ...config, design_id: 'library:tile', design: 'a'.repeat(64) }), /not more than one/);
+  assert.throws(() => element.setConfig({ ...config, design_id: 'library:tile', template_url: '/local/a.rc' }), /not more than one/);
 });

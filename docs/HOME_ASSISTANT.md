@@ -217,7 +217,16 @@ lovelace:
       type: module
 ```
 
-Add this card to an existing dashboard, replacing the entity with your own:
+In a dashboard's editor, **Add card** lists **Remote Compose** with a live preview. Its visual
+editor sets the Home Assistant card it draws (tile, button, entity or gauge, its entity and name)
+and the card style. When you pick an entity under **By entity**, and a design was made for that
+entity's device (a printer, a boiler), the design is offered under **Community**, below Home
+Assistant's own suggestions; entities with nothing made for their device get none. Matching runs
+in your browser against `https://ha.coo.ee/designs/v1/suggestions.json`, fetched while the editor
+is open; no device or state leaves Home Assistant. See
+[the card picker plan](architecture/lovelace-card-picker.md).
+
+Or add this card in YAML, replacing the entity with your own:
 
 ```yaml
 type: custom:remote-compose-card
@@ -228,10 +237,15 @@ card:
   tap_action:
     action: toggle
 card_style: classic
+# Optional: a design chosen by id, in every card style and mode it has (what a suggestion sets).
+# design_id: library:tile
 # Optional: use your own design library and a fixed template hash.
 # library: https://your-design-server/designs/v1/
 # design: <64 lowercase hexadecimal characters>
 ```
+
+`design_id`, `design` and `template_url` exclude each other. A `design_id` the library can't draw
+the card with leaves the card to the design its config picks.
 
 The TS player and embed are packaged locally. The default design library is
 `https://ha.coo.ee/designs/v1/`; without `design`, its resolver receives the card

@@ -71,6 +71,17 @@ class AddonClient(
   }
     .getOrElse { if (it is CancellationException) throw it else false }
 
+  /**
+   * What this add-on serves (`GET /v1/info`), or null when it is older than that endpoint (it
+   * answers 404): try each endpoint then. Throws for other failures, as the other calls do.
+   */
+  suspend fun info(): AddonInfo? {
+    val resp = http.get(url("/v1/info")) { authHeader() }
+    if (resp.status == HttpStatusCode.NotFound) return null
+    if (!resp.status.isSuccess()) error("info: ${resp.status}")
+    return AddonInfo.json.decodeFromString(AddonInfo.serializer(), resp.bodyAsText())
+  }
+
   /** Wraps the add-on's `/v1/dashboards` listing. */
   suspend fun listDashboards(): JsonArray {
     val resp = http.get(url("/v1/dashboards")) { authHeader() }

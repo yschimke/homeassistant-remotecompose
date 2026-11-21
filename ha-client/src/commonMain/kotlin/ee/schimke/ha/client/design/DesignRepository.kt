@@ -482,6 +482,28 @@ class DesignRepository(
     class Body(val manifest: DesignManifest, val etag: String?) : Fetch
   }
 
+  /**
+   * What the design server serves (`GET <base>/info`), or null when it is switched off, older than
+   * that endpoint, or a static host (any of which answers 404): such a server serves the manifest
+   * and blobs only. Throws for network or other server failures.
+   */
+  suspend fun info(): DesignLibraryInfo? {
+    val baseUrl = config.baseUrl?.trimEnd('/')
+    val client = httpClient
+    if (!config.enabled || baseUrl == null || client == null) return null
+    val response =
+      client.get("$baseUrl/info") {
+        config.userAgent?.let { header(HttpHeaders.UserAgent, it.header) }
+        bearer()
+      }
+    if (response.status == HttpStatusCode.NotFound) return null
+    if (!response.status.isSuccess()) error("design server info: ${response.status}")
+    return DesignLibraryInfo.json.decodeFromString(
+      DesignLibraryInfo.serializer(),
+      response.bodyAsText(),
+    )
+  }
+
   private suspend fun fetchManifest(baseUrl: String, stored: StoredManifest?, now: Long): Fetch {
     val response: HttpResponse =
       httpClient!!.get("$baseUrl/manifest.json") {
