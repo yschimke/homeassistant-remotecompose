@@ -45,7 +45,7 @@ class OfflineCache(context: Context) : OfflineCacheStorage(File(context.filesDir
  * File-backed storage layer. Split out from [OfflineCache] so JVM unit tests can construct against
  * a temp directory without bringing in Robolectric.
  */
-open class OfflineCacheStorage(rootDir: File) {
+open class OfflineCacheStorage(rootDir: File) : OfflineCacheStore {
 
   private val root: File = rootDir.apply { mkdirs() }
   private val cacheRoot: File = File(root, "cache").apply { mkdirs() }
@@ -65,7 +65,7 @@ open class OfflineCacheStorage(rootDir: File) {
   }
     .getOrNull()
 
-  fun setLastInstance(baseUrl: String) {
+  override fun setLastInstance(baseUrl: String) {
     val payload = json.encodeToString(InstancePointer.serializer(), InstancePointer(baseUrl))
     instanceFile.atomicWriteText(payload)
   }
@@ -75,31 +75,31 @@ open class OfflineCacheStorage(rootDir: File) {
   }
 
   /** Per-instance dashboard listing. */
-  fun dashboards(baseUrl: String): List<DashboardSummary>? =
+  override fun dashboards(baseUrl: String): List<DashboardSummary>? =
     readJson(dashboardsFile(baseUrl), ListSerializer(DashboardSummary.serializer()))
 
-  fun putDashboards(baseUrl: String, list: List<DashboardSummary>) {
+  override fun putDashboards(baseUrl: String, list: List<DashboardSummary>) {
     writeJson(dashboardsFile(baseUrl), ListSerializer(DashboardSummary.serializer()), list)
   }
 
   /** Per-instance, per-dashboard config. `urlPath == null` is the default dashboard. */
-  fun dashboard(baseUrl: String, urlPath: String?): Dashboard? =
+  override fun dashboard(baseUrl: String, urlPath: String?): Dashboard? =
     readJson(dashboardFile(baseUrl, urlPath), Dashboard.serializer())
 
-  fun putDashboard(baseUrl: String, urlPath: String?, dashboard: Dashboard) {
+  override fun putDashboard(baseUrl: String, urlPath: String?, dashboard: Dashboard) {
     writeJson(dashboardFile(baseUrl, urlPath), Dashboard.serializer(), dashboard)
   }
 
   /** Per-instance, per-dashboard entity snapshot. */
-  fun snapshot(baseUrl: String, urlPath: String?): HaSnapshot? =
+  override fun snapshot(baseUrl: String, urlPath: String?): HaSnapshot? =
     readJson(snapshotFile(baseUrl, urlPath), HaSnapshot.serializer())
 
   /** When [snapshot] for [urlPath] was written (that is, fetched), in epoch ms; null if none. */
-  fun snapshotSavedAtMs(baseUrl: String, urlPath: String?): Long? =
+  override fun snapshotSavedAtMs(baseUrl: String, urlPath: String?): Long? =
     snapshotFile(baseUrl, urlPath).lastModified().takeIf { it > 0L }
 
   @Synchronized
-  fun putSnapshot(baseUrl: String, urlPath: String?, snapshot: HaSnapshot) {
+  override fun putSnapshot(baseUrl: String, urlPath: String?, snapshot: HaSnapshot) {
     writeJson(snapshotFile(baseUrl, urlPath), HaSnapshot.serializer(), snapshot)
     // A live snapshot contains every entity and the device registry, regardless of which
     // dashboard was fetched. Widgets need this latest instance data, not the default dashboard's
@@ -164,7 +164,7 @@ open class OfflineCacheStorage(rootDir: File) {
    * The last [hours] of history read live for [entityIds] (the card-history screen), so an offline
    * open still draws a chart; null when it was never read. Order of [entityIds] doesn't matter.
    */
-  fun history(
+  override fun history(
     baseUrl: String,
     entityIds: List<String>,
     hours: Int,
@@ -173,7 +173,7 @@ open class OfflineCacheStorage(rootDir: File) {
 
   /** Keeps [history]; only the [MAX_HISTORY_FILES] most recently read stay, to bound the disk. */
   @Synchronized
-  fun putHistory(
+  override fun putHistory(
     baseUrl: String,
     entityIds: List<String>,
     hours: Int,

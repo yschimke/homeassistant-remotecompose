@@ -15,9 +15,10 @@ kotlin {
     compileSdk {
       version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 2 }
     }
-    // RemoteCompose widget needs API 35+; align with :app so Android
-    // sources can reference the same platform APIs.
-    minSdk = 35
+    // The project floor (29), not :app's 35: Wear (30), TV (29) and Quest (Horizon OS 34) reuse
+    // the session, cache and token code, and copied it while this was 35. The API-35 RemoteCompose
+    // widget lives in :app; Android lint's NewApi check guards any newer call made here.
+    minSdk = libs.versions.android.minSdk.get().toInt()
     withHostTest {}
   }
   jvm()
@@ -25,8 +26,9 @@ kotlin {
 
   sourceSets {
     commonMain.dependencies {
-      implementation(project(":ha-model"))
-      implementation(project(":ha-client"))
+      // Public API: HaSession and OfflineCacheStore take and return ha-model and ha-client types.
+      api(project(":ha-model"))
+      api(project(":ha-client"))
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.kotlinx.serialization.json)
       implementation(libs.kotlinx.serialization.protobuf)
