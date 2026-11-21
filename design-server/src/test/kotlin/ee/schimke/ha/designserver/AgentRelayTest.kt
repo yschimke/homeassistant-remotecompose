@@ -561,7 +561,7 @@ class AgentRelayTest {
   }
 
   @Test
-  fun abandonedSessionsArePrunedWhenNewOnesStart() {
+  fun abandonedSessionsArePrunedWhenNewOnesStart(): Unit = runBlocking {
     var now = 0L
     val relay = relay({ now })
     repeat(3) {
@@ -578,7 +578,7 @@ class AgentRelayTest {
   }
 
   @Test
-  fun aClaimedRequestWhoseAgentNeverPollsIsSwept() {
+  fun aClaimedRequestWhoseAgentNeverPollsIsSwept(): Unit = runBlocking {
     var now = 0L
     val relay = relay({ now })
     val access = relay.dashboards.create("Tidy", baseline)
@@ -588,11 +588,11 @@ class AgentRelayTest {
     // The agent disconnects and never calls poll_access again.
     now += AgentRelay.REQUEST_MS
     relay.prune()
-    assertEquals(0, relay.pendingRequests)
+    assertEquals(0, relay.pendingRequests())
   }
 
   @Test
-  fun idleSessionsSlideButNeverPastADay() {
+  fun idleSessionsSlideButNeverPastADay(): Unit = runBlocking {
     var now = 0L
     val relay = relay({ now })
     val access = relay.dashboards.create("Tidy", baseline)
@@ -608,7 +608,39 @@ class AgentRelayTest {
   }
 
   @Test
-  fun wrongCodesAreThrottledForEveryone() {
+  fun replacingALinkedAgentCutsTheOldOneOff(): Unit = runBlocking {
+    val relay = relay()
+    val created = relay.links.create()
+    val first = relay.connect(created.code, "Claude")!!
+    val second = relay.connect(relay.links.newCode(created.owner)!!, "Codex")!!
+    assertTrue(first != second, "the replacement gets a capability of its own")
+    assertNull(relay.links.awaitRequests(first, since = 0), "the old agent no longer listens")
+    val access = relay.dashboards.create("Tidy", baseline)
+    relay.register(
+      AgentRelay.Kind.Dashboard,
+      access.owner,
+      access.agent,
+      "Tidy",
+      link = created.owner,
+    )
+    assertEquals(
+      listOf(access.agent),
+      relay.links.awaitRequests(second, since = 0)!!.requests.map { it.session },
+    )
+  }
+
+  @Test
+  fun claimingSpendsTheCodeThePersonWasShown(): Unit = runBlocking {
+    val relay = relay()
+    val access = relay.dashboards.create("Tidy", baseline)
+    val shown = relay.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, "Tidy")!!
+    val pending = relay.requestAccess("Codex")
+    assertEquals(AgentRelay.ClaimResult.Claimed, relay.claim(access.owner, pending.code))
+    assertNull(relay.join(shown, "Someone else"), "only the agent the person let in")
+  }
+
+  @Test
+  fun wrongCodesAreThrottledForEveryone(): Unit = runBlocking {
     val relay = relay()
     val access = relay.dashboards.create("Tidy", baseline)
     val code = relay.register(AgentRelay.Kind.Dashboard, access.owner, access.agent, "Tidy")!!

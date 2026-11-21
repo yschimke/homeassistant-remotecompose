@@ -630,6 +630,22 @@ None of this depends on the card migration, so it can start now.
   fixtures are next.
 - **A2. Server.** `livery-sessions-server` in design-server, behind the same routes. Then delete
   `AgentRelay*`, `AgentLinks` and `AgentSessionFile`, and register the dashboard gate as a kind.
+  *Started:* the relay engine is Livery's. `AgentRelay` is now a thin adapter over
+  `SessionRelay`, with the card and dashboard stores as `DraftStore`s. `AgentLinks` is gone, and
+  `AgentSessionFile` saves Livery's snapshot, reading files written before the switch. Livery's
+  review fixes came with it: a replaced linked agent's capability is rotated, a claim spends the
+  session's join code, and restarts keep pending access requests.
+
+  What is left in harc, and where it goes:
+  - **Moves to Livery wholesale.** The person's HTTP routes and their JSON (`AgentRelayRoutes`),
+    the agent's MCP tools (`AgentRelayMcp`), the save file (`AgentSessionFile`) and the adapter
+    itself. None of them knows Home Assistant; they become `livery-sessions-server`.
+  - **Needs an extension point.** What differs per kind: the store, its draft gate, the kind's
+    own MCP tools (`AgentDesignMcp`, `DashboardAgentMcp`) and its HTTP path. Livery's relay takes
+    a `DraftStore` per kind already. `livery-sessions-server` adds a `SessionKind` (store, gate,
+    extra tools, path) so harc registers `card` and `dashboard` and Confetti registers `template`.
+  - **Stays.** The stores' rules for Lovelace and card drafts, and Home Assistant's own direct
+    path in Python.
 - **A3. Client and UI.** harc's app-ui and Android app move to `livery-sessions-client` and
   `-compose`, with HA's target labeler and preview. `livery-agent` replaces `AgentCardDesigner`.
 - **A4. UI Builder.** Handoffs, the UI Builder process and the import move to `livery-uibuilder`.
