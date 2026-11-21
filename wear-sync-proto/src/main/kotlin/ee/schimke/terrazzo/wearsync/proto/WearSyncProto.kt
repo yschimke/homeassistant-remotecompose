@@ -3,8 +3,8 @@ package ee.schimke.terrazzo.wearsync.proto
 import kotlinx.serialization.Serializable
 
 /**
- * Wear ↔ phone sync schema. The same file is duplicated in the `app` module — both copies must stay
- * byte-for-byte identical so DataItem payloads and MessageClient frames decode on the peer.
+ * Wear ↔ phone sync schema, in the `:wear-sync-proto` module that `:app` and `:wear` both depend
+ * on, so DataItem payloads and MessageClient frames always decode on the peer.
  *
  * The values are encoded with `kotlinx.serialization.protobuf.ProtoBuf`, which produces standard
  * proto3 wire bytes — i.e. the same bytes that `protoc`/Wire would write. We choose this approach

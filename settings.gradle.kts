@@ -147,6 +147,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
     ":app-benchmark",
     ":app-container-tests",
     ":wear",
+    ":wear-sync-proto",
     ":wear-benchmark",
     ":tv",
     ":integration",

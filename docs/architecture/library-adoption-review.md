@@ -217,6 +217,7 @@ Already clean: `rc-components` has no `ha-model` imports and takes its own data 
 - **P1: The Wear sync protocol is copied.** Four files (~605 lines) are byte-identical in
   `app/.../wearsync/proto/` and `wear/.../wearsync/proto/` ("must stay byte-for-byte identical",
   `WearSyncProto.kt:6-7`), and so is `wear_sync.proto`. One `wear-sync-proto` module.
+  *Done:* `:wear-sync-proto` is that module; `:app` and `:wear` both depend on it.
 - **P1: Three demo-data sources.** `terrazzo-core/.../DemoHaSession.kt`,
   `app-ui/.../DemoDataSource.kt` + `DemoDashboard.kt` (a separate `DemoDataSource` interface that
   reuses the name `DemoData`), `tv/.../TvDemoData.kt`; Glasses has a fourth (`DemoHouse`).
