@@ -33,7 +33,7 @@ repo owns.
   This is Livery's model already, under other names, so the refactor is mostly a re-plumbing, not a
   rewrite.
 - **Some code is dead or never fed:**
-  - The `CardGenerator` / `CardSource` chain (`ha-client/.../CardGenerator.kt`, `AddonCardGenerator`,
+  - The `CardGenerator` / `CardSource` chain (`ha-model/.../model/CardGenerator.kt`, `AddonCardGenerator`,
     `RecordedCardGenerator`, `LocalCardGenerator`) only runs in tests.
   - `InbuiltDesigns.None` is the only value ever used.
   - `addon-server/` is a prototype whose `.rc` endpoint answers 501. design-server plus the wall
@@ -110,7 +110,7 @@ selection is Livery's.
 ### Choices
 
 **Per-card choices stay in HA.** `.storage/terrazzo.design_selections` is per HA user and synced
-across that user's devices. Device-local overrides are `CardDesignOverrides` (by card and by type).
+across that user's devices. Device-local overrides are `CardDesignOverrides` (`ha-model`, by card and by type).
 Both just fill `TemplateQuery.designId` / `variant` / `cardStyle`.
 
 Livery has no per-slot choice store, and doesn't need one for this. A design that is chosen but
@@ -534,7 +534,8 @@ as **optional modules**, apart from the client core.
 | `livery-sessions-server` | JVM, Ktor, in `livery-server` | The person's HTTPS routes (long-polls of at most 25 s, no SSE) and the agent's MCP endpoint: `connect`, `await_request`, `request_access`, `get_session`, `set_status`, `send_message`, `submit_draft`, `put_asset`, `await_feedback`, `get_render`, served through `livery-mcp-core` | `AgentRelayRoutes`, `AgentRelayMcp`, `AgentDesignMcp` (~1,060) |
 | Livery's own template gate | in `livery-sessions-server` | A template draft checked as `DocumentAdmission` checks a document (contract, target, features), then rendered with the contract's examples or the person's data | the generic part of `AgentDesignSessions` (~150) |
 | `livery-sessions-client` | KMP, Ktor | The person's side: link, long-poll, comment, decision, sharing a render; resumes after a reload | `AgentRelayClient`, `AgentLiveControls` (~460) |
-| `livery-sessions-compose` | Compose Multiplatform, Material 3 | `LiveryAgentPanel`: presence line, conversation (the agent by name), composer with a pinned target, the fixed action row (**Use it** / **Create it**, **Adjust**, **Stop**, **Undo**) and draft chips. Also a `SessionReview` scaffold with a preview slot the app fills, the session list, and "Connect an agent" | `AgentLivePanel`, the generic body of `AgentEditScreen`, `BuiltInAgentUi` (~1,200) |
+| `livery-sessions-compose` | Compose Multiplatform, Material 3 | `LiveryAgentPanel`: presence line, the transcript (the agent by name, its steps grouped into turns), composer with a pinned target and `@` mentions, the fixed action row (**Use it** / **Create it**, **Adjust**, **Stop**, **Undo**) and draft chips. Also a `SessionReview` scaffold with a preview slot the app fills, the session list, and "Connect an agent" | `AgentLivePanel`, `AgentTranscript`, the generic body of `AgentEditScreen`, `BuiltInAgentUi` (~1,500) |
+| `livery-sessions-agent-render` | Android, JVM, optional | A `TurnRenderer` on agent-render (Markdown replies, expandable tool calls) | `AgentTurnView.agentRender.kt` and the `agentRenderMain` source set |
 | `livery-agent` | KMP | The built-in agent: a tool-calling loop over the same session tools, on any OpenAI-compatible chat-completions endpoint (Gemini, OpenRouter, a custom URL). Keys stay in the caller's memory | `AgentCardDesigner` (~300) |
 | `livery-uibuilder` (extended) | KMP + JVM | Run or reach UI Builder (`UiBuilderConfig`, its process, tokens, the admin listing), bounded app-to-browser **handoffs** (one-time tokens, 10 min), seeding a design from a contract (already there), the **`edits` channel publisher**, and `livery ui-builder import` plus a reusable workflow that opens the pull request back to the repo | `UiBuilder`, the handoff half of `CardStudio`, `LibraryEditPublisher`, `import-card-designs.py`/`.yml` (~1,500) |
 
@@ -556,6 +557,30 @@ the generic half of `AgentEditScreenTest`, `UiBuilderTest`, and the handoff half
     (`docs/SESSIONS.md`) and its conformance fixtures, which the Python tests also run.
   - So an agent or a panel can't tell which side it is talking to.
 - **`UiBuilderDesignCompiler`**: compiling `.uid` designs with the `ha-cards` catalog.
+
+### What #1700 adds, and where it goes
+
+[#1700](https://github.com/yschimke/homeassistant-remotecompose/pull/1700) shows the built-in
+agent's **steps** in the chat and adds **`@` mentions**. It was kept apart from the app's other
+screens for this move, and it all maps onto the modules above:
+
+| #1700 | Moves to | Note |
+| --- | --- | --- |
+| Steps on the edit session (`edit_sessions.py` `agent_step`, `describe_step`; `AgentEditSession.Step`; `AgentRelayMessage` kind `tool`) | the session model's **steps**: one sequence with the conversation, text in words, 500 characters, the newest 100 (`SessionRelay.agentStep`) | Built in `livery-sessions-core`. The Python direct path keeps its own code, held to the same limits and wire shape by the conformance fixtures. A cloud agent reports steps with the new `report_step` tool |
+| Turn grouping (`AgentTranscript.chatItems`, `stepTitle`) | `transcript`, `stepTitle` in `livery-sessions-core` | Built, with its tests |
+| `SharedAgentTurn`, `ChatBubble` | `livery-sessions-compose`'s default `TurnRenderer` | Every target, Wasm included |
+| agent-render (`agentRenderMain`, Android and desktop) | optional `livery-sessions-agent-render` | It has no Wasm or iOS build and is at 0.2.6, so Livery's core UI module doesn't depend on it |
+| prompt-bar's `@` autocomplete (`ChatMention`, `chatMentions`) | `livery-sessions-compose`'s composer, with a `MentionSource` the app supplies | The trigger detection is a few lines of Livery's own: prompt-bar (0.3.0, one maintainer) stays out of a published library. harc's `chatMentions` (the preview's cards, then entities with their ids) becomes HA's `MentionSource` |
+
+Review notes on #1700, none blocking, to fix as the code moves:
+- `chatMentions` splits a card's label at its first `" ("`. A card named "Temperature (°C)" shows
+  as "Temperature", with "°C) (view 1, …)" as its subtitle. The pin still uses the whole label, so
+  only the suggestion reads wrong. A `TargetLabeler` that returns the name and the place
+  separately fixes it.
+- The mention list is remembered on `snapshot.states.keys`, so a renamed entity keeps its old name
+  in suggestions until an entity is added or removed.
+- Picking a card pins the message even when inserting its name would pass the 2,000-character
+  limit and is skipped.
 
 ### What Confetti gets, with no server code of its own
 
@@ -598,8 +623,11 @@ prefix. Edits still reach designers within a minute.
 
 None of this depends on the card migration, so it can start now.
 
-- **A1. Spec.** `docs/SESSIONS.md` in Livery (the wire format above), conformance fixtures, and
-  `livery-sessions-core` with harc's tests moved over. harc's Python direct path runs the fixtures.
+- **A1. Spec and core.** `docs/SESSIONS.md` in Livery (the wire format above), conformance
+  fixtures, and `livery-sessions-core` with harc's tests moved over. harc's Python direct path runs
+  the fixtures. *In progress:* `livery-sessions-core` (relay, links, steps, transcript, save and
+  restore) is [yschimke/livery#132](https://github.com/yschimke/livery/pull/132); the conformance
+  fixtures are next.
 - **A2. Server.** `livery-sessions-server` in design-server, behind the same routes. Then delete
   `AgentRelay*`, `AgentLinks` and `AgentSessionFile`, and register the dashboard gate as a kind.
 - **A3. Client and UI.** harc's app-ui and Android app move to `livery-sessions-client` and
