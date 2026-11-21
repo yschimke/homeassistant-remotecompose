@@ -10,8 +10,11 @@ import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
 import ee.schimke.ha.model.ViewHeader
 import ee.schimke.ha.room.HaArea
+import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 import kotlin.math.sin
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +32,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * a session) can render against the same fake data just by calling `DemoData.snapshot()`.
  */
 class DemoHaSession(
-  private val clock: () -> Long = System::currentTimeMillis,
+  private val clock: () -> Long = { Clock.System.now().toEpochMilliseconds() },
   /**
    * Demo-mode action sink. Defaults to the process-scoped router so pinned widgets (which build
    * their own [DemoHaSession]) share the same overrides as the foreground dashboard. Tests pass an
@@ -171,7 +174,7 @@ object DemoData {
   }
 
   fun snapshot(
-    nowMs: Long = System.currentTimeMillis(),
+    nowMs: Long = Clock.System.now().toEpochMilliseconds(),
     router: DemoActionRouter = actionRouter,
   ): HaSnapshot {
     val drifted = baseStates.mapValues { (id, st) -> drift(id, st, nowMs) }
@@ -189,7 +192,7 @@ object DemoData {
   fun history(
     entityIds: List<String>,
     hours: Int,
-    nowMs: Long = System.currentTimeMillis(),
+    nowMs: Long = Clock.System.now().toEpochMilliseconds(),
   ): Map<String, List<HistoryPoint>> {
     val pointCount = (hours * 4).coerceIn(12, 96)
     val stepMs = (hours * 3_600_000L / pointCount).coerceAtLeast(1L)
@@ -225,8 +228,7 @@ object DemoData {
 
   private fun emptyBoard(b: DemoBoard): Dashboard = Dashboard(title = b.title)
 
-  private fun readResource(path: String): String? =
-    DemoData::class.java.getResourceAsStream(path)?.bufferedReader()?.use { it.readText() }
+  private fun readResource(path: String): String? = demoDashboardFile(path)
 
   private fun parseDashboard(text: String, fallbackTitle: String): Dashboard {
     val root = Json.parseToJsonElement(text).jsonObject
@@ -376,7 +378,21 @@ object DemoData {
   private fun formatLikeOriginal(original: String, value: Double): String {
     val dotIndex = original.indexOf('.')
     val decimals = if (dotIndex == -1) 0 else original.length - dotIndex - 1
-    return if (decimals == 0) value.roundToInt().toString() else "%.${decimals}f".format(value)
+    return if (decimals == 0) value.roundToInt().toString() else fixedDecimals(value, decimals)
+  }
+
+  /**
+   * [value] with exactly [decimals] digits after a `.`, rounded half up: Home Assistant's own
+   * notation for a state, whatever the device locale (`String.format` would write `21,5` on a
+   * German phone, and is JVM-only).
+   */
+  internal fun fixedDecimals(value: Double, decimals: Int): String {
+    var factor = 1L
+    repeat(decimals) { factor *= 10 }
+    val scaled = (abs(value) * factor).roundToLong()
+    val sign = if (value < 0 && scaled != 0L) "-" else ""
+    val fraction = (scaled % factor).toString().padStart(decimals, '0')
+    return "$sign${scaled / factor}.$fraction"
   }
 
   private fun flipBinary(state: String): String = if (state == "on") "off" else "on"

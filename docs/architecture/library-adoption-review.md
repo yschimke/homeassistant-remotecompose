@@ -323,8 +323,9 @@ Ordered so each phase is independently shippable and unblocks the next. Effort i
      `terrazzo-core`, which would only add AppAuth and Credential Manager to the watch.
 5. ~~Move `CachedHaSession` and `OfflineOnlySession` to `commonMain`.~~ Done, behind a common
    `OfflineCacheStore` interface (Android's file-backed `OfflineCacheStorage` implements it) and an
-   injectable clock. Still open: `DemoHaSession`, whose bundled dashboards are JVM resources, and a
-   file-backed store for the desktop target.
+   injectable clock. Since then: the file-backed store moved to `ha-client` and the desktop app uses it, and
+   `DemoHaSession` and `DemoData` are common too (Android and the JVM read the bundled dashboards
+   from the classpath; Wasm compiles them in).
 6. ~~Extract `wear-sync-proto`; delete the copy.~~ Done.
 7. ~~Move `BuiltDesign`, `CachedFontFace`, `GlyphPack`, `Sha256`, `CardGenerator` to
    `ha-design-model`; drop `rc-converter → ha-client`.~~ Done: moved into `ha-model`
