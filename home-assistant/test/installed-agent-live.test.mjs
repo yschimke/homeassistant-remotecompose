@@ -108,7 +108,8 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     await panel.getByText('Sent to Agent. It picks this up when it next listens.', {exact:true}).waitFor();
     // Before the agent reads anything: a comment on a card, so it has work when it starts.
     await panel.getByText('Comment', {exact:true}).first().click({force:true});
-    await panel.getByText(/^About light\.wall_light/).waitFor();
+    // A card is named as Home Assistant names its entity, not by its entity id.
+    await panel.getByText(/^About Wall light \(/).waitFor();
     await typeInto('Tell the agent what to change', 'Add the switch next to the light');
     await panel.getByText('Send', {exact:true}).click({force:true});
     await panel.getByText('Add the switch next to the light', {exact:true}).waitFor();
@@ -121,7 +122,7 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     // The comment waits for the agent, and it's told to start there.
     const request = await mcp('get_edit_session', {session_id:session.session_id});
     assert.equal(request.notes[0].text, 'Add the switch next to the light');
-    assert.match(request.notes[0].target, /^light\.wall_light/);
+    assert.match(request.notes[0].target, /^Wall light \(/);
     assert.match(request.next, /already left notes/);
     request.cursor = request.seq;
     await page.screenshot({path:`${evidence}/agent-live-1-listening.png`});
@@ -157,12 +158,12 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     await panel.getByText('Agent · Waiting for feedback', {exact:true}).waitFor();
     await panel.getByText('Comment', {exact:true}).first().click({force:true});
     // Section headings are drawn by the dashboard itself: the first card with Comment is the light.
-    await panel.getByText(/^About light\.wall_light \(.*card 2\)/).waitFor();
+    await panel.getByText(/^About Wall light \(.*card 2\)/).waitFor();
     await typeInto('Tell the agent what to change', 'Yes, side by side');
     await panel.getByText('Send', {exact:true}).click({force:true});
     const feedback = await listening;
     assert.equal(feedback.feedback[0].text, 'Yes, side by side');
-    assert.match(feedback.feedback[0].target, /^light\.wall_light \(.*card 2\)$/,
+    assert.match(feedback.feedback[0].target, /^Wall light \(.*card 2\)$/,
       'the comment names the card it was left on');
     await panel.getByText('Yes, side by side', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/agent-live-3-comment.png`});
