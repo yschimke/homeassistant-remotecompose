@@ -107,11 +107,25 @@ private class AppConnection(
    * change many times a second, and only the latest matters to the next start.
    */
   suspend fun keepSnapshot(snapshot: HaSnapshot) {
-    val store = offline ?: return
+    if (offline == null) return
     val now = Clock.System.now().toEpochMilliseconds()
     if (now - snapshotSavedAtMs < SNAPSHOT_SAVE_INTERVAL_MS) return
     snapshotSavedAtMs = now
-    withContext(Dispatchers.Default) { store.putSnapshot(config.baseUrl, null, snapshot) }
+    keep { it.putSnapshot(config.baseUrl, null, snapshot) }
+  }
+
+  /**
+   * Writes to the offline cache off the UI thread. The cache is optional: one that can't be written
+   * (a full disk, no permission) must never read as a lost connection, so its failures are dropped,
+   * and the next write tries again.
+   */
+  suspend fun keep(write: (OfflineCacheStore) -> Unit) {
+    val store = offline ?: return
+    try {
+      withContext(Dispatchers.Default) { write(store) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: Exception) {}
   }
 
   val pictures = EntityPictureClient(config, accessTokenProvider)
@@ -534,11 +548,7 @@ private fun DashboardShell(
       try {
         val dashboards = connection.client.listRenderableDashboards()
         list = DashboardListState.Ready(dashboards)
-        connection.offline?.let { store ->
-          withContext(Dispatchers.Default) {
-            store.putDashboards(connection.config.baseUrl, dashboards)
-          }
-        }
+        connection.keep { it.putDashboards(connection.config.baseUrl, dashboards) }
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -1250,11 +1260,7 @@ private fun LiveDashboard(
           dashboard = live
           fetchedLive = true
           error = null
-          connection.offline?.let { store ->
-            withContext(Dispatchers.Default) {
-              store.putDashboard(connection.config.baseUrl, path, live)
-            }
-          }
+          connection.keep { it.putDashboard(connection.config.baseUrl, path, live) }
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
