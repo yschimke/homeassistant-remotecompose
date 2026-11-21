@@ -5,8 +5,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to render and comment on (leave empty for baseline)'
+        required: false
+        default: ''
 
 # Workflow-level: read only. The render job widens to write below so fork
 # PRs running via `pull_request` don't inherit write scopes by default.
@@ -14,21 +19,204 @@ permissions:
   contents: read
 
 concurrency:
-  # `push` to main / `workflow_dispatch` end with a `git push` to the shared
-  # `compose-preview/main` branch (in the -out repository, see the apply step
-  # below) — don't cancel those mid-flight (a cancel
-  # between commit-tree and push can leave the remote half-advanced). PRs
-  # are safe to cancel; the comment composite handles being interrupted.
-  group: compose-preview-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # `push` to main / `workflow_dispatch` (without pr_number) end with a `git push`
+  # to the shared `compose-preview/main` branch (in the -out repository, see the
+  # apply step below) — don't cancel those mid-flight (a cancel between
+  # commit-tree and push can leave the remote half-advanced). PRs are safe to
+  # cancel; the comment composite handles being interrupted.
+  group: compose-preview-${{ github.event.pull_request.number || inputs.pr_number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || inputs.pr_number != '' }}
 
 jobs:
+  # Fast pre-check so draft PRs, non-UI path-only PRs, and non-UI Renovate bumps
+  # skip the full JDK + Android SDK + Gradle setup while still letting the
+  # required `Render previews` check report as skipped (passing) on Protect Main.
+  gate:
+    name: Check if previews should run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+      pr_number: ${{ steps.decide.outputs.pr_number }}
+    steps:
+      - name: Checkout for diff inspection
+        if: >-
+          ${{
+            github.event_name == 'pull_request' &&
+            !github.event.pull_request.draft &&
+            !(startsWith(github.head_ref || '', 'release-please--') && github.event.pull_request.user.login == 'github-actions[bot]')
+          }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Decide whether to render previews
+        id: decide
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          IS_DRAFT: ${{ github.event.pull_request.draft || false }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number || '' }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login || '' }}
+          HEAD_REF: ${{ github.head_ref || github.ref_name }}
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name || '' }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+
+          # push to main and manual / checkbox workflow_dispatch always run.
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Skip release-please PRs (version/changelog only).
+          if [[ "$HEAD_REF" == release-please--* ]] && [ "$PR_AUTHOR" = "github-actions[bot]" ]; then
+            echo "Skipping release-please PR."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Skip draft PRs; ready_for_review will trigger a render when ready.
+          if [ "$IS_DRAFT" = "true" ]; then
+            echo "Skipping draft PR #${PR_NUMBER}."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Fail open if git diff is unavailable.
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "Base SHA unavailable; failing open."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          decision=$(python3 - <<'PY'
+          import fnmatch, json, os, re, subprocess
+          from pathlib import Path
+
+          base_sha = os.environ["BASE_SHA"]
+          head_sha = os.environ["HEAD_SHA"]
+          pr_author = os.environ["PR_AUTHOR"]
+          head_ref = os.environ["HEAD_REF"]
+          pr_title = os.environ["PR_TITLE"]
+
+          files = [
+              f.strip()
+              for f in subprocess.check_output(
+                  ["git", "diff", "--name-only", "--no-renames", base_sha, head_sha],
+                  text=True,
+              ).splitlines()
+              if f.strip()
+          ]
+          if not files:
+              print("run")
+              raise SystemExit(0)
+
+          # Non-UI paths from .github/preview-scope.json plus non-preview workflows.
+          ignore_globs = []
+          scope_file = Path(".github/preview-scope.json")
+          if scope_file.is_file():
+              ignore_globs = json.loads(scope_file.read_text()).get("ignorePaths", [])
+
+          def is_ignored(path: str) -> bool:
+              if path in (".github/workflows/compose-preview.yml", ".github/preview-scope.json"):
+                  return False
+              if path.startswith(".github/workflows/") or path.startswith(".github/scripts/"):
+                  return True
+              for pat in ignore_globs:
+                  p = pat.rstrip("/")
+                  if p.endswith("/**"):
+                      prefix = p[:-3]
+                      if path == prefix or path.startswith(prefix + "/"):
+                          return True
+                  elif p.startswith("**/"):
+                      if fnmatch.fnmatch(path, p) or fnmatch.fnmatch(Path(path).name, p[3:]):
+                          return True
+                  elif fnmatch.fnmatch(path, p):
+                      return True
+              return False
+
+          if all(is_ignored(f) for f in files):
+              print("skip_paths")
+              raise SystemExit(0)
+
+          # Renovate PRs: run by default only when UI-affecting dependencies change.
+          is_renovate = pr_author == "renovate[bot]" or head_ref.startswith("renovate/")
+          dep_only_files = all(
+              f in ("gradle/libs.versions.toml", "gradle.properties", "gradle/wrapper/gradle-wrapper.properties")
+              or f.endswith(".lock")
+              or f.startswith(".github/workflows/")
+              or is_ignored(f)
+              for f in files
+          )
+          if is_renovate and dep_only_files:
+              diff_text = subprocess.check_output(
+                  ["git", "diff", "-U0", base_sha, head_sha], text=True, errors="replace"
+              )
+              changed_lines = "\n".join(
+                  line for line in diff_text.splitlines()
+                  if (line.startswith("+") or line.startswith("-"))
+                  and not line.startswith("+++") and not line.startswith("---")
+              )
+              haystack = f"{head_ref}\n{pr_title}\n{changed_lines}"
+              ui_re = re.compile(
+                  r"compose|material|rc[-_]players|compose[-_]?ai|compose[-_]?preview|"
+                  r"skiko|coil|livery|glance|horologist|wear|accompanist|robolectric|"
+                  r"lottie|svg|agp|android[-_]?gradle|kotlin|ksp|metro|paparazzi|"
+                  r"androidx\.(ui|core|activity|navigation|window|graphics|appcompat)",
+                  re.I,
+              )
+              if not ui_re.search(haystack):
+                  print("skip_renovate")
+                  raise SystemExit(0)
+
+          print("run")
+          PY
+          )
+
+          echo "Gate decision: ${decision}"
+          if [ "$decision" = "run" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "run=false" >> "$GITHUB_OUTPUT"
+
+          # On Renovate non-UI skips (same-repo PRs), post/update a sticky comment
+          # with a checkbox so a maintainer can trigger a render on demand.
+          if [ "$decision" = "skip_renovate" ] && [ "$HEAD_REPO" = "$REPO" ]; then
+            id=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+              --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- preview-diff -->"))) | .id' | tail -1) || true
+            body=$(printf '%s\n' \
+              "<!-- preview-diff -->" \
+              "## Preview Changes" \
+              "" \
+              "Skipped automatically for non-UI dependency update (\`${HEAD_SHA:0:8}\`)." \
+              "" \
+              "- [ ] Run Compose Preview on this PR")
+            if [ -n "${id:-}" ]; then
+              gh api -X PATCH "repos/$REPO/issues/comments/$id" -f body="$body" >/dev/null
+            else
+              gh api "repos/$REPO/issues/$PR_NUMBER/comments" -f body="$body" >/dev/null
+            fi
+          fi
+
   apply:
     name: Render previews (baseline or PR comment, auto-selected)
-    # Skip on release-please PRs: they only bump the manifest, CHANGELOG and
-    # version lines, all of which main's push CI already built. Matches the
-    # bot-authored PR (or a bot dispatch); humans and main always run it.
-    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
+    needs: gate
+    # Skip when the gate cleanly decided not to run. A skipped required check
+    # reports as passing; `!cancelled()` + `result != 'success'` fails open if
+    # the gate itself errors.
+    if: ${{ !cancelled() && (needs.gate.result != 'success' || needs.gate.outputs.run != 'false') }}
     runs-on: ubuntu-latest
     # Render, a11y and the PR-comment comparison all scale with how many
     # previews a PR changes: one touching ~120 (a grid or dashboard-wide
@@ -47,18 +235,25 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.pr_number != '' && format('refs/pull/{0}/head', inputs.pr_number) || '' }}
           # The composite action pushes via an explicit token in the remote
           # URL embedded in its push step, so we don't need the default git
           # credentials persisted here.
           persist-credentials: false
       - uses: ./.github/actions/setup
         with:
-          cache-read-only: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          cache-read-only: ${{ (github.event_name == 'pull_request' || inputs.pr_number != '') && 'true' || 'false' }}
+      - uses: ./.github/actions/buildfetch-cache
+        with:
+          rw-token: ${{ github.event_name == 'push' && secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN || '' }}
+          ro-token: ${{ secrets.BUILDFETCH_GRADLE_REMOTE_CACHE_TOKEN_RO }}
       - name: Record render start
         run: echo "RENDER_STARTED=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
       - id: apply
         uses: yschimke/compose-ai-tools/.github/actions/apply@v2.102.0
         with:
+          mode: ${{ inputs.pr_number != '' && 'comment' || 'auto' }}
+          pr-number: ${{ inputs.pr_number || '' }}
           # Render the debug variant explicitly. AGP 9.5 turns unit tests off for release
           # variants, and Compose Preview packages Android resources through the variant's
           # unit-test APK, so a release render fails before it starts (compose-ai-tools #6382).
@@ -115,12 +310,12 @@ jobs:
       # in the sticky comment, unless this run already updated it. The next
       # successful run overwrites it through the same marker.
       - name: Report a failed render on the PR
-        if: failure() && steps.apply.outcome == 'failure' && github.event_name == 'pull_request'
+        if: failure() && steps.apply.outcome == 'failure' && (github.event_name == 'pull_request' || inputs.pr_number != '')
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          PR: ${{ github.event.pull_request.number }}
-          SHA: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number || inputs.pr_number }}
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}
         run: |
           set -euo pipefail
@@ -132,7 +327,9 @@ jobs:
           fi
           body=$(printf '%s\n' "<!-- preview-diff -->" "## Preview Changes" "" \
             "> [!CAUTION]" \
-            "> The preview render failed at ${SHA:0:8}, so this PR has no preview diff for that commit. See [the run]($RUN_URL); re-running the job retries it.")
+            "> The preview render failed at ${SHA:0:8}, so this PR has no preview diff for that commit. See [the run]($RUN_URL)." \
+            "" \
+            "- [ ] Re-run Compose Preview")
           if [ -n "${id:-}" ]; then
             gh api -X PATCH "repos/$REPO/issues/comments/$id" -f body="$body" >/dev/null
           else

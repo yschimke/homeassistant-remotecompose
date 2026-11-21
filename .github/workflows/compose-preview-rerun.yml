@@ -1,0 +1,76 @@
+name: Compose Preview Rerun
+
+# Allows maintainers to trigger or re-run Compose Preview on a PR by checking
+# the checkbox in the bot's sticky `<!-- preview-diff -->` comment (e.g., to
+# override a Renovate non-UI skip or retry after a flaky render).
+on:
+  issue_comment:
+    types: [edited]
+
+permissions: {}
+
+concurrency:
+  group: compose-preview-rerun-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  rerun:
+    name: Trigger Compose Preview from checkbox
+    if: >-
+      ${{
+        github.event.issue.pull_request != null &&
+        github.event.comment.user.login == 'github-actions[bot]' &&
+        startsWith(github.event.comment.body, '<!-- preview-diff -->') &&
+        (
+          contains(github.event.comment.body, '- [x] Run Compose Preview on this PR') ||
+          contains(github.event.comment.body, '- [x] Re-run Compose Preview')
+        )
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Authorize, reset checkbox, and dispatch Compose Preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          SENDER: ${{ github.event.sender.login }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          set -euo pipefail
+
+          # Only repo maintainers (admin/maintain/write) may trigger a workflow run.
+          perm=$(gh api "repos/${REPO}/collaborators/${SENDER}/permission" --jq '.permission' 2>/dev/null || echo "none")
+          case "$perm" in
+            admin|maintain|write) ;;
+            *)
+              echo "Ignoring checkbox edit by ${SENDER} (permission=${perm})."
+              exit 0
+              ;;
+          esac
+
+          # Only dispatch for same-repository PRs so fork code never runs with write secrets.
+          head_repo=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.head.repo.full_name // ""')
+          if [ "$head_repo" != "$REPO" ]; then
+            echo "Refusing checkbox dispatch for fork PR #${PR_NUMBER} (head_repo=${head_repo})."
+            exit 0
+          fi
+
+          # Uncheck the box immediately so the trigger is idempotent and reusable.
+          updated_body=$(python3 - <<'PY'
+          import os
+          body = os.environ["COMMENT_BODY"]
+          body = body.replace("- [x] Run Compose Preview on this PR", "- [ ] Run Compose Preview on this PR")
+          body = body.replace("- [x] Re-run Compose Preview", "- [ ] Re-run Compose Preview")
+          print(body, end="")
+          PY
+          )
+          gh api -X PATCH "repos/${REPO}/issues/comments/${COMMENT_ID}" -f body="$updated_body" >/dev/null
+          gh api "repos/${REPO}/issues/comments/${COMMENT_ID}/reactions" -f content=rocket >/dev/null || true
+
+          gh workflow run compose-preview.yml --repo "$REPO" --ref main -f "pr_number=${PR_NUMBER}"
+          echo "Dispatched compose-preview.yml for PR #${PR_NUMBER}."
