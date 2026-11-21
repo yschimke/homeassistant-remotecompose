@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -25,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,14 +35,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.agent.AgentRelayClient
 import ee.schimke.ha.client.agent.AgentRelayMessage
 import ee.schimke.ha.client.agent.AgentRelayState
+import io.github.nadeemiqbal.promptbar.ActiveTrigger
+import io.github.nadeemiqbal.promptbar.Mention
+import io.github.nadeemiqbal.promptbar.MentionAutocompletePanel
+import io.github.nadeemiqbal.promptbar.MentionProvider
+import io.github.nadeemiqbal.promptbar.detectActiveTrigger
+import io.github.nadeemiqbal.promptbar.insertTriggerReplacement
 import kotlinx.coroutines.launch
 
 /**
@@ -73,6 +82,10 @@ fun AgentLivePanel(
    * within itself, so all of it fits above the keyboard.
    */
   compact: Boolean = false,
+  /** What the message box offers after @: the preview's cards and the home's entities. */
+  mentions: List<ChatMention> = emptyList(),
+  /** Pins the next message to a card, as picking an @card does. */
+  onPin: (String) -> Unit = {},
 ) {
   Surface(
     modifier = modifier.fillMaxWidth(),
@@ -103,7 +116,15 @@ fun AgentLivePanel(
         )
       Conversation(state.messages, state.agent.name)
       if (state.agent.joined || composeBeforeJoin)
-        Composer(busy, target, onClearTarget, onSend, maxLines = if (compact) 2 else 4)
+        Composer(
+          busy,
+          target,
+          onClearTarget,
+          onSend,
+          maxLines = if (compact) 2 else 4,
+          mentions = mentions,
+          onPin = onPin,
+        )
     }
   }
 }
@@ -220,40 +241,42 @@ private fun AgentCode(busy: Boolean, onClaim: (String) -> Unit) {
 private fun Conversation(messages: List<AgentRelayMessage>, agentName: String) {
   if (messages.isEmpty()) return
   Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    messages.takeLast(8).forEach { m ->
-      val mine = !m.fromAgent
-      Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = if (mine) Arrangement.End else Arrangement.Start,
-      ) {
-        Surface(
-          color =
-            if (mine) MaterialTheme.colorScheme.secondaryContainer
-            else MaterialTheme.colorScheme.surfaceContainerLowest,
-          shape = MaterialTheme.shapes.small,
-          modifier =
-            Modifier.widthIn(max = 520.dp)
-              .padding(start = if (mine) 32.dp else 0.dp, end = if (mine) 0.dp else 32.dp),
-        ) {
-          Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
-            Text(
-              when {
-                m.kind == "decision" -> "You decided"
-                m.kind == "summary" -> "Draft"
-                mine -> "You" + (m.target?.let { " · about $it" } ?: "")
-                // The agent by name (Gemini, Claude), as the status line names it.
-                else -> agentName.ifBlank { "Agent" }
-              },
-              style = MaterialTheme.typography.labelSmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(m.text, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Start)
-          }
+    // The latest lines: the agent's steps count as part of the turn they belong to.
+    chatItems(messages).takeLast(8).forEach { item ->
+      when (item) {
+        is ChatItem.Turn -> AgentTurnView(item.turn, agentName)
+        is ChatItem.Said -> {
+          val m = item.message
+          val mine = !m.fromAgent
+          ChatBubble(
+            when {
+              m.kind == "decision" -> "You decided"
+              m.kind == "summary" -> "Draft"
+              mine -> "You" + (m.target?.let { " · about $it" } ?: "")
+              // The agent by name (Gemini, Claude), as the status line names it.
+              else -> agentName.ifBlank { "Agent" }
+            },
+            m.text,
+            mine,
+          )
         }
       }
     }
   }
 }
+
+/**
+ * Something the person can @-mention in a message: a card on the preview ([pin] is its label, and
+ * picking it pins the message to that card as its Comment button does) or an entity ([expandTo]
+ * replaces `@display` in the message, so the agent gets the entity id).
+ */
+data class ChatMention(
+  val display: String,
+  val subtitle: String? = null,
+  val category: String,
+  val pin: String? = null,
+  val expandTo: String? = null,
+)
 
 @Composable
 private fun Composer(
@@ -262,32 +285,82 @@ private fun Composer(
   onClearTarget: () -> Unit,
   onSend: (String) -> Unit,
   maxLines: Int = 4,
+  mentions: List<ChatMention> = emptyList(),
+  onPin: (String) -> Unit = {},
 ) {
-  var text by remember { mutableStateOf("") }
+  var field by remember { mutableStateOf(TextFieldValue("")) }
+  // What was picked from the @ list this message, by what it inserted.
+  val picked = remember { mutableStateMapOf<String, ChatMention>() }
   fun send() {
-    if (text.isBlank()) return
-    onSend(text)
-    text = ""
+    if (field.text.isBlank()) return
+    var text = field.text
+    picked.values.forEach { m -> m.expandTo?.let { text = text.replace("@${m.display}", it) } }
+    onSend(text.take(2000))
+    field = TextFieldValue("")
+    picked.clear()
   }
   Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
     target?.let { AssistChip(onClick = onClearTarget, label = { Text("About $it  ✕") }) }
+    // Typing @ offers the preview's cards and the home's entities (prompt-bar's autocomplete).
+    val trigger = detectActiveTrigger(field.text, field.selection.end)
+    if (trigger is ActiveTrigger.Mention && mentions.isNotEmpty()) {
+      val provider =
+        remember(mentions) {
+          MentionProvider { query ->
+            mentions
+              .withIndex()
+              .filter { (_, it) ->
+                query.isEmpty() ||
+                  it.display.contains(query, ignoreCase = true) ||
+                  it.subtitle?.contains(query, ignoreCase = true) == true
+              }
+              .take(MAX_MENTION_SUGGESTIONS)
+              .map { (i, it) -> Mention("$i", it.display, it.subtitle, it.category) }
+          }
+        }
+      MentionAutocompletePanel(
+        provider = provider,
+        query = trigger.query,
+        // Bounded: the panel is a lazy list, inside a screen that scrolls.
+        modifier = Modifier.fillMaxWidth().heightIn(max = 220.dp),
+        onSelect = { mention ->
+          val chosen =
+            mention.id.toIntOrNull()?.let { mentions.getOrNull(it) }
+              ?: return@MentionAutocompletePanel
+          val insertion =
+            insertTriggerReplacement(
+              field.text,
+              field.selection.end,
+              trigger,
+              "@${chosen.display}",
+            )
+          field = TextFieldValue(insertion.newText, TextRange(insertion.newCaretPosition))
+          picked[chosen.display] = chosen
+          chosen.pin?.let(onPin)
+        },
+      )
+    }
     Row(
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       OutlinedTextField(
-        value = text,
-        onValueChange = { text = it.take(2000) },
+        value = field,
+        onValueChange = { if (it.text.length <= 2000) field = it },
         label = { Text("Tell the agent what to change") },
+        placeholder =
+          if (mentions.isNotEmpty()) ({ Text("Type @ to name a card or entity") }) else null,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
         keyboardActions = KeyboardActions(onSend = { send() }),
         modifier = Modifier.weight(1f),
         maxLines = maxLines,
       )
-      Button(onClick = { send() }, enabled = !busy && text.isNotBlank()) { Text("Send") }
+      Button(onClick = { send() }, enabled = !busy && field.text.isNotBlank()) { Text("Send") }
     }
   }
 }
+
+private const val MAX_MENTION_SUGGESTIONS = 8
 
 /** The person's agent links, one per design server, kept on this device ([readAgentGrants]). */
 internal object AgentLinkStore {

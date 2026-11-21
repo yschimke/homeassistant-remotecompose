@@ -106,6 +106,9 @@ maven-publish = "0.37.0"
 
 # Markdown parsing (KMP, by JetBrains — used by IntelliJ)
 jetbrains-markdown = "0.7.18"
+# Agent chat: the transcript (Android and desktop; no Wasm build yet) and @-mention autocomplete.
+agent-render = "0.2.6"
+prompt-bar = "0.3.0"
 
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
@@ -363,6 +366,8 @@ mockserver-netty = { module = "org.mock-server:mockserver-netty", version.ref = 
 mockserver-client-java = { module = "org.mock-server:mockserver-client-java", version.ref = "mockserver" }
 
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrains-markdown" }
+agent-render = { module = "io.github.0xzhangke:agent-render", version.ref = "agent-render" }
+prompt-bar = { module = "io.github.nadeemiqbal:prompt-bar", version.ref = "prompt-bar" }
 indriya = { module = "tech.units:indriya", version.ref = "indriya" }
 
 # Firebase — pulled into :app only when a google-services.json key is

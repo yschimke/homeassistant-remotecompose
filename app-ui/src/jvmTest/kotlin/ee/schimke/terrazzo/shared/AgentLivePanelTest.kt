@@ -133,4 +133,92 @@ class AgentLivePanelTest {
     onNodeWithText("Send").performClick()
     assertEquals(listOf("Bigger camera"), sent)
   }
+
+  @Test
+  fun atMentionsPinACardOrNameAnEntityById() = runComposeUiTest {
+    val sent = mutableListOf<String>()
+    var target by mutableStateOf<String?>(null)
+    setContent {
+      MaterialTheme {
+        AgentLivePanel(
+          state = talking,
+          busy = false,
+          onCopyInvite = {},
+          onNewCode = {},
+          onClaim = {},
+          onSend = { sent += it },
+          target = target,
+          onClearTarget = { target = null },
+          showCodes = false,
+          mentions =
+            listOf(
+              ChatMention("Front door", "view 1, card 2", "Card", pin = "Front door (card 2)"),
+              ChatMention(
+                "Kitchen",
+                "light.kitchen",
+                "Entity",
+                expandTo = "@Kitchen (light.kitchen)",
+              ),
+            ),
+          onPin = { target = it },
+        )
+      }
+    }
+    val field = onNodeWithText("Tell the agent what to change")
+    // A card: picking it pins the message to it, as its Comment button does.
+    field.performTextInput("@Fro")
+    // Suggestions load as the query changes.
+    waitUntil { onAllNodesWithText("view 1, card 2").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("view 1, card 2").performClick()
+    assertEquals("Front door (card 2)", target)
+    // An entity: it reads as its name, and the agent gets its id too.
+    field.performTextInput("next to @kit")
+    waitUntil { onAllNodesWithText("light.kitchen").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("light.kitchen").performClick()
+    onNodeWithText("Send").performClick()
+    assertEquals(listOf("@Front door next to @Kitchen (light.kitchen) "), sent)
+  }
+
+  @Test
+  fun theAgentsStepsShowWithinItsTurn() = runComposeUiTest {
+    setContent {
+      MaterialTheme {
+        AgentLivePanel(
+          state =
+            talking.copy(
+              messages =
+                listOf(
+                  AgentRelayMessage(1, "person", "comment", "Add soil moisture"),
+                  AgentRelayMessage(
+                    2,
+                    "agent",
+                    AgentRelayMessage.TOOL,
+                    "1 found: Soil moisture",
+                    tool = "find_entities",
+                    arguments = "soil",
+                  ),
+                  AgentRelayMessage(
+                    3,
+                    "agent",
+                    AgentRelayMessage.TOOL,
+                    "Draft submitted",
+                    tool = "submit_draft",
+                    arguments = "Soil gauge",
+                  ),
+                ),
+            ),
+          busy = false,
+          onCopyInvite = {},
+          onNewCode = {},
+          onClaim = {},
+          onSend = {},
+          showCodes = false,
+        )
+      }
+    }
+    // Working: its steps so far, before any reply.
+    onNodeWithText("Ran Find entities", substring = true).assertExists()
+    onNodeWithText("Ran Submit draft", substring = true).assertExists()
+    capture("agent-live-steps")
+  }
 }

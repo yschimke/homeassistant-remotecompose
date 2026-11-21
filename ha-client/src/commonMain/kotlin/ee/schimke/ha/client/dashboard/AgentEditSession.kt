@@ -25,6 +25,12 @@ data class AgentEditSession(
   @SerialName("expires_at") val expiresAt: Double = 0.0,
   /** What the agent said to the person, in the same sequence as [notes]. */
   val messages: List<Message> = emptyList(),
+  /**
+   * The steps the integration's built-in agent took (each tool it called, in words), in the same
+   * sequence as [notes] and [messages]: what the chat shows between the person's message and the
+   * agent's reply.
+   */
+  val steps: List<Step> = emptyList(),
   /** The agent's last activity, when it has joined: for the live status line. */
   val agent: Activity? = null,
   /** Home Assistant's clock when this was read ([Activity.seenAt] is in it); 0 when unknown. */
@@ -90,6 +96,17 @@ data class AgentEditSession(
   )
 
   @Serializable data class Message(val text: String, val at: Double = 0.0, val seq: Long = 0)
+
+  /** A tool the agent called: [arguments] and [output] are short descriptions, not raw JSON. */
+  @Serializable
+  data class Step(
+    val tool: String,
+    val arguments: String = "",
+    val output: String = "",
+    val ok: Boolean = true,
+    val at: Double = 0.0,
+    val seq: Long = 0,
+  )
 
   @Serializable
   data class Activity(
