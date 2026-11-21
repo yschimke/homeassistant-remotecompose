@@ -2,6 +2,9 @@ package ee.schimke.terrazzo.shared
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.runComposeUiTest
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaConfig
@@ -10,6 +13,7 @@ import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.View
 import java.nio.file.Files
 import kotlin.test.Test
+import kotlin.test.assertNull
 
 /**
  * The desktop app's offline-first start: with Home Assistant unreachable, a signed-in app draws the
@@ -41,6 +45,29 @@ class OfflineStartTest {
     waitUntil(timeoutMillis = 10_000) {
       onAllNodes(hasText("Cached garden")).fetchSemanticsNodes().isNotEmpty()
     }
+  }
+
+  @Test
+  fun signingOutForgetsTheCachedDashboards() = runComposeUiTest {
+    val store = OfflineCacheStorage(Files.createTempDirectory("offline-sign-out").toFile())
+    store.putDashboards(unreachable, listOf(DashboardSummary(urlPath = null, title = "Home")))
+    store.putDashboard(unreachable, null, cached)
+    setContent {
+      TerrazzoMultiplatformApp(
+        hostedConfig = HaConfig(unreachable, ""),
+        hostedAccessToken = { "token" },
+        onSignOut = {},
+        offlineCache = store,
+      )
+    }
+    waitUntil(timeoutMillis = 10_000) {
+      onAllNodes(hasText("Cached garden")).fetchSemanticsNodes().isNotEmpty()
+    }
+    onNodeWithContentDescription("Settings").performClick()
+    onNode(hasText("Sign out")).performScrollTo().performClick()
+    // The next person to sign in to this server must not see this user's dashboards.
+    waitUntil(timeoutMillis = 10_000) { store.dashboards(unreachable) == null }
+    assertNull(store.dashboard(unreachable, null))
   }
 
   @Test

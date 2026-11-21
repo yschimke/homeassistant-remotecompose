@@ -47,4 +47,11 @@ interface OfflineCacheStore {
     hours: Int,
     history: Map<String, List<HistoryPoint>>,
   )
+
+  /**
+   * Forgets everything kept for [baseUrl]. A host calls it when the user signs out, or their
+   * sign-in ends: the cache holds that user's dashboards and states, and the next person to sign in
+   * to the same server must not see them.
+   */
+  fun clearInstance(baseUrl: String)
 }

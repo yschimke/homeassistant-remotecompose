@@ -163,7 +163,7 @@ open class OfflineCacheStorage(rootDir: File) : OfflineCacheStore {
    * Wipe every cached payload for [baseUrl]. Called by sign-out so a subsequent user on the device
    * can't read the previous account's dashboard config off disk.
    */
-  fun clearInstance(baseUrl: String) {
+  override fun clearInstance(baseUrl: String) {
     instanceDir(baseUrl).deleteRecursively()
     if (lastInstance() == baseUrl) clearLastInstance()
   }

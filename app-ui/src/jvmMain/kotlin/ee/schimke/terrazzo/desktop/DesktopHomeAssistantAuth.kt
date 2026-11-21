@@ -59,10 +59,19 @@ internal class DesktopHomeAssistantAuth(
         saved = value
         try {
           refresh(value)
-          mutableSession.value = DesktopAuthSession(value.server)
         } catch (_: DesktopSignInExpired) {
           // Rejected credentials have already been removed; show the connection screen.
+          return@withLock
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          // A refusal whose credentials couldn't be deleted: not signed in, and the caller says so.
+          if (saved == null) throw e
+          // Otherwise Home Assistant was unreachable or answered with a transient error, and the
+          // saved sign-in still stands. Publish it, so the app opens on its offline cache;
+          // currentAccessToken() refreshes once the server answers, and only a refusal signs out.
         }
+        mutableSession.value = DesktopAuthSession(value.server)
       }
     }
 

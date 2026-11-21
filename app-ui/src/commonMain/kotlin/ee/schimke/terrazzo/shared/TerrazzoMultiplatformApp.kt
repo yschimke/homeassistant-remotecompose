@@ -280,6 +280,13 @@ fun TerrazzoMultiplatformApp(
                     try {
                       onSignOut?.invoke()
                       CardAgentSessions.clear()
+                      // The next person to sign in to this server must not see this user's
+                      // cached dashboards and states.
+                      offlineCache?.let { store ->
+                        withContext(Dispatchers.Default) {
+                          store.clearInstance(active.config.baseUrl)
+                        }
+                      }
                       connection = null
                     } catch (e: CancellationException) {
                       throw e
