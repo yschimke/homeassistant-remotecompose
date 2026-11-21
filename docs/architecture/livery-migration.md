@@ -601,10 +601,12 @@ users see a change, and both sit behind the flag.
   - An older Livery client ignores `uses`. It could select a template that reads `HA:` values it
     never pushes, and that template would then draw with the document's own defaults. For
     `ha/entity@1` that is safe for the fixed entities, since every `sun.sun` value defaults to its
-    daytime value. An aliased slot read is not: an old client never fills it, so L2b raises the
-    level its templates need (`requiresLevel`).
-  - In general it isn't, so L2 must make such entries ineligible below the new protocol level: a
-    per-entry `requiresLevel`, or `minClient` in strict mode, mirroring how `requiresMinor` works.
+    daytime value. A reference-list slot read is not: an old client never fills it.
+  - An old client can't be protected by a field it doesn't know. The only gate shipped Livery
+    clients honour is the manifest's `minClient`. So a channel with reference-list or vocabulary
+    entries sets `minClient >= 9`, which `livery build` raises automatically, and old clients keep
+    the last manifest they accepted. Today's harc clients don't read Livery manifests at all, and
+    keep reading `/designs/v1` until step 8, so this costs nothing during the migration.
   - Derivations are additive. An old client sees only native templates.
 - **Discovery is advisory.** `implements` is computed from facts, but a document that structurally
   fits a contract can still mean something else by a name. The publisher writes what it inferred,
