@@ -1,11 +1,14 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.livery.sessions.Codes
-import ee.schimke.livery.sessions.DraftStore
 import ee.schimke.livery.sessions.Message
 import ee.schimke.livery.sessions.SecureEntropy
 import ee.schimke.livery.sessions.SessionLinks
 import ee.schimke.livery.sessions.SessionRelay
+import ee.schimke.livery.sessions.server.SessionServer
+import ee.schimke.livery.sessions.server.SessionText
+import ee.schimke.livery.sessions.server.sessionRoutes
+import io.ktor.server.routing.Route
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -18,9 +21,10 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * This keeps the design server's own names and wire shapes; the rules (codes and their shared
  * failed-code budget, links, presence, long-polls, what a restart keeps) are Livery's. The drafts
- * stay in [AgentDesignSessions] and [DashboardAgentSessions], which keep validating them, and are
- * the relay's `card` and `dashboard` [DraftStore]s. Nothing here holds a Home Assistant credential,
- * and the agent can never apply a draft.
+ * stay in [AgentDesignSessions] and [DashboardAgentSessions], which keep validating them, behind
+ * the server's `card` and `dashboard` kinds ([CardSessionKind], [DashboardSessionKind]). Livery's
+ * routes and MCP endpoint serve both sides ([agentRelayRoutes]). Nothing here holds a Home
+ * Assistant credential, and the agent can never apply a draft.
  */
 class AgentRelay(
   val cards: AgentDesignSessions,
@@ -78,42 +82,19 @@ class AgentRelay(
     Gone,
   }
 
-  private val relay =
-    SessionRelay(
-      stores =
-        mapOf(
-          Kind.Card.wire to
-            object : DraftStore {
-              override fun revision(owner: String) = cards.read(owner)?.revision
-
-              override fun touch(owner: String) = cards.touch(owner)
-
-              override fun revoke(owner: String) = cards.revoke(owner)
-            },
-          Kind.Dashboard.wire to
-            object : DraftStore {
-              override fun revision(owner: String) = dashboards.read(owner)?.revision
-
-              override fun touch(owner: String) = dashboards.touch(owner)
-
-              override fun revoke(owner: String) = dashboards.revoke(owner)
-
-              // Agents that still read the dashboard request directly see the comment as a note.
-              override fun note(owner: String, text: String) {
-                dashboards.note(owner, text)
-              }
-            },
-        ),
-      entropy = SecureEntropy(),
+  /**
+   * Livery's session server with the card and dashboard kinds: mount it with [agentRelayRoutes].
+   */
+  val server: SessionServer =
+    SessionServer(
+      kinds = listOf(CardSessionKind(cards), DashboardSessionKind(dashboards)),
+      text = TEXT,
       clock = clock,
+      entropy = SecureEntropy(),
       maxWaitMs = maxWaitMs,
     )
 
-  init {
-    // Store callbacks run under the store's lock: SessionRelay.changed takes none.
-    cards.onChange = relay::changed
-    dashboards.onChange = relay::changed
-  }
+  private val relay: SessionRelay = server.relay
 
   /** People's lasting connections to their agents: requests go to them without a code. */
   val links: SessionLinks
@@ -248,6 +229,28 @@ class AgentRelay(
     AgentView(Kind.of(kind), title, messages, cursor, decision, personWatching, expiresInSeconds)
 
   companion object {
+    /** What agents are told, in Terrazzo's words. */
+    val TEXT =
+      SessionText(
+        serverName = "terrazzo-agent-sessions",
+        instructions =
+          "You edit Home Assistant cards and dashboards with a person who watches in the Terrazzo app. " +
+            "Connect once: call connect with the code the person gives you (from Settings, Connect an " +
+            "agent), and keep the link it returns for later conversations. If they have no code, call " +
+            "request_access, tell them its code, and call poll_access until it returns a link. Then " +
+            "listen: call await_request with the link in a loop (it waits up to 25 s). Each request " +
+            "brings a session: get_session, set_status while you work, report_step for each thing you " +
+            "look up or change, submit_draft with the revision you read, get_render to see it as the " +
+            "person does, and await_feedback in a loop passing back its cursor, acting on each comment " +
+            "(sometimes about one card; the person may comment before you join: act first on comments " +
+            "already in get_session's conversation) until a decision arrives. Then go back to " +
+            "await_request. send_message asks the person something. You never apply a draft; the " +
+            "person does.",
+        whereToEnterCode =
+          "in Terrazzo: open Settings, Connect an agent, and enter it under Have a code from your " +
+            "agent (or enter it on the card or dashboard they are asking about)",
+      )
+
     const val JOIN_CODE_MS = SessionRelay.CODE_MS
     const val REQUEST_MS = SessionRelay.REQUEST_MS
     const val CONNECTED_MS = SessionRelay.CONNECTED_MS
@@ -264,3 +267,9 @@ class AgentRelay(
     internal fun cleanName(name: String?) = Codes.cleanName(name)
   }
 }
+
+/**
+ * Both sides of every card and dashboard session, under `/api/agent`: the person's app (owner
+ * capability, long-polled, any origin) and the agent's MCP endpoint and `join` (never a browser).
+ */
+fun Route.agentRelayRoutes(relay: AgentRelay) = sessionRoutes(relay.server)
