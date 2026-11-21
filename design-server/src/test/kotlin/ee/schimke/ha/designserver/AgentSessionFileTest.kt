@@ -59,6 +59,22 @@ class AgentSessionFileTest {
   }
 
   @Test
+  fun aFileFromBeforeLiverysRelayStillLoads(): Unit = runBlocking {
+    val file = createTempDirectory("agent-sessions").toFile().resolve("sessions.json")
+    val relay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
+    val dash = relay.dashboards.create("Tidy", baseline)
+    relay.register(AgentRelay.Kind.Dashboard, dash.owner, dash.agent, "Tidy")
+    relay.comment(dash.owner, "Bigger", null)
+    AgentSessionFile(file, relay).save()
+    // The old relay saved its kinds by enum name, and had no access requests.
+    file.writeText(file.readText().replace("\"kind\":\"dashboard\"", "\"kind\":\"Dashboard\""))
+    assertTrue("\"Dashboard\"" in file.readText())
+    val later = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
+    AgentSessionFile(file, later).load()
+    assertEquals(listOf("Bigger"), later.ownerState(dash.owner)!!.messages.map { it.text })
+  }
+
+  @Test
   fun changesAreSavedOnTheirOwn() = runBlocking {
     val file = createTempDirectory("agent-sessions").toFile().resolve("sessions.json")
     val relay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
@@ -94,12 +110,12 @@ class AgentSessionFileTest {
   }
 
   @Test
-  fun anUnreadableFileStartsEmpty() {
+  fun anUnreadableFileStartsEmpty(): Unit = runBlocking {
     val dir = createTempDirectory("agent-sessions").toFile()
     val file = dir.resolve("sessions.json").apply { writeText("{not json") }
     val relay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
     AgentSessionFile(file, relay).load()
-    assertTrue(relay.snapshot().isEmpty())
+    assertTrue(relay.snapshot().sessions.isEmpty())
   }
 
   private companion object {

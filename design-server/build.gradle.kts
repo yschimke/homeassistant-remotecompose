@@ -103,6 +103,9 @@ dependencies {
       libs.versions.compose.multiplatform.get(),
   )
   implementation(platform(libs.rc.players.bom))
+  // Agent sessions: the relay, links and codes are Livery's (AgentRelay adapts them).
+  implementation(platform(libs.livery.bom))
+  implementation(libs.livery.sessions.core)
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
   // Captures designs the library doesn't hold (DesignGenerator), with the app's own converters and
