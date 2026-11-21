@@ -13,7 +13,6 @@ import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.View
 import java.nio.file.Files
 import kotlin.test.Test
-import kotlin.test.assertNull
 
 /**
  * The desktop app's offline-first start: with Home Assistant unreachable, a signed-in app draws the
@@ -66,8 +65,10 @@ class OfflineStartTest {
     onNodeWithContentDescription("Settings").performClick()
     onNode(hasText("Sign out")).performScrollTo().performClick()
     // The next person to sign in to this server must not see this user's dashboards.
-    waitUntil(timeoutMillis = 10_000) { store.dashboards(unreachable) == null }
-    assertNull(store.dashboard(unreachable, null))
+    // Cleared off the UI thread, file by file: wait for all of it, not just the first file gone.
+    waitUntil(timeoutMillis = 10_000) {
+      store.dashboards(unreachable) == null && store.dashboard(unreachable, null) == null
+    }
   }
 
   @Test
