@@ -1,4 +1,4 @@
-package ee.schimke.terrazzo.core.cache
+package ee.schimke.ha.client.cache
 
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.design.DeviceInfo
@@ -20,7 +20,7 @@ import kotlinx.serialization.json.JsonPrimitive
  * entries return null without throwing (so the UI can treat absence as "no cache yet" instead of an
  * error).
  */
-class OfflineCacheTest {
+class OfflineCacheStorageTest {
 
   private val instance = "http://homeassistant.local:8123"
   private val instance2 = "https://other.example/"

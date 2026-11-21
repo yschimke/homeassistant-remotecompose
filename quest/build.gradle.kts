@@ -39,6 +39,8 @@ dependencies {
   implementation(project(":room-ui"))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
+  // Sign-in and the refresh token, shared with the phone (HaAuthService, TokenVault).
+  implementation(project(":terrazzo-core"))
 
   implementation(libs.meta.spatial.sdk)
   implementation(libs.meta.spatial.sdk.compose)
