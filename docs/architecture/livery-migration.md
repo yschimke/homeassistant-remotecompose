@@ -475,16 +475,25 @@ by chain T". Selection considers native templates first, then derivable ones, an
 3. **Reads it from the catalog**, if the publisher **materialised** it at build time. Do that for
    hot targets, for example every phone design for the two Wear containers.
 
-**Trust.** A derived document's sha differs from its source's, so its signature can't be the
-source's. Two options:
+**Trust: no server-signed receipts for now.** A derived document's sha differs from its source's,
+so its signature can't be the source's. Derivations happen only in places that need no new kind of
+signature:
 
-- A client that derives on device trusts the result as far as it trusts the source and its own
+- **On the device**, for clients that link the transforms (Android, Wear, the JVM). The result is
+  trusted as far as the source and the client's own transforms are.
+- **At build time**, for hot targets (the Wear containers, common folds). The catalog signature
+  covers them like any other entry.
+- **Per instance through the person's own Home Assistant**, for wall panels and ESP32. That path
+  is already trusted, and those players check no signatures.
+- iOS and the web embed get built-time derivations until the Swift and TS ports have the
   transforms.
-- A server answers with a **derivation receipt**, `{source sha, chain, output sha}`, signed by a key
-  limited to derivations. The client can verify by re-deriving whenever it can.
 
-Either way, a malicious server can't make a document read or emit more than its source does,
-because transforms declare their fact changes and the inspector checks them.
+The risk that matters needs no receipt. A derived document must not read, emit or use more than its
+source, and every transform declares how it changes those facts. So a client checks the derived
+bytes with `TemplateInspector` against the source's facts plus the declared change: one decode,
+which admission already does. A receipt would only prove the pixels weren't altered. That costs a
+key class, a protocol field and conformance fixtures with no consumer yet. Add receipts when a
+third-party server derives for a client that verifies them.
 
 **What this replaces in harc:**
 
@@ -494,6 +503,111 @@ because transforms declare their fact changes and the inspector checks them.
 - The glyph and bitmap-font filters become `glyph-subset` on catalog font assets.
 - `/generate` is gone for every case that is "same design, other device". Only a design that was
   never captured in a shape still needs the converter.
+
+## Agent and UI Builder flows as optional Livery modules
+
+The agent and UI Builder flows are a large part of harc that knows little about Home Assistant. Look
+at what [#1694](https://github.com/yschimke/homeassistant-remotecompose/pull/1694) touched:
+
+- keeping **Use it** in reach;
+- naming the agent ("Gemini");
+- naming a comment's target plainly.
+
+That is a co-editing UI, and only the target's name came from Home Assistant. Underneath it sits
+the relay ([agent-sessions.md](agent-sessions.md)). The person and an agent both connect out to a
+rendezvous, and nothing depends on an inbound connection. On top of it:
+
+- lasting links and short codes;
+- presence, a conversation with comments pinned to a target, drafts checked by a gate;
+- accept, reject and undo;
+- the agent seeing a render of what the person sees.
+
+**None of that is HA-specific.** Confetti needs exactly the same loop to co-design its session
+and speaker cards with an agent, and so does any Livery app with a catalog. So it moves to Livery
+as **optional modules**, apart from the client core.
+
+### What moves
+
+| Module | Platform | Takes from harc | Lines (main) |
+| --- | --- | --- | --- |
+| `livery-sessions-core` | KMP, transport-free (like `livery-mcp-core`) | Every session's model and rules, with a clock: links, codes and the failed-code budget, session, revision, drafts, conversation (messages, comments with a `target`, decisions), presence, expiry, persistence (`SessionStore`, today's `AgentSessionFile`). A `DraftGate<T>` per draft **kind**, and a `TargetLabeler` the app supplies | `AgentRelay`, `AgentLinks`, `AgentSessionFile` (~1,030) |
+| `livery-sessions-server` | JVM, Ktor, in `livery-server` | The person's HTTPS routes (long-polls of at most 25 s, no SSE) and the agent's MCP endpoint: `connect`, `await_request`, `request_access`, `get_session`, `set_status`, `send_message`, `submit_draft`, `put_asset`, `await_feedback`, `get_render`, served through `livery-mcp-core` | `AgentRelayRoutes`, `AgentRelayMcp`, `AgentDesignMcp` (~1,060) |
+| Livery's own template gate | in `livery-sessions-server` | A template draft checked as `DocumentAdmission` checks a document (contract, target, features), then rendered with the contract's examples or the person's data | the generic part of `AgentDesignSessions` (~150) |
+| `livery-sessions-client` | KMP, Ktor | The person's side: link, long-poll, comment, decision, sharing a render; resumes after a reload | `AgentRelayClient`, `AgentLiveControls` (~460) |
+| `livery-sessions-compose` | Compose Multiplatform, Material 3 | `LiveryAgentPanel`: presence line, conversation (the agent by name), composer with a pinned target, the fixed action row (**Use it** / **Create it**, **Adjust**, **Stop**, **Undo**) and draft chips. Also a `SessionReview` scaffold with a preview slot the app fills, the session list, and "Connect an agent" | `AgentLivePanel`, the generic body of `AgentEditScreen`, `BuiltInAgentUi` (~1,200) |
+| `livery-agent` | KMP | The built-in agent: a tool-calling loop over the same session tools, on any OpenAI-compatible chat-completions endpoint (Gemini, OpenRouter, a custom URL). Keys stay in the caller's memory | `AgentCardDesigner` (~300) |
+| `livery-uibuilder` (extended) | KMP + JVM | Run or reach UI Builder (`UiBuilderConfig`, its process, tokens, the admin listing), bounded app-to-browser **handoffs** (one-time tokens, 10 min), seeding a design from a contract (already there), the **`edits` channel publisher**, and `livery ui-builder import` plus a reusable workflow that opens the pull request back to the repo | `UiBuilder`, the handoff half of `CardStudio`, `LibraryEditPublisher`, `import-card-designs.py`/`.yml` (~1,500) |
+
+The tests move with their code: `AgentRelayTest`, `AgentSessionFileTest`, `AgentLivePanelTest`,
+the generic half of `AgentEditScreenTest`, `UiBuilderTest`, and the handoff half of
+`CardStudioTest` (~2,000 lines).
+
+### What stays in harc
+
+- **The dashboard gate** (`DashboardAgentSessions`). It checks Lovelace shape and holds a section
+  session to its section. It is registered as the `dashboard` kind's `DraftGate`.
+- **Applying.** Saving to Lovelace, undo against a baseline, the admin-only rule.
+- **The target labeler.** "Living room temperature (view 1, section 2, card 2)" is
+  `cardLabel` plus the friendly name, as an implementation of `TargetLabeler`.
+- **The preview.** The app draws its own cards in the review scaffold's slot.
+- **Home Assistant's direct path.** `edit_sessions.py`, `edits.py`, `mcp.py`, `assistant.py` and
+  `cloud_relay.py` run inside HA, in Python, and are HA-specific by nature.
+  - They keep their own code, but **speak the same session wire format**: Livery's session spec
+    (`docs/SESSIONS.md`) and its conformance fixtures, which the Python tests also run.
+  - So an agent or a panel can't tell which side it is talking to.
+- **`UiBuilderDesignCompiler`**: compiling `.uid` designs with the `ha-cards` catalog.
+
+### What Confetti gets, with no server code of its own
+
+- A designer opens **Ask your agent** on a session-card design.
+- The agent connects with a code and drafts.
+- Livery's template gate checks the draft against `confetti/session@1`.
+- The panel draws it with the contract's examples or the live schedule. **Use it** publishes it to
+  a preview channel.
+- **Edit in UI Builder** opens a handoff. Saves go to the `edits` channel, and the import workflow
+  opens the pull request.
+
+Confetti registers only `confetti/` contracts and, if it wants one, its own target labeler.
+
+### UI Builder saves and catalog trust
+
+`LibraryEditPublisher` today publishes a UI Builder save to `main` within about 60 s, with no CI.
+Under Livery the library is signed. Neither "the server signs `main`" nor "pull requests only" is
+right:
+
+- **A server key that signs `main`** would be an online key that can push to every user's default
+  library: the worst key to lose.
+- **Pull requests only** loses the minute-long edit-to-device loop designers rely on.
+
+Instead:
+
+1. **`main` is signed only by the CI key**, so only merged pull requests reach it: the daily import,
+   or a designer's own.
+2. **Saves go to an `edits` channel**, signed by a server key limited to the catalog's contract
+   prefix (`ha-card/`, `confetti/`).
+3. **Only devices that opt in read `edits`**: a designer's phone, or "preview library edits". It is
+   layered above `main` with L1, as `pr-<n>` channels are for reviewers.
+4. **The add-on's mirror follows `main` only**, so a self-hosted home never trusts that server key.
+5. **The import pull request moves edits to `main`.** Once CI signs it, the edit reaches everyone,
+   and its `edits` entry is pruned.
+
+If the server key leaks, the damage is limited to opted-in designers' devices and one contract
+prefix. Edits still reach designers within a minute.
+
+### Order: track A, beside steps 0–8
+
+None of this depends on the card migration, so it can start now.
+
+- **A1. Spec.** `docs/SESSIONS.md` in Livery (the wire format above), conformance fixtures, and
+  `livery-sessions-core` with harc's tests moved over. harc's Python direct path runs the fixtures.
+- **A2. Server.** `livery-sessions-server` in design-server, behind the same routes. Then delete
+  `AgentRelay*`, `AgentLinks` and `AgentSessionFile`, and register the dashboard gate as a kind.
+- **A3. Client and UI.** harc's app-ui and Android app move to `livery-sessions-client` and
+  `-compose`, with HA's target labeler and preview. `livery-agent` replaces `AgentCardDesigner`.
+- **A4. UI Builder.** Handoffs, the UI Builder process and the import move to `livery-uibuilder`.
+  The `edits` channel replaces `LibraryEditPublisher`'s writes to `main`, and needs step 3's
+  signing.
+- **A5. Confetti.** The first app with no app-specific server code proves the modules are general.
 
 ## What moves into Livery, and what harc loses
 
@@ -509,12 +623,13 @@ Assistant.
 | **L2b** | **Reference lists**: `ListSpec.ref`, binding ids, a host value store, store-fed named values in `LiveryTemplate`, resolving or renaming in `livery-instantiate` | step 1 | `CardDesignSlots.slotBindings` and the per-card copies of entity values |
 | **L2c** | **Discovery**: `TemplateInspector.conformance`, `implements`, the embedded `livery.sidecar` | step 2 | `meta.binding_recipe`, and the embed's own document sniffing |
 | L3 | **`livery-recipes`**: data-to-inputs expressions, Kotlin, Swift and TS | step 7 | `CardBindingRecipe` (317) and its JS copy in `ha-card.js` |
-| **L4** | **Devices and transforms**: `display` and `player` capabilities, named transforms, derivations, the `derive/` route, receipts | steps 6–7 | `PlayerFolding` (320), `forDisplay`, `WearWidgetTemplate` + `CardDesignWearTemplate` (546), launcher recapture, `GlyphRanges` + `WidgetFilters` (577), most of `/generate` |
+| **L4** | **Devices and transforms**: `display` and `player` capabilities, named transforms, derivations, the `derive/` route (no receipts yet) | steps 6–7 | `PlayerFolding` (320), `forDisplay`, `WearWidgetTemplate` + `CardDesignWearTemplate` (546), launcher recapture, `GlyphRanges` + `WidgetFilters` (577), most of `/generate` |
 | L5 | AndroidX View player plays Livery templates | sliders, lock | — |
 | L6 | Manifest split by contract | only if the step-1 count is too big | — |
 | L7 | `livery-server` catalog channels: upload-what-changed, mirror, server-side `derive/`, fetch counting | step 8 | `LibraryChannels` + `LibraryMirror` (656), `UsageStats` (304) |
 | L8 | Phone → watch blob sync over the Data Layer | step 6, optional | the design half of `MobileWearSyncManager` |
-| L9 | Agent sessions and relay in `livery-server` / `livery-mcp`, with app gates as validators | after step 8 | `AgentRelay*` (~1,300), `AgentRelayClient` (411) |
+| **L9** | **Agent sessions** (`livery-sessions-*`, `livery-agent`): see [Agent and UI Builder flows](#agent-and-ui-builder-flows-as-optional-livery-modules) | track A, any time | relay, links, MCP surface, session client, live panel, built-in agent runner (~4,000 + tests) |
+| **L10** | **UI Builder flows** in `livery-uibuilder`: handoffs, editor process, an `edits` channel publisher, import back to the repo | track A | `UiBuilder` config and process, `CardStudio` handoffs, `LibraryEditPublisher`, the import workflow (~1,500) |
 
 **Also deleted once the steps land:** `DesignRepository`, `DesignQuery`, `DeviceMatch`,
 `CardDesign`'s wire types, `BundledDesigns`, `SkinStore`, `Skins`, `CardDesignSync`,
@@ -523,8 +638,9 @@ Assistant.
 `LiverySlot`), plus the dead code from step 0 (`CardGenerator` chain and `addon-server`, ~1,700
 lines).
 
-**Estimate: about 10,000 lines of Kotlin leave harc.** In exchange it gains generated contracts and
-an HA vocabulary.
+**Estimate: about 10,000 lines of Kotlin leave harc for the card migration, and about 5,500 more
+(plus ~2,000 of tests) for track A.** In exchange harc gains generated contracts, an HA vocabulary,
+a dashboard gate and a target labeler.
 
 **Not needed** (the old plan said "to add"):
 
@@ -553,7 +669,7 @@ Each step is one PR (or a short series) that keeps every surface working, with a
    signing; the bundled copy through the Gradle plugin. Publish it beside today's manifest on the
    same `main` / `pr-<n>` channels.
 3. **Serve it.** Add the `/livery/v1/...` routes, the integration proxy path and WS discovery with
-   keys. Add the personal catalog with the add-on's own key.
+   keys. Add the personal catalog with the add-on's own key, and the `edits` channel's key.
 4. **Phone selection** (needs L1).
    - Move `cardTemplateFor` onto `TemplateRepository.resolveFirst`. Skins become `install`;
      overrides and HA selections become `designId`.
@@ -593,10 +709,10 @@ users see a change, and both sit behind the flag.
   becomes the default.
 - **Two players during the transition.** The View player for sliders, and the CMP player for
   everything else via Livery.
-- **Catalog trust.** Today's clients accept unsigned manifests. With Livery the library must be
-  signed, so a channel CI never signed (a hand-edited `main` via `LibraryEditPublisher`) needs the
-  server to sign with a key the app trusts. Alternatively, UI Builder edits go through the PR import
-  only. Decide this in step 3.
+- **Catalog trust.** Today's clients accept unsigned manifests. With Livery, `main` is signed only
+  by CI, and UI Builder saves go to an opt-in `edits` channel with a prefix-limited server key (see
+  [UI Builder saves and catalog trust](#ui-builder-saves-and-catalog-trust)). Step 3 sets up both
+  keys.
 - **Protocol compatibility for vocabularies and derivations.**
   - An older Livery client ignores `uses`. It could select a template that reads `HA:` values it
     never pushes, and that template would then draw with the document's own defaults. For
