@@ -96,7 +96,8 @@ dependencies, **P2** hygiene.
   (`:193`), design selections (`:257-271`), `registerSilentPush` (`:243`). A third-party client
   implementing a fake or a non-HA source has to know about them. Split into a core interface and
   optional capability interfaces (`AgentEditCapability`, `DesignSelectionCapability`,
-  `PushCapability`) checked with `as?`.
+  `PushCapability`) checked with `as?`. Done as one `TerrazzoSession`, reached by `session.terrazzo`
+  (see [library-publishing.md](library-publishing.md#the-client-api-to-the-terrazzo-integration-and-add-on)).
 - **P1: `ha-client` mixes six concerns.** `HaClient` is a 1296-line class
   (`ha-client/.../HaClient.kt`) holding WebSocket transport and correlation (`:109-151`,
   `:1042-1180`), HA core commands (`:236-1000`) and `terrazzo/*` integration commands

@@ -38,6 +38,7 @@ import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.ReconnectBackoff
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
+import ee.schimke.terrazzo.core.session.terrazzo
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignSync
@@ -538,7 +539,7 @@ private fun DashboardsRoot(
           HomeDesignServer(
             haBaseUrl = home.baseUrl,
             accessToken = { WidgetActionRunner.accessToken(graph, home.baseUrl) },
-            link = { path -> home.privateDesignLink(path) },
+            link = { path -> home.terrazzo?.privateDesignLink(path) },
           )
         }
     }
@@ -677,7 +678,7 @@ private fun DashboardsRoot(
       if (status != SessionConnectionStatus.Connected) return@collectLatest
       val available =
         try {
-          session.privateDesignServer()
+          session.terrazzo?.privateDesignServer() == true
         } catch (e: CancellationException) {
           throw e
         } catch (_: Exception) {
@@ -700,8 +701,9 @@ private fun DashboardsRoot(
           if (status == SessionConnectionStatus.Connected) {
             while (true) {
               try {
-                if (session.privateDesignServer()) {
-                  session.sharedDesignSelections()?.let { selections.setShared(owner, it) }
+                val terrazzo = session.terrazzo
+                if (terrazzo != null && terrazzo.privateDesignServer()) {
+                  terrazzo.sharedDesignSelections()?.let { selections.setShared(owner, it) }
                 } else selections.setShared(owner, emptyMap())
               } catch (e: CancellationException) {
                 throw e
@@ -749,7 +751,14 @@ private fun DashboardsRoot(
   val builtInAgent by
     produceState(BuiltInAgent.Off, session, connectionStatus) {
       if (connectionStatus == ConnectionStatus.Connected)
-        value = runCatching { session.builtInAgent() }.getOrDefault(value)
+        value =
+          try {
+            session.terrazzo?.builtInAgent() ?: BuiltInAgent.Off
+          } catch (e: CancellationException) {
+            throw e
+          } catch (_: Exception) {
+            value
+          }
     }
   val phoneAgentEdits =
     ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session, builtInAgent.enabled)
@@ -832,7 +841,10 @@ private fun DashboardsRoot(
               "The design was published but could not be downloaded. Try again.",
             )
           try {
-            session.setSharedDesignSelection(cardFingerprint(card), designId)
+            val terrazzo =
+              session.terrazzo
+                ?: throw UnsupportedOperationException("Shared card selections are unavailable")
+            terrazzo.setSharedDesignSelection(cardFingerprint(card), designId)
           } catch (e: CancellationException) {
             throw e
           } catch (e: Exception) {

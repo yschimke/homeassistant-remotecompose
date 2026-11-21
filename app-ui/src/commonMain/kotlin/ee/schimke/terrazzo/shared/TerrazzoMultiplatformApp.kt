@@ -38,12 +38,14 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
+import ee.schimke.ha.client.TerrazzoIntegration
 import ee.schimke.ha.client.UnsupportedDashboardException
 import ee.schimke.ha.client.cache.OfflineCacheStore
 import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
+import ee.schimke.ha.client.detectTerrazzo
 import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.design.cardFingerprint
@@ -560,8 +562,14 @@ private fun DashboardShell(
       }
     }
   }
-  // Edit sessions need the Terrazzo integration, which serves the panel itself.
-  var integrationInstalled by remember(connection) { mutableStateOf(false) }
+  // The terrazzo/info handshake: whether the integration is here, and what it offers this user.
+  var integration by remember(connection) { mutableStateOf<TerrazzoIntegration?>(null) }
+  // Edit sessions need the Terrazzo integration, which serves the panel itself: when it offers
+  // them to this user (`edit`), or is older than the handshake, which offered them to everyone.
+  val editSessions = integration.let {
+    (it is TerrazzoIntegration.Installed && it.info.capabilities.edit != null) ||
+      it is TerrazzoIntegration.TooOld
+  }
   // With the integration's own agent on, editing is a chat with it: no manual editor, no relay.
   var builtInAgent by remember(connection) { mutableStateOf(BuiltInAgent.Off) }
   var privateDesignServer by remember(connection) { mutableStateOf(false) }
@@ -569,11 +577,20 @@ private fun DashboardShell(
   LaunchedEffect(connection) {
     connection.client.state.collectLatest { state ->
       if (state != HaClient.ConnectionState.Ready) return@collectLatest
-      integrationInstalled =
-        runCatching { TERRAZZO_DOMAIN in connection.client.fetchConfig().components }
-          .getOrDefault(integrationInstalled)
+      val found =
+        try {
+          connection.client.detectTerrazzo()
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          // Not known this time: keep what the last connection found.
+          integration
+        }
+      integration = found
+      // Each command is asked only when the integration offers it; an older one is tried.
+      val offered = found.offers()
       builtInAgent =
-        if (!integrationInstalled) BuiltInAgent.Off
+        if (offered?.agent == false) BuiltInAgent.Off
         else
           try {
             connection.client.terrazzoBuiltInAgent()
@@ -583,14 +600,15 @@ private fun DashboardShell(
             builtInAgent
           }
       privateDesignServer =
-        try {
-          (connection.client.terrazzoDesignServer()["available"] as? JsonPrimitive)
-            ?.booleanOrNull == true
-        } catch (e: CancellationException) {
-          throw e
-        } catch (_: Exception) {
-          false
-        }
+        offered?.designServer != false &&
+          try {
+            (connection.client.terrazzoDesignServer()["available"] as? JsonPrimitive)
+              ?.booleanOrNull == true
+          } catch (e: CancellationException) {
+            throw e
+          } catch (_: Exception) {
+            false
+          }
     }
   }
   fun select(route: NavKey) {
@@ -721,6 +739,7 @@ private fun DashboardShell(
                   verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                   Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
+                  TerrazzoIntegrationStatus(integration)
                   CardStyleSetting(cardStyle, onCardStyle)
                   Text(
                     signInStorageLabel
@@ -782,8 +801,7 @@ private fun DashboardShell(
                           else ({ stack.add(DashboardEditDestination(route.path)) }),
                         // The Home Assistant integration's own agent (its MCP user) answers this.
                         onAskAgent =
-                          if (integrationInstalled)
-                            ({ stack.add(AgentEditDestination(route.path)) })
+                          if (editSessions) ({ stack.add(AgentEditDestination(route.path)) })
                           else null,
                         askAgentLabel =
                           if (builtInAgent.enabled) CHAT_WITH_AGENT else "Ask your agent",
@@ -813,7 +831,7 @@ private fun DashboardShell(
                     privateDesignServer,
                   )
                 }
-                if (integrationInstalled && !customizing)
+                if (editSessions && !customizing)
                   DashboardDraftEntry(
                     connection,
                     route.path,
@@ -877,8 +895,21 @@ private fun DashboardShell(
   }
 }
 
-/** The Terrazzo integration's domain, in `get_config`'s `components` when it is installed. */
-private const val TERRAZZO_DOMAIN = "terrazzo"
+/** Which Terrazzo commands [this] answer offers; null to try each (unknown, or older). */
+private class Offered(val agent: Boolean, val designServer: Boolean)
+
+private fun TerrazzoIntegration?.offers(): Offered? =
+  when (this) {
+    is TerrazzoIntegration.Installed ->
+      Offered(
+        agent = info.capabilities.agent != null,
+        designServer = info.capabilities.designServer != null,
+      )
+    TerrazzoIntegration.Absent,
+    is TerrazzoIntegration.Unsupported -> Offered(agent = false, designServer = false)
+    is TerrazzoIntegration.TooOld,
+    null -> null
+  }
 
 /** [AgentEditScreen] with drafts drawn as the dashboard draws its cards, read-only. */
 @Composable

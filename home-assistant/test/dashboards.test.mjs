@@ -57,6 +57,11 @@ test('hosted WASM opens a supported dashboard directly, switches hidden dashboar
           'terrazzo/design_server':{available:false},
           get_config:{unit_system:{temperature:'°C',length:'km',mass:'kg',volume:'L'}},
         };
+        // Without the Terrazzo integration: Core doesn't know terrazzo/info and has no manifest
+        // for it, which is how the app tells "not installed" from "too old".
+        const refused = {'terrazzo/info':'unknown_command', 'manifest/get':'not_found'};
+        if (message.type in refused) return socket.send(JSON.stringify({id:message.id,type:'result',
+          success:false,error:{code:refused[message.type],message:refused[message.type]}}));
         let result = results[message.type];
         if (message.type === 'lovelace/config') {
           requested.push(message.url_path ?? null);

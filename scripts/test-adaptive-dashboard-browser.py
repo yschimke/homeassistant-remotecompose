@@ -101,6 +101,13 @@ def socket_route(socket):
                   'lovelace/config': dashboard, 'subscribe_events': None, 'config/entity_registry/list_for_display': {'entities': []},
                   'config/device_registry/list': [], 'call_service': {}, 'terrazzo/design_server': {'available': False},
                   'get_config': {'unit_system': {'temperature': '°C', 'length': 'km', 'mass': 'kg', 'volume': 'L'}}}
+        # A Home Assistant without the Terrazzo integration: Core doesn't know terrazzo/info, and
+        # has no manifest for it, which is how the app tells "not installed" from "too old".
+        refused = {'terrazzo/info': 'unknown_command', 'manifest/get': 'not_found'}
+        if kind in refused:
+            socket.send(json.dumps({'id': msg['id'], 'type': 'result', 'success': False,
+                                    'error': {'code': refused[kind], 'message': refused[kind]}}))
+            return
         if kind == 'logbook/get_events':
             assert msg['entity_ids'] == [conversation]
             assert 'start_time' in msg

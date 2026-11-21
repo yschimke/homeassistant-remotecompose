@@ -184,41 +184,6 @@ interface HaSession {
     throw UnsupportedOperationException("This session can't save dashboards to Home Assistant.")
 
   /**
-   * The Terrazzo integration's agent edit sessions on this Home Assistant
-   * (docs/architecture/dashboard-editing.md), or null for sessions with no Home Assistant behind
-   * them (demo, offline). Whether the integration is installed is `get_config`'s `components`.
-   */
-  val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits?
-    get() = null
-
-  /**
-   * Whether this Home Assistant has the Terrazzo integration, and what it offers this user
-   * (`terrazzo/info`, see [ee.schimke.ha.client.detectTerrazzo]): asked once per connection. Null
-   * with no Home Assistant behind the session, or while it can't be asked. A UI tells
-   * [TerrazzoIntegration.Absent] and [TerrazzoIntegration.TooOld] ("install or update the
-   * integration") from [TerrazzoIntegration.Unsupported] ("update the app").
-   */
-  suspend fun terrazzoIntegration(): TerrazzoIntegration? = null
-
-  /**
-   * The Terrazzo integration's built-in dashboard agent (`terrazzo/agent/info`): while it's on, the
-   * app edits dashboards by chatting with it instead of by hand. Off with no Home Assistant behind
-   * the session, without the integration, or when it can't be asked.
-   */
-  suspend fun builtInAgent(): ee.schimke.ha.client.dashboard.BuiltInAgent =
-    ee.schimke.ha.client.dashboard.BuiltInAgent.Off
-
-  /**
-   * Edit sessions whose agent works through the design [server]'s relay (agent-sessions.md): the
-   * one "Ask your agent" flow. Null where there's no Home Assistant behind the session.
-   */
-  fun cloudAgentEdits(
-    server: String,
-    grants: ee.schimke.ha.client.agent.AgentGrantStore,
-    agentLink: () -> String?,
-  ): ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits? = null
-
-  /**
    * Fetch HA's `get_config` payload — version + `internal_url` / `external_url`. Live sessions
    * round-trip the WebSocket; demo / offline sessions return null so callers can skip the
    * persist-public-URL side effect.
@@ -257,51 +222,6 @@ interface HaSession {
 
   /** Fires [eventType] on HA's bus, as a notification's action button does. */
   suspend fun fireEvent(eventType: String, eventData: JsonObject): Unit = Unit
-
-  /**
-   * Registers this device's FCM token with the Terrazzo integration's silent push for [webhookId]:
-   * the `push_url` and `push_token` to give HA, or null without the integration (or a live HA).
-   */
-  suspend fun registerSilentPush(
-    webhookId: String,
-    fcmToken: String,
-    relayUrl: String,
-  ): Pair<String, String>? = null
-
-  /** The notifications the Terrazzo integration held for [webhookId]; each is answered once. */
-  suspend fun takeHeldNotifications(webhookId: String): List<HaPushNotification> = emptyList()
-
-  /**
-   * Whether this Home Assistant runs its own card design server (the Terrazzo integration's
-   * `terrazzo/design_server`, for the Card Designs add-on): its API is then at
-   * `<baseUrl>/api/terrazzo/designs`, with this session's access token.
-   */
-  suspend fun privateDesignServer(): Boolean = false
-
-  /** The current user's shared card selections, or null when the integration is too old. */
-  suspend fun sharedDesignSelections(): Map<String, String>? = null
-
-  /** Select a private design for the signed-in user across their devices. */
-  suspend fun setSharedDesignSelection(card: String, designId: String) {
-    throw UnsupportedOperationException("Shared card selections are unavailable")
-  }
-
-  /**
-   * A one-time link that opens the design server's page [path] in a browser, signed in through this
-   * Home Assistant ([privateDesignServer]); null where there is none or the user isn't an admin.
-   */
-  suspend fun privateDesignLink(path: String): String? = null
-
-  /**
-   * Tells the Terrazzo integration which entities this device's widgets read, so a change to one
-   * wakes the app, with a lease of [leaseSeconds] while the app follows them itself. The lease
-   * granted, in seconds, or null without the integration (or a live HA).
-   */
-  suspend fun watchStates(
-    webhookId: String,
-    entityIds: Collection<String>,
-    leaseSeconds: Int,
-  ): Int? = null
 
   /**
    * Dismiss a single persistent notification by id — removes it from HA's bell-icon list. Live
@@ -356,7 +276,7 @@ class LiveHaSession(
   override val baseUrl: String,
   private val tokens: HaAccessTokens,
   engine: HttpClientEngine? = null,
-) : HaSession {
+) : HaSession, TerrazzoSession {
   /** A session pinned to one access token, never refreshed. */
   constructor(
     baseUrl: String,

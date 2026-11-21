@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.client.design.DesignLibraryInfo
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.DesignKey
@@ -169,6 +170,44 @@ class LibraryChannelsTest {
     val newer = LibraryChannels(root, library(generatedAt = 6_000), clock = { now })
     assertEquals(2, newer.main.current().designs.size)
     assertTrue(newer.main.current().manifest.serial >= 40_000)
+  }
+
+  @Test
+  fun aChannelsInfoLeavesOutPrivateDesignsItCannotServe() {
+    val channels = LibraryChannels(store(), library())
+    testApplication {
+      val github =
+        GithubAuth(
+          clientId = "id",
+          clientSecret = "secret",
+          publicUrl = "https://ha.example",
+          sessionSecret = "session-secret",
+          http = client,
+        )
+      application {
+        designServer(
+          channels.main,
+          github = github,
+          userDesigns = UserDesignStore(Files.createTempDirectory("user-designs").toFile()),
+          channels = channels,
+          publishToken = "ci-token",
+        )
+      }
+      val bundle = zip(library(generatedAt = 2_000, withDark = false))
+      client.put("$LIBRARY_CHANNELS_PATH/pr-42") {
+        header(HttpHeaders.Authorization, "Bearer ci-token")
+        setBody(bundle)
+      }
+      fun info(body: String) =
+        DesignLibraryInfo.json.decodeFromString(DesignLibraryInfo.serializer(), body)
+      val main = info(client.get("$API_BASE/info").bodyAsText())
+      assertEquals(1, main.capabilities.privateDesigns)
+      // The channel's manifest and blobs never include anyone's private designs.
+      val preview = info(client.get("$API_BASE/channels/pr-42/info").bodyAsText())
+      assertNull(preview.capabilities.privateDesigns)
+      assertEquals(main.capabilities.copy(privateDesigns = null), preview.capabilities)
+      assertEquals(HttpStatusCode.NotFound, client.get("$API_BASE/channels/pr-9/info").status)
+    }
   }
 
   @Test
