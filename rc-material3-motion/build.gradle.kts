@@ -1,5 +1,6 @@
 plugins {
   id("harc.base-conventions")
+  id("harc.publishing")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.kmp.library)
   alias(libs.plugins.compose.multiplatform)
@@ -42,3 +43,12 @@ kotlin {
 }
 
 tasks.register("test") { dependsOn("testAndroidHostTest") }
+
+mavenPublishing {
+  pom {
+    name.set("Remote Compose Material 3 motion")
+    description.set(
+      "Material 3 motion tokens for Remote Compose creation: Compose Multiplatform",
+    )
+  }
+}

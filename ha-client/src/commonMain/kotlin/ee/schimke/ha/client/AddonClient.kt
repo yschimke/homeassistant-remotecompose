@@ -46,18 +46,15 @@ class AddonClient(
   val baseUrl: String,
   private val accessToken: String? = null,
   engine: HttpClientEngine? = null,
+  /** Supplies the HTTP client, in place of [engine]; see [HaHttpClientFactory]. */
+  httpClients: HaHttpClientFactory? = null,
 ) {
   private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true
   }
 
-  private val http: HttpClient =
-    if (engine != null) {
-      HttpClient(engine) { installPlugins() }
-    } else {
-      HttpClient { installPlugins() }
-    }
+  private val http: HttpClient = engine.orFactory(httpClients).create { installPlugins() }
 
   /**
    * Probes `/healthz` with a short timeout. Used by the runtime to decide whether to install

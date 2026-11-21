@@ -1,6 +1,8 @@
 # Library adoption review
 
 Status: review, 2026-11. Read-only audit of every client-side module; no code changed.
+Publishing of the modules that are clean today, and a second pass on templates, the Terrazzo API
+and HTTP-client configuration: [library-publishing.md](library-publishing.md).
 
 **Goal.** Every part of the Home Assistant client should be adoptable on its own as a library:
 

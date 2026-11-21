@@ -1,6 +1,6 @@
 package ee.schimke.ha.client.design
 
-import ee.schimke.ha.client.platformHttpClient
+import ee.schimke.ha.client.HaHttpClientFactory
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -79,8 +79,9 @@ object DesignFilters {
     density: Float,
     token: suspend () -> String = { "" },
     locale: String? = null,
+    httpClients: HaHttpClientFactory = HaHttpClientFactory.Platform,
   ): ByteArray? {
-    val client = platformHttpClient()
+    val client = httpClients.create {}
     return try {
       bitmapFonts(baseUrl, document, host, density, client, token, locale)
     } finally {

@@ -1,5 +1,6 @@
 plugins {
   id("harc.base-conventions")
+  id("harc.publishing")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.kmp.library)
   alias(libs.plugins.compose.compiler)
@@ -28,5 +29,14 @@ kotlin {
       implementation(libs.cmp.foundation)
     }
     commonTest.dependencies { implementation(libs.kotlin.test) }
+  }
+}
+
+mavenPublishing {
+  pom {
+    name.set("Remote Compose card player")
+    description.set(
+      "Play a Remote Compose card document with live named bindings, inside a Compose tree: Compose Multiplatform",
+    )
   }
 }

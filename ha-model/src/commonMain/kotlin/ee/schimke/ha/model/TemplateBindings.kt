@@ -23,7 +23,9 @@ data class TemplateRef(val key: String, val template: String)
  * [needsTemplateRender] flags exactly the cards that take the [JinjaTemplate] path.
  */
 object TemplateBindings {
-  private val exprRegex = Regex("\\{\\{\\s*(.*?)\\s*\\}\\}", RegexOption.DOT_MATCHES_ALL)
+  // `[\\s\\S]` rather than `.` with `RegexOption.DOT_MATCHES_ALL`, which common Kotlin doesn't
+  // have: the published common metadata has to compile, not only each target.
+  private val exprRegex = Regex("\\{\\{\\s*([\\s\\S]*?)\\s*\\}\\}")
   private val simpleStates = Regex("^states\\('[^']+'\\)$")
 
   /**

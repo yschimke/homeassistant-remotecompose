@@ -2,7 +2,6 @@ package ee.schimke.ha.client
 
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HistoryPoint
-import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
@@ -33,8 +32,10 @@ class HaEntityStates(
   private val baseUrl: String,
   private val accessToken: String,
   engine: HttpClientEngine? = null,
+  /** Supplies the HTTP client, in place of [engine]; see [HaHttpClientFactory]. */
+  httpClients: HaHttpClientFactory? = null,
 ) : AutoCloseable {
-  private val httpClient = if (engine != null) HttpClient(engine) else platformHttpClient()
+  private val httpClient = engine.orFactory(httpClients).create {}
   private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true

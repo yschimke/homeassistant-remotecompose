@@ -1,5 +1,6 @@
 plugins {
   id("harc.base-conventions")
+  id("harc.publishing")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.kmp.library)
   alias(libs.plugins.compose.multiplatform)
@@ -78,3 +79,12 @@ kotlin {
 // CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own, so
 // without this the card tests would silently stop running there.
 tasks.register("test") { dependsOn("testAndroidHostTest") }
+
+mavenPublishing {
+  pom {
+    name.set("Home Assistant Remote Compose components")
+    description.set(
+      "Remote Compose card components and themes for Home Assistant cards, independent of the Home Assistant model: Compose Multiplatform",
+    )
+  }
+}

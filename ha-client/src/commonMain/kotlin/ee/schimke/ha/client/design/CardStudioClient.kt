@@ -3,13 +3,12 @@
 package ee.schimke.ha.client.design
 
 import ee.schimke.ha.client.networkErrorsAsExceptions
-import ee.schimke.ha.client.platformHttpClient
+import ee.schimke.ha.client.orFactory
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
-import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.api.createClientPlugin
@@ -48,9 +47,7 @@ private constructor(
     engine: HttpClientEngine? = null,
   ) : this(studioServerUrl(serverUrl), engine, null)
 
-  private val http =
-    if (engine == null) platformHttpClient { configure(homeAssistantToken) }
-    else HttpClient(engine) { configure(homeAssistantToken) }
+  private val http = engine.orFactory(null).create { configure(homeAssistantToken) }
 
   companion object {
     /**

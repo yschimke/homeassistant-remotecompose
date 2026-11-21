@@ -93,6 +93,13 @@ Glance widgets, Wear launcher tiles, ESP32 devices, etc.).
 | [`demo-app`](demo-app/) | Android | Sample app: fetch a real dashboard, render via `remote-player-compose`. |
 | [`ios`](ios/) | iOS / SwiftUI | Dashboard app using `RcNativePlayerUIKit`, with bundled demo cards, live named bindings, and offline caching. |
 
+## Using the libraries
+
+`ha-model`, `ha-client`, the `rc-*` rendering modules, `rc-converter` and `room-ui` publish to Maven
+Central as `ee.schimke.ha:<module>`, pinned together by `ee.schimke.ha:ha-bom`. What each is for,
+and what is not published yet, is in
+[docs/architecture/library-publishing.md](docs/architecture/library-publishing.md).
+
 ## Key library references
 
 Versions live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml)

@@ -477,6 +477,58 @@ jobs:
           name: release-${{ steps.stage.outputs.version }}
           path: _release/
 
+  # The reusable libraries (`HarcPublishing.LIBRARIES` in build-logic, plus `ha-bom`) go to Maven
+  # Central as `ee.schimke.ha:<module>:<tag without v>`, after yschimke/livery's release job. Off
+  # until the repository variable MAVEN_CENTRAL_PUBLISH is 'true', so a release never fails on a
+  # namespace or key that isn't set up yet; docs/architecture/library-publishing.md lists the setup.
+  # Secrets (as livery and rc-players use): MAVEN_CENTRAL_USERNAME / MAVEN_CENTRAL_PASSWORD (a
+  # Central Portal user token whose account owns the `ee.schimke.ha` namespace), SIGNING_KEY (an
+  # ASCII-armoured private PGP key), SIGNING_KEY_ID and SIGNING_KEY_PASSWORD. Kotlin/Native
+  # cross-compiles the Apple klibs, so this runs on Linux. It does not gate the GitHub release: a
+  # failed upload is re-run on its own (Central refuses a version it already has, so a re-run after
+  # a partial upload needs the deployment dropped in the Central Portal first).
+  maven-central:
+    name: Publish libraries to Maven Central
+    needs: ensure-release
+    if: vars.MAVEN_CENTRAL_PUBLISH == 'true' && (github.event_name == 'push' || inputs.publish_release != false)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6.3.0
+        with:
+          distribution: temurin
+          java-version: 21.0.13+100000002.0.LTS
+      - uses: gradle/actions/setup-gradle@v6.4.1
+        with:
+          cache-read-only: true
+      - name: Publish to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in ORG_GRADLE_PROJECT_mavenCentralUsername ORG_GRADLE_PROJECT_mavenCentralPassword ORG_GRADLE_PROJECT_signingInMemoryKey; do
+            [ -n "${!name}" ] || { echo "::error::MAVEN_CENTRAL_PUBLISH is on but $name is empty"; exit 1; }
+          done
+          version="${TAG_NAME#v}"
+          ./gradlew publishHarcLibraries -Pharc.libraryVersion="$version" \
+            --no-configuration-cache --stacktrace
+          {
+            echo "### Maven Central"
+            echo "Published \`ee.schimke.ha:*:$version\`; import \`ee.schimke.ha:ha-bom:$version\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   # The release goes public only when the Home Assistant packages, the desktop installers and the
   # Android/Apple assets are all attached. If any of them fails it stays a draft: re-run the failed
   # jobs and this one publishes it. A release that is already published is left as it is.

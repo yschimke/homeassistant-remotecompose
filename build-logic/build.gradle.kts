@@ -13,4 +13,10 @@ dependencies {
     "com.ncorti.ktfmt.gradle:com.ncorti.ktfmt.gradle.gradle.plugin:${libs.versions.ktfmt.gradle.get()}"
   )
   implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
+  // Maven Central publishing for the library modules (`harc.publishing`). On this classpath, not
+  // applied from each module's own `plugins {}`, so every publishing module shares one plugin
+  // classloader and one `MavenCentralBuildService`, as rc-players' root build arranges.
+  implementation(
+    "com.vanniktech:gradle-maven-publish-plugin:${libs.versions.maven.publish.get()}"
+  )
 }
