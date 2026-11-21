@@ -9,15 +9,15 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 /** Small settings stay compatible with older peers; full designs use Data Layer asset transfer. */
-internal fun DataMap.putProtoPayload(bytes: ByteArray) {
+fun DataMap.putProtoPayload(bytes: ByteArray) {
   if (bytes.size <= INLINE_PROTO_LIMIT) putByteArray("proto", bytes)
   else putAsset("proto_asset", Asset.createFromBytes(bytes))
 }
 
-internal const val INLINE_PROTO_LIMIT = 90_000
+const val INLINE_PROTO_LIMIT = 90_000
 
 /** Extracted before releasing a DataEvent buffer; asset I/O can finish asynchronously. */
-internal class WearDataPayload(val inlineBytes: ByteArray?, private val asset: Asset?) {
+class WearDataPayload(val inlineBytes: ByteArray?, private val asset: Asset?) {
   suspend fun read(client: DataClient): ByteArray? {
     inlineBytes?.let {
       return it
@@ -46,5 +46,4 @@ internal class WearDataPayload(val inlineBytes: ByteArray?, private val asset: A
   }
 }
 
-internal fun DataMap.protoPayload() =
-  WearDataPayload(getByteArray("proto"), getAsset("proto_asset"))
+fun DataMap.protoPayload() = WearDataPayload(getByteArray("proto"), getAsset("proto_asset"))

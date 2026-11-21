@@ -107,12 +107,13 @@ or compatible add-on documents. Android retains those existing integrations.
 Dependency modernization is part of this change. SDK 37.1 is required by the upgraded Android
 Compose artifacts; target SDK remains 37. Kotlin's Wasm Node/Yarn/Binaryen setup creates project
 repositories, so settings prefer the centrally declared, group-filtered toolchain repositories.
-The converter does not depend on `app-ui` or `rc-player-ui`, but it does depend on
-`rc-player-compose` directly for card playback, so the phone, Wear, demo and preview modules all
+The converter does not depend on `app-ui`. It uses `rc-player-ui` for `RcErrorBoundary`, and
+depends on `rc-player-compose` directly for card playback, so the phone, Wear, demo and preview modules all
 resolve the CMP Android variants, which can raise Compose above its BOM minimum.
 
 `dependencyInsight` on `debugRuntimeClasspath` confirms Foundation's Android artifact resolves to
 `1.13.0-alpha03` in both phone and Wear. Remote Compose alpha21 already requests that artifact
-above the BOM's `1.12.1` minimum; Wear has no dependency on `app-ui` or `rc-player-ui`. The phone
+above the BOM's `1.12.1` minimum. Wear depends on `app-ui` (for `ReportFeedbackButton` and
+`feedbackIssueUrl`) and on `rc-player-ui`. The phone
 also consumes CMP Foundation `1.13.0-alpha02`. The upgraded `Grid` API no longer requires its
 previous experimental opt-in.

@@ -217,6 +217,7 @@ Already clean: `rc-components` has no `ha-model` imports and takes its own data 
 - **P1: The Wear sync protocol is copied.** Four files (~605 lines) are byte-identical in
   `app/.../wearsync/proto/` and `wear/.../wearsync/proto/` ("must stay byte-for-byte identical",
   `WearSyncProto.kt:6-7`), and so is `wear_sync.proto`. One `wear-sync-proto` module.
+  *Done:* `:wear-sync-proto` is that module; `:app` and `:wear` both depend on it.
 - **P1: Three demo-data sources.** `terrazzo-core/.../DemoHaSession.kt`,
   `app-ui/.../DemoDataSource.kt` + `DemoDashboard.kt` (a separate `DemoDataSource` interface that
   reuses the name `DemoData`), `tv/.../TvDemoData.kt`; Glasses has a fourth (`DemoHouse`).
@@ -309,11 +310,14 @@ Ordered so each phase is independently shippable and unblocks the next. Effort i
 3. Rename `rc-player-ui`'s package off `ee.schimke.terrazzo.shared`.
 
 **Phase 1: unblock the form factors (small, highest leverage).**
-4. Lower `terrazzo-core` to `minSdk 29`; gate API-35 code with `@RequiresApi`/runtime checks.
-   Wear, TV and Quest can then drop their copies.
-5. Move `CachedHaSession`, `DemoHaSession`, `OfflineOnlySession`, `OfflineCacheStorage` to
-   `commonMain` (inject a clock; load demo dashboards as resources).
-6. Extract `wear-sync-proto`; delete the copy.
+4. ~~Lower `terrazzo-core` to `minSdk 29`.~~ Done: it is on the project floor (29); its Android
+   code calls nothing newer than API 26. Wear, TV and Quest can now drop their copies (not done
+   yet: `TvOfflineCache`, `QuestAuth`/`QuestRoomModel`, `WearDirectAccess`).
+5. ~~Move `CachedHaSession` and `OfflineOnlySession` to `commonMain`.~~ Done, behind a common
+   `OfflineCacheStore` interface (Android's file-backed `OfflineCacheStorage` implements it) and an
+   injectable clock. Still open: `DemoHaSession`, whose bundled dashboards are JVM resources, and a
+   file-backed store for the desktop target.
+6. ~~Extract `wear-sync-proto`; delete the copy.~~ Done.
 7. ~~Move `BuiltDesign`, `CachedFontFace`, `GlyphPack`, `Sha256`, `CardGenerator` to
    `ha-design-model`; drop `rc-converter → ha-client`.~~ Done: moved into `ha-model`
    (`ee.schimke.ha.design`, `ee.schimke.ha.design.glyphs`, `ee.schimke.ha.model`); see

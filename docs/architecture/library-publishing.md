@@ -38,7 +38,7 @@ Not published, and why:
 
 | Module | Blocker |
 |---|---|
-| `terrazzo-core` | minSdk 35; Metro DI in commonMain; it is the phone app's services (AppAuth, DataStore, widgets, Wear sync), not a library. Its common `HaSession` should move out first (review §2.1). |
+| `terrazzo-core` | Metro DI in commonMain; it is the phone app's services (AppAuth, DataStore, widgets, Wear sync), not a library. Its common `HaSession` should move out first (review §2.1). |
 | `app-ui` | One app's shell: 17-parameter entry point, Play update, keyring, webview, telemetry. |
 | `ha-cards-catalog` | Composeai preview tooling on its main classpath. Its runtime half (`CardDesignDocument`) is wanted; split it out (below). |
 | `card-designs` | Design generation tooling; `java.io.File` in common, `compose.desktop.currentOs` in jvmMain. |

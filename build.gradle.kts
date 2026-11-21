@@ -268,3 +268,13 @@ tasks.register("publishHarcLibrariesToMavenLocal") {
   description = "Publishes the reusable libraries and :ha-bom to ~/.m2, for trying them in an app."
   (HarcPublishing.LIBRARIES + ":ha-bom").forEach { dependsOn("$it:publishToMavenLocal") }
 }
+
+// A published multiplatform library also ships its common metadata, compiled against only the
+// APIs every target shares. No per-target build compiles it: a JVM-only call such as
+// `RegexOption.DOT_MATCHES_ALL` passes Android, JVM, Wasm and iOS and still fails the publish.
+// CI runs this on every PR (ci.yml, "Unit tests") so that break lands in review, not at release.
+tasks.register("checkHarcLibraryMetadata") {
+  group = "verification"
+  description = "Compiles the common metadata of every library HarcPublishing.LIBRARIES publishes."
+  HarcPublishing.LIBRARIES.forEach { dependsOn("$it:compileCommonMainKotlinMetadata") }
+}

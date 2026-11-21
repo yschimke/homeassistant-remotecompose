@@ -5,14 +5,16 @@ import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
-import java.util.concurrent.ConcurrentHashMap
+import ee.schimke.terrazzo.core.cache.OfflineCacheStore
+import kotlin.time.Clock
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.json.JsonObject
 
 /**
  * Offline-first wrapper around any [HaSession]. Every successful live fetch is mirrored to the
- * [OfflineCacheStorage]; every read falls back to the cache when the live call fails, and the cache
+ * [OfflineCacheStore]; every read falls back to the cache when the live call fails, and the cache
  * is the first thing the UI sees on cold start.
  *
  * Failure-mode contract:
@@ -25,8 +27,11 @@ import kotlinx.serialization.json.JsonObject
  * source — wrapping it is a no-op cache write that costs nothing). Demo callers can skip the
  * wrapper if they prefer; production sessions always use it.
  */
-class CachedHaSession(private val delegate: HaSession, private val cache: OfflineCacheStorage) :
-  HaSession {
+class CachedHaSession(
+  private val delegate: HaSession,
+  private val cache: OfflineCacheStore,
+  private val nowMs: () -> Long = { Clock.System.now().toEpochMilliseconds() },
+) : HaSession {
 
   override val baseUrl: String
     get() = delegate.baseUrl
@@ -73,12 +78,15 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
       delegate.loadDashboard(urlPath).let { (d, fresh) -> d to fresh.keeping(cached?.second) }
     }
       .onSuccess { (dashboard, snapshot) ->
-        liveFetchedAtMs[urlPath.orEmpty()] = System.currentTimeMillis()
-        servedFromCache.remove(urlPath.orEmpty())
+        val key = urlPath.orEmpty()
+        liveFetchedAtMs.update { it + (key to nowMs()) }
+        servedFromCache.update { it - key }
         cache.putDashboard(baseUrl, urlPath, dashboard)
         cache.putSnapshot(baseUrl, urlPath, snapshot)
       }
-      .getOrElse { ex -> (cached ?: throw ex).also { servedFromCache.add(urlPath.orEmpty()) } }
+      .getOrElse { ex ->
+        (cached ?: throw ex).also { servedFromCache.update { it + urlPath.orEmpty() } }
+      }
   }
 
   /**
@@ -89,12 +97,12 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
     delegate.loadSnapshot().keeping(cache.snapshot(baseUrl, null))
   }
     .onSuccess { snapshot ->
-      liveFetchedAtMs[""] = System.currentTimeMillis()
-      servedFromCache.remove("")
+      liveFetchedAtMs.update { it + ("" to nowMs()) }
+      servedFromCache.update { it - "" }
       cache.putSnapshot(baseUrl, null, snapshot)
     }
     .getOrElse { ex ->
-      (cache.snapshot(baseUrl, null) ?: throw ex).also { servedFromCache.add("") }
+      (cache.snapshot(baseUrl, null) ?: throw ex).also { servedFromCache.update { it + "" } }
     }
 
   /**
@@ -111,10 +119,12 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   }
 
   /** Per dashboard (`""` for the default): when this session last fetched its snapshot live. */
-  private val liveFetchedAtMs = ConcurrentHashMap<String, Long>()
+  // Copy-on-write maps rather than ConcurrentHashMap, which is JVM-only: written once per fetch,
+  // read once per frame at most.
+  private val liveFetchedAtMs = MutableStateFlow<Map<String, Long>>(emptyMap())
 
   /** The dashboards whose last [loadDashboard] fell back to the cache. */
-  private val servedFromCache: MutableSet<String> = ConcurrentHashMap.newKeySet()
+  private val servedFromCache = MutableStateFlow<Set<String>>(emptySet())
 
   /**
    * Null after a live fetch; after a fallback, when the cached snapshot was fetched — this
@@ -123,8 +133,8 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
    */
   override fun snapshotFetchedAtMs(urlPath: String?): Long? {
     val key = urlPath.orEmpty()
-    if (key !in servedFromCache) return null
-    return liveFetchedAtMs[key] ?: cache.snapshotSavedAtMs(baseUrl, urlPath) ?: 0L
+    if (key !in servedFromCache.value) return null
+    return liveFetchedAtMs.value[key] ?: cache.snapshotSavedAtMs(baseUrl, urlPath) ?: 0L
   }
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()
@@ -200,7 +210,7 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
      * A session with no live connection behind it, only [cache]: what the UI draws until a live
      * session replaces it. Every read is the cached copy; every live-only call fails.
      */
-    fun cacheOnly(baseUrl: String, cache: OfflineCacheStorage): CachedHaSession =
+    fun cacheOnly(baseUrl: String, cache: OfflineCacheStore): CachedHaSession =
       CachedHaSession(OfflineOnlySession(baseUrl), cache)
   }
 

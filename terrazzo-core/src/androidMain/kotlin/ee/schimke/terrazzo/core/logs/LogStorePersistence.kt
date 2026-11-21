@@ -122,8 +122,8 @@ internal fun PersistedLogEntry.toModel(): LogEntry? =
  * read: empty file (first run) or corrupt bytes fall back to [defaultValue] rather than propagating
  * a `CorruptionException` that would crash the activity.
  *
- * Mirrors the same adapter in `app/wearsync/proto/ProtoSerializers.kt` — kept duplicated to avoid
- * pulling :app's wearsync module into :terrazzo-core.
+ * Mirrors the same adapter in `:wear-sync-proto`'s `ProtoSerializers.kt`, kept separate so
+ * :terrazzo-core doesn't depend on the Wear Data Layer.
  */
 @OptIn(ExperimentalSerializationApi::class)
 internal class ProtoBufStoreSerializer<T : Any>(

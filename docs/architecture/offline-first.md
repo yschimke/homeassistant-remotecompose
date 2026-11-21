@@ -60,7 +60,7 @@ and `loadDashboard()` first emit the cached value (if any) via the
 `Flow<...>` companion APIs, then attempt a live fetch and emit the
 fresh result. Failures never overwrite a successful cache entry.
 
-`TokenVault.lastInstance()` returns the most-recently-stored
+`OfflineCache.lastInstance()` returns the most-recently-stored
 instance, used by `MainActivity` to auto-resume on cold start. If
 the access-token mint fails (no network, refresh token expired) the
 app still constructs a session using only the cache; UI surfaces
@@ -112,7 +112,7 @@ the same `CachedHaSession` wrapper used by mobile.
 ## Auto-resume
 
 `MainActivity.onCreate` (mobile) does a synchronous
-`runBlocking` read of `TokenVault.lastInstance()` (already does
+`runBlocking` read of `OfflineCache.lastInstance()` (already does
 this for `lastViewedDashboardNow()`). If an instance is present:
 
 1. Construct a cache-only `CachedHaSession` immediately so the first

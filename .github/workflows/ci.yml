@@ -195,6 +195,11 @@ jobs:
           :rc-components:compileKotlinWasmJs :rc-components:compileKotlinIosSimulatorArm64
           :rc-converter:compileKotlinWasmJs :rc-converter:compileKotlinIosSimulatorArm64
           :ha-cards-catalog:compileKotlinWasmJs :ha-cards-catalog:compileKotlinIosSimulatorArm64
+      # The published libraries also ship common metadata, compiled against only the APIs all
+      # targets share. The per-target compiles above don't build it, so an API one platform lacks
+      # in common terms (RegexOption.DOT_MATCHES_ALL) passes them and fails the Maven publish.
+      - name: Compile the published libraries' common metadata
+        run: ./gradlew --stacktrace checkHarcLibraryMetadata
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v7.0.2

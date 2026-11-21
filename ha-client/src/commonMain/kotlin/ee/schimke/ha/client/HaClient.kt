@@ -95,7 +95,8 @@ data class HaConfig(val baseUrl: String, val accessToken: String)
  * 5. server → `{id:N, type:"result", success:true, result:…}`
  *
  * The connection is held open; command IDs are monotonic and responses are matched in a receive
- * loop. Not a subscription client yet — cards work from a point-in-time [HaSnapshot].
+ * loop. [subscribeEvents] streams events (such as `state_changed`) over the same connection;
+ * [snapshot] reads a point-in-time [HaSnapshot].
  */
 class HaClient(
   private val config: HaConfig,
