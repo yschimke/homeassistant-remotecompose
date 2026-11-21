@@ -1,0 +1,268 @@
+diff --color -ruN a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h
+--- a/components/kobentovg/include/kobentovg/ThorvgPaintContext.h	2026-11-14 09:31:14.712268372 +0000
++++ b/components/kobentovg/include/kobentovg/ThorvgPaintContext.h	2026-11-14 09:31:14.712997104 +0000
+@@ -95,6 +95,20 @@
+         // what it's asked for calls rcstage::redraw() once it has it.
+         virtual bool picture(const std::string& url, int w, int h, uint32_t& version,
+                              std::vector<uint32_t>& px, int& pw, int& ph) = 0;
++        // Direct pictures (direct() true): the paint keeps none of a picture's pixels. It asks
++        // pictureVersion() as it paints, and ThorVG draws a placeholder in the picture's box.
++        // Once ThorVG has drawn the frame, the host draws the picture into the target over it
++        // (drawPicture), and ThorVG draws again, over the picture, what the document paints on
++        // top of it. Where the placeholder didn't reach in the box's corners (a rounded clip),
++        // the picture is taken back off. The host keeps only the encoded bytes.
++        virtual bool direct() const { return false; }
++        // [url] drawn [w] x [h] pixels: the version the host has (0: none yet), and a fetch of it
++        // at that size when it hasn't, as picture() does.
++        virtual uint32_t pictureVersion(const std::string& url, int w, int h) { return 0; }
++        // Fill box [x0, y0, x1, y1) (box[0..3]) of [pixels] (premultiplied ARGB8888, [stride]
++        // pixels a row) with [url]'s picture at [version], writing only inside within[0..3].
++        virtual void drawPicture(const std::string& url, uint32_t version, const int* box,
++                                 const int* within, uint32_t* pixels, int stride) {}
+     };
+     static void setBitmapSource(BitmapSource* source);
+     // Whether this context asks the bitmap source for pictures (off for a document laid out
+@@ -387,6 +401,26 @@
+     bool mPictures = true;
+     // A URL bitmap's image for its visible box [l, t, r, b] (document coordinates), or null.
+     Image* urlImage(int imageId, float l, float t, float r, float b);
++    // Direct pictures (BitmapSource::direct): this frame's, their boxes in target pixels, and
++    // where each paint came in the frame (mSeq: its push, 1 up; 0 for the frame's own).
++    struct DirectPicture {
++        std::string url;
++        uint32_t version;
++        int box[4];
++        size_t seq;   // the placeholder's
++    };
++    std::vector<DirectPicture> mDirect;
++    std::unordered_map<const tvg::Paint*, size_t> mSeq;
++    size_t mSeqNext = 0;
++    bool mTrackSeq = false;
++    long mDirectUs = 0;
++    void urlDirect(int imageId, float l, float t, float r, float b);
++    void drawDirect();
++    void hideLeaves(tvg::Paint* p, size_t cut, bool before, std::vector<std::pair<tvg::Paint*, uint8_t>>& hidden);
++public:
++    // Microseconds the last endFrame spent on direct pictures (host decode and ThorVG redraws).
++    long directMicros() const { return mDirectUs; }
++private:
+     std::unordered_map<uint64_t, float> mWidthCache;
+     // Plain text runs rasterised once (premultiplied ARGB, with a margin) and blitted after:
+     // a frame otherwise re-tessellates every glyph, most of its cost on a microcontroller.
+diff --color -ruN a/components/kobentovg/src/ThorvgPaintContext.cpp b/components/kobentovg/src/ThorvgPaintContext.cpp
+--- a/components/kobentovg/src/ThorvgPaintContext.cpp	2026-11-14 09:31:14.708777427 +0000
++++ b/components/kobentovg/src/ThorvgPaintContext.cpp	2026-11-14 09:31:14.709552697 +0000
+@@ -131,6 +131,9 @@
+ 
+ void ThorvgPaintContext::setGlyphSource(GlyphSource* source) { sGlyphSource = source; }
+ static ThorvgPaintContext::BitmapSource* sBitmapSource = nullptr;
++// A direct picture's placeholder, opaque (ARGB): a dark grey near a card's.
++static constexpr uint32_t kPlaceholder = 0xFF242424;
++static ThorvgPaintContext::Rect intersect(const ThorvgPaintContext::Rect& a, const ThorvgPaintContext::Rect& b);
+ void ThorvgPaintContext::setBitmapSource(BitmapSource* source) { sBitmapSource = source; }
+ 
+ ThorvgPaintContext::CacheBytes ThorvgPaintContext::cacheBytes() const {
+@@ -391,6 +394,10 @@
+     mRemoveUs = (long) std::chrono::duration_cast<std::chrono::microseconds>(
+         std::chrono::steady_clock::now() - begun).count();
+     mEffectPad.clear();
++    mDirect.clear();
++    mSeq.clear();
++    mSeqNext = 0;
++    mTrackSeq = sBitmapSource != nullptr && mPictures && sBitmapSource->direct();
+     mContainers.clear();
+     mSaves.clear();
+     mLayerAlpha = 1;
+@@ -418,6 +425,7 @@
+ }
+ 
+ void ThorvgPaintContext::addOverlay(tvg::Paint* p) {
++    if (mTrackSeq) mSeq[p] = ++mSeqNext;   // over every picture
+     mCanvas->add(p);
+ }
+ 
+@@ -425,6 +433,7 @@
+     if (mOffscreen) endDrawToBitmap();
+     if (mDamageOn && mClearOpaque) {
+         drawDamaged();
++        drawDirect();
+         return;
+     }
+     mFrameDamage.assign(1, Rect{0, 0, mW, mH});
+@@ -432,6 +441,87 @@
+     mCanvas->viewport(0, 0, mW, mH);
+     mCanvas->draw(!mClearOpaque);
+     mCanvas->sync();
++    drawDirect();
++}
++
++// Leaves under [p] made invisible for a draw: those pushed up to [cut] ([before]), or after it.
++// A leaf the frame added itself (its background) counts as before everything.
++void ThorvgPaintContext::hideLeaves(tvg::Paint* p, size_t cut, bool before,
++                                    std::vector<std::pair<tvg::Paint*, uint8_t>>& hidden) {
++    if (p->type() == tvg::Type::Scene) {
++        for (auto* child : static_cast<tvg::Scene*>(p)->paints()) hideLeaves(child, cut, before, hidden);
++        return;
++    }
++    auto it = mSeq.find(p);
++    const size_t seq = it == mSeq.end() ? 0 : it->second;
++    if ((seq <= cut) != before || p->opacity() == 0) return;
++    hidden.emplace_back(p, p->opacity());
++    p->opacity(0);
++}
++
++void ThorvgPaintContext::drawDirect() {
++    mDirectUs = 0;
++    if (mDirect.empty() || sBitmapSource == nullptr) return;
++    const auto t0 = std::chrono::steady_clock::now();
++    const Rect full{0, 0, mW, mH};
++    std::vector<std::pair<tvg::Paint*, uint8_t>> hidden;
++    auto drawOnly = [&](size_t cut, bool keepBefore, const Rect& a) {
++        hidden.clear();
++        for (auto* p : mCanvas->paints()) hideLeaves(p, cut, !keepBefore, hidden);
++        mCanvas->viewport(a.x0, a.y0, a.x1 - a.x0, a.y1 - a.y0);
++        mCanvas->draw(false);
++        mCanvas->sync();
++        for (auto& h : hidden) h.first->opacity(h.second);
++    };
++    constexpr int kCorner = 24;   // the largest corner radius kept
++    std::vector<uint32_t> corners;
++    for (auto& pic : mDirect) {
++        const Rect box{pic.box[0], pic.box[1], pic.box[2], pic.box[3]};
++        for (auto& r : mDrawn) {
++            const Rect a = intersect(intersect(box, r), full);
++            if (a.empty()) continue;
++            // What's under the picture and its placeholder, without what's over it.
++            drawOnly(pic.seq, true, a);
++            // The corners: what the placeholder didn't cover there is kept.
++            const int cx[2] = {box.x0, std::max(box.x0, box.x1 - kCorner)};
++            const int cy[2] = {box.y0, std::max(box.y0, box.y1 - kCorner)};
++            corners.assign((size_t) 4 * kCorner * kCorner, 0);
++            // A corner the placeholder fills (a pixel in from it is the placeholder's) is square:
++            // nothing to keep there. Its straight edges blend with what's beside them when the box
++            // isn't on whole pixels, which isn't a rounded corner.
++            bool rounded[4];
++            for (int i = 0; i < 4; i++) {
++                const int x = (i & 1) ? box.x1 - 2 : box.x0 + 1, y = (i >> 1) ? box.y1 - 2 : box.y0 + 1;
++                rounded[i] = x >= a.x0 && x < a.x1 && y >= a.y0 && y < a.y1 && mPixels[y * mW + x] != kPlaceholder;
++            }
++            auto cornerRect = [&](int i) {
++                if (!rounded[i]) return Rect{};
++                const Rect c{cx[i & 1], cy[i >> 1], std::min(box.x1, cx[i & 1] + kCorner),
++                             std::min(box.y1, cy[i >> 1] + kCorner)};
++                return intersect(c, a);
++            };
++            for (int i = 0; i < 4; i++) {
++                const Rect c = cornerRect(i);
++                for (int y = c.y0; y < c.y1; y++)
++                    for (int x = c.x0; x < c.x1; x++)
++                        corners[(size_t) i * kCorner * kCorner + (y - c.y0) * kCorner + (x - c.x0)] = mPixels[y * mW + x];
++            }
++            const int within[4] = {a.x0, a.y0, a.x1, a.y1};
++            sBitmapSource->drawPicture(pic.url, pic.version, pic.box, within, mPixels, mW);
++            for (int i = 0; i < 4; i++) {
++                const Rect c = cornerRect(i);
++                for (int y = c.y0; y < c.y1; y++)
++                    for (int x = c.x0; x < c.x1; x++) {
++                        const uint32_t was = corners[(size_t) i * kCorner * kCorner + (y - c.y0) * kCorner + (x - c.x0)];
++                        if (was != kPlaceholder) mPixels[y * mW + x] = was;
++                    }
++            }
++            // What the document paints over it.
++            drawOnly(pic.seq, false, a);
++        }
++    }
++    mDirectUs = (long) std::chrono::duration_cast<std::chrono::microseconds>(
++                    std::chrono::steady_clock::now() - t0).count();
+ }
+ 
+ // ── Damage tracking ───────────────────────────────────────────────────────────────────────
+@@ -740,6 +830,7 @@
+         p->blend(mPaint.blend);
+         p->id = p->id * 31 + 1 + (uint32_t) mPaint.blend;   // the damage hash can't read it back
+     }
++    if (mTrackSeq) mSeq[p] = ++mSeqNext;
+     if (!mContainers.empty()) mContainers.back()->add(p);
+     else if (mOffscreen) mOffscreen->canvas->add(p);
+     else mCanvas->add(p);
+@@ -1174,6 +1265,10 @@
+ }
+ 
+ void ThorvgPaintContext::drawBitmap(int imageId, float l, float t, float r, float b) {
++    if (mImageUrls.count(imageId) && mTrackSeq) {
++        urlDirect(imageId, l, t, r, b);
++        return;
++    }
+     if (mImageUrls.count(imageId)) {
+         if (Image* img = urlImage(imageId, l, t, r, b)) drawImage(*img, l, t, r - l, b - t);
+         return;
+@@ -1188,8 +1283,10 @@
+         // shows, which the host crops it to.
+         const float l = std::max((float) dstL, mLastClip[0]), t = std::max((float) dstT, mLastClip[1]);
+         const float r = std::min((float) dstR, mLastClip[2]), b = std::min((float) dstB, mLastClip[3]);
+-        if (r > l && b > t)
+-            if (Image* img = urlImage(imageId, l, t, r, b)) drawImage(*img, l, t, r - l, b - t);
++        if (r > l && b > t) {
++            if (mTrackSeq) urlDirect(imageId, l, t, r, b);
++            else if (Image* img = urlImage(imageId, l, t, r, b)) drawImage(*img, l, t, r - l, b - t);
++        }
+         return;
+     }
+     Image* img = imageFor(imageId);
+@@ -1301,6 +1398,30 @@
+     mImageSourceHash[imageId] = hash;
+ }
+ 
++void ThorvgPaintContext::urlDirect(int imageId, float l, float t, float r, float b) {
++    // The box in target pixels: the document's transform (no rotation in a card) maps it.
++    const tvg::Matrix& m = mMatrix;
++    const float x0 = m.e11 * l + m.e12 * t + m.e13, y0 = m.e21 * l + m.e22 * t + m.e23;
++    const float x1 = m.e11 * r + m.e12 * b + m.e13, y1 = m.e21 * r + m.e22 * b + m.e23;
++    DirectPicture pic;
++    pic.box[0] = (int) std::lround(std::min(x0, x1)), pic.box[1] = (int) std::lround(std::min(y0, y1));
++    pic.box[2] = (int) std::lround(std::max(x0, x1)), pic.box[3] = (int) std::lround(std::max(y0, y1));
++    const int w = pic.box[2] - pic.box[0], h = pic.box[3] - pic.box[1];
++    if (w <= 0 || h <= 0) return;
++    pic.url = mImageUrls[imageId];
++    pic.version = sBitmapSource->pictureVersion(pic.url, w, h);
++    // The placeholder: what shows until the host has the picture, and where it goes. Its id is
++    // the picture's, so a new one is damage.
++    auto s = tvg::Shape::gen();
++    s->appendRect(l, t, r - l, b - t);
++    s->fill((kPlaceholder >> 16) & 0xFF, (kPlaceholder >> 8) & 0xFF, kPlaceholder & 0xFF, 255);
++    size_t hash = std::hash<std::string>()(pic.url);
++    s->id = (uint32_t) (hash ^ (pic.version * 2654435761u)) | 1u;
++    push(s);
++    pic.seq = mSeqNext;
++    if (pic.version != 0) mDirect.push_back(std::move(pic));
++}
++
+ ThorvgPaintContext::Image* ThorvgPaintContext::urlImage(int imageId, float l, float t, float r, float b) {
+     if (sBitmapSource == nullptr || !mPictures) return imageFor(imageId);
+     // The box in target pixels: the document's transform (no rotation in a card) scales it.
+diff --color -ruN a/esp32/host/rc2png/main.cpp b/esp32/host/rc2png/main.cpp
+--- a/esp32/host/rc2png/main.cpp	2026-11-14 09:31:14.715620615 +0000
++++ b/esp32/host/rc2png/main.cpp	2026-11-14 09:31:14.716335160 +0000
+@@ -201,6 +201,22 @@
+         oy = (sh - dh * scale) * 0.5f;
+     }
+ 
++    // RC_DIRECT_PICTURES: every URL picture drawn directly, as a gradient (the panel's path).
++    struct GradientSource : kobentovg::ThorvgPaintContext::BitmapSource {
++        bool picture(const std::string&, int, int, uint32_t&, std::vector<uint32_t>&, int&, int&) override { return false; }
++        bool direct() const override { return true; }
++        uint32_t pictureVersion(const std::string&, int, int) override { return 1; }
++        void drawPicture(const std::string&, uint32_t, const int* box, const int* in, uint32_t* px, int stride) override {
++            const int w = box[2] - box[0], h = box[3] - box[1];
++            for (int y = in[1]; y < in[3]; y++)
++                for (int x = in[0]; x < in[2]; x++) {
++                    const uint32_t r = 255 * (x - box[0]) / w, g = 255 * (y - box[1]) / h;
++                    px[y * stride + x] = 0xFF000000u | (r << 16) | (g << 8) | 0x80;
++                }
++        }
++    };
++    static GradientSource gradient;
++    if (std::getenv("RC_DIRECT_PICTURES")) kobentovg::ThorvgPaintContext::setBitmapSource(&gradient);
+     std::vector<uint32_t> px((size_t) sw * sh);
+     rccore::RemoteContext ctx;
+     kobentovg::ThorvgPaintContext pc(ctx, px.data(), sw, sh);

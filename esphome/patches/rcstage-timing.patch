@@ -1,0 +1,53 @@
+diff --color -ruN c/components/rcstage/src/stage.cpp b/components/rcstage/src/stage.cpp
+--- a/components/rcstage/src/stage.cpp	2026-11-13 21:45:59.337585542 +0000
++++ b/components/rcstage/src/stage.cpp	2026-11-13 21:45:59.338262036 +0000
+@@ -747,8 +747,12 @@
+ 
+ // ── Any-task API ────────────────────────────────────────────────────────────────────────
+ 
++static int64_t sPendingAtUs = 0;    // sLock: when the pending document was handed over
++static int64_t sLoadedAtUs = 0;     // player task: when the last document loaded, until its first frame
++
+ void show(std::vector<uint8_t> bytes, std::string name, bool fit) {
+     std::lock_guard<std::mutex> g(sLock);
++    sPendingAtUs = esp_timer_get_time();
+     sPendingDoc = std::move(bytes);
+     sPendingName = std::move(name);
+     sPendingFit = fit;
+@@ -868,8 +872,19 @@
+     }
+     if (haveDoc) {
+         size_t n = doc.size();
++        int64_t handed;
++        {
++            std::lock_guard<std::mutex> g(sLock);
++            handed = sPendingAtUs;
++        }
++        const int64_t t0 = esp_timer_get_time();
+         bool ok = sPlayer.load(std::move(doc), name.c_str(), sBufs[sBack], fit);
+-        ESP_LOGI(TAG, "doc '%s' (%u bytes): %s", name.c_str(), (unsigned) n, ok ? "showing" : "FAILED, kept the old one");
++        sLoadedAtUs = esp_timer_get_time();
++        // Where a document's way onto the screen goes: waiting for this task, then loading it
++        // (parse, data pass); its first frame is logged when it's presented.
++        ESP_LOGI(TAG, "doc '%s' (%u bytes): %s (waited %d ms, loaded in %d ms)", name.c_str(), (unsigned) n,
++                 ok ? "showing" : "FAILED, kept the old one", (int) ((t0 - handed) / 1000),
++                 (int) ((sLoadedAtUs - t0) / 1000));
+         if (ok) {
+             publishInfo();
+             pushEvent({0, 0, "document", 0, 0, name, {}});
+@@ -1106,6 +1121,15 @@
+         board::presentAsync(sBufs[sBack], sPlayer.rw, sPlayer.rh);   // waits for the previous one
+ #endif
+         tPresent += esp_timer_get_time() - t2;
++        if (sLoadedAtUs) {
++            // One line, so it isn't lost among the stats: the frame's own breakdown.
++            const auto& fp = rccore::frameProfile();
++            ESP_LOGI(TAG, "first frame %d ms after the load: data %.1f, layout %.1f (%s), paint %.1f, doc %.1f, raster %.1f ms",
++                     (int) ((esp_timer_get_time() - sLoadedAtUs) / 1000), fp.dataUs / 1000.0f, fp.layoutUs / 1000.0f,
++                     fp.measured ? "measured" : "cached", fp.paintUs / 1000.0f, sLastDocUs / 1000.0f,
++                     sLastRasterUs / 1000.0f);
++            sLoadedAtUs = 0;
++        }
+         sBack ^= 1;
+         frames++;
+         sDirty = false;
