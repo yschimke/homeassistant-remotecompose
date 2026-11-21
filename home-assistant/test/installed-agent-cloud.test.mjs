@@ -136,7 +136,7 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     await panel.getByText('New session', {exact:true}).click({force:true});
     // Before the agent reads anything: a comment on a card, so it has work when it starts.
     await panel.getByText('Comment', {exact:true}).first().click({force:true});
-    await panel.getByText(/^About light\.wall_light/).waitFor();
+    await panel.getByText(/^About Wall light \(/).waitFor();
     await typeInto('Tell the agent what to change', 'Add the switch next to the light');
     await panel.getByText('Send', {exact:true}).click({force:true});
     await panel.getByText('Add the switch next to the light', {exact:true}).waitFor();
@@ -152,7 +152,7 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     // The comment made before the agent joined is waiting for it, and it's told to start there.
     const [early] = read.conversation.filter((m) => m.from === 'person' && m.kind === 'comment');
     assert.equal(early.text, 'Add the switch next to the light');
-    assert.match(early.target, /^light\.wall_light/);
+    assert.match(early.target, /^Wall light \(/);
     assert.match(read.next, /already commented/);
     await agent('set_status', {session, status:'Drafting the switch tile'});
     await panel.getByText('Claude · Drafting the switch tile', {exact:true}).waitFor();
@@ -184,12 +184,12 @@ test('Cloud agent edit: joined by code, relayed through a restart, applied', {sk
     const listening = agent('await_feedback', {session, since:resumed.cursor});
     await panel.getByText('Claude · Waiting for feedback', {exact:true}).waitFor({timeout:60_000});
     await panel.getByText('Comment', {exact:true}).first().click({force:true});
-    await panel.getByText(/^About light\.wall_light \(.*card 2\)/).waitFor();
+    await panel.getByText(/^About Wall light \(.*card 2\)/).waitFor();
     await typeInto('Tell the agent what to change', 'Yes, side by side');
     await panel.getByText('Send', {exact:true}).click({force:true});
     const feedback = await listening;
     assert.equal(feedback.feedback[0].text, 'Yes, side by side');
-    assert.match(feedback.feedback[0].target, /^light\.wall_light \(.*card 2\)$/);
+    assert.match(feedback.feedback[0].target, /^Wall light \(.*card 2\)$/);
     await page.screenshot({path:`${evidence}/agent-cloud-3-comment.png`});
 
     const done = agent('await_feedback', {session, since:feedback.cursor});
