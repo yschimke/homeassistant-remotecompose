@@ -311,12 +311,21 @@ Ordered so each phase is independently shippable and unblocks the next. Effort i
 
 **Phase 1: unblock the form factors (small, highest leverage).**
 4. ~~Lower `terrazzo-core` to `minSdk 29`.~~ Done: it is on the project floor (29); its Android
-   code calls nothing newer than API 26. Wear, TV and Quest can now drop their copies (not done
-   yet: `TvOfflineCache`, `QuestAuth`/`QuestRoomModel`, `WearDirectAccess`).
+   code calls nothing newer than API 26. Then:
+   - Quest signs in and keeps its refresh token through `terrazzo-core` (`HaAuthService`,
+     `TokenVault` with `RestoreKeyEscrow.Disabled`, as Horizon OS has no Play services);
+     `QuestAuth` and `QuestTokenStore` are gone. Its WebSocket loop stays, since the room view
+     reads areas and dashboard importance that `HaSession` doesn't carry.
+   - TV's `TvOfflineCache` was an unused scaffold (TV has no live connection yet), so it is gone;
+     a TV session would use `CachedHaSession` directly.
+   - Wear keeps `WearDirectAccess`, `WearAccessStore` and `WearOfflineStore`: a phone-minted
+     long-lived token, per-entity REST reads and the Wear sync payloads, not copies of
+     `terrazzo-core`, which would only add AppAuth and Credential Manager to the watch.
 5. ~~Move `CachedHaSession` and `OfflineOnlySession` to `commonMain`.~~ Done, behind a common
    `OfflineCacheStore` interface (Android's file-backed `OfflineCacheStorage` implements it) and an
-   injectable clock. Still open: `DemoHaSession`, whose bundled dashboards are JVM resources, and a
-   file-backed store for the desktop target.
+   injectable clock. Since then: the file-backed store moved to `ha-client` and the desktop app uses it, and
+   `DemoHaSession` and `DemoData` are common too (Android and the JVM read the bundled dashboards
+   from the classpath; Wasm compiles them in).
 6. ~~Extract `wear-sync-proto`; delete the copy.~~ Done.
 7. ~~Move `BuiltDesign`, `CachedFontFace`, `GlyphPack`, `Sha256`, `CardGenerator` to
    `ha-design-model`; drop `rc-converter → ha-client`.~~ Done: moved into `ha-model`

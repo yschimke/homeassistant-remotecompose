@@ -32,6 +32,9 @@ kotlin {
   }
 
   sourceSets {
+    // JVM-only code Android and desktop share: the file-backed OfflineCacheStorage.
+    androidMain { kotlin.srcDir("src/jdkMain/kotlin") }
+    jvmMain { kotlin.srcDir("src/jdkMain/kotlin") }
     commonMain.dependencies {
       api(project(":ha-model"))
       // Public API: clients take an `HttpClientEngine` / `HttpClient` / `HaHttpClientFactory`

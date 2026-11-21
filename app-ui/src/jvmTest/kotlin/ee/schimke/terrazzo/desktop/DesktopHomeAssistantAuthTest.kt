@@ -215,8 +215,10 @@ class DesktopHomeAssistantAuthTest {
       val http = HttpClient(MockEngine { respond("""{"error":"invalid_grant"}""", status) })
       val auth = DesktopHomeAssistantAuth(store, http)
       try {
-        assertFailsWith<IllegalStateException> { auth.restore() }
+        // Unreachable: the saved sign-in stays and is published, so the app opens offline.
+        auth.restore()
         assertNotNull(store.value)
+        assertEquals("https://ha.test", auth.session.value?.server)
         status = HttpStatusCode.BadRequest
         auth.restore()
         assertNull(store.value)
@@ -224,6 +226,47 @@ class DesktopHomeAssistantAuthTest {
         assertFailsWith<DesktopSignInExpired> { auth.currentAccessToken() }
       } finally {
         auth.close()
+      }
+    }
+
+  @Test
+  fun everyEndOfASignInReportsItsServerSoItsCacheIsForgotten() =
+    runBlocking<Unit> {
+      // Refused at start: no session is ever published, and the server is still reported.
+      val signedOut = mutableListOf<String>()
+      val store = MemoryStore().apply { value = DesktopSavedSignIn("https://ha.test", "refresh") }
+      var status = HttpStatusCode.ServiceUnavailable
+      val http =
+        HttpClient(
+          MockEngine {
+            if (status == HttpStatusCode.OK) respond(token())
+            else respond("""{"error":"invalid_grant"}""", status)
+          },
+        )
+      val auth = DesktopHomeAssistantAuth(store, http, onSignedOut = { signedOut += it })
+      try {
+        auth.restore()
+        assertEquals(emptyList(), signedOut, "a transient failure keeps the sign-in and its cache")
+        status = HttpStatusCode.BadRequest
+        auth.restore()
+        assertNull(auth.session.value)
+        assertEquals(listOf("https://ha.test"), signedOut)
+      } finally {
+        auth.close()
+      }
+      // Signed out explicitly.
+      val explicit = mutableListOf<String>()
+      val saved =
+        MemoryStore().apply { value = DesktopSavedSignIn("https://other.test", "refresh") }
+      val ok = HttpClient(MockEngine { respond(token()) })
+      val signedIn = DesktopHomeAssistantAuth(saved, ok, onSignedOut = { explicit += it })
+      try {
+        signedIn.restore()
+        assertNotNull(signedIn.session.value)
+        signedIn.signOut()
+        assertEquals(listOf("https://other.test"), explicit)
+      } finally {
+        signedIn.close()
       }
     }
 
@@ -385,13 +428,17 @@ class DesktopHomeAssistantAuthTest {
               val session = auth.session.value
               clock = 31_000
               gatewayFailure = true
-              val failure =
-                assertFailsWith<IllegalStateException> {
-                  if (active) auth.currentAccessToken() else auth.restore()
-                }
-              assertFalse(failure is DesktopSignInExpired)
+              if (active) {
+                val failure = assertFailsWith<IllegalStateException> { auth.currentAccessToken() }
+                assertFalse(failure is DesktopSignInExpired)
+                assertSame(session, auth.session.value)
+              } else {
+                // A transient error at start keeps the sign-in and publishes it, so the app opens
+                // on its offline cache and retries.
+                auth.restore()
+                assertEquals("https://ha.test", auth.session.value?.server)
+              }
               assertSame(saved, store.value)
-              assertSame(session, auth.session.value)
               assertEquals(capabilities, CardAgentSessions.get(key))
               gatewayFailure = false
               if (!active) auth.restore()

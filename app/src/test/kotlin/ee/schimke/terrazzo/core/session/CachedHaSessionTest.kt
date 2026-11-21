@@ -1,11 +1,11 @@
 package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.ha.client.cache.OfflineCacheStorage
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.View
-import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals

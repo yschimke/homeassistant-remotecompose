@@ -1,9 +1,9 @@
 package ee.schimke.terrazzo.integration
 
 import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.ha.client.cache.OfflineCacheStorage
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
 import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LiveHaSession

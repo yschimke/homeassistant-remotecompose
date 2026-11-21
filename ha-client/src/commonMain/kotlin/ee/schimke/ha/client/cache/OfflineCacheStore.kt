@@ -1,4 +1,4 @@
-package ee.schimke.terrazzo.core.cache
+package ee.schimke.ha.client.cache
 
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.Dashboard
@@ -6,12 +6,12 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 
 /**
- * What [ee.schimke.terrazzo.core.session.CachedHaSession] keeps between runs, per Home Assistant
- * instance ([baseUrl][setLastInstance]): the dashboards, each dashboard's last snapshot, and the
- * history charts last drawn. Every read returns null for what was never stored.
+ * What `CachedHaSession` (in `terrazzo-core`) keeps between runs, per Home Assistant instance
+ * ([baseUrl][setLastInstance]): the dashboards, each dashboard's last snapshot, and the history
+ * charts last drawn. Every read returns null for what was never stored.
  *
- * Common so any target can be offline-first. Android's file-backed `OfflineCacheStorage` is one
- * implementation; a desktop or browser host supplies its own (files, IndexedDB, or memory).
+ * Common so any target can be offline-first. `OfflineCacheStorage` is the file-backed one, on
+ * Android (`terrazzo-core`'s `OfflineCache`) and the desktop; a browser host supplies its own.
  */
 interface OfflineCacheStore {
   /** Records [baseUrl] as the instance a cold start resumes. */
@@ -47,4 +47,11 @@ interface OfflineCacheStore {
     hours: Int,
     history: Map<String, List<HistoryPoint>>,
   )
+
+  /**
+   * Forgets everything kept for [baseUrl]. A host calls it when the user signs out, or their
+   * sign-in ends: the cache holds that user's dashboards and states, and the next person to sign in
+   * to the same server must not see them.
+   */
+  fun clearInstance(baseUrl: String)
 }
