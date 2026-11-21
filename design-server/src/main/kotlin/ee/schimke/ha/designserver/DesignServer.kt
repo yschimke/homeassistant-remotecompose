@@ -236,7 +236,9 @@ fun Application.designServer(
         watchFaces = watchFaces != null,
       )
     serverInfoRoutes(API_BASE, info) { channels.main }
-    serverInfoRoutes("$API_BASE/channels/{channel}", info) { call ->
+    // A channel's protocol routes serve no private designs (no user store, no sign-in).
+    val channelInfo = info.copy(capabilities = info.capabilities.copy(privateDesigns = null))
+    serverInfoRoutes("$API_BASE/channels/{channel}", channelInfo) { call ->
       call.parameters["channel"]?.takeIf { it != LibraryPaths.MAIN }?.let(channels::holder)
     }
     // The fonts designs name, beside the designs: the same for `main` and every channel.
