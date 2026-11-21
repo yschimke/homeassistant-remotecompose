@@ -64,11 +64,14 @@ function suggestedCard(cardType, entityId) {
 export function entitySuggestions(hass, entityId, index) {
   const device = deviceInfo(hass, entityId);
   if (!device || !Array.isArray(index?.designs)) return [];
+  const domain = entityId.split('.')[0];
   const seen = new Set();
   const matches = [];
   for (const design of index.designs) {
     if (!BOUND_CARD_TYPES.includes(design?.cardType) || typeof design.designId !== 'string') continue;
     if (!DESIGN_ID.test(design.designId) || !deviceMatches(design.device, device)) continue;
+    // A design drawn for another domain (the printer's light, offered on its sensor) can't draw it.
+    if (design.domain != null && design.domain !== domain) continue;
     const key = `${design.designId}\n${design.cardType}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -95,7 +98,8 @@ const suggestionIndexes = new Map();
 /**
  * Start fetching [library]'s device index, once per page. The picker asks for suggestions
  * synchronously, so they come from this copy; it is fetched when an editor shows Remote Compose
- * (the card picker's preview, the visual editor), never on a dashboard that only views cards. The
+ * (the card picker's preview, the visual editor) or an administrator's page is idle
+ * ([preloadForEditors]); a page that can't edit dashboards never fetches it. The
  * request carries no cookies, referrer or Home Assistant data.
  */
 export function loadSuggestionIndex(library = DEFAULT_LIBRARY, fetchImpl = globalThis.fetch) {
@@ -110,6 +114,8 @@ export function loadSuggestionIndex(library = DEFAULT_LIBRARY, fetchImpl = globa
       } catch (_) {
         // No index, no suggestions: the picker still has Home Assistant's own.
       }
+      // A failure is forgotten, so the next editor hook asks again.
+      if (entry.index == null) suggestionIndexes.delete(url);
       return entry.index;
     })();
     suggestionIndexes.set(url, entry);
@@ -119,6 +125,19 @@ export function loadSuggestionIndex(library = DEFAULT_LIBRARY, fetchImpl = globa
 
 function loadedSuggestionIndex(library = DEFAULT_LIBRARY) {
   return suggestionIndexes.get(new URL('suggestions.json', library).toString())?.index ?? null;
+}
+
+/**
+ * Fetch the index ahead of the picker for someone who can edit dashboards: the picker's **By
+ * entity** tab asks for suggestions before any other hook runs, and keeps its first answer for an
+ * entity. Only administrators can save a dashboard, so only their pages fetch it, once, when idle.
+ */
+export function preloadForEditors(root = globalThis.document) {
+  try {
+    if (root?.querySelector?.('home-assistant')?.hass?.user?.is_admin) loadSuggestionIndex();
+  } catch (_) {
+    // Not Home Assistant's frontend: the editor hooks still load it.
+  }
 }
 
 /** `getEntitySuggestion` for the card picker: synchronous, from the index already fetched. */
@@ -300,6 +319,9 @@ export class RemoteComposeCard extends HaCardElement {
 // (a cache-busting query, an absolute URL) loads a second copy that must not redefine it.
 if (!customElements.get('remote-compose-card')) {
   customElements.define('remote-compose-card', RemoteComposeCard);
+  // HA's frontend sets `hass` on <home-assistant> after this resource loads; look once it's idle.
+  const idle = globalThis.requestIdleCallback ?? ((run) => globalThis.setTimeout?.(run, 2000));
+  idle?.(() => preloadForEditors());
   window.customCards = window.customCards || [];
   window.customCards.push({ type: 'remote-compose-card', name: 'Remote Compose',
     description: 'A Home Assistant card drawn by Remote Compose, in a card style or a design made for your device',

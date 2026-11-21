@@ -222,8 +222,9 @@ editor sets the Home Assistant card it draws (tile, button, entity or gauge, its
 and the card style. When you pick an entity under **By entity**, and a design was made for that
 entity's device (a printer, a boiler), the design is offered under **Community**, below Home
 Assistant's own suggestions; entities with nothing made for their device get none. Matching runs
-in your browser against `https://ha.coo.ee/designs/v1/suggestions.json`, fetched while the editor
-is open; no device or state leaves Home Assistant. See
+in your browser against `https://ha.coo.ee/designs/v1/suggestions.json`, which only an
+administrator's pages (the people who can edit dashboards) fetch; no device or state leaves Home
+Assistant. See
 [the card picker plan](architecture/lovelace-card-picker.md).
 
 Or add this card in YAML, replacing the entity with your own:

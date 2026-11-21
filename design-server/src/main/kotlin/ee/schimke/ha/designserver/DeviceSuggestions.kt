@@ -1,6 +1,7 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignEntry
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.design.DeviceMatch
 import kotlinx.serialization.Serializable
@@ -8,7 +9,10 @@ import kotlinx.serialization.json.Json
 
 /**
  * The designs a dashboard editor may suggest for an entity: those made for a device
- * ([DesignEntry.device]), one row per design, card type and device match, without blobs or keys.
+ * ([DesignEntry.device]), one row per design, card type, entity domain and device match, without
+ * blobs or keys. [Suggestion.domain] is the domain the design's entity slot was made for (its key's
+ * `domain` property): a printer's light design is no suggestion for the printer's sensors, since
+ * the resolver could not draw them with it.
  *
  * Home Assistant's card picker asks a custom card for suggestions synchronously, entity by entity
  * (`getEntitySuggestion`), so the Remote Compose card matches the entity's device in the browser
@@ -27,6 +31,8 @@ object DeviceSuggestions {
     val cardType: String,
     val device: DeviceMatch,
     val title: String? = null,
+    /** The entity domain the design draws (`light`), or null when its key doesn't say. */
+    val domain: String? = null,
   )
 
   @Serializable data class Index(val serial: Long, val designs: List<Suggestion>)
@@ -44,13 +50,18 @@ object DeviceSuggestions {
           .mapNotNull { entry ->
             val id = entry.stableDesignId ?: return@mapNotNull null
             val device = entry.device?.normalized()?.takeIf { it.specificity > 0 }
-            device?.let { Suggestion(id, entry.key.cardType, it, entry.title) }
+            val domain = runCatching {
+              DesignProperties.parse(entry.key.shape)["domain"]
+            }
+              .getOrNull()
+            device?.let { Suggestion(id, entry.key.cardType, it, entry.title, domain) }
           }
           .distinct()
           .sortedWith(
             compareByDescending<Suggestion> { it.device.specificity }
               .thenBy { it.designId }
-              .thenBy { it.cardType },
+              .thenBy { it.cardType }
+              .thenBy { it.domain.orEmpty() },
           )
           .toList(),
     )

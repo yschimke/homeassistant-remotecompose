@@ -784,7 +784,7 @@ per request — but adds what a static host can't: verification, a template brow
   Lovelace card's `design_id`) gets that design's entry for the card in the asked style and mode
   first (`CardResolve.resolveChosen`), when the library has one.
 - **Device suggestions.** `GET /designs/v1/suggestions.json` lists the library's designs made for
-  a device (`DeviceSuggestions`: design id, card type, device match, title), for the Lovelace
+  a device (`DeviceSuggestions`: design id, card type, entity domain, device match, title), for the Lovelace
   card's suggestions in Home Assistant's card picker
   ([lovelace-card-picker.md](lovelace-card-picker.md)).
 - **Designing in UI Builder.** A design's page and `/schema` (paste a card's JSON) show the
