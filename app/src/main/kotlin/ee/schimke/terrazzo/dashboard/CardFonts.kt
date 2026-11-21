@@ -2,7 +2,7 @@ package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
 import ee.schimke.ha.client.design.DesignFonts
-import ee.schimke.ha.client.design.FontStore
+import ee.schimke.ha.design.FontStore
 import ee.schimke.ha.rc.HaFontLibrary
 import java.io.File
 import kotlinx.coroutines.Dispatchers

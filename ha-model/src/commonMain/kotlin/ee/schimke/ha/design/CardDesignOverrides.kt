@@ -1,4 +1,4 @@
-package ee.schimke.ha.client.design
+package ee.schimke.ha.design
 
 import ee.schimke.ha.model.CardConfig
 import kotlinx.serialization.Serializable

@@ -1,7 +1,7 @@
 package ee.schimke.ha.designs
 
 import ee.schimke.ha.cards.CardDesignDocument
-import ee.schimke.ha.client.design.BuiltDesign
+import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.rc.CaptureHost

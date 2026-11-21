@@ -1,9 +1,8 @@
 package ee.schimke.ha.designs
 
 import ee.schimke.ha.cards.CardDesignDocument
-import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
-import ee.schimke.ha.client.design.Sha256
+import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.CardDesignFiles
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignCatalogEntry
@@ -11,6 +10,7 @@ import ee.schimke.ha.design.DesignExample
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignPreviews
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot

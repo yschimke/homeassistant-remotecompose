@@ -24,8 +24,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
-import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.DesignOption
+import ee.schimke.ha.design.CardDesignOverrides
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.terrazzo.core.prefs.CardStylePref

@@ -1,8 +1,8 @@
 package ee.schimke.terrazzo.wearsync
 
-import ee.schimke.ha.client.design.CardDesignOverride
-import ee.schimke.ha.client.design.CardDesignOverrides
-import ee.schimke.ha.client.design.CardDesignScope
+import ee.schimke.ha.design.CardDesignOverride
+import ee.schimke.ha.design.CardDesignOverrides
+import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection

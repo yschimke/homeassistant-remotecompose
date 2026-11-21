@@ -1,10 +1,10 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.composeai.rcplayer.runtime.RcStyledText
-import ee.schimke.ha.client.design.Sha256
-import ee.schimke.ha.client.design.glyphs.GlyphPack
-import ee.schimke.ha.client.design.glyphs.GlyphPackCodec
-import ee.schimke.ha.client.design.glyphs.GlyphRequest
+import ee.schimke.ha.design.Sha256
+import ee.schimke.ha.design.glyphs.GlyphPack
+import ee.schimke.ha.design.glyphs.GlyphPackCodec
+import ee.schimke.ha.design.glyphs.GlyphRequest
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode

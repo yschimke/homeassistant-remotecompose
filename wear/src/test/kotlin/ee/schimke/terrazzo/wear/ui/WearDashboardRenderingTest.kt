@@ -273,12 +273,12 @@ class WearDashboardRenderingTest {
         kotlinx.coroutines.runBlocking {
           ee.schimke.ha.rc.CardDesignTemplates.capture(context, key).bytes
         }
-      val sha = ee.schimke.ha.client.design.Sha256.hex(bytes)
+      val sha = ee.schimke.ha.design.Sha256.hex(bytes)
       val index =
         ee.schimke.terrazzo.wearsync.proto.WearSlotDesigns(
           ee.schimke.ha.design.DesignKey.WEAR_CONTAINERS.map { container ->
             ee.schimke.terrazzo.wearsync.proto.WearSlotDesign(
-              ee.schimke.ha.client.design.cardFingerprint(card),
+              ee.schimke.ha.design.cardFingerprint(card),
               container,
               sha,
             )

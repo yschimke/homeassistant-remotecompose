@@ -3,6 +3,8 @@ package ee.schimke.ha.client.design
 import ee.schimke.ha.design.CardFontFace
 import ee.schimke.ha.design.CardFontFamily
 import ee.schimke.ha.design.CardFontManifest
+import ee.schimke.ha.design.FontStore
+import ee.schimke.ha.design.Sha256
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

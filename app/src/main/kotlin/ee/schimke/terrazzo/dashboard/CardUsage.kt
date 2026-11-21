@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.TemplateUsage
 import ee.schimke.ha.client.design.UsageKey
 import ee.schimke.ha.client.design.UsageLedger
@@ -10,6 +9,7 @@ import ee.schimke.ha.client.design.UsageStore
 import ee.schimke.ha.client.design.UsageSurfaces
 import ee.schimke.ha.client.design.UsageUserAgent
 import ee.schimke.ha.client.design.uploadWithDefaultClient
+import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.terrazzo.BuildConfig
 import ee.schimke.terrazzo.core.prefs.PreferencesStore

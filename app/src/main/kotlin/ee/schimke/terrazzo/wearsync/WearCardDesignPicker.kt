@@ -77,7 +77,7 @@ internal fun wearCardDesigns(
         WearSlotDesign(
           cardKey,
           container,
-          ee.schimke.ha.client.design.Sha256.hex(it),
+          ee.schimke.ha.design.Sha256.hex(it),
           sharedDesignNames(listOf(it)).sorted(),
         ) to it
       }

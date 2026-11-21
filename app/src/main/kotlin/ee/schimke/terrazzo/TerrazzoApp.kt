@@ -26,7 +26,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import ee.schimke.ha.client.dashboard.BuiltInAgent
-import ee.schimke.ha.client.design.cardFingerprint
+import ee.schimke.ha.design.cardFingerprint
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.designTokenLogin

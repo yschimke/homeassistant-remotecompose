@@ -42,8 +42,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import ee.schimke.ha.client.design.CardDesignOverrides
-import ee.schimke.ha.client.design.CardDesignScope
+import ee.schimke.ha.design.CardDesignOverrides
+import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaUberTheme

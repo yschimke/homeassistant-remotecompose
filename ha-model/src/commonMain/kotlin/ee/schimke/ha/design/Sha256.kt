@@ -1,4 +1,4 @@
-package ee.schimke.ha.client.design
+package ee.schimke.ha.design
 
 /**
  * Minimal SHA-256 (FIPS 180-4) for common code: design blobs are content-addressed and the client
