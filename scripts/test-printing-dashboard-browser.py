@@ -114,6 +114,13 @@ def socket_route(socket):
                   ]}, 'config/device_registry/list': [{'id': 'printer-device', 'manufacturer': 'Bambu Lab', 'model': 'P2S'}],
                   'call_service': {}, 'terrazzo/design_server': {'available': False},
                   'get_config': {'unit_system': {'temperature': '°C', 'length': 'km', 'mass': 'kg', 'volume': 'L'}}}
+        # A Home Assistant without the Terrazzo integration: Core doesn't know terrazzo/info, and
+        # has no manifest for it, which is how the app tells "not installed" from "too old".
+        refused = {'terrazzo/info': 'unknown_command', 'manifest/get': 'not_found'}
+        if kind in refused:
+            socket.send(json.dumps({'id': msg['id'], 'type': 'result', 'success': False,
+                                    'error': {'code': refused[kind], 'message': refused[kind]}}))
+            return
         assert kind in result, kind
         socket.send(json.dumps({'id': msg['id'], 'type': 'result', 'success': True, 'result': result[kind]}))
     socket.on_message(receive)
