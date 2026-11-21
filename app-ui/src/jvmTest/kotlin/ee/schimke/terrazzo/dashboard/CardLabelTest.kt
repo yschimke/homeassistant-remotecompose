@@ -2,6 +2,8 @@ package ee.schimke.terrazzo.dashboard
 
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardKey
+import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.serialization.json.buildJsonObject
@@ -22,5 +24,40 @@ class CardLabelTest {
     )
     val titled = CardConfig("entities", buildJsonObject { put("title", "Locks") })
     assertEquals("Locks (card 1)", cardLabel(CardKey(null, null, null, 0, "entities"), titled))
+  }
+
+  @Test
+  fun anEntityCardIsNamedAsHomeAssistantNamesIt() {
+    val tile =
+      CardConfig("tile", buildJsonObject { put("entity", "sensor.living_room_temperature") })
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.living_room_temperature" to
+              EntityState(
+                "sensor.living_room_temperature",
+                "21.4",
+                buildJsonObject { put("friendly_name", "Living room temperature") },
+              ),
+          ),
+      )
+    assertEquals(
+      "Living room temperature (view 1, section 2, card 2)",
+      cardLabel(CardKey(null, "view-0", 1, 1, "tile"), tile, snapshot),
+    )
+    // A card's own name still wins.
+    val named =
+      CardConfig(
+        "tile",
+        buildJsonObject {
+          put("entity", "sensor.living_room_temperature")
+          put("name", "Lounge")
+        },
+      )
+    assertEquals(
+      "Lounge (card 1)",
+      cardLabel(CardKey(null, null, null, 0, "tile"), named, snapshot),
+    )
   }
 }

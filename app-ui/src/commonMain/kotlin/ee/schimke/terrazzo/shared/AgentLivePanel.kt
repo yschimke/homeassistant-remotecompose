@@ -101,7 +101,7 @@ fun AgentLivePanel(
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-      Conversation(state.messages)
+      Conversation(state.messages, state.agent.name)
       if (state.agent.joined || composeBeforeJoin)
         Composer(busy, target, onClearTarget, onSend, maxLines = if (compact) 2 else 4)
     }
@@ -217,7 +217,7 @@ private fun AgentCode(busy: Boolean, onClaim: (String) -> Unit) {
 }
 
 @Composable
-private fun Conversation(messages: List<AgentRelayMessage>) {
+private fun Conversation(messages: List<AgentRelayMessage>, agentName: String) {
   if (messages.isEmpty()) return
   Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
     messages.takeLast(8).forEach { m ->
@@ -241,7 +241,8 @@ private fun Conversation(messages: List<AgentRelayMessage>) {
                 m.kind == "decision" -> "You decided"
                 m.kind == "summary" -> "Draft"
                 mine -> "You" + (m.target?.let { " · about $it" } ?: "")
-                else -> "Agent"
+                // The agent by name (Gemini, Claude), as the status line names it.
+                else -> agentName.ifBlank { "Agent" }
               },
               style = MaterialTheme.typography.labelSmall,
               color = MaterialTheme.colorScheme.onSurfaceVariant,

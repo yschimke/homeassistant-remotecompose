@@ -315,7 +315,12 @@ fun AgentEditScreen(
               live =
                 shownLive(
                   relayed = live?.live(current.id)?.collectAsState()?.value,
-                  direct = directLive(current, sinceReply),
+                  direct =
+                    directLive(
+                      current,
+                      sinceReply,
+                      builtInAgent.shortName.takeIf { builtInAgent.enabled } ?: "Agent",
+                    ),
                 ) ?: pendingLive(current, current.agentListening && sinceReply < LISTENING_SECONDS),
               liveBusy = busy,
               onComment = { text, target ->
@@ -484,6 +489,39 @@ private fun SessionReview(
     session.drafts.firstOrNull { it.id == (shown ?: session.applied?.draftId) }
       ?: session.latestDraft
   val headerScroll = rememberScrollState()
+  val building = session.scope?.isNewDashboard == true
+  val canWrite = !busy && writeBlockedReason == null
+  // The draft chips and what to do with the draft: Use it (or Create it), Adjust, Stop, Undo.
+  val actions: @Composable () -> Unit = {
+    if (session.drafts.size > 1) {
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        session.drafts.forEachIndexed { i, d ->
+          FilterChip(
+            selected = d.id == draft?.id,
+            onClick = { shown = d.id },
+            label = { Text("Draft ${i + 1}") },
+          )
+        }
+      }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      when {
+        session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
+        session.isOpen -> {
+          if (draft != null)
+            Button(enabled = canWrite, onClick = { onApply(draft) }) {
+              Text(if (building) "Create it" else "Use it")
+            }
+          val config = draft?.config
+          if (onEditDraft != null && config != null)
+            OutlinedButton(enabled = !busy, onClick = { onEditDraft(config, session.baseline) }) {
+              Text("Adjust")
+            }
+          TextButton(enabled = !busy, onClick = onDiscard) { Text("Stop") }
+        }
+      }
+    }
+  }
   Column(Modifier.fillMaxSize()) {
     Column(
       Modifier.fillMaxWidth()
@@ -494,7 +532,6 @@ private fun SessionReview(
       verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       compactBar?.invoke()
-      val building = session.scope?.isNewDashboard == true
       Text(
         when {
           session.isApplied && building -> "The dashboard is created. Undo deletes it."
@@ -520,7 +557,6 @@ private fun SessionReview(
           color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
       }
-      val canWrite = !busy && writeBlockedReason == null
       if (session.isOpen) {
         AgentLivePanel(
           state = live,
@@ -539,35 +575,17 @@ private fun SessionReview(
           compact = compactBar != null,
         )
       }
-      if (session.drafts.size > 1) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          session.drafts.forEachIndexed { i, d ->
-            FilterChip(
-              selected = d.id == draft?.id,
-              onClick = { shown = d.id },
-              label = { Text("Draft ${i + 1}") },
-            )
-          }
-        }
-      }
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        when {
-          session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
-          session.isOpen -> {
-            if (draft != null)
-              Button(enabled = canWrite, onClick = { onApply(draft) }) {
-                Text(if (building) "Create it" else "Use it")
-              }
-            val config = draft?.config
-            if (onEditDraft != null && config != null)
-              OutlinedButton(enabled = !busy, onClick = { onEditDraft(config, session.baseline) }) {
-                Text("Adjust")
-              }
-            TextButton(enabled = !busy, onClick = onDiscard) { Text("Stop") }
-          }
-        }
-      }
+      if (compactBar != null) actions()
     }
+    // Below the scrolling header, so a long conversation can't scroll Use it away; in a compact
+    // height (a landscape keyboard) the header can fill the window, so it scrolls with it there.
+    if (compactBar == null)
+      Column(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        actions()
+      }
     // The preview: the draft once there is one, the dashboard as it is until then.
     val dashboard = previewDashboard(draft?.config ?: session.baseline)
     if (dashboard == null) {
@@ -606,7 +624,7 @@ private fun SessionReview(
               shape = MaterialTheme.shapes.small,
               modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
             ) {
-              TextButton(onClick = { target = cardLabel(key, card) }) { Text("Comment") }
+              TextButton(onClick = { target = cardLabel(key, card, snapshot) }) { Text("Comment") }
             }
           }
         else renderCard(key, card)
@@ -663,11 +681,22 @@ internal fun pendingLive(session: AgentEditSession, agentListening: Boolean) =
     linked = agentListening,
   )
 
-/** How a message names a card for the agent: its title or entity, and where it sits. */
-internal fun cardLabel(key: CardKey, card: CardConfig): String {
+/**
+ * How a message names a card, for the person and the agent: its title, else its entity's name as
+ * Home Assistant shows it ([snapshot]), else the entity id; and where it sits.
+ */
+internal fun cardLabel(key: CardKey, card: CardConfig, snapshot: HaSnapshot? = null): String {
   fun field(name: String) =
     (card.raw[name] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
-  val name = field("title") ?: field("name") ?: field("heading") ?: field("entity") ?: card.type
+  val entity = field("entity")
+  val friendly =
+    entity
+      ?.let { snapshot?.states?.get(it)?.attributes?.get("friendly_name") }
+      ?.let { it as? kotlinx.serialization.json.JsonPrimitive }
+      ?.takeIf { it.isString }
+      ?.content
+      ?.takeIf { it.isNotBlank() }
+  val name = field("title") ?: field("name") ?: field("heading") ?: friendly ?: entity ?: card.type
   val where = buildString {
     // A view without a path of its own gets a made-up one ("view-0"): name it by position.
     key.viewPath?.let { path ->
@@ -685,7 +714,12 @@ internal fun cardLabel(key: CardKey, card: CardConfig): String {
  * until the agent has been active, so the prompt to hand it shows until then. Presence counts as
  * connected for a minute and a half after the agent's last call, by Home Assistant's clock.
  */
-internal fun directLive(session: AgentEditSession, sinceReply: Double = 0.0): AgentRelayState? {
+internal fun directLive(
+  session: AgentEditSession,
+  sinceReply: Double = 0.0,
+  /** How the agent is named: the built-in agent's model family, else just "Agent". */
+  name: String = "Agent",
+): AgentRelayState? {
   val agent = session.agent ?: return null
   val idle = session.agentIdleSeconds?.let { it + sinceReply }
   return AgentRelayState(
@@ -697,7 +731,7 @@ internal fun directLive(session: AgentEditSession, sinceReply: Double = 0.0): Ag
       AgentPresence(
         joined = true,
         connected = idle != null && idle < 90,
-        name = "Agent",
+        name = name,
         status = agent.status,
         lastSeenSecondsAgo = idle?.toLong(),
       ),

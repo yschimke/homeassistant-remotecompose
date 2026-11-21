@@ -183,6 +183,15 @@ data class BuiltInAgent(
   @SerialName("provider_label") val providerLabel: String? = null,
   val model: String? = null,
 ) {
+  /** How the conversation names it: "Gemini", "OpenRouter", or a custom service's model. */
+  val shortName: String
+    get() =
+      when (provider) {
+        "gemini" -> "Gemini"
+        "openrouter" -> "OpenRouter"
+        else -> model?.substringAfterLast('/')?.takeIf { it.isNotBlank() } ?: "Agent"
+      }
+
   /** How the apps name it: "Gemini (gemini-flash-latest)". */
   val displayName: String
     get() = listOfNotNull(providerLabel ?: "Your agent", model?.let { "($it)" }).joinToString(" ")

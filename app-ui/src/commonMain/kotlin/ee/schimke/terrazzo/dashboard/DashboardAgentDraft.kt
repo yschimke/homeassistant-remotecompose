@@ -204,7 +204,7 @@ fun DashboardAgentDraft(
               shape = MaterialTheme.shapes.small,
               modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
             ) {
-              TextButton(onClick = { target = cardLabel(key, card) }) { Text("Comment") }
+              TextButton(onClick = { target = cardLabel(key, card, snapshot) }) { Text("Comment") }
             }
         }
       }

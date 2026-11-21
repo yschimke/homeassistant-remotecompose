@@ -11,6 +11,7 @@ import ee.schimke.ha.client.agent.AgentPresence
 import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
+import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
@@ -390,5 +391,85 @@ class AgentEditScreenTest {
     val relayJoined = relay.copy(agent = AgentPresence(joined = true, name = "Claude"))
     assertEquals(relayJoined, shownLive(relayJoined, direct))
     assertEquals(direct, shownLive(null, direct))
+  }
+
+  @Test
+  fun inACompactHeightUseItScrollsWithTheConversation() = runComposeUiTest {
+    val edits =
+      FakeEdits().apply {
+        current.value =
+          AgentEditSession(
+            id = "s1",
+            urlPath = "garden",
+            baseline = draftConfig,
+            messages = (1..8).map { AgentEditSession.Message("Reply $it about the layout.") },
+            drafts = listOf(AgentEditSession.Draft("d1", "Pump first", config = draftConfig)),
+          )
+      }
+    // A landscape phone with the keyboard open: the header can fill the window.
+    setContent {
+      Box(Modifier.size(600.dp, 200.dp)) {
+        AgentEditScreen(
+          edits = edits,
+          urlPath = "garden",
+          title = "Garden",
+          snapshot = HaSnapshot(),
+          onBack = {},
+          onSharePrompt = {},
+          onApplied = {},
+          initialSessionId = "s1",
+        ) { _, card ->
+          Text("card:${card.type}")
+        }
+      }
+    }
+    waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Use it").performScrollTo().assertIsDisplayed()
+  }
+
+  @Test
+  fun theBuiltInAgentIsNamedAndUseItStaysInReachInALongConversation() = runComposeUiTest {
+    val said =
+      (1..8).map { i ->
+        AgentEditSession.Message("Reply $i: a longer answer about the layout of this dashboard.")
+      }
+    val edits =
+      FakeEdits().apply {
+        current.value =
+          AgentEditSession(
+            id = "s1",
+            urlPath = "garden",
+            baseline = draftConfig,
+            messages = said,
+            drafts = listOf(AgentEditSession.Draft("d1", "Pump first", config = draftConfig)),
+            agent = AgentEditSession.Activity("Waiting for you", seenAt = 100.0),
+            serverTime = 101.0,
+          )
+      }
+    setContent {
+      Box(Modifier.size(400.dp, 800.dp)) {
+        AgentEditScreen(
+          edits = edits,
+          urlPath = "garden",
+          title = "Garden",
+          snapshot = HaSnapshot(),
+          onBack = {},
+          onSharePrompt = {},
+          onApplied = {},
+          initialSessionId = "s1",
+          builtInAgent = BuiltInAgent(true, "gemini", "Google Gemini", "gemini-flash-latest"),
+        ) { _, card ->
+          Text("card:${card.type}")
+        }
+      }
+    }
+    waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
+    // However long the conversation, Use it isn't scrolled away with it.
+    onNodeWithText("Use it").assertIsDisplayed()
+    // The agent is named in its status and its messages.
+    onNodeWithText("Gemini · Waiting for you").assertExists()
+    assertTrue(onAllNodesWithText("Gemini").fetchSemanticsNodes().isNotEmpty())
+    // Nothing to hand another agent.
+    onNodeWithText("Copy prompt").assertDoesNotExist()
   }
 }
