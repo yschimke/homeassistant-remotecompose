@@ -15,11 +15,9 @@ import ee.schimke.terrazzo.shared.TerrazzoMultiplatformApp
 import java.io.File
 import java.net.BindException
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 internal fun DesktopApp(
@@ -27,7 +25,9 @@ internal fun DesktopApp(
   isFullScreen: Boolean = false,
   onToggleFullScreen: (() -> Unit)? = null,
 ) {
-  val auth = remember { DesktopHomeAssistantAuth() }
+  val auth = remember {
+    DesktopHomeAssistantAuth(onSignedOut = { server -> desktopOfflineCache.clearInstance(server) })
+  }
   val session by auth.session.collectAsState()
   val scope = rememberCoroutineScope()
   var restoring by remember { mutableStateOf(true) }
@@ -35,14 +35,6 @@ internal fun DesktopApp(
   var error by remember { mutableStateOf<String?>(null) }
   var signInJob by remember { mutableStateOf<Job?>(null) }
   DisposableEffect(auth) { onDispose { auth.close() } }
-  // A sign-in that ends (signed out, or refused on refresh) takes its offline cache with it, so
-  // whoever signs in next to the same server never sees the previous user's dashboards.
-  var signedInServer by remember { mutableStateOf<String?>(null) }
-  LaunchedEffect(session) {
-    val ended = signedInServer?.takeIf { it != session?.server }
-    signedInServer = session?.server
-    if (ended != null) withContext(Dispatchers.IO) { desktopOfflineCache.clearInstance(ended) }
-  }
   LaunchedEffect(auth) {
     try {
       auth.restore()

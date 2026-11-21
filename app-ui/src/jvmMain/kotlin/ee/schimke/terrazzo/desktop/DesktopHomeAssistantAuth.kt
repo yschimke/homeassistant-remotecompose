@@ -43,6 +43,12 @@ internal class DesktopHomeAssistantAuth(
   private val callbackFactory: () -> DesktopOAuthCallback = { DesktopOAuthCallback() },
   private val now: () -> Long = System::currentTimeMillis,
   private val signInTimeoutMillis: Long = 180_000,
+  /**
+   * Called with the server whenever a saved sign-in ends: signed out, or refused on refresh,
+   * including at start, when no session was ever published. The app forgets that server's offline
+   * cache here, so whoever signs in next never sees the previous user's dashboards.
+   */
+  private val onSignedOut: (server: String) -> Unit = {},
 ) : AutoCloseable {
   private val mutex = Mutex()
   private val mutableSession = MutableStateFlow<DesktopAuthSession?>(null)
@@ -142,7 +148,7 @@ internal class DesktopHomeAssistantAuth(
         try {
           revoke(value)
         } finally {
-          publishSignedOut()
+          publishSignedOut(value.server)
         }
       }
     }
@@ -165,10 +171,12 @@ internal class DesktopHomeAssistantAuth(
     }
   }
 
-  private fun publishSignedOut() {
+  private fun publishSignedOut(server: String) {
     // A different HA user on the same server must not recover the previous user's capabilities.
     CardAgentSessions.clear()
     mutableSession.value = null
+    // Nor their cached dashboards. Best effort: the sign-out itself must still complete.
+    runCatching { onSignedOut(server) }
   }
 
   private suspend fun refresh(value: DesktopSavedSignIn) {
@@ -188,7 +196,7 @@ internal class DesktopHomeAssistantAuth(
         } finally {
           saved = null
           accessToken = null
-          publishSignedOut()
+          publishSignedOut(value.server)
         }
         throw e
       }
