@@ -49,6 +49,7 @@ import ee.schimke.ha.client.agent.AgentRelayMessage
 import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
+import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.openingRequest
@@ -112,6 +113,11 @@ fun AgentEditScreen(
    * **Use it** would. Null where there is no editor to take it.
    */
   onEditDraft: ((draft: JsonObject, baseline: JsonObject?) -> Unit)? = null,
+  /**
+   * The Terrazzo integration's own agent, when it answers every session ([BuiltInAgent.enabled]):
+   * there is no prompt to hand over, and the screen is a chat with it.
+   */
+  builtInAgent: BuiltInAgent = BuiltInAgent.Off,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -230,7 +236,8 @@ fun AgentEditScreen(
     }
   }
   val copyPrompt: @Composable () -> Unit = {
-    if (current?.isOpen == true)
+    // The built-in agent answers by itself: nothing to hand another agent.
+    if (current?.isOpen == true && !builtInAgent.enabled)
       TextButton(
         enabled = !busy,
         onClick = {
@@ -325,10 +332,14 @@ fun AgentEditScreen(
                 run {
                   session = edits.apply(current.id, draft.id)
                   onApplied()
-                  tell("Done: your dashboard uses it.")
+                  tell(
+                    if (current.scope?.isNewDashboard == true) "Done: the dashboard is created."
+                    else "Done: your dashboard uses it.",
+                  )
                 }
               },
-              onEditDraft = onEditDraft,
+              onEditDraft = onEditDraft.takeUnless { builtInAgent.enabled },
+              builtInAgent = builtInAgent,
               onUndo = {
                 run {
                   session = edits.undo(current.id)
@@ -457,6 +468,7 @@ private fun SessionReview(
   writeBlockedReason: String?,
   onApply: (AgentEditSession.Draft) -> Unit,
   onEditDraft: ((draft: JsonObject, baseline: JsonObject?) -> Unit)?,
+  builtInAgent: BuiltInAgent,
   onUndo: () -> Unit,
   onDiscard: () -> Unit,
   onRender: (draftId: String, png: ByteArray) -> Unit,
@@ -482,10 +494,17 @@ private fun SessionReview(
       verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       compactBar?.invoke()
+      val building = session.scope?.isNewDashboard == true
       Text(
         when {
+          session.isApplied && building -> "The dashboard is created. Undo deletes it."
           session.isApplied -> "Your dashboard uses it. Undo puts it back."
           !session.isOpen -> "This session was ${session.status}."
+          draft == null && building ->
+            "A new dashboard: tell ${builtInAgent.providerLabel ?: "the agent"} what it should show."
+          draft == null && builtInAgent.enabled ->
+            "The dashboard as it is: comment on a card, or tell ${builtInAgent.displayName} " +
+              "what to change: its layout, a card, or a new section."
           draft == null -> "The dashboard as it is: comment on a card, or tell the agent below."
           else -> draft.summary.ifBlank { "Draft from the agent" }
         },
@@ -493,6 +512,7 @@ private fun SessionReview(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
       )
       problem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+      session.assistantError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
       writeBlockedReason?.let {
         Text(
           "$it Drafts can be reviewed but not applied.",
@@ -535,7 +555,9 @@ private fun SessionReview(
           session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
           session.isOpen -> {
             if (draft != null)
-              Button(enabled = canWrite, onClick = { onApply(draft) }) { Text("Use it") }
+              Button(enabled = canWrite, onClick = { onApply(draft) }) {
+                Text(if (building) "Create it" else "Use it")
+              }
             val config = draft?.config
             if (onEditDraft != null && config != null)
               OutlinedButton(enabled = !busy, onClick = { onEditDraft(config, session.baseline) }) {

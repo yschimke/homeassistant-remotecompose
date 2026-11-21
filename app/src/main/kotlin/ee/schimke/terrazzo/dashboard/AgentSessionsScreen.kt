@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import ee.schimke.ha.client.dashboard.AgentEdits
+import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.model.HaSnapshot
@@ -30,17 +31,23 @@ internal class PhoneAgentEdits(val edits: AgentEdits, val relayServer: String?)
  * Assistant's alone; null when this session can't hold any.
  */
 @Composable
-internal fun rememberPhoneAgentEdits(session: HaSession): PhoneAgentEdits? {
+internal fun rememberPhoneAgentEdits(
+  session: HaSession,
+  /** The integration's built-in agent answers in Home Assistant's own sessions: no relay. */
+  builtInAgent: Boolean = false,
+): PhoneAgentEdits? {
   val designServer by
     LocalTerrazzoGraph.current.preferencesStore.designServerUrl.collectAsState(
       initial = "https://ha.coo.ee",
     )
   val relayServer = designServer.ifBlank { "https://ha.coo.ee" }
   val cloudEdits: CloudDashboardAgentEdits? =
-    remember(session, relayServer) {
-      session.cloudAgentEdits(relayServer, AgentOnThisDevice.dashboardGrants()) {
-        AgentOnThisDevice.link(relayServer)
-      }
+    remember(session, relayServer, builtInAgent) {
+      if (builtInAgent) null
+      else
+        session.cloudAgentEdits(relayServer, AgentOnThisDevice.dashboardGrants()) {
+          AgentOnThisDevice.link(relayServer)
+        }
     }
   DisposableEffect(cloudEdits) { onDispose { cloudEdits?.close() } }
   return remember(session, cloudEdits) {
@@ -69,6 +76,9 @@ internal fun AgentSessionsScreen(
   onApplied: () -> Unit,
   /** Takes a draft into the dashboard editor to adjust by hand ([AgentEditScreen]'s Adjust). */
   onEditDraft: ((draft: JsonObject, baseline: JsonObject?) -> Unit)? = null,
+  /** A session to open at once: a new dashboard just started. */
+  initialSessionId: String? = null,
+  builtInAgent: BuiltInAgent = BuiltInAgent.Off,
 ) {
   val context = LocalContext.current
   BackHandler(onBack = onBack)
@@ -101,6 +111,8 @@ internal fun AgentSessionsScreen(
     writeBlockedReason = saveBlockedReason,
     startScope = startScope,
     onEditDraft = onEditDraft,
+    initialSessionId = initialSessionId,
+    builtInAgent = builtInAgent,
   ) { _, card ->
     DashboardCardPreview(session, card, snapshot)
   }

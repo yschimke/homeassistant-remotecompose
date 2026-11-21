@@ -216,6 +216,15 @@ class HassHome:
             raise mcp.ToolError(str(failure)) from failure
         return edits.edit_sessions.summary(session)
 
+    async def start_new_dashboard(self, title, request):
+        try:
+            session = await edits.async_start(
+                self._hass, self._user, None, request, {"kind": edits.edit_sessions.NEW_DASHBOARD, "title": title}
+            )
+        except edits.SessionError as failure:
+            raise mcp.ToolError(str(failure)) from failure
+        return edits.edit_sessions.summary(session)
+
     async def edit_session(self, session_id):
         try:
             edits.agent_seen(self._hass, self._user, session_id, "Reading the request")

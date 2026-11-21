@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.design.cardFingerprint
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -481,7 +483,9 @@ private fun DashboardsRoot(
 ) {
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
-  val dashboards by rememberSelectedDashboardListState(session)
+  // Bumped once a dashboard the built-in agent built is created, to list it.
+  var dashboardListRefresh by remember { mutableIntStateOf(0) }
+  val dashboards by rememberSelectedDashboardListState(session, dashboardListRefresh)
   val context = LocalContext.current
   val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
   var opened by rememberSaveable {
@@ -741,14 +745,35 @@ private fun DashboardsRoot(
 
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
-  val phoneAgentEdits = ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session)
+  // The integration's built-in agent: while it's on, editing is a chat with it, not the editor.
+  val builtInAgent by
+    produceState(BuiltInAgent.Off, session, connectionStatus) {
+      if (connectionStatus == ConnectionStatus.Connected)
+        value = runCatching { session.builtInAgent() }.getOrDefault(value)
+    }
+  val phoneAgentEdits =
+    ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session, builtInAgent.enabled)
+  var newDashboardOpen by remember { mutableStateOf(false) }
+  if (newDashboardOpen && phoneAgentEdits != null)
+    // Also where a dashboard still being built is picked back up: the switcher lists only
+    // dashboards Home Assistant has.
+    ee.schimke.terrazzo.dashboard.NewDashboardChooser(
+      phoneAgentEdits.edits,
+      builtInAgent,
+      onDismiss = { newDashboardOpen = false },
+      onOpen = {
+        newDashboardOpen = false
+        agentSessions = AgentSessionsTarget(null, urlPath = it.urlPath, sessionId = it.id)
+      },
+    )
   val sessionsTarget = agentSessions
   if (sessionsTarget != null && phoneAgentEdits != null) {
+    val sessionPath = if (sessionsTarget.sessionId != null) sessionsTarget.urlPath else openedValue
     ee.schimke.terrazzo.dashboard.AgentSessionsScreen(
       session = session,
       edits = phoneAgentEdits,
-      urlPath = openedValue,
-      title = readyDashboards.firstOrNull { it.urlPath == openedValue }?.title,
+      urlPath = sessionPath,
+      title = readyDashboards.firstOrNull { it.urlPath == sessionPath }?.title,
       saveBlockedReason =
         when {
           session is DemoHaSession -> "Demo dashboards can't be saved."
@@ -757,7 +782,12 @@ private fun DashboardsRoot(
         },
       startScope = sessionsTarget.scope,
       onBack = { agentSessions = null },
-      onApplied = { dashboardSaves++ },
+      onApplied = {
+        dashboardSaves++
+        dashboardListRefresh++
+      },
+      initialSessionId = sessionsTarget.sessionId,
+      builtInAgent = builtInAgent,
     )
   } else if (editorOpen) {
     DashboardEditorScreen(
@@ -869,7 +899,17 @@ private fun DashboardsRoot(
               onSignOut = onSignOut,
               signOutLabel = if (session is DemoHaSession) "Exit demo" else "Sign out",
               onInstallOnWatch = installOnWatch,
-              onEditDashboard = { editorOpen = true },
+              // With the built-in agent on, the editor gives way to a chat with it.
+              onEditDashboard =
+                if (builtInAgent.enabled && phoneAgentEdits != null)
+                  ({ agentSessions = AgentSessionsTarget(null) })
+                else ({ editorOpen = true }),
+              editDashboardLabel =
+                if (builtInAgent.enabled) ee.schimke.terrazzo.dashboard.CHAT_WITH_AGENT
+                else "Edit dashboard",
+              onNewDashboard =
+                if (builtInAgent.enabled && phoneAgentEdits != null) ({ newDashboardOpen = true })
+                else null,
               onOpenRoom = onOpenRoom,
             )
           },
@@ -1002,4 +1042,10 @@ private fun SessionConnectionStatus.toLogStatus():
   }
 
 /** What the agent sessions screen opens on: a section's session, or the list ([scope] null). */
-private data class AgentSessionsTarget(val scope: ee.schimke.ha.client.dashboard.EditScope?)
+private data class AgentSessionsTarget(
+  val scope: ee.schimke.ha.client.dashboard.EditScope?,
+  /** With [sessionId], the dashboard that session is about (a new one's path). */
+  val urlPath: String? = null,
+  /** A session to open at once, such as a new dashboard just started. */
+  val sessionId: String? = null,
+)

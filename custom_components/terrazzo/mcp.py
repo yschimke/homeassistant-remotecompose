@@ -149,7 +149,8 @@ EDIT_TOOLS = [
         "name": "start_edit_session",
         "title": "Start a dashboard edit",
         "description": (
-            "Opens an edit session on a dashboard for a change the user asked for. Drafts you "
+            "Opens an edit session on a dashboard for a change the user asked for, or on a new "
+            "dashboard (new_dashboard_title) that applying its draft creates. Drafts you "
             "submit to it are previewed and applied by a person; nothing you do saves the "
             "dashboard. Skip this when the user gave you a session id."
         ),
@@ -160,6 +161,11 @@ EDIT_TOOLS = [
                     "type": "string",
                     "description": "The dashboard's url_path from list_dashboards. Omit for the "
                     "default Overview dashboard.",
+                },
+                "new_dashboard_title": {
+                    "type": "string",
+                    "description": "Build a new dashboard with this title instead of editing one "
+                    "(url_path is then ignored). It starts empty; submit its whole config.",
                 },
                 "request": {"type": "string", "description": "What the user wants changed."},
             },
@@ -449,6 +455,9 @@ async def call_tool(home, name, arguments):
     if name == "list_edit_sessions":
         return {"sessions": home.edit_sessions()}
     if name == "start_edit_session":
+        title = _optional_text(arguments, "new_dashboard_title").strip()
+        if title:
+            return await home.start_new_dashboard(title, _optional_text(arguments, "request"))
         url_path = _optional_text(arguments, "url_path")
         return await home.start_edit_session(url_path or None, _optional_text(arguments, "request"))
     if name == "get_edit_session":

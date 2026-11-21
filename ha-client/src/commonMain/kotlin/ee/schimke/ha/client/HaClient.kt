@@ -2,6 +2,7 @@ package ee.schimke.ha.client
 
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
+import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
@@ -709,6 +710,18 @@ class HaClient(
     }
   }
 
+  /**
+   * The Terrazzo integration's built-in dashboard agent: whether Home Assistant answers edit
+   * sessions itself. [BuiltInAgent.Off] for an integration too old to have one; fails with
+   * [HaCommandException] for other refusals, and when the integration isn't installed.
+   */
+  suspend fun terrazzoBuiltInAgent(): BuiltInAgent =
+    try {
+      json.decodeFromJsonElement(BuiltInAgent.serializer(), runCommand("terrazzo/agent/info"))
+    } catch (e: HaCommandException) {
+      if (e.code == "unknown_command") BuiltInAgent.Off else throw e
+    }
+
   /** Put an externally prepared draft into an HA edit session as this signed-in user. */
   suspend fun relayAgentDraft(
     sessionId: String,
@@ -770,6 +783,11 @@ class HaClient(
       }
 
       override suspend fun open(urlPath: String?) = list(urlPath, includeClosed = false)
+
+      override suspend fun newDashboards() =
+        (edit("terrazzo/edit/list") { put("new_dashboards", true) }["sessions"] as? JsonArray)
+          .orEmpty()
+          .map { json.decodeFromJsonElement(AgentEditSession.serializer(), it) }
 
       override suspend fun recent(urlPath: String?) = list(urlPath, includeClosed = true)
 

@@ -30,7 +30,7 @@ import ee.schimke.terrazzo.core.session.HaSession
  * the user can opt into / out of every dashboard the instance actually exposes.
  */
 @Composable
-fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
+fun rememberDashboardListState(session: HaSession, refresh: Int = 0): State<DashboardListState> {
   val cache = LocalTerrazzoGraph.current.offlineCache
   // Seed from disk synchronously so the first composition paints
   // already-known dashboards instead of the loading spinner. The
@@ -45,7 +45,8 @@ fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
         } ?: DashboardListState.Loading
       mutableStateOf<DashboardListState>(seed)
     }
-  LaunchedEffect(session) {
+  // [refresh] reads the list again: a dashboard the built-in agent built was just created.
+  LaunchedEffect(session, refresh) {
     runCatching {
       session.connect()
       session.listDashboards()
@@ -75,8 +76,11 @@ fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
  *   but if it does we fall back to the raw list rather than render a blank picker.
  */
 @Composable
-fun rememberSelectedDashboardListState(session: HaSession): State<DashboardListState> {
-  val rawState = rememberDashboardListState(session)
+fun rememberSelectedDashboardListState(
+  session: HaSession,
+  refresh: Int = 0,
+): State<DashboardListState> {
+  val rawState = rememberDashboardListState(session, refresh)
   val selectionState =
     LocalTerrazzoGraph.current.preferencesStore.selectedDashboardUrls.collectAsState(initial = null)
   return remember(rawState, selectionState) {

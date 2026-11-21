@@ -187,6 +187,14 @@ interface HaSession {
     get() = null
 
   /**
+   * The Terrazzo integration's built-in dashboard agent (`terrazzo/agent/info`): while it's on, the
+   * app edits dashboards by chatting with it instead of by hand. Off with no Home Assistant behind
+   * the session, without the integration, or when it can't be asked.
+   */
+  suspend fun builtInAgent(): ee.schimke.ha.client.dashboard.BuiltInAgent =
+    ee.schimke.ha.client.dashboard.BuiltInAgent.Off
+
+  /**
    * Edit sessions whose agent works through the design [server]'s relay (agent-sessions.md): the
    * one "Ask your agent" flow. Null where there's no Home Assistant behind the session.
    */
@@ -556,6 +564,15 @@ class LiveHaSession(
 
   override val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits
     get() = client.agentEdits
+
+  override suspend fun builtInAgent(): ee.schimke.ha.client.dashboard.BuiltInAgent =
+    try {
+      client.terrazzoBuiltInAgent()
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (_: Exception) {
+      ee.schimke.ha.client.dashboard.BuiltInAgent.Off
+    }
 
   override fun cloudAgentEdits(
     server: String,

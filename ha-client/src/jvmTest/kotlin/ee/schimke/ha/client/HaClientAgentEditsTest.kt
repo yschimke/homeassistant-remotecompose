@@ -1,6 +1,9 @@
 package ee.schimke.ha.client
 
+import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.DashboardConflictException
+import ee.schimke.ha.client.dashboard.EditScope
+import ee.schimke.ha.client.dashboard.scopeLabel
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import io.ktor.server.websocket.WebSockets
@@ -80,6 +83,69 @@ class HaClientAgentEditsTest {
     val command = commands.single()
     assertEquals("terrazzo/edit/start", command.type)
     assertEquals("Add the pump", command.getValue("request").jsonPrimitive.content)
+  }
+
+  @Test
+  fun theBuiltInAgentIsReadAndOffForAnOlderIntegration() {
+    fakeHa(
+      mutableListOf(),
+      { _, id ->
+        listOf(
+          result(
+            id,
+            """{"enabled":true,"provider":"gemini","provider_label":"Google Gemini",
+              "model":"gemini-flash-latest"}""",
+          ),
+        )
+      },
+    ) { client ->
+      val agent = client.terrazzoBuiltInAgent()
+      assertTrue(agent.enabled)
+      assertEquals("Google Gemini (gemini-flash-latest)", agent.displayName)
+    }
+    fakeHa(
+      mutableListOf(),
+      { _, id ->
+        listOf(
+          """{"id":$id,"type":"result","success":false,
+            "error":{"code":"unknown_command","message":"Unknown command."}}""",
+        )
+      },
+    ) { client ->
+      assertEquals(BuiltInAgent.Off, client.terrazzoBuiltInAgent())
+    }
+  }
+
+  @Test
+  fun aNewDashboardIsStartedWithItsScopeAndListedWhileBeingBuilt() {
+    val commands = mutableListOf<JsonObject>()
+    val building =
+      """{"session_id":"s2","url_path":"dashboard-garden","request":"Build it","status":"open",
+        "notes":[],"applied":null,"drafts":[],"created_at":1,"updated_at":1,"expires_at":2,
+        "scope":{"kind":"new_dashboard","title":"Garden","label":"Garden"}}"""
+    fakeHa(
+      commands,
+      { command, id ->
+        if (command.type == "terrazzo/edit/list") listOf(result(id, """{"sessions":[$building]}"""))
+        else listOf(result(id, """{"session":$building,"prompt":""}"""))
+      },
+    ) { client ->
+      val started =
+        client.agentEdits.start(null, "Build it", EditScope.newDashboard("Garden")).session
+      assertTrue(started.scope!!.isNewDashboard)
+      assertEquals("Garden", started.scopeLabel("ignored"))
+      assertEquals(listOf("s2"), client.agentEdits.newDashboards().map { it.id })
+    }
+    val (start, list) = commands
+    assertEquals(
+      "new_dashboard",
+      start.getValue("scope").jsonObject.getValue("kind").jsonPrimitive.content,
+    )
+    assertEquals(
+      "Garden",
+      start.getValue("scope").jsonObject.getValue("title").jsonPrimitive.content,
+    )
+    assertEquals(true, list.getValue("new_dashboards").jsonPrimitive.content.toBoolean())
   }
 
   @Test

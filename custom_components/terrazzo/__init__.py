@@ -7,6 +7,9 @@ own session. The app's notifications, while it holds no websocket, are held here
 the app is woken with a content-free FCM message and collects them with its own session.
 A Terrazzo page on another site can ask for its origin to be allowed (`web_origins.py`); only an
 admin's fix of the repair it raises changes HA's HTTP config.
+With an LLM API key in the options, the integration runs a dashboard agent itself
+(`assistant.py`, `assistant_hass.py`): it answers edit sessions as the person who started them,
+and like any agent it only drafts; a person applies.
 Wall displays (`wall.py`) read dashboards as a grid and their cards' designs and values with a
 user's own access token, and their taps run as that user.
 """
@@ -22,6 +25,7 @@ from homeassistant.helpers.collection import ItemNotFound
 from homeassistant.loader import async_get_integration
 
 from .const import (
+    AGENT_OPTIONS,
     CARD_URL,
     CONF_DASHBOARD,
     CONF_MCP_USER,
@@ -33,7 +37,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
-from . import design_selections, design_server, edits, push, wall, web_origins
+from . import assistant_hass, design_selections, design_server, edits, push, wall, web_origins
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -54,8 +58,11 @@ async def async_setup(hass, config):
     if DOMAIN in config:
         options = clean_options(config[DOMAIN])
         if entries := hass.config_entries.async_entries(DOMAIN):
-            # The MCP server's user is chosen in the UI only; YAML leaves it as it was.
+            # The MCP server's user and the built-in agent are chosen in the UI only; YAML leaves
+            # them as they were.
             options[CONF_MCP_USER] = entries[0].options.get(CONF_MCP_USER, "")
+            for key in AGENT_OPTIONS:
+                options[key] = entries[0].options.get(key, options[key])
             # HA refuses new flows once the single entry exists, so update it in place. This runs
             # before the entry is set up, which then reads these options.
             if dict(entries[0].options) != options:
@@ -99,6 +106,9 @@ async def async_setup_entry(hass, entry):
     if "edits" not in state:
         state["edits"] = await edits.Edits.async_load(hass)
         edits.async_register(hass)
+    # The built-in agent answers edit sessions while the options give it an API key (assistant.py).
+    if "assistant" not in state:
+        state["assistant"] = assistant_hass.async_register(hass)
     # Held notifications for the app's silent push, likewise (push.py).
     if "push" not in state:
         state["push"] = await push.Push.async_load(hass)

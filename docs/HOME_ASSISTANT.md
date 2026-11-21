@@ -424,6 +424,41 @@ client completes that flow depends on its OAuth support; the long-lived token al
 The protocol layer is `custom_components/terrazzo/mcp.py`; `home-assistant/test/mcp_test.py`
 covers it and `home-assistant/test/installed-mcp.test.mjs` runs it inside a real Home Assistant.
 
+## Built-in dashboard agent
+
+Instead of connecting an agent of your own, you can give Terrazzo an AI service's API key and let
+Home Assistant run the agent itself. While it is on, the Terrazzo apps and the panel edit
+dashboards by chatting with it: **Edit dashboard** becomes **Chat with your agent**, and **New
+dashboard** asks it to build one from your entities.
+
+- Open the integration, choose **Configure**, and set **Dashboard agent** to **Google Gemini**,
+  **OpenRouter**, or **Other OpenAI-compatible service** (Ollama, LM Studio and the like, with its
+  URL). Enter the **Agent API key**: a Gemini key from Google AI Studio, or an OpenRouter key.
+  **Agent model** is optional for Gemini (`gemini-flash-latest`) and OpenRouter
+  (`openrouter/auto`); any model that supports tool calling works. **Off** turns it off and
+  forgets the key.
+- The key stays in Home Assistant, in the integration's options (`.storage/core.config_entries`,
+  like other integrations' keys), and is only sent to that service. The apps learn only that the
+  agent is on and which model it uses. Leave the key field empty when you change other settings
+  to keep the saved key.
+- The agent answers every edit session: a new session with a greeting (or a first draft, for a
+  new dashboard), and each message or card comment with a new draft or a question. It can change
+  a dashboard's structure (views, sections, their order), change any card (pin a comment to it),
+  or build a new dashboard from your areas and entities.
+- It acts as the person chatting, with their Home Assistant permissions only: it reads the
+  entities and dashboards they can see, and like any agent it only drafts. The person sees each
+  draft drawn with their own cards and live states and chooses **Use it** (or **Create it** for a
+  new dashboard, which then appears in Home Assistant's dashboards and sidebar). Only an
+  administrator can apply; **Undo** puts a dashboard back, or deletes a dashboard it created.
+- Each turn sends the service the dashboard's configuration, the conversation, and the names and
+  states of the entities the agent looks up. Use a provider you are comfortable sharing that with,
+  or a local model.
+
+`custom_components/terrazzo/assistant.py` holds the turn and the providers;
+`home-assistant/test/assistant_test.py` covers it with a fake model, and
+`home-assistant/test/installed-agent-builtin.test.mjs` runs it inside a real Home Assistant
+against a fake OpenAI-compatible service.
+
 ## Build and verify
 
 ```sh
