@@ -20,8 +20,8 @@ YAML and without crowding out Home Assistant's cards.
 - **Device facts stay in Home Assistant.** The browser matches the entity's device against a
   small public index; the resolver is sent the chosen design's id, never a manufacturer, model or
   state.
-- **Nothing happens outside the editor.** The index is fetched when an editor shows the card,
-  not when a dashboard is viewed.
+- **Only editors fetch.** The index is fetched on a page that can edit dashboards (an
+  administrator's), or when an editor shows the card; anyone else's dashboard never fetches it.
 - **No takeover.** No dashboard strategy, no rewriting of existing cards, no dependency on the
   `/terrazzo` panel.
 
@@ -39,26 +39,32 @@ YAML and without crowding out Home Assistant's cards.
 - the frontend already holds `hass.entities[id]` (`platform`, `device_id`, `translation_key`) and
   `hass.devices[device_id]` (`manufacturer`, `model`), which are exactly `DeviceInfo`'s matching
   fields (`deviceInfo` in the card);
-- the index is fetched in advance (`getStubConfig` and `getConfigForm` start it, and the picker
-  calls those as soon as it opens), so the hook answers from memory. Before it arrives the hook
-  answers `null`, never a wait.
+- the index is fetched in advance, so the hook answers from memory. The picker's **By entity**
+  tab asks before any other hook runs and keeps its first answer for an entity
+  (`hui-suggestion-picker`), so the card starts the fetch when an administrator's page is idle
+  (`preloadForEditors`; only administrators can save dashboards), and `getStubConfig` and
+  `getConfigForm` start it too. Before it arrives the hook answers `null`, never a wait, and a
+  failed fetch is asked for again by the next hook.
 
 ## The device index
 
 `GET /designs/v1/suggestions.json` (`DeviceSuggestions`, design server): one row per design, card
-type and device match, for live phone-card entries made for a device:
+type, entity domain and device match, for live phone-card entries made for a device:
 
 ```json
 {"serial": 12, "designs": [
   {"designId": "user:abc", "cardType": "tile",
-   "device": {"integration": "bambu_lab", "model": "x1*"}, "title": "Bambu printer"}
+   "device": {"integration": "bambu_lab", "model": "x1*"}, "title": "Bambu printer",
+   "domain": "light"}
 ]}
 ```
 
 Generic designs are not in it; the full manifest is about 9 MB, the index is a few rows per device
 design. The card matches with `DeviceMatch`'s rules (`deviceMatches`: every set field, without
-case, `*` in a model), lists the most specific first, keeps the card types it binds live, and
-offers at most three, labelled by the design's title.
+case, `*` in a model), keeps only designs for the entity's own domain (a printer's light design
+is no suggestion for its sensors, which the resolver could not draw with it) and the card types it
+binds live, lists the most specific first, and offers at most three, labelled by the design's
+title.
 
 A suggestion is the card set to that design:
 

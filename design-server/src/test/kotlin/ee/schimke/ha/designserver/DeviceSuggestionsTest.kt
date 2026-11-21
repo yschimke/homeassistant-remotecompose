@@ -71,6 +71,7 @@ class DeviceSuggestionsTest {
           cardType = "tile",
           device = DeviceMatch(integration = "bambu_lab", model = "x1*"),
           title = "Printer",
+          domain = "light",
         ),
       ),
       index.designs,

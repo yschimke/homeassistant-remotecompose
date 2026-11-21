@@ -10,6 +10,9 @@ const elements = new Map();
 globalThis.customElements = { get: (name) => elements.get(name), define: (name, value) => elements.set(name, value) };
 globalThis.window = {};
 globalThis.document = { baseURI: 'https://ha.test/lovelace/home' };
+// No test reaches the network: the default index request fails at once unless a test stubs it.
+const fetched = [];
+globalThis.fetch = async (url) => { fetched.push(String(url)); return { ok: false }; };
 // Reproduce the packaged layout: the integration bundles the shared embed beside its adapter.
 const directory = mkdtempSync(join(tmpdir(), 'ha-card-config-'));
 let RemoteComposeCard, card;
@@ -97,11 +100,12 @@ const printerIndex = {
   serial: 3,
   designs: [
     { designId: 'user:chamber', cardType: 'tile', device: { integration: 'bambu_lab', model: 'x1*', translationKey: 'chamber_light' }, title: 'Chamber light' },
-    { designId: 'user:printer', cardType: 'tile', device: { integration: 'bambu_lab' }, title: 'Bambu printer' },
-    { designId: 'user:printer', cardType: 'tile', device: { manufacturer: 'bambu lab' }, title: 'Bambu printer' },
+    { designId: 'user:printer', cardType: 'tile', device: { integration: 'bambu_lab' }, title: 'Bambu printer', domain: 'light' },
+    { designId: 'user:printer', cardType: 'tile', device: { manufacturer: 'bambu lab' }, title: 'Bambu printer', domain: 'light' },
     { designId: 'user:printer-graph', cardType: 'history-graph', device: { integration: 'bambu_lab' } },
     { designId: 'user:p1', cardType: 'tile', device: { integration: 'bambu_lab', model: 'P1*' } },
     { designId: 'user:untitled', cardType: 'gauge', device: { manufacturer: 'Bambu Lab' } },
+    { designId: 'user:nozzle', cardType: 'tile', device: { integration: 'bambu_lab' }, domain: 'sensor', title: 'Nozzle' },
   ],
 };
 
@@ -165,6 +169,10 @@ test('the device index is fetched once, without credentials, and a failure leave
   assert.deepEqual(seen[0].init, { credentials: 'omit', referrerPolicy: 'no-referrer' });
   const failing = async () => { throw new Error('offline'); };
   assert.equal(await card.loadSuggestionIndex('https://down.test/designs/v1/', failing), null);
+  let calls = 0;
+  const counting = async () => { calls += 1; throw new Error('offline'); };
+  await card.loadSuggestionIndex('https://down.test/designs/v1/', counting);
+  assert.equal(calls, 1, 'a failed index is asked for again');
 });
 
 test('a new card starts as a tile of an unused entity a tile shows well', () => {
@@ -197,4 +205,26 @@ test('a card set to a design sends its id to the resolver, and only on its own',
   }
   assert.throws(() => element.setConfig({ ...config, design_id: 'library:tile', design: 'a'.repeat(64) }), /not more than one/);
   assert.throws(() => element.setConfig({ ...config, design_id: 'library:tile', template_url: '/local/a.rc' }), /not more than one/);
+});
+
+test('a design made for another domain of the same device is not offered', () => {
+  const hass = structuredClone(printerHass);
+  hass.entities['sensor.printer_nozzle'] = { entity_id: 'sensor.printer_nozzle', device_id: 'd1', platform: 'bambu_lab' };
+  const ids = card.entitySuggestions(hass, 'sensor.printer_nozzle', printerIndex).map((s) => s.config.design_id);
+  assert.deepEqual(ids, ['user:untitled', 'user:nozzle']);
+  assert.ok(!card.entitySuggestions(printerHass, 'light.printer_chamber', printerIndex)
+    .some((s) => s.config.design_id === 'user:nozzle'));
+});
+
+test('an administrator page fetches the index ahead of the picker; no other page does', async () => {
+  const root = (user) => ({ querySelector: (tag) => (tag === 'home-assistant' ? { hass: { user } } : null) });
+  // Let any earlier test's failed request settle and be forgotten.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  fetched.length = 0;
+  card.preloadForEditors(root({ is_admin: false }));
+  card.preloadForEditors(root(undefined));
+  card.preloadForEditors({ querySelector: () => { throw new Error('no DOM'); } });
+  assert.equal(fetched.length, 0);
+  card.preloadForEditors(root({ is_admin: true }));
+  assert.deepEqual(fetched, ['https://ha.coo.ee/designs/v1/suggestions.json']);
 });
