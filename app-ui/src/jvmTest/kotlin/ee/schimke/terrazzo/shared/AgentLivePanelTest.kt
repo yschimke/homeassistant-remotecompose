@@ -180,6 +180,48 @@ class AgentLivePanelTest {
   }
 
   @Test
+  fun entitiesSharingANameKeepTheirOwnIds() = runComposeUiTest {
+    val sent = mutableListOf<String>()
+    setContent {
+      MaterialTheme {
+        AgentLivePanel(
+          state = talking,
+          busy = false,
+          onCopyInvite = {},
+          onNewCode = {},
+          onClaim = {},
+          onSend = { sent += it },
+          showCodes = false,
+          mentions =
+            listOf(
+              ChatMention(
+                "Kitchen",
+                "light.kitchen",
+                "Entity",
+                expandTo = "@Kitchen (light.kitchen)",
+              ),
+              ChatMention(
+                "Kitchen",
+                "switch.kitchen",
+                "Entity",
+                expandTo = "@Kitchen (switch.kitchen)",
+              ),
+            ),
+        )
+      }
+    }
+    val field = onNodeWithText("Tell the agent what to change")
+    field.performTextInput("@kit")
+    waitUntil { onAllNodesWithText("light.kitchen").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("light.kitchen").performClick()
+    field.performTextInput("and @kit")
+    waitUntil { onAllNodesWithText("switch.kitchen").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("switch.kitchen").performClick()
+    onNodeWithText("Send").performClick()
+    assertEquals(listOf("@Kitchen (light.kitchen) and @Kitchen (switch.kitchen) "), sent)
+  }
+
+  @Test
   fun theAgentsStepsShowWithinItsTurn() = runComposeUiTest {
     setContent {
       MaterialTheme {

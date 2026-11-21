@@ -26,7 +26,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -267,8 +266,8 @@ private fun Conversation(messages: List<AgentRelayMessage>, agentName: String) {
 
 /**
  * Something the person can @-mention in a message: a card on the preview ([pin] is its label, and
- * picking it pins the message to that card as its Comment button does) or an entity ([expandTo]
- * replaces `@display` in the message, so the agent gets the entity id).
+ * picking it pins the message to that card as its Comment button does) or an entity ([expandTo] is
+ * what picking it inserts, with its entity id, so the agent gets the one that was picked).
  */
 data class ChatMention(
   val display: String,
@@ -289,15 +288,10 @@ private fun Composer(
   onPin: (String) -> Unit = {},
 ) {
   var field by remember { mutableStateOf(TextFieldValue("")) }
-  // What was picked from the @ list this message, by what it inserted.
-  val picked = remember { mutableStateMapOf<String, ChatMention>() }
   fun send() {
     if (field.text.isBlank()) return
-    var text = field.text
-    picked.values.forEach { m -> m.expandTo?.let { text = text.replace("@${m.display}", it) } }
-    onSend(text.take(2000))
+    onSend(field.text)
     field = TextFieldValue("")
-    picked.clear()
   }
   Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
     target?.let { AssistChip(onClick = onClearTarget, label = { Text("About $it  ✕") }) }
@@ -327,15 +321,17 @@ private fun Composer(
           val chosen =
             mention.id.toIntOrNull()?.let { mentions.getOrNull(it) }
               ?: return@MentionAutocompletePanel
+          // The entity's id goes in with its name, where it was picked: two entities can share a
+          // name, and one name can start another's.
           val insertion =
             insertTriggerReplacement(
               field.text,
               field.selection.end,
               trigger,
-              "@${chosen.display}",
+              chosen.expandTo ?: "@${chosen.display}",
             )
-          field = TextFieldValue(insertion.newText, TextRange(insertion.newCaretPosition))
-          picked[chosen.display] = chosen
+          if (insertion.newText.length <= 2000)
+            field = TextFieldValue(insertion.newText, TextRange(insertion.newCaretPosition))
           chosen.pin?.let(onPin)
         },
       )
