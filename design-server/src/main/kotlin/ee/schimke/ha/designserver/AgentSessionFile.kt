@@ -1,5 +1,7 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.livery.sessions.SessionLinks
+import ee.schimke.livery.sessions.SessionRelay
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -11,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -27,8 +30,10 @@ class AgentSessionFile(private val file: File, private val relay: AgentRelay) {
     val version: Int = 1,
     val cards: List<AgentDesignSessions.Saved> = emptyList(),
     val dashboards: List<DashboardAgentSessions.Saved> = emptyList(),
-    val relay: List<AgentRelay.Saved> = emptyList(),
-    val links: List<AgentLinks.Saved> = emptyList(),
+    val relay: List<SessionRelay.Saved> = emptyList(),
+    val links: List<SessionLinks.Saved> = emptyList(),
+    /** Agents' `request_access` not yet expired, granted or not (since Livery's relay). */
+    val requests: List<SessionRelay.SavedRequest> = emptyList(),
   )
 
   private val json = Json {
@@ -46,18 +51,29 @@ class AgentSessionFile(private val file: File, private val relay: AgentRelay) {
         .getOrNull() ?: return
     relay.cards.restore(contents.cards)
     relay.dashboards.restore(contents.dashboards)
-    relay.links.restore(contents.links)
-    relay.restore(contents.relay)
+    runBlocking {
+      relay.restore(
+        SessionRelay.Snapshot(
+          // Files from before Livery's relay name kinds by their enum ("Card"), not their wire
+          // name.
+          contents.relay.map { it.copy(kind = it.kind.lowercase()) },
+          contents.links,
+          contents.requests,
+        ),
+      )
+    }
   }
 
   @Synchronized
   fun save() {
+    val saved = runBlocking { relay.snapshot() }
     val contents =
       Contents(
         cards = relay.cards.snapshot(),
         dashboards = relay.dashboards.snapshot(),
-        relay = relay.snapshot(),
-        links = relay.links.snapshot(),
+        relay = saved.sessions,
+        links = saved.links,
+        requests = saved.requests,
       )
     file.parentFile?.mkdirs()
     val temp = File(file.parentFile, file.name + ".tmp")

@@ -364,7 +364,7 @@ object AgentRelayMcp {
     put("next", "Pass session to every other tool. $next")
   }
 
-  fun List<AgentRelay.Message>.json() = buildJsonArray {
+  fun List<ee.schimke.livery.sessions.Message>.json() = buildJsonArray {
     forEach { m ->
       add(
         buildJsonObject {
