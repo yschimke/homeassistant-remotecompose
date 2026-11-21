@@ -394,6 +394,40 @@ class AgentEditScreenTest {
   }
 
   @Test
+  fun inACompactHeightUseItScrollsWithTheConversation() = runComposeUiTest {
+    val edits =
+      FakeEdits().apply {
+        current.value =
+          AgentEditSession(
+            id = "s1",
+            urlPath = "garden",
+            baseline = draftConfig,
+            messages = (1..8).map { AgentEditSession.Message("Reply $it about the layout.") },
+            drafts = listOf(AgentEditSession.Draft("d1", "Pump first", config = draftConfig)),
+          )
+      }
+    // A landscape phone with the keyboard open: the header can fill the window.
+    setContent {
+      Box(Modifier.size(600.dp, 200.dp)) {
+        AgentEditScreen(
+          edits = edits,
+          urlPath = "garden",
+          title = "Garden",
+          snapshot = HaSnapshot(),
+          onBack = {},
+          onSharePrompt = {},
+          onApplied = {},
+          initialSessionId = "s1",
+        ) { _, card ->
+          Text("card:${card.type}")
+        }
+      }
+    }
+    waitUntil { onAllNodesWithText("Use it").fetchSemanticsNodes().isNotEmpty() }
+    onNodeWithText("Use it").performScrollTo().assertIsDisplayed()
+  }
+
+  @Test
   fun theBuiltInAgentIsNamedAndUseItStaysInReachInALongConversation() = runComposeUiTest {
     val said =
       (1..8).map { i ->

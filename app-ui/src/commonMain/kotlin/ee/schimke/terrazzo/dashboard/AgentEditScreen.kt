@@ -491,6 +491,37 @@ private fun SessionReview(
   val headerScroll = rememberScrollState()
   val building = session.scope?.isNewDashboard == true
   val canWrite = !busy && writeBlockedReason == null
+  // The draft chips and what to do with the draft: Use it (or Create it), Adjust, Stop, Undo.
+  val actions: @Composable () -> Unit = {
+    if (session.drafts.size > 1) {
+      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        session.drafts.forEachIndexed { i, d ->
+          FilterChip(
+            selected = d.id == draft?.id,
+            onClick = { shown = d.id },
+            label = { Text("Draft ${i + 1}") },
+          )
+        }
+      }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      when {
+        session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
+        session.isOpen -> {
+          if (draft != null)
+            Button(enabled = canWrite, onClick = { onApply(draft) }) {
+              Text(if (building) "Create it" else "Use it")
+            }
+          val config = draft?.config
+          if (onEditDraft != null && config != null)
+            OutlinedButton(enabled = !busy, onClick = { onEditDraft(config, session.baseline) }) {
+              Text("Adjust")
+            }
+          TextButton(enabled = !busy, onClick = onDiscard) { Text("Stop") }
+        }
+      }
+    }
+  }
   Column(Modifier.fillMaxSize()) {
     Column(
       Modifier.fillMaxWidth()
@@ -544,41 +575,17 @@ private fun SessionReview(
           compact = compactBar != null,
         )
       }
+      if (compactBar != null) actions()
     }
-    // Outside the scrolling header: Use it stays in reach however long the conversation gets.
-    Column(
-      Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-      if (session.drafts.size > 1) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          session.drafts.forEachIndexed { i, d ->
-            FilterChip(
-              selected = d.id == draft?.id,
-              onClick = { shown = d.id },
-              label = { Text("Draft ${i + 1}") },
-            )
-          }
-        }
+    // Below the scrolling header, so a long conversation can't scroll Use it away; in a compact
+    // height (a landscape keyboard) the header can fill the window, so it scrolls with it there.
+    if (compactBar == null)
+      Column(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+      ) {
+        actions()
       }
-      Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        when {
-          session.isApplied -> OutlinedButton(enabled = canWrite, onClick = onUndo) { Text("Undo") }
-          session.isOpen -> {
-            if (draft != null)
-              Button(enabled = canWrite, onClick = { onApply(draft) }) {
-                Text(if (building) "Create it" else "Use it")
-              }
-            val config = draft?.config
-            if (onEditDraft != null && config != null)
-              OutlinedButton(enabled = !busy, onClick = { onEditDraft(config, session.baseline) }) {
-                Text("Adjust")
-              }
-            TextButton(enabled = !busy, onClick = onDiscard) { Text("Stop") }
-          }
-        }
-      }
-    }
     // The preview: the draft once there is one, the dashboard as it is until then.
     val dashboard = previewDashboard(draft?.config ?: session.baseline)
     if (dashboard == null) {
