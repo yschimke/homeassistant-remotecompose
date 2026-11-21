@@ -12,6 +12,8 @@ With an LLM API key in the options, the integration runs a dashboard agent itsel
 and like any agent it only drafts; a person applies.
 Wall displays (`wall.py`) read dashboards as a grid and their cards' designs and values with a
 user's own access token, and their taps run as that user.
+Clients learn which of these this Home Assistant has, for their user, from `terrazzo/info`
+(`info.py`).
 """
 from pathlib import Path
 
@@ -37,7 +39,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
-from . import assistant_hass, design_selections, design_server, edits, push, wall, web_origins
+from . import assistant_hass, design_selections, design_server, edits, info, push, wall, web_origins
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -128,6 +130,10 @@ async def async_setup_entry(hass, entry):
     if not state.get("web_origins"):
         web_origins.async_register(hass)
         state["web_origins"] = True
+    # Which of the commands above this user has, and the integration's version (info.py).
+    if not state.get("info"):
+        info.async_register(hass)
+        state["info"] = True
     options = entry.options
     # Static files are served without Cache-Control, so a browser may keep an old release's panel
     # and renderer for hours after an update. Each release gets its own URLs instead.

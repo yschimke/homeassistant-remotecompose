@@ -128,13 +128,22 @@ unpublished.
 `registerTerrazzoPush`, `takeTerrazzoPushes`, `watchTerrazzoStates`, `terrazzoDesignServer`,
 `terrazzoDesignLink`, design selections, `reportTerrazzoWebOrigin`, `relayAgentDraft` and the
 `AgentEdits` edit sessions. It also has clients for the add-on (`AddonClient`) and the design server
-(`DesignRepository`, `CardStudioClient`, `AgentRelayClient`). But:
+(`DesignRepository`, `CardStudioClient`, `AgentRelayClient`).
 
-- **No versioned protocol.** There is no `terrazzo/info`, no protocol version and no capability
-  list. Clients probe by sending a command and treating `unknown_command` as "not installed or too
-  old", which can't tell "absent" from "refused". The HTTP APIs are versioned by path (`/designs/v1`,
-  `wall/v1`, the add-on's `/v1`) and the design manifest has `schema` and `minClient`; the WebSocket
-  surface has nothing.
+**A versioned handshake, on the WebSocket only.** The integration answers `terrazzo/info` with
+`{protocol, min_client, version, capabilities}` (`custom_components/terrazzo/capabilities.py`):
+`edit`, `push`, `design_selections`, `web_origin` and `agent` are revisions (all 1),
+`design_server` is `{available, version}`, `mcp` is `{enabled}` and `wall` is `"v1"`. A revision
+or object only ever gains optional fields; a missing key means unsupported; `protocol` bumps only
+on a breaking change. The answer is per user: `edit_apply`, `design_server_open` and `mcp` are
+left out for users who can't use them. `ha-client` reads it with `HaClient.detectTerrazzo()` →
+`Installed(info)` / `Absent` / `TooOld(version)` / `Unsupported(minClient)`: on
+`unknown_command` it asks Core's `manifest/get` for `terrazzo` to tell an older integration from
+none. The HTTP APIs are still versioned by path only (`/designs/v1`, `wall/v1`, the add-on's
+`/v1`); the design manifest has `schema` and `minClient`.
+
+But:
+
 - **Mostly untyped.** Push, design-server info, selections and web-origin replies are hand-parsed
   `JsonObject`s inside `HaClient`. The typed DTOs that do exist (`AgentEditSession`, `EditScope`,
   relay state) live in `ha-client`, so a consumer can't have them without Ktor. Only the
@@ -151,14 +160,12 @@ Proposed:
 - **`terrazzo-protocol`** (serialization only): edit-session DTOs, relay DTOs, typed replies
   (`PushRegistration`, `DesignServerInfo`, `DesignSelections`, `WebOriginStatus`, `DesignLink`),
   command-name constants, wall `v1` DTOs.
-- **`terrazzo-client`**: a `TerrazzoIntegration` over a small `HaWebSocketTransport` interface
-  (which `HaClient` implements), with `detect()` → `Installed(info)` / `Absent` /
-  `Unsupported(minClient)`.
-- **Server side:** add `terrazzo/info` →
-  `{protocol, min_client, version, capabilities: {edit, push, design_selections, design_server, web_origin, mcp, wall}}`.
-  Each capability carries a revision that only ever gains optional fields. Mirror it as
-  `GET /v1/info` on the add-on and design server.
-- **`HaSession`:** the Terrazzo members become capability interfaces checked with `as?`.
+- **`terrazzo-client`**: move `TerrazzoInfo` and `detectTerrazzo` there, over a small
+  `HaWebSocketTransport` interface (which `HaClient` implements).
+- **`HaSession`:** `LiveHaSession` still probes each command and catches `unknown_command`. It
+  should call `detectTerrazzo()` once per connection and gate each Terrazzo member on its
+  capability; the members then become capability interfaces checked with `as?`.
+- **Add-on and design server:** mirror `terrazzo/info` as `GET /v1/info`.
 
 ### Dependencies, and supplying a configured HTTP client per platform
 

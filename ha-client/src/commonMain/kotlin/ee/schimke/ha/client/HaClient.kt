@@ -562,6 +562,22 @@ class HaClient(
    */
   suspend fun terrazzoDesignServer(): JsonObject = runCommand("terrazzo/design_server")
 
+  /**
+   * The Terrazzo integration's `terrazzo/info`: its protocol, version and what it offers this user.
+   * Fails with [HaCommandException] (`unknown_command`) for an integration older than the command,
+   * or none; [detectTerrazzo] tells those apart.
+   */
+  suspend fun terrazzoInfo(): TerrazzoInfo = terrazzoInfoOf(terrazzoInfoJson())
+
+  internal suspend fun terrazzoInfoJson(): JsonObject = runCommand("terrazzo/info")
+
+  /**
+   * Core's `manifest/get`: the installed [domain]'s manifest (`version` among it, for a custom
+   * integration). Fails with [HaCommandException] (`not_found`) when there is no such integration.
+   */
+  suspend fun integrationManifest(domain: String): JsonObject =
+    runCommand("manifest/get") { put("integration", domain) }
+
   /** This Home Assistant user's per-card design selections, shared across their devices. */
   suspend fun terrazzoDesignSelections(): Map<String, String> =
     (runCommand("terrazzo/design_selections/get")["cards"] as? JsonObject)
