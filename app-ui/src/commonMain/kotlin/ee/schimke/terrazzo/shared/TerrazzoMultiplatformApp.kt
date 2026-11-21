@@ -58,7 +58,7 @@ import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.EditorScope
-import ee.schimke.terrazzo.dashboard.NewDashboardDialog
+import ee.schimke.terrazzo.dashboard.NewDashboardChooser
 import ee.schimke.terrazzo.dashboard.NewDashboardSessions
 import ee.schimke.terrazzo.dashboard.preferredDashboardPath
 import io.github.timoptr.mdiicons.Mdi
@@ -683,11 +683,11 @@ private fun DashboardShell(
               var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
               var newDashboard by remember { mutableStateOf(false) }
               if (newDashboard)
-                NewDashboardDialog(
+                NewDashboardChooser(
                   connection.client.agentEdits,
                   builtInAgent,
                   onDismiss = { newDashboard = false },
-                  onStarted = {
+                  onOpen = {
                     newDashboard = false
                     stack.add(AgentEditDestination(it.urlPath, it.id))
                   },

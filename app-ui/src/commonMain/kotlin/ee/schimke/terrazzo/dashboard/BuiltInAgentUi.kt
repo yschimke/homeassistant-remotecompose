@@ -150,3 +150,50 @@ fun NewDashboardSessions(
       },
     )
 }
+
+/**
+ * **New dashboard** from a menu: the dashboards still being built to pick back up, if there are
+ * any, beside starting another; straight to [NewDashboardDialog] when there are none. Without it a
+ * build left before **Create it** would have no way back on a host with no dashboard list.
+ */
+@Composable
+fun NewDashboardChooser(
+  edits: AgentEdits,
+  agent: BuiltInAgent,
+  onDismiss: () -> Unit,
+  onOpen: (AgentEditSession) -> Unit,
+) {
+  var building by remember(edits) { mutableStateOf<List<AgentEditSession>?>(null) }
+  var asking by remember { mutableStateOf(false) }
+  LaunchedEffect(edits) {
+    building = runCatching { edits.newDashboards() }.getOrDefault(emptyList())
+  }
+  val listed = building ?: return
+  if (asking || listed.isEmpty()) {
+    NewDashboardDialog(edits, agent, onDismiss = onDismiss, onStarted = onOpen)
+    return
+  }
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    title = { Text("New dashboard") },
+    text = {
+      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Pick up a dashboard you're building, or start another.")
+        listed.forEach { session ->
+          OutlinedButton(onClick = { onOpen(session) }, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.fillMaxWidth()) {
+              Text(
+                session.scopeLabel(null),
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+              )
+              Text(sessionLine(session), style = MaterialTheme.typography.bodySmall, maxLines = 1)
+            }
+          }
+        }
+      }
+    },
+    confirmButton = { Button(onClick = { asking = true }) { Text("Start another") } },
+    dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+  )
+}

@@ -755,11 +755,13 @@ private fun DashboardsRoot(
     ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session, builtInAgent.enabled)
   var newDashboardOpen by remember { mutableStateOf(false) }
   if (newDashboardOpen && phoneAgentEdits != null)
-    ee.schimke.terrazzo.dashboard.NewDashboardDialog(
+    // Also where a dashboard still being built is picked back up: the switcher lists only
+    // dashboards Home Assistant has.
+    ee.schimke.terrazzo.dashboard.NewDashboardChooser(
       phoneAgentEdits.edits,
       builtInAgent,
       onDismiss = { newDashboardOpen = false },
-      onStarted = {
+      onOpen = {
         newDashboardOpen = false
         agentSessions = AgentSessionsTarget(null, urlPath = it.urlPath, sessionId = it.id)
       },
