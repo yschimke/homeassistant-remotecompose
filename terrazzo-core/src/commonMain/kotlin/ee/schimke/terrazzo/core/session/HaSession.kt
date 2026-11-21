@@ -7,6 +7,9 @@ import ee.schimke.ha.client.HaCommandException
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.client.HaPushNotification
+import ee.schimke.ha.client.TerrazzoCapabilities
+import ee.schimke.ha.client.TerrazzoIntegration
+import ee.schimke.ha.client.detectTerrazzo
 import ee.schimke.ha.client.listRenderableDashboards
 import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.Dashboard
@@ -39,6 +42,8 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -185,6 +190,15 @@ interface HaSession {
    */
   val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits?
     get() = null
+
+  /**
+   * Whether this Home Assistant has the Terrazzo integration, and what it offers this user
+   * (`terrazzo/info`, see [ee.schimke.ha.client.detectTerrazzo]): asked once per connection. Null
+   * with no Home Assistant behind the session, or while it can't be asked. A UI tells
+   * [TerrazzoIntegration.Absent] and [TerrazzoIntegration.TooOld] ("install or update the
+   * integration") from [TerrazzoIntegration.Unsupported] ("update the app").
+   */
+  suspend fun terrazzoIntegration(): TerrazzoIntegration? = null
 
   /**
    * The Terrazzo integration's built-in dashboard agent (`terrazzo/agent/info`): while it's on, the
@@ -450,8 +464,40 @@ class LiveHaSession(
     }
   }
 
+  // What `terrazzo/info` answered on this connection; null until asked, and again after a
+  // reconnect, since the integration may have been updated or removed in between.
+  private val integrationLock = Mutex()
+  private var integration: TerrazzoIntegration? = null
+
+  override suspend fun terrazzoIntegration(): TerrazzoIntegration? = integrationLock.withLock {
+    integration
+      ?: try {
+        client.detectTerrazzo().also { integration = it }
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        // Not reachable right now: ask again on the next call rather than remember a guess.
+        null
+      }
+  }
+
+  /**
+   * Whether the integration offers [capability] to this user: false when it is absent, needs a
+   * newer client, or leaves the capability out; null when it predates `terrazzo/info` (or can't be
+   * asked), so the caller tries the command itself as before.
+   */
+  private suspend fun offers(capability: (TerrazzoCapabilities) -> Any?): Boolean? =
+    when (val found = terrazzoIntegration()) {
+      is TerrazzoIntegration.Installed -> capability(found.info.capabilities) != null
+      TerrazzoIntegration.Absent,
+      is TerrazzoIntegration.Unsupported -> false
+      is TerrazzoIntegration.TooOld,
+      null -> null
+    }
+
   override suspend fun connect() {
     parked = false
+    integrationLock.withLock { integration = null }
     _connectionStatus.value = SessionConnectionStatus.Connecting
     try {
       try {
@@ -566,13 +612,15 @@ class LiveHaSession(
     get() = client.agentEdits
 
   override suspend fun builtInAgent(): ee.schimke.ha.client.dashboard.BuiltInAgent =
-    try {
-      client.terrazzoBuiltInAgent()
-    } catch (e: kotlinx.coroutines.CancellationException) {
-      throw e
-    } catch (_: Exception) {
-      ee.schimke.ha.client.dashboard.BuiltInAgent.Off
-    }
+    if (offers { it.agent } == false) ee.schimke.ha.client.dashboard.BuiltInAgent.Off
+    else
+      try {
+        client.terrazzoBuiltInAgent()
+      } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        ee.schimke.ha.client.dashboard.BuiltInAgent.Off
+      }
 
   override fun cloudAgentEdits(
     server: String,
@@ -649,6 +697,7 @@ class LiveHaSession(
     fcmToken: String,
     relayUrl: String,
   ): Pair<String, String>? {
+    if (offers { it.push } == false) return null
     val result =
       try {
         client.registerTerrazzoPush(webhookId, fcmToken, relayUrl)
@@ -662,46 +711,58 @@ class LiveHaSession(
   }
 
   override suspend fun privateDesignServer(): Boolean =
-    try {
-      (client.terrazzoDesignServer()["available"] as? JsonPrimitive)?.booleanOrNull == true
-    } catch (refused: HaCommandException) {
-      // No Terrazzo integration, or one from before the design add-on.
-      false
-    }
+    // `terrazzo/design_server` is still asked when offered: it checks the add-on afresh, where
+    // terrazzo/info reports it as last found.
+    if (offers { it.designServer } == false) false
+    else
+      try {
+        (client.terrazzoDesignServer()["available"] as? JsonPrimitive)?.booleanOrNull == true
+      } catch (refused: HaCommandException) {
+        // No Terrazzo integration, or one from before the design add-on.
+        false
+      }
 
   override suspend fun sharedDesignSelections(): Map<String, String>? =
-    try {
-      client.terrazzoDesignSelections()
-    } catch (refused: HaCommandException) {
-      null
-    }
+    if (offers { it.designSelections } == false) null
+    else
+      try {
+        client.terrazzoDesignSelections()
+      } catch (refused: HaCommandException) {
+        null
+      }
 
   override suspend fun setSharedDesignSelection(card: String, designId: String) {
     client.setTerrazzoDesignSelection(card, designId)
   }
 
   override suspend fun privateDesignLink(path: String): String? =
-    try {
-      baseUrl.trimEnd('/') + client.terrazzoDesignLink(path)
-    } catch (refused: HaCommandException) {
-      // No integration, not an admin, or not a design page.
-      null
-    }
+    // An administrator's: left out of terrazzo/info for everyone else.
+    if (offers { it.designServerOpen } == false) null
+    else
+      try {
+        baseUrl.trimEnd('/') + client.terrazzoDesignLink(path)
+      } catch (refused: HaCommandException) {
+        // No integration, not an admin, or not a design page.
+        null
+      }
 
   override suspend fun takeHeldNotifications(webhookId: String): List<HaPushNotification> =
-    client.takeTerrazzoPushes(webhookId).mapNotNull { HaPushNotification.parse(it) }
+    if (offers { it.push } == false) emptyList()
+    else client.takeTerrazzoPushes(webhookId).mapNotNull { HaPushNotification.parse(it) }
 
   override suspend fun watchStates(
     webhookId: String,
     entityIds: Collection<String>,
     leaseSeconds: Int,
   ): Int? =
-    try {
-      client.watchTerrazzoStates(webhookId, entityIds, leaseSeconds)
-    } catch (refused: HaCommandException) {
-      // No Terrazzo integration, or one older than state wakes, or not registered for push yet.
-      null
-    }
+    if (offers { it.push } == false) null
+    else
+      try {
+        client.watchTerrazzoStates(webhookId, entityIds, leaseSeconds)
+      } catch (refused: HaCommandException) {
+        // No Terrazzo integration, or one older than state wakes, or not registered for push yet.
+        null
+      }
 
   override suspend fun dismissNotification(notificationId: String) {
     // Optimistically drop it so the bell/sheet update on the tap
