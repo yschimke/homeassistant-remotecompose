@@ -60,6 +60,7 @@ import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.shared.AgentConnection
 import ee.schimke.terrazzo.shared.AgentLivePanel
+import ee.schimke.terrazzo.shared.ChatMention
 import ee.schimke.terrazzo.shared.DashboardContent
 import ee.schimke.terrazzo.shared.drawable
 import ee.schimke.terrazzo.shared.encodePng
@@ -491,6 +492,11 @@ private fun SessionReview(
   val headerScroll = rememberScrollState()
   val building = session.scope?.isNewDashboard == true
   val canWrite = !busy && writeBlockedReason == null
+  // What the message box offers after @: the cards on the preview, then the home's entities.
+  val mentions =
+    remember(draft?.id, session.baseline, snapshot.states.keys) {
+      chatMentions(previewDashboard(draft?.config ?: session.baseline), session.scope, snapshot)
+    }
   // The draft chips and what to do with the draft: Use it (or Create it), Adjust, Stop, Undo.
   val actions: @Composable () -> Unit = {
     if (session.drafts.size > 1) {
@@ -573,6 +579,8 @@ private fun SessionReview(
           showCodes = false,
           composeBeforeJoin = true,
           compact = compactBar != null,
+          mentions = mentions,
+          onPin = { target = it },
         )
       }
       if (compactBar != null) actions()
@@ -664,22 +672,94 @@ internal fun shownLive(relayed: AgentRelayState?, direct: AgentRelayState?): Age
  */
 internal fun pendingLive(session: AgentEditSession, agentListening: Boolean) =
   AgentRelayState(
-    version = session.conversation.lastOrNull()?.seq ?: 0,
+    version = session.chatMessages().lastOrNull()?.seq ?: 0,
     kind = "dashboard",
     title = session.request,
     revision = session.drafts.size.toLong(),
-    messages =
-      session.conversation.map {
-        AgentRelayMessage(
-          it.seq,
-          if (it.fromAgent) "agent" else "person",
-          if (it.fromAgent) "message" else "comment",
-          it.text,
-          it.target,
-        )
-      },
+    messages = session.chatMessages(),
     linked = agentListening,
   )
+
+/**
+ * The session's conversation and the agent's steps as the live panel shows them, in the order they
+ * happened (they share one sequence).
+ */
+internal fun AgentEditSession.chatMessages(): List<AgentRelayMessage> =
+  (conversation.map {
+      AgentRelayMessage(
+        it.seq,
+        if (it.fromAgent) "agent" else "person",
+        if (it.fromAgent) "message" else "comment",
+        it.text,
+        it.target,
+      )
+    } +
+      steps.map {
+        AgentRelayMessage(
+          it.seq,
+          "agent",
+          AgentRelayMessage.TOOL,
+          it.output,
+          tool = it.tool,
+          arguments = it.arguments,
+          ok = it.ok,
+        )
+      })
+    .sortedBy { it.seq }
+
+/**
+ * What the message box offers after @: each card of [dashboard] (only [scope]'s section's, for a
+ * section session), pinned by the label its Comment button gives it, then [snapshot]'s entities,
+ * named as Home Assistant names them and sent with their entity id.
+ */
+internal fun chatMentions(
+  dashboard: Dashboard?,
+  scope: EditScope?,
+  snapshot: HaSnapshot,
+): List<ChatMention> {
+  val focus = scope?.takeIf { it.isSection }
+  val cards = buildList {
+    dashboard?.views?.forEachIndexed { v, view ->
+      val viewPath = view.path?.takeIf { it.isNotEmpty() } ?: "view-$v"
+      view.sections.forEachIndexed { s, section ->
+        if (focus != null && (focus.view != v || focus.section != s)) return@forEachIndexed
+        section.cards.forEachIndexed { c, card ->
+          if (card.type != "heading") add(CardKey(null, viewPath, s, c, card.type) to card)
+        }
+      }
+      if (focus == null)
+        view.cards.forEachIndexed { c, card ->
+          add(CardKey(null, viewPath, null, c, card.type) to card)
+        }
+    }
+  }
+  val cardMentions = cards.map { (key, card) ->
+    val label = cardLabel(key, card, snapshot)
+    ChatMention(
+      display = label.substringBefore(" ("),
+      subtitle = label.substringAfter(" (", "").removeSuffix(")").ifBlank { null },
+      category = "Card",
+      pin = label,
+    )
+  }
+  val entityMentions =
+    snapshot.states.values
+      .map { state ->
+        val name =
+          (state.attributes["friendly_name"] as? kotlinx.serialization.json.JsonPrimitive)
+            ?.takeIf { it.isString }
+            ?.content
+            ?.takeIf { it.isNotBlank() } ?: state.entityId
+        ChatMention(
+          display = name,
+          subtitle = state.entityId,
+          category = "Entity",
+          expandTo = "@$name (${state.entityId})",
+        )
+      }
+      .sortedBy { it.display.lowercase() }
+  return cardMentions + entityMentions
+}
 
 /**
  * How a message names a card, for the person and the agent: its title, else its entity's name as
@@ -723,7 +803,7 @@ internal fun directLive(
   val agent = session.agent ?: return null
   val idle = session.agentIdleSeconds?.let { it + sinceReply }
   return AgentRelayState(
-    version = session.conversation.lastOrNull()?.seq ?: 0,
+    version = session.chatMessages().lastOrNull()?.seq ?: 0,
     kind = "dashboard",
     title = session.request,
     revision = session.drafts.size.toLong(),
@@ -735,16 +815,7 @@ internal fun directLive(
         status = agent.status,
         lastSeenSecondsAgo = idle?.toLong(),
       ),
-    messages =
-      session.conversation.map {
-        AgentRelayMessage(
-          it.seq,
-          if (it.fromAgent) "agent" else "person",
-          if (it.fromAgent) "message" else "comment",
-          it.text,
-          it.target,
-        )
-      },
+    messages = session.chatMessages(),
     decision = if (session.isApplied) "accepted" else null,
   )
 }

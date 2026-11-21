@@ -76,7 +76,11 @@ data class AgentPresence(
   val lastSeenSecondsAgo: Long? = null,
 )
 
-/** A comment or decision from the person, or a message or draft summary from the agent. */
+/**
+ * A comment or decision from the person, or a message, draft summary or step from the agent. A step
+ * ([kind] `tool`) is a tool the agent called: [tool] names it, [arguments] says what it asked,
+ * [text] what it got, and [ok] whether it worked.
+ */
 @Serializable
 data class AgentRelayMessage(
   val seq: Long,
@@ -84,9 +88,19 @@ data class AgentRelayMessage(
   val kind: String,
   val text: String,
   val target: String? = null,
+  val tool: String? = null,
+  val arguments: String? = null,
+  val ok: Boolean = true,
 ) {
   val fromAgent: Boolean
     get() = from == "agent"
+
+  val isStep: Boolean
+    get() = kind == TOOL
+
+  companion object {
+    const val TOOL = "tool"
+  }
 }
 
 /** The session ended: revoked, expired, or the server restarted. */

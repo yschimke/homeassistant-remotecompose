@@ -77,6 +77,21 @@ How it works (`assistant.py`, `assistant_hass.py`):
   `generativelanguage.googleapis.com/v1beta/openai`, OpenRouter at `openrouter.ai/api/v1`, or the
   person's own base URL. A refused key, a rate limit or an unreachable service is said in the
   chat and kept as the session's `assistant_error` until the next turn.
+- **Steps in the chat.** Each tool call is kept on the session as a step (`steps`: the tool, what
+  it asked and what it got in a few words, and whether it worked; `describe_step`), numbered in
+  the same sequence as the notes and messages, so the person watches the agent work between
+  their message and its reply. Steps are for the person only; the model's context is rebuilt
+  without them. The newest 100 are kept.
+- **The chat (`app-ui`, `AgentTranscript.kt`, `AgentLivePanel.kt`).** A turn is the agent's
+  steps up to its next message. On Android and desktop it is drawn with
+  [agent-render](https://github.com/0xZhangKe/compose-agent-render) (`agentRenderMain`), whose
+  steps fold under a summary once the reply comes and whose replies render Markdown; it has no
+  Wasm build, so the panel draws the same turns with the app's own rows (`SharedAgentTurn`). The
+  message box keeps its labelled field and uses
+  [prompt-bar](https://github.com/NadeemIqbal/prompt-bar)'s `@` autocomplete: `@` offers the
+  preview's cards (picking one pins the message to it, as its Comment button does) and the home's
+  entities (sent as `@Name (entity_id)`). These are kept apart from the rest of the app's screens:
+  the agent session flows are expected to move into a shared Livery module.
 - **What clients see.** `terrazzo/agent/info` returns `enabled`, `provider`, `provider_label` and
   `model`, never the key; `HaClient.terrazzoBuiltInAgent()` reads it (off for an older
   integration).

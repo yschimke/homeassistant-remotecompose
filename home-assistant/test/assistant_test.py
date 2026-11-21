@@ -108,6 +108,32 @@ class TurnTest(unittest.TestCase):
         self.assertIn('native_card_types', first[0]['content'])
         self.assertEqual({'role': 'user', 'content': 'Work on this dashboard with me.\n\nAdd the soil moisture'}, first[1])
 
+    def test_each_step_is_reported_in_words(self):
+        draft = {'views': [{'cards': [{'type': 'tile', 'entity': 'sensor.soil'}]}]}
+        model = ScriptedModel(
+            {'tool_calls': [call('find_entities', {'query': 'soil'})]},
+            {'tool_calls': [call('submit_draft', {'config_json': json.dumps(draft), 'summary': 'Soil'}, 'c2')]},
+            {'tool_calls': [call('get_entity_state', {'entity_id': 'light.attic'}, 'c3')]},
+            {'content': 'Done.'},
+        )
+        steps = []
+        run(assistant.run_turn(self.session, FakeHome(self.session), model,
+                               on_step=lambda *step: steps.append(step)))
+        self.assertEqual(('find_entities', 'soil', '1 found: Soil moisture', True), steps[0])
+        self.assertEqual(('submit_draft', 'Soil', 'Draft submitted', True), steps[1])
+        self.assertEqual('get_entity_state', steps[2][0])
+        self.assertFalse(steps[2][3])
+
+    def test_steps_share_the_conversation_sequence(self):
+        sid = self.session['id']
+        self.sessions.note(sid, 'Add soil', 'person', 101)
+        step = self.sessions.agent_step(sid, 'find_entities', 'soil', '1 found', True, 102)
+        self.sessions.agent_message(sid, 'Done', 'person', 103)
+        self.assertEqual([1, 2, 3], [self.session['notes'][0]['seq'], step['seq'], self.session['messages'][0]['seq']])
+        self.assertEqual([step], es.summary(self.session)['steps'])
+        # Steps are the person's view of the work, not the model's context.
+        self.assertNotIn('find_entities', json.dumps(assistant.conversation(self.session)))
+
     def test_a_refused_draft_goes_back_to_the_model_to_fix(self):
         bad = {'views': [{'cards': [{'type': 'tile', 'entity': 'light.attic'}]}]}
         model = ScriptedModel(

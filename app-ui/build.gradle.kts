@@ -48,6 +48,16 @@ kotlin {
       implementation(libs.ktor.client.core)
       implementation(libs.cmp.material.icons.core)
       implementation(libs.cmp.material.icons.extended)
+      // @-mention autocomplete in the agent chat's message box.
+      implementation(libs.prompt.bar)
+    }
+    // The agent chat's transcript draws with agent-render where it is published (Android and
+    // desktop); the Wasm panel keeps the shared rows until it ships a Wasm build. Both compile the
+    // same `src/agentRenderMain` (no dependsOn edge, so the default hierarchy template still
+    // holds).
+    listOf(androidMain, jvmMain).forEach {
+      it.get().kotlin.srcDir("src/agentRenderMain/kotlin")
+      it.dependencies { implementation(libs.agent.render) }
     }
     androidMain.dependencies { implementation(libs.play.app.update) }
     jvmMain.dependencies {
