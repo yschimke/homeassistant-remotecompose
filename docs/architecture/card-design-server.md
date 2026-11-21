@@ -780,7 +780,13 @@ per request — but adds what a static host can't: verification, a template brow
   app built from it) runs the converters itself, on wasmJs: a card with a template shape is asked
   for by its exact key (`LibraryCard.exactDesignKey`, `POST /designs/v1/generate`) and plays with
   its converter's own bindings, as the phone app does; only a card with no template shape still
-  sends its anonymous card here.
+  sends its anonymous card here. A request with `designId` (a card set to a design, as the
+  Lovelace card's `design_id`) gets that design's entry for the card in the asked style and mode
+  first (`CardResolve.resolveChosen`), when the library has one.
+- **Device suggestions.** `GET /designs/v1/suggestions.json` lists the library's designs made for
+  a device (`DeviceSuggestions`: design id, card type, device match, title), for the Lovelace
+  card's suggestions in Home Assistant's card picker
+  ([lovelace-card-picker.md](lovelace-card-picker.md)).
 - **Designing in UI Builder.** A design's page and `/schema` (paste a card's JSON) show the
   card's schema — slots and bindings with example values (`/api/designs/<id>/schema`,
   `POST /api/schema`) — and, with UI Builder bundled (`UI_BUILDER_BINARY`) or configured

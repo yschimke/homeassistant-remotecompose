@@ -149,6 +149,20 @@ internal fun Route.libraryProtocolRoutes(
     )
   }
 
+  // The designs made for a device, for a dashboard editor's suggestions (DeviceSuggestions).
+  get("$base/${DeviceSuggestions.PATH}") {
+    val holder = holderOf(call) ?: return@get call.notFound()
+    val library = holder.current()
+    call.allowAnyOrigin()
+    call.response.header(HttpHeaders.CacheControl, "public, max-age=300")
+    call.respondText(
+      DeviceSuggestions.encode(
+        DeviceSuggestions.index(library.manifest.serial, library.manifest.designs),
+      ),
+      ContentType.Application.Json,
+    )
+  }
+
   get("$base/${DesignCatalog.PATH}") {
     val holder = holderOf(call) ?: return@get call.notFound()
     val catalog = holder.current().catalog ?: return@get call.notFound()
