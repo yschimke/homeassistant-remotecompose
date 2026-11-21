@@ -250,7 +250,9 @@ class MarkdownCardConverter : DesignedCardConverter() {
     companion object {
       fun from(content: String, snapshot: HaSnapshot): MarkdownTemplateBindings {
         if (!content.contains("{{")) return MarkdownTemplateBindings(content, emptyList())
-        val expr = Regex("\\{\\{\\s*(.*?)\\s*\\}\\}", RegexOption.DOT_MATCHES_ALL)
+        // `[\\s\\S]`, not `.` with the JVM-only `RegexOption.DOT_MATCHES_ALL`: as
+        // `TemplateBindings`.
+        val expr = Regex("\\{\\{\\s*([\\s\\S]*?)\\s*\\}\\}")
         val bindings = mutableListOf<Binding>()
         var index = 0
         val rendered =
