@@ -65,13 +65,29 @@ class AgentSessionFileTest {
     val dash = relay.dashboards.create("Tidy", baseline)
     relay.register(AgentRelay.Kind.Dashboard, dash.owner, dash.agent, "Tidy")
     relay.comment(dash.owner, "Bigger", null)
-    AgentSessionFile(file, relay).save()
-    // The old relay saved its kinds by enum name, and had no access requests.
-    file.writeText(file.readText().replace("\"kind\":\"dashboard\"", "\"kind\":\"Dashboard\""))
-    assertTrue("\"Dashboard\"" in file.readText())
+    // The design server's own file, from before Livery's session server; its oldest form names
+    // kinds by their enum ("Dashboard").
+    val saved = relay.server.relay.snapshot()
+    file.writeText(
+      Json.encodeToString(
+        AgentSessionFile.Legacy.serializer(),
+        AgentSessionFile.Legacy(
+          dashboards = relay.dashboards.snapshot(),
+          relay = saved.sessions.map { it.copy(kind = "Dashboard") },
+          links = saved.links,
+        ),
+      ),
+    )
     val later = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
     AgentSessionFile(file, later).load()
     assertEquals(listOf("Bigger"), later.ownerState(dash.owner)!!.messages.map { it.text })
+    // Saved again, it is Livery's file: the relay and each kind's own drafts.
+    AgentSessionFile(file, later).save()
+    val written = Json.parseToJsonElement(file.readText()).jsonObject
+    assertEquals(setOf("card", "dashboard"), written.getValue("kinds").jsonObject.keys)
+    val again = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
+    AgentSessionFile(file, again).load()
+    assertEquals(listOf("Bigger"), again.ownerState(dash.owner)!!.messages.map { it.text })
   }
 
   @Test

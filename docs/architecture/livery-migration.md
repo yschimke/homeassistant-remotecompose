@@ -628,23 +628,26 @@ None of this depends on the card migration, so it can start now.
   the fixtures. *In progress:* `livery-sessions-core` (relay, links, steps, transcript, save and
   restore) is [yschimke/livery#132](https://github.com/yschimke/livery/pull/132); the conformance
   fixtures are next.
-- **A2. Server.** `livery-sessions-server` in design-server, behind the same routes. Then delete
-  `AgentRelay*`, `AgentLinks` and `AgentSessionFile`, and register the dashboard gate as a kind.
-  *Started:* the relay engine is Livery's. `AgentRelay` is now a thin adapter over
-  `SessionRelay`, with the card and dashboard stores as `DraftStore`s. `AgentLinks` is gone, and
-  `AgentSessionFile` saves Livery's snapshot, reading files written before the switch. Livery's
-  review fixes came with it: a replaced linked agent's capability is rotated, a claim spends the
-  session's join code, and restarts keep pending access requests.
+- **A2. Server.** *Done, with Livery 0.22.0:* design-server runs on Livery's `SessionServer`
+  (`livery-sessions-server`) behind the same routes and tools.
+  - **Moved to Livery wholesale:** the person's HTTP routes and their JSON, the agent's MCP
+    endpoint and the save file. `AgentRelayRoutes`, `AgentRelayMcp` and `AgentLinks` are deleted.
+    `AgentSessionFile` is now Livery's `SessionFile`, and it still reads files written before the
+    switch.
+  - **Through the extension point:** `card` and `dashboard` are `SessionKind`s
+    (`AgentSessionKinds.kt`). Each one has:
+    - its store;
+    - its gate, through the per-kind handlers (`AgentDesignMcp`, `DashboardAgentMcp`) that the
+      older per-session endpoints also use;
+    - `put_card_asset` as a card tool;
+    - its HTTP path;
+    - its save.
 
-  What is left in harc, and where it goes:
-  - **Moves to Livery wholesale.** The person's HTTP routes and their JSON (`AgentRelayRoutes`),
-    the agent's MCP tools (`AgentRelayMcp`), the save file (`AgentSessionFile`) and the adapter
-    itself. None of them knows Home Assistant; they become `livery-sessions-server`.
-  - **Needs an extension point.** What differs per kind: the store, its draft gate, the kind's
-    own MCP tools (`AgentDesignMcp`, `DashboardAgentMcp`) and its HTTP path. Livery's relay takes
-    a `DraftStore` per kind already. `livery-sessions-server` adds a `SessionKind` (store, gate,
-    extra tools, path) so harc registers `card` and `dashboard` and Confetti registers `template`.
-  - **Stays.** The stores' rules for Lovelace and card drafts, and Home Assistant's own direct
+    Livery passes a draft's summary to the kind, so the dashboard store keeps it
+    ([yschimke/livery#136](https://github.com/yschimke/livery/pull/136)).
+  - **The adapter:** `AgentRelay` is a thin facade that keeps harc's names for its callers.
+    Terrazzo's instructions to agents are a `SessionText`.
+  - **Stays:** the stores' rules for Lovelace and card drafts, and Home Assistant's own direct
     path in Python.
 - **A3. Client and UI.** harc's app-ui and Android app move to `livery-sessions-client` and
   `-compose`, with HA's target labeler and preview. `livery-agent` replaces `AgentCardDesigner`.
