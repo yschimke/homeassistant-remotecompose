@@ -9,8 +9,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import ee.schimke.ha.client.HaConfig
+import ee.schimke.ha.client.cache.OfflineCacheStorage
 import ee.schimke.terrazzo.shared.DesktopCommands
 import ee.schimke.terrazzo.shared.TerrazzoMultiplatformApp
+import java.io.File
 import java.net.BindException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -57,6 +59,7 @@ internal fun DesktopApp(
   key(session) {
     TerrazzoMultiplatformApp(
       desktopCommands = desktopCommands,
+      offlineCache = desktopOfflineCache,
       isFullScreen = isFullScreen,
       onToggleFullScreen = onToggleFullScreen,
       hostedConfig = session?.let { HaConfig(it.server, "") },
@@ -95,4 +98,13 @@ internal fun DesktopApp(
         session?.let { "Your Home Assistant sign-in is saved in this device's credential store." },
     )
   }
+}
+
+/**
+ * The desktop app's offline cache, beside its settings under `~/.terrazzo/`: the dashboard list,
+ * each dashboard and the last states of the instance signed in to, so a start with Home Assistant
+ * unreachable draws the last good dashboard.
+ */
+private val desktopOfflineCache: OfflineCacheStorage by lazy {
+  OfflineCacheStorage(File(System.getProperty("user.home"), ".terrazzo/offline"))
 }

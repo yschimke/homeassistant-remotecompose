@@ -1,0 +1,243 @@
+package ee.schimke.ha.client.cache
+
+import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.ha.model.Dashboard
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.HistoryPoint
+import java.io.File
+import java.security.MessageDigest
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
+
+/**
+ * The file-backed [OfflineCacheStore], under [rootDir]: Android's `OfflineCache` roots it in the
+ * app's files directory, the desktop app in its data directory, and JVM tests in a temp directory.
+ */
+open class OfflineCacheStorage(rootDir: File) : OfflineCacheStore {
+
+  private val root: File = rootDir.apply { mkdirs() }
+  private val cacheRoot: File = File(root, "cache").apply { mkdirs() }
+  private val instanceFile: File = File(root, "instance.json")
+  private val json = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = true
+  }
+
+  /**
+   * The instance the user was last connected to. Used by `MainActivity` to decide whether to
+   * auto-resume on cold start versus showing the discovery / login screens.
+   */
+  fun lastInstance(): String? = runCatching {
+    if (!instanceFile.exists()) return@runCatching null
+    json.decodeFromString(InstancePointer.serializer(), instanceFile.readText()).baseUrl
+  }
+    .getOrNull()
+
+  override fun setLastInstance(baseUrl: String) {
+    val payload = json.encodeToString(InstancePointer.serializer(), InstancePointer(baseUrl))
+    instanceFile.atomicWriteText(payload)
+  }
+
+  fun clearLastInstance() {
+    instanceFile.delete()
+  }
+
+  /** Per-instance dashboard listing. */
+  override fun dashboards(baseUrl: String): List<DashboardSummary>? =
+    readJson(dashboardsFile(baseUrl), ListSerializer(DashboardSummary.serializer()))
+
+  override fun putDashboards(baseUrl: String, list: List<DashboardSummary>) {
+    writeJson(dashboardsFile(baseUrl), ListSerializer(DashboardSummary.serializer()), list)
+  }
+
+  /** Per-instance, per-dashboard config. `urlPath == null` is the default dashboard. */
+  override fun dashboard(baseUrl: String, urlPath: String?): Dashboard? =
+    readJson(dashboardFile(baseUrl, urlPath), Dashboard.serializer())
+
+  override fun putDashboard(baseUrl: String, urlPath: String?, dashboard: Dashboard) {
+    writeJson(dashboardFile(baseUrl, urlPath), Dashboard.serializer(), dashboard)
+  }
+
+  /** Per-instance, per-dashboard entity snapshot. */
+  override fun snapshot(baseUrl: String, urlPath: String?): HaSnapshot? =
+    readJson(snapshotFile(baseUrl, urlPath), HaSnapshot.serializer())
+
+  /** When [snapshot] for [urlPath] was written (that is, fetched), in epoch ms; null if none. */
+  override fun snapshotSavedAtMs(baseUrl: String, urlPath: String?): Long? =
+    snapshotFile(baseUrl, urlPath).lastModified().takeIf { it > 0L }
+
+  @Synchronized
+  override fun putSnapshot(baseUrl: String, urlPath: String?, snapshot: HaSnapshot) {
+    writeJson(snapshotFile(baseUrl, urlPath), HaSnapshot.serializer(), snapshot)
+    // A live snapshot contains every entity and the device registry, regardless of which
+    // dashboard was fetched. Widgets need this latest instance data, not the default dashboard's
+    // possibly absent or stale slot. Point at the payload rather than writing it twice.
+    writeJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer(), SnapshotPointer(urlPath))
+  }
+
+  /** Latest successful instance snapshot, including device mappings used by printer cards. */
+  fun latestSnapshot(baseUrl: String): HaSnapshot? {
+    readJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer())?.let { pointer ->
+      snapshot(baseUrl, pointer.urlPath)?.let {
+        return it
+      }
+    }
+    // Older installs have no pointer. Also recover if its payload was lost or corrupted.
+    return File(instanceDir(baseUrl), "snapshot")
+      .listFiles()
+      .orEmpty()
+      .filter { it.isFile && it.extension == "json" }
+      .sortedByDescending { it.lastModified() }
+      .firstNotNullOfOrNull { readJson(it, HaSnapshot.serializer()) }
+  }
+
+  /**
+   * Set [entityId]'s state in [baseUrl]'s latest snapshot (the one [latestSnapshot] reads) to what
+   * [update] returns for its current one, leaving every other entity as it is: a widget shows the
+   * state a tap on it asked for before a live session reports it. Atomic with [putSnapshot], so a
+   * live refresh landing meanwhile is never overwritten with an older copy. Returns whether it
+   * changed anything; [update] returning null leaves the entity alone.
+   */
+  @Synchronized
+  fun updateLatestState(baseUrl: String, entityId: String, update: (String) -> String?): Boolean {
+    val snapshot = latestSnapshot(baseUrl) ?: return false
+    val entity = snapshot.states[entityId] ?: return false
+    val state = update(entity.state)?.takeIf { it != entity.state } ?: return false
+    val pointer = readJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer())
+    putSnapshot(
+      baseUrl,
+      pointer?.urlPath,
+      snapshot.copy(states = snapshot.states + (entityId to entity.copy(state = state))),
+    )
+    return true
+  }
+
+  /**
+   * Replaces [baseUrl]'s latest snapshot's entity states with [states], a live session's, keeping
+   * what it holds besides (history, devices, the unit system); stored as is when there is none.
+   * Atomic with [putSnapshot] and [updateLatestState].
+   */
+  @Synchronized
+  fun putLatestStates(baseUrl: String, states: HaSnapshot) {
+    val stored = latestSnapshot(baseUrl)
+    val pointer = readJson(snapshotPointerFile(baseUrl), SnapshotPointer.serializer())
+    putSnapshot(
+      baseUrl,
+      pointer?.urlPath,
+      stored?.copy(states = stored.states + states.states) ?: states,
+    )
+  }
+
+  /**
+   * The last [hours] of history read live for [entityIds] (the card-history screen), so an offline
+   * open still draws a chart; null when it was never read. Order of [entityIds] doesn't matter.
+   */
+  override fun history(
+    baseUrl: String,
+    entityIds: List<String>,
+    hours: Int,
+  ): Map<String, List<HistoryPoint>>? =
+    readJson(historyFile(baseUrl, entityIds, hours), historySerializer)
+
+  /** Keeps [history]; only the [MAX_HISTORY_FILES] most recently read stay, to bound the disk. */
+  @Synchronized
+  override fun putHistory(
+    baseUrl: String,
+    entityIds: List<String>,
+    hours: Int,
+    history: Map<String, List<HistoryPoint>>,
+  ) {
+    val file = historyFile(baseUrl, entityIds, hours)
+    writeJson(file, historySerializer, history)
+    file.parentFile
+      ?.listFiles()
+      .orEmpty()
+      .sortedByDescending { it.lastModified() }
+      .drop(MAX_HISTORY_FILES)
+      .forEach { it.delete() }
+  }
+
+  /**
+   * Wipe every cached payload for [baseUrl]. Called by sign-out so a subsequent user on the device
+   * can't read the previous account's dashboard config off disk.
+   */
+  fun clearInstance(baseUrl: String) {
+    instanceDir(baseUrl).deleteRecursively()
+    if (lastInstance() == baseUrl) clearLastInstance()
+  }
+
+  private fun <T> readJson(file: File, serializer: kotlinx.serialization.KSerializer<T>): T? =
+    runCatching {
+      if (!file.exists()) return@runCatching null
+      json.decodeFromString(serializer, file.readText())
+    }
+    .getOrNull()
+
+  private fun <T> writeJson(
+    file: File,
+    serializer: kotlinx.serialization.KSerializer<T>,
+    value: T,
+  ) {
+    file.parentFile?.mkdirs()
+    file.atomicWriteText(json.encodeToString(serializer, value))
+  }
+
+  private fun instanceDir(baseUrl: String): File = File(cacheRoot, instanceKey(baseUrl))
+
+  private fun dashboardsFile(baseUrl: String): File = File(instanceDir(baseUrl), "dashboards.json")
+
+  private fun dashboardFile(baseUrl: String, urlPath: String?): File =
+    File(File(instanceDir(baseUrl), "dashboard"), "${urlPath.encodeUrlPath()}.json")
+
+  private fun snapshotFile(baseUrl: String, urlPath: String?): File =
+    File(File(instanceDir(baseUrl), "snapshot"), "${urlPath.encodeUrlPath()}.json")
+
+  private fun historyFile(baseUrl: String, entityIds: List<String>, hours: Int): File =
+    File(
+      File(instanceDir(baseUrl), "history"),
+      "${sha1(entityIds.sorted().joinToString(",") + "@" + hours)}.json",
+    )
+
+  private val historySerializer =
+    MapSerializer(String.serializer(), ListSerializer(HistoryPoint.serializer()))
+
+  private fun snapshotPointerFile(baseUrl: String): File =
+    File(instanceDir(baseUrl), "latest-snapshot-pointer.json")
+
+  @kotlinx.serialization.Serializable private data class SnapshotPointer(val urlPath: String?)
+
+  @kotlinx.serialization.Serializable private data class InstancePointer(val baseUrl: String)
+
+  companion object {
+    /** History reads kept per instance: a few cards' worth of charts. */
+    const val MAX_HISTORY_FILES: Int = 20
+
+    /** SHA-1 of the baseUrl as the directory name — keeps any URL-shaped filesystem. */
+    fun instanceKey(baseUrl: String): String = sha1(baseUrl.trim().removeSuffix("/"))
+
+    private fun sha1(text: String): String {
+      val md = MessageDigest.getInstance("SHA-1")
+      val digest = md.digest(text.toByteArray(Charsets.UTF_8))
+      return digest.joinToString("") { "%02x".format(it) }
+    }
+  }
+}
+
+/** Mirror of `WearSyncPaths.dashboardPath`'s null encoding. */
+private fun String?.encodeUrlPath(): String =
+  this?.takeIf { it.isNotEmpty() }?.replace('/', '_') ?: "_default"
+
+/**
+ * Atomic write — render to a sibling .tmp first then rename, so a kill mid-write doesn't leave a
+ * half-written cache file that decodes as partial data on next launch.
+ */
+private fun File.atomicWriteText(text: String) {
+  val tmp = File(parentFile, "$name.tmp")
+  tmp.writeText(text)
+  if (!tmp.renameTo(this)) {
+    writeText(text)
+    tmp.delete()
+  }
+}

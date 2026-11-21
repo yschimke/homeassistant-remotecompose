@@ -1,7 +1,7 @@
 package ee.schimke.terrazzo.integration
 
 import ee.schimke.ha.client.AddonClient
-import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
+import ee.schimke.ha.client.cache.OfflineCacheStorage
 import java.net.ServerSocket
 import java.nio.file.Files
 import kotlin.test.AfterTest

@@ -2,10 +2,10 @@ package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaInstanceConfig
+import ee.schimke.ha.client.cache.OfflineCacheStore
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.terrazzo.core.cache.OfflineCacheStore
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

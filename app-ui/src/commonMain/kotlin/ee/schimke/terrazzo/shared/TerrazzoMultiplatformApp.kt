@@ -39,6 +39,7 @@ import androidx.navigation3.ui.NavDisplay
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.UnsupportedDashboardException
+import ee.schimke.ha.client.cache.OfflineCacheStore
 import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardEditSession
@@ -65,7 +66,9 @@ import io.github.timoptr.mdiicons.Mdi
 import io.github.timoptr.mdiicons.generated.Fullscreen
 import io.github.timoptr.mdiicons.generated.FullscreenExit
 import io.ktor.http.encodeURLParameter
+import kotlin.time.Clock
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -93,8 +96,24 @@ private class AppConnection(
   val config: HaConfig,
   private val accessTokenProvider: (suspend () -> String)? = null,
   val hostedAction: ((String) -> Boolean)? = null,
+  /** Where this connection's dashboards and last states are kept between runs; null keeps none. */
+  val offline: OfflineCacheStore? = null,
 ) {
   val hosted = accessTokenProvider != null
+  private var snapshotSavedAtMs = 0L
+
+  /**
+   * Keeps [snapshot] as the states an offline start draws. At most once a minute: live states
+   * change many times a second, and only the latest matters to the next start.
+   */
+  suspend fun keepSnapshot(snapshot: HaSnapshot) {
+    val store = offline ?: return
+    val now = Clock.System.now().toEpochMilliseconds()
+    if (now - snapshotSavedAtMs < SNAPSHOT_SAVE_INTERVAL_MS) return
+    snapshotSavedAtMs = now
+    withContext(Dispatchers.Default) { store.putSnapshot(config.baseUrl, null, snapshot) }
+  }
+
   val pictures = EntityPictureClient(config, accessTokenProvider)
   val client = HaClient(config, accessTokenProvider = accessTokenProvider)
 
@@ -103,6 +122,10 @@ private class AppConnection(
   suspend fun close() {
     pictures.close()
     client.close()
+  }
+
+  private companion object {
+    const val SNAPSHOT_SAVE_INTERVAL_MS = 60_000L
   }
 }
 
@@ -125,6 +148,9 @@ private class AppConnection(
  * @param reportsWebOrigin tells the Terrazzo integration, once a connection is ready, that this
  *   page on another site signed in, so HA can be asked to allow it to load images (CORS). Only a
  *   page outside Home Assistant sets it.
+ * @param offlineCache keeps the dashboard list, each dashboard and the last states between runs, so
+ *   a start with Home Assistant unreachable draws the last good dashboard instead of a spinner. The
+ *   desktop app passes a file-backed `OfflineCacheStorage`; null keeps nothing.
  */
 @Composable
 fun TerrazzoMultiplatformApp(
@@ -145,6 +171,7 @@ fun TerrazzoMultiplatformApp(
   signInStorageLabel: String? = null,
   reportsWebOrigin: Boolean = false,
   desktopCommands: DesktopCommands? = null,
+  offlineCache: OfflineCacheStore? = null,
 ) {
   val dark = hostTheme?.dark ?: isSystemInDarkTheme()
   // App-wide, so the chrome and every dashboard share one look. Chosen in Settings and kept across
@@ -153,7 +180,9 @@ fun TerrazzoMultiplatformApp(
   var cardStyle by remember { mutableStateOf(storedCardStyle(settings)) }
   AppChromeTheme(cardStyle, dark, hostTheme) {
     var connection by remember {
-      mutableStateOf(hostedConfig?.let { AppConnection(it, hostedAccessToken, hostedAction) })
+      mutableStateOf(
+        hostedConfig?.let { AppConnection(it, hostedAccessToken, hostedAction, offlineCache) },
+      )
     }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
@@ -201,7 +230,8 @@ fun TerrazzoMultiplatformApp(
             scope.launch {
               busy = true
               error = null
-              val candidate = AppConnection(HaConfig(url.trimEnd('/'), token))
+              val candidate =
+                AppConnection(HaConfig(url.trimEnd('/'), token), offline = offlineCache)
               try {
                 candidate.client.connect()
                 connection = candidate
@@ -404,7 +434,13 @@ private fun DashboardShell(
   signInStorageLabel: String?,
   desktopCommands: DesktopCommands?,
 ) {
-  var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
+  var list by remember {
+    mutableStateOf(
+      connection.offline?.dashboards(connection.config.baseUrl)?.let {
+        DashboardListState.Ready(it)
+      } ?: DashboardListState.Loading,
+    )
+  }
   // Bumped to read the list again: a dashboard the built-in agent built was just created.
   var dashboardListGeneration by remember(connection) { mutableIntStateOf(0) }
   var home by remember { mutableStateOf<NavKey>(DashboardDestination(initialDashboardPath)) }
@@ -424,7 +460,10 @@ private fun DashboardShell(
   }
   // Bumped to drop every screen's saved state (selected view, scroll) when returning home.
   var homeVisit by remember { mutableIntStateOf(0) }
-  var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
+  var snapshot by
+    remember(connection) {
+      mutableStateOf(connection.offline?.snapshot(connection.config.baseUrl, null) ?: HaSnapshot())
+    }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
   // Keep the owner capability while navigating away from an edit, and in the browser across a
@@ -471,6 +510,7 @@ private fun DashboardShell(
             .collect {
               snapshot = it
               connectionError = null
+              connection.keepSnapshot(it)
             }
         } catch (e: CancellationException) {
           throw e
@@ -485,11 +525,21 @@ private fun DashboardShell(
     connection.client.state.collectLatest { state ->
       if (state != HaClient.ConnectionState.Ready) return@collectLatest
       try {
-        list = DashboardListState.Ready(connection.client.listRenderableDashboards())
+        val dashboards = connection.client.listRenderableDashboards()
+        list = DashboardListState.Ready(dashboards)
+        connection.offline?.let { store ->
+          withContext(Dispatchers.Default) {
+            store.putDashboards(connection.config.baseUrl, dashboards)
+          }
+        }
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
-        list = DashboardListState.Error("Could not load dashboards. Will retry after reconnecting.")
+        // A list already shown (from the offline cache, or an earlier read) stays.
+        if (list !is DashboardListState.Ready) {
+          list =
+            DashboardListState.Error("Could not load dashboards. Will retry after reconnecting.")
+        }
       }
     }
   }
@@ -1127,8 +1177,13 @@ private fun LiveDashboard(
 ) {
   val uriHandler = LocalUriHandler.current
   var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
+  // The offline copy first, so a start with Home Assistant unreachable draws the last good
+  // dashboard; the live read below still replaces it once connected.
   var dashboard by
-    remember(connection, path, refreshGeneration) { mutableStateOf<Dashboard?>(null) }
+    remember(connection, path, refreshGeneration) {
+      mutableStateOf(connection.offline?.dashboard(connection.config.baseUrl, path))
+    }
+  var fetchedLive by remember(connection, path, refreshGeneration) { mutableStateOf(false) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   var selections by remember(connection) { mutableStateOf<Map<String, String>?>(null) }
   var selectionProblem by remember(connection) { mutableStateOf<String?>(null) }
@@ -1182,13 +1237,22 @@ private fun LiveDashboard(
     }
   LaunchedEffect(connection, path, refreshGeneration) {
     connection.client.state.collectLatest { state ->
-      if (state == HaClient.ConnectionState.Ready && dashboard == null) {
+      if (state == HaClient.ConnectionState.Ready && !fetchedLive) {
         try {
-          dashboard = connection.client.fetchDashboard(path)
+          val live = connection.client.fetchDashboard(path)
+          dashboard = live
+          fetchedLive = true
           error = null
+          connection.offline?.let { store ->
+            withContext(Dispatchers.Default) {
+              store.putDashboard(connection.config.baseUrl, path, live)
+            }
+          }
         } catch (e: CancellationException) {
           throw e
         } catch (e: Exception) {
+          // A dashboard drawn from the offline cache stays; only nothing to draw is an error.
+          if (dashboard != null) return@collectLatest
           error =
             if (e is UnsupportedDashboardException) e.message
             else
