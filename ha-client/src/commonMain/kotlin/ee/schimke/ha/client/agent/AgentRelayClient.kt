@@ -1,9 +1,9 @@
 package ee.schimke.ha.client.agent
 
+import ee.schimke.ha.client.HaHttpClientFactory
 import ee.schimke.ha.client.design.studioServerUrl
 import ee.schimke.ha.client.networkErrorsAsExceptions
-import ee.schimke.ha.client.platformHttpClient
-import io.ktor.client.HttpClient
+import ee.schimke.ha.client.orFactory
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
@@ -100,11 +100,15 @@ class AgentRelayException(message: String) : Exception(message)
  * Android, desktop and the browser (Wasm, Wasmo) behind any reverse proxy; Home Assistant is never
  * reached and no Home Assistant token is sent.
  */
-class AgentRelayClient(server: String, engine: HttpClientEngine? = null) {
+class AgentRelayClient(
+  server: String,
+  engine: HttpClientEngine? = null,
+  /** Supplies the HTTP client, in place of [engine]; see [HaHttpClientFactory]. */
+  httpClients: HaHttpClientFactory? = null,
+) {
   val base = studioServerUrl(server)
 
-  private val http =
-    if (engine == null) platformHttpClient { configure() } else HttpClient(engine) { configure() }
+  private val http = engine.orFactory(httpClients).create { configure() }
 
   private fun HttpClientConfig<*>.configure() {
     // A long-poll is held for up to 25 s; leave room for slow networks on top.

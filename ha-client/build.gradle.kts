@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
   id("harc.base-conventions")
+  id("harc.publishing")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.android.kmp.library)
@@ -33,11 +34,13 @@ kotlin {
   sourceSets {
     commonMain.dependencies {
       api(project(":ha-model"))
-      implementation(libs.ktor.client.core)
+      // Public API: clients take an `HttpClientEngine` / `HttpClient` / `HaHttpClientFactory`
+      // and return `Flow` / `StateFlow`, so both are `api`.
+      api(libs.ktor.client.core)
       implementation(libs.ktor.client.websockets)
       implementation(libs.ktor.client.content.negotiation)
       implementation(libs.ktor.serialization.kotlinx.json)
-      implementation(libs.kotlinx.coroutines.core)
+      api(libs.kotlinx.coroutines.core)
       implementation(libs.kotlinx.serialization.json)
     }
     commonTest.dependencies {
@@ -57,5 +60,14 @@ kotlin {
     }
     wasmJsMain.dependencies { implementation(libs.ktor.client.js) }
     iosMain.dependencies { implementation(libs.ktor.client.darwin) }
+  }
+}
+
+mavenPublishing {
+  pom {
+    name.set("Home Assistant client")
+    description.set(
+      "Ktor WebSocket and REST client for Home Assistant, plus Terrazzo integration, design-library and card-source clients: Kotlin Multiplatform",
+    )
   }
 }

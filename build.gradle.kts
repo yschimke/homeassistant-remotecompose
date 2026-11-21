@@ -253,3 +253,18 @@ subprojects {
     .matching { it.name == "preBuild" || it.name == "check" }
     .configureEach { dependsOn(verifyYschimkeBoms) }
 }
+
+// Every library the release uploads, and the BOM that pins them: `HarcPublishing.LIBRARIES` in
+// build-logic is the one list. The release job (`maven-central` in release-build.yml) runs this
+// with `-Pharc.libraryVersion=<tag without v>`.
+tasks.register("publishHarcLibraries") {
+  group = "publishing"
+  description = "Publishes the reusable libraries and :ha-bom to Maven Central."
+  (HarcPublishing.LIBRARIES + ":ha-bom").forEach { dependsOn("$it:publishToMavenCentral") }
+}
+
+tasks.register("publishHarcLibrariesToMavenLocal") {
+  group = "publishing"
+  description = "Publishes the reusable libraries and :ha-bom to ~/.m2, for trying them in an app."
+  (HarcPublishing.LIBRARIES + ":ha-bom").forEach { dependsOn("$it:publishToMavenLocal") }
+}

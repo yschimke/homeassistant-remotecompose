@@ -1,5 +1,6 @@
 plugins {
   id("harc.base-conventions")
+  id("harc.publishing")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.kmp.library)
   alias(libs.plugins.compose.multiplatform)
@@ -106,8 +107,13 @@ kotlin {
       api(project(":rc-components"))
       // HaIconMap's glyphs: Material Design Icons by name.
       api(project(":rc-mdi-icons"))
-      implementation(project(":ha-model"))
-      implementation(project(":ha-client"))
+      // Public API: `CardConverter.Render(CardConfig, HaSnapshot)` and the registry take ha-model
+      // types, and `CardDesignTemplates` / `HaFontLibrary` return ha-client's `BuiltDesign` and
+      // `CachedFontFace`. `api` so a consumer compiles against what it is handed; moving those
+      // value types out of ha-client (and dropping it here) is the planned fix, see
+      // docs/architecture/library-adoption-review.md.
+      api(project(":ha-model"))
+      api(project(":ha-client"))
       // RcErrorBoundary: each player disables a document that throws, instead of the screen.
       implementation(project(":rc-player-ui"))
       implementation(libs.kotlinx.coroutines.core)
@@ -201,3 +207,12 @@ dependencies { robolectricSdk(libs.robolectric.sdk35) }
 // CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own, so
 // without this the converter tests would silently stop running there.
 tasks.register("test") { dependsOn("testAndroidHostTest") }
+
+mavenPublishing {
+  pom {
+    name.set("Lovelace to Remote Compose converter")
+    description.set(
+      "Convert Home Assistant Lovelace card configs and state into Remote Compose documents through an open card registry: Compose Multiplatform",
+    )
+  }
+}

@@ -1,5 +1,6 @@
 plugins {
   id("harc.base-conventions")
+  id("harc.publishing")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.android.kmp.library)
@@ -38,3 +39,12 @@ kotlin {
 // CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own, so
 // without this the placement and pin tests would never run there.
 tasks.register("test") { dependsOn("jvmTest") }
+
+mavenPublishing {
+  pom {
+    name.set("Home Assistant room UI")
+    description.set(
+      "Room state derived from a Home Assistant snapshot, and its Compose Multiplatform UI",
+    )
+  }
+}

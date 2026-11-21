@@ -1,6 +1,6 @@
 package ee.schimke.ha.client.design
 
-import ee.schimke.ha.client.platformHttpClient
+import ee.schimke.ha.client.HaHttpClientFactory
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
@@ -653,11 +653,12 @@ fun createDesignRepository(
   store: DesignStore,
   inbuilt: InbuiltDesigns = InbuiltDesigns.None,
   clock: () -> Long,
+  httpClients: HaHttpClientFactory = HaHttpClientFactory.Platform,
 ): DesignRepository =
   DesignRepository(
     config,
     store,
-    if (config.enabled) platformHttpClient() else null,
+    if (config.enabled) httpClients.create {} else null,
     inbuilt,
     clock,
   )

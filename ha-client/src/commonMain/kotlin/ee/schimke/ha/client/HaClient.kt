@@ -13,7 +13,6 @@ import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.room.HaArea
-import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
@@ -102,17 +101,14 @@ class HaClient(
   private val config: HaConfig,
   engine: HttpClientEngine? = null,
   private val accessTokenProvider: (suspend () -> String)? = null,
+  /** Supplies the HTTP client, in place of [engine]; see [HaHttpClientFactory]. */
+  httpClients: HaHttpClientFactory? = null,
 ) {
   private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true
   }
-  private val httpClient =
-    if (engine != null) {
-      HttpClient(engine) { install(WebSockets) }
-    } else {
-      HttpClient { install(WebSockets) }
-    }
+  private val httpClient = engine.orFactory(httpClients).create { install(WebSockets) }
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
   private val idMutex = Mutex()
   private var nextId = 1

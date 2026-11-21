@@ -1,5 +1,6 @@
 plugins {
   id("harc.base-conventions")
+  id("harc.publishing")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.kmp.library)
   alias(libs.plugins.compose.multiplatform)
@@ -42,3 +43,12 @@ kotlin {
 
 // CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own.
 tasks.register("test") { dependsOn("jvmTest") }
+
+mavenPublishing {
+  pom {
+    name.set("Remote Compose MDI icons")
+    description.set(
+      "Material Design Icons by name for Remote Compose documents: Compose Multiplatform",
+    )
+  }
+}

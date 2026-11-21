@@ -101,6 +101,8 @@ coil = "3.6.3"
 
 # Formatting
 ktfmt-gradle = "0.28.0"
+# Maven Central publishing for the library modules (`harc.publishing` in build-logic).
+maven-publish = "0.37.0"
 
 # Markdown parsing (KMP, by JetBrains — used by IntelliJ)
 jetbrains-markdown = "0.7.18"
@@ -391,4 +393,5 @@ metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt-gradle" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 play-publisher = { id = "com.github.triplet.play", version.ref = "play-publisher" }

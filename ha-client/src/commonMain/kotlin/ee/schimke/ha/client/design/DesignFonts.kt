@@ -1,6 +1,6 @@
 package ee.schimke.ha.client.design
 
-import ee.schimke.ha.client.platformHttpClient
+import ee.schimke.ha.client.HaHttpClientFactory
 import ee.schimke.ha.design.CardFontManifest
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestBuilder
@@ -96,8 +96,9 @@ object DesignFonts {
     baseUrl: String,
     store: FontStore,
     token: suspend () -> String = { "" },
+    httpClients: HaHttpClientFactory = HaHttpClientFactory.Platform,
   ): Boolean {
-    val client = platformHttpClient()
+    val client = httpClients.create {}
     return try {
       refresh(baseUrl, client, store, token)
     } finally {

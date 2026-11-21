@@ -23,7 +23,10 @@ fun rememberExpressionName(prefix: String): String {
   val names = LocalExpressionNames.current
   val key = currentCompositeKeyHashCode
   return remember(prefix, key) {
-    prefix + (names?.next()?.toString() ?: key.toULong().toString(16))
+    // `CompositeKeyHashCode` is a platform type (Long on the JVM and Native, Int on the web), so
+    // common code has no `toULong()` on it; through its decimal string the name is the same on
+    // every target as `key.toULong().toString(16)`, sign extension included.
+    prefix + (names?.next()?.toString() ?: key.toString().toLong().toULong().toString(16))
   }
 }
 

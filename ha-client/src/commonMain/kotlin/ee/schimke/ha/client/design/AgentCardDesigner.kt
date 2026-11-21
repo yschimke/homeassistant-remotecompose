@@ -1,8 +1,8 @@
 package ee.schimke.ha.client.design
 
-import ee.schimke.ha.client.platformHttpClient
+import ee.schimke.ha.client.HaHttpClientFactory
+import ee.schimke.ha.client.orFactory
 import ee.schimke.ha.design.HaSharedValues
-import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.header
@@ -22,10 +22,12 @@ enum class CardAgentProvider(val label: String, val endpoint: String) {
 }
 
 /** Keys live only in the caller's memory. Connected agents use an OpenAI-compatible endpoint. */
-class AgentCardDesigner(engine: HttpClientEngine? = null) {
-  private val http =
-    if (engine == null) platformHttpClient { configureAgent() }
-    else HttpClient(engine) { configureAgent() }
+class AgentCardDesigner(
+  engine: HttpClientEngine? = null,
+  /** Supplies the HTTP client, in place of [engine]; see [HaHttpClientFactory]. */
+  httpClients: HaHttpClientFactory? = null,
+) {
+  private val http = engine.orFactory(httpClients).create { configureAgent() }
 
   suspend fun design(
     provider: CardAgentProvider,

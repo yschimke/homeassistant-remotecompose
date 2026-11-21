@@ -1,5 +1,6 @@
 plugins {
   id("harc.base-conventions")
+  id("harc.publishing")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.android.kmp.library)
@@ -33,3 +34,12 @@ kotlin {
 // CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own, so
 // without this the model's tests (room ranking, state formatting, templates) never run there.
 tasks.register("test") { dependsOn("jvmTest") }
+
+mavenPublishing {
+  pom {
+    name.set("Home Assistant model")
+    description.set(
+      "Home Assistant dashboard, card config and state snapshot types, with state formatting and Jinja: Kotlin Multiplatform, no networking",
+    )
+  }
+}

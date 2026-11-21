@@ -130,6 +130,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
   include(":ha-model", ":ha-client", ":addon-server")
 } else {
   include(
+    ":ha-bom",
     ":ha-model",
     ":ha-client",
     ":rc-components",
