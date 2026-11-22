@@ -11,8 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import ee.schimke.ha.client.dashboard.AgentEdits
-import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.LocalTerrazzoGraph
@@ -34,8 +34,8 @@ internal class PhoneAgentEdits(val edits: AgentEdits, val relayServer: String?)
 @Composable
 internal fun rememberPhoneAgentEdits(
   session: HaSession,
-  /** The integration's built-in agent answers in Home Assistant's own sessions: no relay. */
-  builtInAgent: Boolean = false,
+  /** The integration's dashboard agent answers in Home Assistant's own sessions: no relay. */
+  dashboardAgent: Boolean = false,
 ): PhoneAgentEdits? {
   val designServer by
     LocalTerrazzoGraph.current.preferencesStore.designServerUrl.collectAsState(
@@ -43,8 +43,8 @@ internal fun rememberPhoneAgentEdits(
     )
   val relayServer = designServer.ifBlank { "https://ha.coo.ee" }
   val cloudEdits: CloudDashboardAgentEdits? =
-    remember(session, relayServer, builtInAgent) {
-      if (builtInAgent) null
+    remember(session, relayServer, dashboardAgent) {
+      if (dashboardAgent) null
       else
         session.terrazzo?.cloudAgentEdits(relayServer, AgentOnThisDevice.dashboardGrants()) {
           AgentOnThisDevice.link(relayServer)
@@ -76,7 +76,7 @@ internal fun AgentSessionsScreen(
   onEditDraft: ((draft: JsonObject, baseline: JsonObject?) -> Unit)? = null,
   /** A session to open at once: a new dashboard just started. */
   initialSessionId: String? = null,
-  builtInAgent: BuiltInAgent = BuiltInAgent.Off,
+  dashboardAgent: DashboardAgent = DashboardAgent.Off,
 ) {
   val context = LocalContext.current
   BackHandler(onBack = onBack)
@@ -110,7 +110,7 @@ internal fun AgentSessionsScreen(
     startScope = startScope,
     onEditDraft = onEditDraft,
     initialSessionId = initialSessionId,
-    builtInAgent = builtInAgent,
+    dashboardAgent = dashboardAgent,
   ) { _, card ->
     DashboardCardPreview(session, card, snapshot)
   }

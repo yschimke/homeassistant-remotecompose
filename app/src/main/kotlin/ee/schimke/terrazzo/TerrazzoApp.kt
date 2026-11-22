@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import ee.schimke.ha.client.dashboard.BuiltInAgent
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.design.cardFingerprint
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -484,7 +484,7 @@ private fun DashboardsRoot(
 ) {
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
-  // Bumped once a dashboard the built-in agent built is created, to list it.
+  // Bumped once a dashboard the dashboard agent built is created, to list it.
   var dashboardListRefresh by remember { mutableIntStateOf(0) }
   val dashboards by rememberSelectedDashboardListState(session, dashboardListRefresh)
   val context = LocalContext.current
@@ -747,13 +747,14 @@ private fun DashboardsRoot(
 
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
-  // The integration's built-in agent: while it's on, editing is a chat with it, not the editor.
-  val builtInAgent by
-    produceState(BuiltInAgent.Off, session, connectionStatus) {
+  // The conversation agent answering the integration's edit sessions: while one does, Edit opens a
+  // chat with it, and the editor stays as Edit by hand.
+  val dashboardAgent by
+    produceState(DashboardAgent.Off, session, connectionStatus) {
       if (connectionStatus == ConnectionStatus.Connected)
         value =
           try {
-            session.terrazzo?.builtInAgent() ?: BuiltInAgent.Off
+            session.terrazzo?.dashboardAgent() ?: DashboardAgent.Off
           } catch (e: CancellationException) {
             throw e
           } catch (_: Exception) {
@@ -761,14 +762,14 @@ private fun DashboardsRoot(
           }
     }
   val phoneAgentEdits =
-    ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session, builtInAgent.enabled)
+    ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session, dashboardAgent.enabled)
   var newDashboardOpen by remember { mutableStateOf(false) }
   if (newDashboardOpen && phoneAgentEdits != null)
     // Also where a dashboard still being built is picked back up: the switcher lists only
     // dashboards Home Assistant has.
     ee.schimke.terrazzo.dashboard.NewDashboardChooser(
       phoneAgentEdits.edits,
-      builtInAgent,
+      dashboardAgent,
       onDismiss = { newDashboardOpen = false },
       onOpen = {
         newDashboardOpen = false
@@ -796,7 +797,7 @@ private fun DashboardsRoot(
         dashboardListRefresh++
       },
       initialSessionId = sessionsTarget.sessionId,
-      builtInAgent = builtInAgent,
+      dashboardAgent = dashboardAgent,
     )
   } else if (editorOpen) {
     DashboardEditorScreen(
@@ -911,16 +912,20 @@ private fun DashboardsRoot(
               onSignOut = onSignOut,
               signOutLabel = if (session is DemoHaSession) "Exit demo" else "Sign out",
               onInstallOnWatch = installOnWatch,
-              // With the built-in agent on, the editor gives way to a chat with it.
+              // With a dashboard agent answering, Edit opens a chat with it; the editor stays as
+              // Edit by hand.
               onEditDashboard =
-                if (builtInAgent.enabled && phoneAgentEdits != null)
+                if (dashboardAgent.enabled && phoneAgentEdits != null)
                   ({ agentSessions = AgentSessionsTarget(null) })
                 else ({ editorOpen = true }),
               editDashboardLabel =
-                if (builtInAgent.enabled) ee.schimke.terrazzo.dashboard.CHAT_WITH_AGENT
+                if (dashboardAgent.enabled) ee.schimke.terrazzo.dashboard.CHAT_WITH_AGENT
                 else "Edit dashboard",
               onNewDashboard =
-                if (builtInAgent.enabled && phoneAgentEdits != null) ({ newDashboardOpen = true })
+                if (dashboardAgent.enabled && phoneAgentEdits != null) ({ newDashboardOpen = true })
+                else null,
+              onEditByHand =
+                if (dashboardAgent.enabled && phoneAgentEdits != null) ({ editorOpen = true })
                 else null,
               onOpenRoom = onOpenRoom,
             )

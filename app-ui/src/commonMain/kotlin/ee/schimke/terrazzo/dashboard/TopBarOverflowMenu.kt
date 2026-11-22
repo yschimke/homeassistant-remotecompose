@@ -41,6 +41,11 @@ fun TopBarOverflowMenu(
   editDashboardLabel: String = "Edit dashboard",
   /** "New dashboard", built with the integration's dashboard agent. */
   onNewDashboard: (() -> Unit)? = null,
+  /**
+   * "Edit by hand", after the chat, while [onEditDashboard] opens the dashboard agent: the editor
+   * stays one tap away.
+   */
+  onEditByHand: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
   IconButton(onClick = { expanded = true }) {
@@ -53,6 +58,7 @@ fun TopBarOverflowMenu(
       HorizontalDivider()
     }
     onEditDashboard?.let { MenuEntry(editDashboardLabel, close, it) }
+    onEditByHand?.let { MenuEntry("Edit by hand", close, it) }
     onNewDashboard?.let { MenuEntry("New dashboard", close, it) }
     // One place for cards outside the app: the phone's home screen, the watch's widgets and the
     // cards the watch app shows.
