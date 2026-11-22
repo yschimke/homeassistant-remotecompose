@@ -506,6 +506,35 @@ key: OpenAI, Google Gemini, Anthropic, Ollama or any other LLM integration.
 `home-assistant/test/installed-llm-api.test.mjs` plays them through the MCP Server in a real Home
 Assistant.
 
+## Your own conversation agent (LLM API)
+
+Terrazzo also registers its dashboard tools as a Home Assistant **LLM API**, **Terrazzo
+dashboards**, so a conversation agent you already use can edit dashboards with its own provider and
+key: OpenAI, Google Gemini, Anthropic, Ollama or any other LLM integration.
+
+- **Turn it on:** open that integration's conversation agent options and, under the APIs it may
+  control (*Control Home Assistant*), choose **Terrazzo dashboards** (beside **Assist**, or
+  instead of it). Then ask Assist, by text or voice, to change a dashboard.
+- **Its tools:** `list_dashboards`, `get_dashboard`, `find_entities`, `get_entity_state`,
+  `home_overview`, `find_designs`, `get_card_guide`, `list_edit_sessions`, `start_edit_session`,
+  `get_edit_session` and `submit_draft`. They are the MCP server's, without switching (Assist
+  does that, for exposed entities) or waiting on notes.
+- **It only drafts.** It works through edit sessions like any agent: each draft appears in the
+  Terrazzo panel and apps, drawn with your cards and live states, and an administrator applies it
+  there. The agent says where to look.
+- **Whose view:** each tool runs as the conversation's user, with their permissions. It reads
+  every entity that user may read, not only those exposed to Assist, so choose it for agents and
+  people you trust with that. A conversation without a user (some voice satellites) is refused.
+- **Home Assistant's MCP Server** can serve the same tools to an outside agent: add the **Model
+  Context Protocol Server** integration, then in its options (*Configure*) turn off *All LLM APIs*
+  and choose **Terrazzo dashboards** (Home Assistant 2026.11 and later; before, its setup form
+  asks).
+
+`custom_components/terrazzo/llm_tools.py` holds the tools and prompt (tested by
+`home-assistant/test/llm_tools_test.py`), `llm_api.py` registers them, and
+`home-assistant/test/installed-llm-api.test.mjs` plays them through the MCP Server in a real Home
+Assistant.
+
 ## Build and verify
 
 ```sh

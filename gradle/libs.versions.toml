@@ -82,7 +82,7 @@ compose-ai-tools = "2.103.0"
 # Renovate bump past it failed to resolve
 # (`Could not find ee.schimke.composeai:data-render-core:1.70.0`) and could
 # never merge. Resolve contracts versionless through `composeai-contracts-bom`.
-composeai-contracts = "3.45.0"
+composeai-contracts = "3.46.0"
 # `preview-annotations` (and the rest of the preview runtime) ships from
 # yschimke/compose-preview-daemon, not compose-ai-tools, on its own 3.x line.
 # That repository publishes only the modules a release changed, and each
@@ -93,7 +93,7 @@ composeai-contracts = "3.45.0"
 compose-preview-daemon = "3.29.0"
 # `compose-preview-ui-builder-bom` from yschimke/compose-ui-builder, constraining the typed-catalog
 # consumer runtime on its own 3.x release line.
-compose-ui-builder = "3.148.0"
+compose-ui-builder = "3.149.0"
 tapmoc = "0.5.0"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
