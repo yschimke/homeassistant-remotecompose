@@ -327,6 +327,44 @@ class UiBuilderDesignCompilerTest {
     )
   }
 
+  @Test
+  fun capabilitiesDescribeWhatProblemsAccepts() {
+    val capabilities = UiBuilderDesignCompiler.capabilities()
+    assertEquals(UiBuilderDesignCompiler.CATALOG, capabilities.catalog)
+    assertTrue(UiBuilderDesignCompiler.SWITCH in capabilities.components)
+    assertTrue(capabilities.components.values.all { it.isNotBlank() }, "each says what it draws")
+    assertEquals(3, capabilities.expressions["select"])
+    assertTrue("time.hour" in capabilities.systemValues)
+    assertTrue(
+      "rotationX" in capabilities.remoteCalls.getValue(UiBuilderDesignCompiler.GRAPHICS_LAYER),
+    )
+    // Every listed component compiles as a lone root: the list is what the compiler draws.
+    for (component in capabilities.components.keys - setOf("asset/image")) {
+      val document =
+        Json.parseToJsonElement(
+            """
+            {"catalogPin": {"systemId": "ha-cards"}, "roots": ["n"], "stateVariables": {
+               "light.s0.is_on": {"type": "value", "valueType": "bool", "initialValue": true}},
+             "nodes": {"n": {"id": "n", "componentId": "$component", "properties":
+               ${if (component == UiBuilderDesignCompiler.SWITCH) """{"checked": {"type": "state", "variable": "light.s0.is_on"}}""" else "{}"}}}}
+            """,
+          )
+          .jsonObject
+      assertEquals(emptyList(), compiler.problems(document, emptySet()), component)
+    }
+    val unknown =
+      Json.parseToJsonElement(
+          """{"catalogPin": {"systemId": "ha-cards"}, "roots": ["n"],
+             "nodes": {"n": {"id": "n", "componentId": "ha-cards/remote-slider"}}}""",
+        )
+        .jsonObject
+    assertTrue("ha-cards/remote-slider" !in capabilities.components)
+    assertEquals(
+      listOf("n: `ha-cards/remote-slider` isn't drawn here yet"),
+      compiler.problems(unknown, emptySet()),
+    )
+  }
+
   /** A noisy [width] × [height] picture, as hard to compress as a photo. */
   private fun noise(width: Int, height: Int): ByteArray {
     val bitmap = Bitmap().apply { allocN32Pixels(width, height) }

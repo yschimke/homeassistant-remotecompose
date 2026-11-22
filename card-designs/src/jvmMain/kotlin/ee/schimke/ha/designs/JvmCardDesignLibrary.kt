@@ -109,16 +109,25 @@ class JvmCardPreviewRenderer(private val density: Float = 2f) : CardPreviewRende
   ): ByteArray {
     val values =
       if (snapshot != null) namedValues(playback.bindings(snapshot, SystemHaClock)) else emptyMap()
+    return render(playback.bytes, values)
+  }
+
+  /**
+   * The template [bytes] drawn as a PNG with [values] pushed as its named values (a card's own by
+   * bare name, `light.s0.state`; a shared one by its `HA:` name), at the card's own height, at most
+   * [MAX_HEIGHT_PX]: what an agent session shows a draft with sample values.
+   */
+  fun render(bytes: ByteArray, values: Map<String, RcNamedValue>): ByteArray {
     val width = (CardPreviewRenderer.CARD_WIDTH_DP * density).toInt()
     // Laid out once at the tallest preview allowed to learn the card's own height, then drawn at
     // exactly that.
     var height = 0
     scene(width, MAX_HEIGHT_PX) {
-        Box(Modifier.onSizeChanged { height = it.height }) { Card(playback.bytes, values) }
+        Box(Modifier.onSizeChanged { height = it.height }) { Card(bytes, values) }
       }
       .use { it.render() }
     val image =
-      scene(width, height.coerceIn(1, MAX_HEIGHT_PX)) { Card(playback.bytes, values) }
+      scene(width, height.coerceIn(1, MAX_HEIGHT_PX)) { Card(bytes, values) }
         .use { scene ->
           scene.render()
           // Past any entrance animation.
@@ -147,9 +156,9 @@ class JvmCardPreviewRenderer(private val density: Float = 2f) : CardPreviewRende
     bindings.floats.forEach { (k, v) -> put(k, RcNamedValue.FloatValue(v)) }
   }
 
-  private companion object {
+  companion object {
     /** No generated image exceeds 1800 px in either dimension (AGENTS.md); a taller card is cut. */
     const val MAX_HEIGHT_PX = 1800
-    const val SETTLED_NANOS = 2_000_000_000L
+    private const val SETTLED_NANOS = 2_000_000_000L
   }
 }
