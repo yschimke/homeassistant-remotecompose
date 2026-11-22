@@ -148,10 +148,10 @@ installed; current apps no longer use them.
 
 | Piece | Where |
 | --- | --- |
-| Relay: codes, presence, conversation, long-polls, sliding expiry | `design-server/.../AgentRelay.kt` |
-| Saved across restarts | `AgentSessionFile.kt` |
+| Relay: codes, presence, conversation, long-polls, sliding expiry | Livery's `livery-sessions-core`, under `design-server/.../AgentRelay.kt` |
+| Saved across restarts | `AgentSessionFile.kt` (Livery's `SessionFile`) |
 | Direct path: `await_feedback`, `send_message`, `set_status` | `custom_components/terrazzo/edit_sessions.py`, `edits.py`, `mcp.py` |
-| MCP and HTTP routes | `AgentRelayMcp.kt`, `AgentRelayRoutes.kt` |
+| MCP and HTTP routes | Livery's `livery-sessions-server`; the `card` and `dashboard` kinds in `AgentSessionKinds.kt` |
 | Drafts and their validation (unchanged) | `AgentDesignSessions.kt`, `DashboardAgentSessions.kt` |
 | Client | `ha-client/.../agent/AgentRelayClient.kt`, `CloudDashboardAgentEdits` |
 | Panel (both screens, every host) | `app-ui/.../shared/AgentLivePanel.kt`; `CardStudioScreen`, `AgentEditScreen` |

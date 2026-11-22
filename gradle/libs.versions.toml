@@ -132,7 +132,7 @@ cmp-adaptive = "1.3.0"
 # 3.1.0: its writer keeps a declaration where it is made and its capture takes a `Profile`.
 rc-players = "3.5.3"
 # Livery (yschimke/livery): the agent session relay design-server runs on.
-livery = "0.21.0"
+livery = "0.22.0"
 compose-webview = "2.0.3"
 keyring = "1.0.4"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
@@ -158,6 +158,7 @@ cmp-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", v
 rc-players-bom = { module = "ee.schimke.composeai:rc-players-bom", version.ref = "rc-players" }
 livery-bom = { module = "ee.schimke.composeai:livery-bom", version.ref = "livery" }
 livery-sessions-core = { module = "ee.schimke.composeai:livery-sessions-core" }
+livery-sessions-server = { module = "ee.schimke.composeai:livery-sessions-server" }
 rc-player-protocol = { module = "ee.schimke.composeai:rc-player-protocol" }
 # rc-players' Compose Multiplatform creation API (`ee.schimke.composeai.rccreation`): what cards
 # are written against and captured with on every target. It brings `rc-creation-expression` and
