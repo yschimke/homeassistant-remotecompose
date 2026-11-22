@@ -155,6 +155,13 @@ for a bindable unit (below):
   every theme the library keys its card by: a tile of the garage door (the thermostat card, for a
   climate entity). Its keys carry its own variant (`pack-<designId>`), so the card's library design
   stays the automatic one: a card draws a pack design only when it is set to it (`design_id`).
+  - **One key for every state:** a pack draws its entity from bindings, so its keys publish every
+    shape property but `domain` and `device_class` as `*` (`DesignProperties.ANY`). A garage door
+    tile's `state_icon` follows the door (`garage`, `garage-open`, `arrow-up-box`,
+    `arrow-down-box`), and `state_icon=*` matches each of them.
+  - **Where the wildcard applies:** only a design chosen by id is matched that way
+    (`DesignKey.accepts`, in the app's `DesignsById.find` and `designOptions`). A card's own key never
+    carries `*`, and an automatic lookup stays exact.
 - **The card's own entity, live.** Each is drawn by `CardDesignDocument` with its example entity
   named as the contract's slot (`DevicePacks.forSlots`: `cover.garage_door` is `cover.s0`), so it
   binds the entity of whichever card it draws.

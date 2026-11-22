@@ -635,7 +635,7 @@ class DesignsById(val entries: Map<String, List<DesignedBlob>> = emptyMap()) {
    * wins, else the generic one ([DeviceMatch.pick]); an entry for another device never does.
    */
   fun find(designId: String, key: DesignKey, device: DeviceInfo?): Pair<DesignKey, ByteArray>? {
-    val candidates = entries[designId].orEmpty().filter { it.key.sameExceptVariant(key) }
+    val candidates = entries[designId].orEmpty().filter { it.key.accepts(key) }
     if (candidates.isEmpty()) return null
     val variants =
       (listOf(key.variant, DesignKey.DEFAULT_VARIANT) + candidates.map { it.key.variant })
@@ -676,7 +676,7 @@ fun designOptions(
   val fits = designs.filter { entry ->
     !entry.revoked &&
       entry.stableDesignId != null &&
-      entry.key.sameExceptVariant(key) &&
+      entry.key.accepts(key) &&
       (entry.device == null || (device != null && entry.device?.matches(device) == true))
   }
   return fits
@@ -691,9 +691,6 @@ fun designOptions(
       )
     }
 }
-
-private fun DesignKey.sameExceptVariant(other: DesignKey): Boolean =
-  copy(variant = DesignKey.DEFAULT_VARIANT) == other.copy(variant = DesignKey.DEFAULT_VARIANT)
 
 fun cachedDesignRepository(
   store: DesignStore,

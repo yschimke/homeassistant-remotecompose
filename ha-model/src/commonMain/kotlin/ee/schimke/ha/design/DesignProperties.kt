@@ -21,6 +21,18 @@ class DesignProperties private constructor(val values: Map<String, String>) {
 
   operator fun get(name: String): String? = values[name]
 
+  /**
+   * Whether a design published with these properties draws a card with [card]'s: the same names,
+   * each value equal or [ANY]. A design that doesn't follow a property (a device pack's drawing
+   * ignores the tile's state icon) publishes it as [ANY], so one key serves every value of it.
+   */
+  fun accepts(card: DesignProperties): Boolean =
+    values.keys == card.values.keys && values.all { (k, v) -> v == ANY || v == card.values[k] }
+
+  /** These properties with every one but [kept] set to [ANY]: see [accepts]. */
+  fun anyExcept(kept: Set<String>): DesignProperties =
+    DesignProperties(values.mapValues { (k, v) -> if (k in kept) v else ANY })
+
   override fun equals(other: Any?): Boolean = other is DesignProperties && other.values == values
 
   override fun hashCode(): Int = values.hashCode()
@@ -43,6 +55,13 @@ class DesignProperties private constructor(val values: Map<String, String>) {
   }
 
   companion object {
+    /**
+     * A published value meaning "any": the design draws a card whatever its value of that property
+     * ([accepts]). Only a design chosen by id is matched this way; a card's own key never carries
+     * it, and an automatic lookup stays exact.
+     */
+    const val ANY: String = "*"
+
     fun build(block: Builder.() -> Unit): DesignProperties =
       DesignProperties(sorted(Builder().apply(block).values))
 

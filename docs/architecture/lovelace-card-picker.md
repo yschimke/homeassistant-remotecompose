@@ -79,7 +79,10 @@ design_id: user:abc
 ## Choosing a design by id
 
 `design_id` names a design across its themes, modes and shapes (`DesignEntry.stableDesignId`), so
-a card keeps its design when the card style or dark mode changes. The card sends it to
+a card keeps its design when the card style or dark mode changes. A design that doesn't follow one
+of its card's shape properties publishes it as `*` (`DesignProperties.ANY`; a device pack's
+`state_icon`), and the app's lookup of a chosen design (`DesignKey.accepts`) matches it to any
+value. A card's own key and automatic lookups stay exact. The card sends it to
 `POST /api/cards/resolve` as `designId`; `CardResolve.resolveChosen` serves that design's entry for
 the card's key and the requested style and mode, ahead of the exact and nearest paths, and the card
 resolves as usual when the library has no such entry. `design` (a SHA-256) remains the way to pin

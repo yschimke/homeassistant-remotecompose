@@ -149,4 +149,28 @@ class DevicePackLibraryTest {
       )
     }
   }
+
+  @Test
+  fun aGarageDoorDesignIsFoundInEveryStateTheDoorIsIn() {
+    val design =
+      DevicePackLibrary.published.first { it.designId == "garage-door-controls-skeuomorphic" }
+    val keys = DevicePackLibrary.keys(design)
+    assertTrue(keys.all { "state_icon=*" in it.shape }, keys.first().shape)
+    val example = DevicePackLibrary.example(design)
+    val entity = example.snapshot.states.keys.single()
+    for (state in listOf("closed", "open", "opening", "closing")) {
+      val snapshot =
+        example.snapshot.copy(
+          states = mapOf(entity to example.snapshot.states.getValue(entity).copy(state = state)),
+        )
+      val cardKeys = CardDesignLibrary.keysOf(example.card, snapshot)
+      assertTrue(cardKeys.isNotEmpty(), state)
+      for (card in cardKeys) {
+        assertTrue(
+          keys.any { it.accepts(card) },
+          "no pack key for $state in ${card.theme}: ${card.shape}",
+        )
+      }
+    }
+  }
 }

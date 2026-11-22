@@ -9,6 +9,7 @@ import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -105,13 +106,26 @@ object DevicePackLibrary {
     )
   }
 
-  /** [design]'s library keys: the tile's, each with the design's own [variant]. */
-  fun keys(design: DevicePacks.PackDesign): List<DesignKey> {
+  /**
+   * [design]'s library keys: its card's, one per theme, each with the design's own [variant] and
+   * every shape property but those it depends on ([KEPT]) published as [DesignProperties.ANY]. A
+   * pack draws its entity from bindings, so a tile property that follows the state (a garage door's
+   * `state_icon`: `garage`, `garage-open`, `arrow-up-box`) mustn't split it: one key serves a door
+   * in every state ([DesignKey.accepts]).
+   */
+  fun keys(design: DevicePacks.PackDesign): List<DesignKey> =
+    exampleKeys(design).map(::published).distinct()
+
+  /** The concrete keys of [design]'s example card: what it is captured for. */
+  private fun exampleKeys(design: DevicePacks.PackDesign): List<DesignKey> {
     val example = example(design)
-    return CardDesignLibrary.keysOf(example.card, example.snapshot)
-      .map { it.copy(variant = variant(design)) }
-      .distinct()
+    return CardDesignLibrary.keysOf(example.card, example.snapshot).map {
+      it.copy(variant = variant(design))
+    }
   }
+
+  private fun published(key: DesignKey): DesignKey =
+    key.copy(shape = DesignProperties.parse(key.shape).anyExcept(KEPT).shape)
 
   /**
    * [design] captured for [key], drawn by [CardDesignDocument] with its example entity as slot 0.
@@ -119,12 +133,15 @@ object DevicePackLibrary {
   fun capture(host: CaptureHost, key: DesignKey, design: DevicePacks.PackDesign): BuiltDesign {
     val document = CardDesignDocument.parse(DevicePacks.forSlots(design))
     // The box carries the recipe's declaration: the document's own root may not draw the modifier.
+    // Captured for the example's concrete key (the capture builds its placeholder card from the
+    // shape), published under [key].
+    val concrete = exampleKeys(design).firstOrNull { published(it) == key } ?: key
     val built =
-      CardDesignTemplates.captureWithRecipe(host, key, recipe(design)) { _, _, modifier ->
+      CardDesignTemplates.captureWithRecipe(host, concrete, recipe(design)) { _, _, modifier ->
         RemoteBox(modifier) { document.Render(RemoteModifier.fillMaxWidth()) }
       }
     return BuiltDesign(
-      key = built.key,
+      key = key,
       slots = built.slots,
       bytes = built.bytes,
       designId = designId(design),
@@ -148,6 +165,9 @@ object DevicePackLibrary {
   private const val PREFIX = "pack:"
   private const val CONTROLS = "controls"
   private val NOT_BINDABLE = setOf("thermostat-controls-overlay")
+
+  /** The shape properties a pack design depends on: its entity's domain and class. */
+  private val KEPT = setOf("domain", "device_class")
 
   /**
    * Domains whose readings carry a unit the designs bake (a thermostat's `°C`, its dial's 7–30
