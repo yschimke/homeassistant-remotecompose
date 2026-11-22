@@ -271,12 +271,7 @@ class AgentGuide(
   private fun attachmentProblems(
     session: AgentDesignSessions.Context,
     document: JsonObject,
-  ): List<String> =
-    (document["assets"] as? JsonObject)
-      .orEmpty()
-      .keys
-      .filter { it !in session.assets }
-      .map { "asset `$it` isn't attached: call put_card_asset first" }
+  ): List<String> = AgentDesignSessions.bindingProblems(document, session.assets)
 
   /**
    * A key to draw a session's card with when the app hasn't previewed it: the library's live phone
@@ -338,8 +333,10 @@ class AgentGuide(
         put("designsNote", "The first $MAX_GUIDE_DESIGNS, made-for-a-device designs first.")
       put(
         "designIdNote",
-        "A card may name one of these with design_id (\"design_id\": \"<design_id>\" in its " +
-          "config) to be drawn with it; a device design suits that device's entities only.",
+        "To draw a card with one of these, wrap it: {\"type\": \"custom:remote-compose-card\", " +
+          "\"card\": {the card}, \"design_id\": \"<design_id>\"}. Only the wrapper keeps the choice " +
+          "once the dashboard is applied; a design_id on the card itself is ignored. A device " +
+          "design suits that device's entities only.",
       )
       putJsonArray("rules") {
         listOf(
@@ -533,7 +530,22 @@ class AgentGuide(
   }
 
   /** One card drawn as the design server resolves it ([CardResolve.resolveExact]). */
-  private suspend fun drawCard(card: JsonObject, snapshot: HaSnapshot, dark: Boolean): CardOutcome {
+  private suspend fun drawCard(
+    placed: JsonObject,
+    snapshot: HaSnapshot,
+    dark: Boolean,
+  ): CardOutcome {
+    // Only a remote-compose card keeps a chosen design once the dashboard is applied: it draws its
+    // inner card with its own design_id. A design_id on any other card is ignored, as Terrazzo
+    // does.
+    val wrapped = placed.text("type") == REMOTE_COMPOSE_CARD
+    val card =
+      if (wrapped)
+        placed["card"] as? JsonObject
+          ?: return CardOutcome.Undrawable("a $REMOTE_COMPOSE_CARD needs its card under `card`")
+      // Drawn as Terrazzo draws it, the stray key dropped: it would otherwise change the card's
+      // shape, so no design would match it.
+      else JsonObject(placed - "design_id")
     val type = card.text("type") ?: return CardOutcome.Undrawable("the card has no type")
     if (registry.get(type).let { it == null || it is UnsupportedCardConverter })
       return CardOutcome.Undrawable("Terrazzo doesn't draw `$type` cards: it shows a placeholder")
@@ -546,7 +558,10 @@ class AgentGuide(
         CardDesignTemplates.keyFor(config, snapshot, ThemeStyle.entries.first(), dark)
           ?: return CardOutcome.Undrawable("this card has no design template to draw it with")
       val notes = mutableListOf<String>()
-      val chosenId = card.text("design_id")
+      if (!wrapped && placed.text("design_id") != null)
+        notes +=
+          "design_id is ignored on a bare card; wrap it in a $REMOTE_COMPOSE_CARD to keep a design"
+      val chosenId = if (wrapped) placed.text("design_id") else null
       val chosen = chosenId?.let { id ->
         library.designs.firstOrNull {
           it.entry.stableDesignId == id && !it.entry.revoked && it.key.accepts(key)
@@ -577,6 +592,8 @@ class AgentGuide(
   }
 
   companion object {
+    /** The card that draws its inner card with a chosen library design (`design_id`). */
+    const val REMOTE_COMPOSE_CARD = "custom:remote-compose-card"
     const val CURRENT = "current"
     const val SAMPLE = "sample"
     private const val MAX_GUIDE_DESIGNS = 80

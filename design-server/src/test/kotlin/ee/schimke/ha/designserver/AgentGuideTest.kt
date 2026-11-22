@@ -423,6 +423,81 @@ class AgentGuideTest {
         )
         .isError(),
     )
+
+    // Only a remote-compose card keeps a chosen design once applied: it draws its inner card, and
+    // a design_id on a bare card is ignored, with a note saying how to keep it.
+    val choices =
+      Json.parseToJsonElement(
+          """
+          {"views": [{"title": "Home", "type": "sections", "sections": [{"type": "grid", "cards": [
+            {"type": "tile", "entity": "light.porch", "design_id": "pack:nothing-here"},
+            {"type": "custom:remote-compose-card", "design_id": "pack:nothing-here",
+             "card": {"type": "tile", "entity": "light.porch"}},
+            {"type": "custom:remote-compose-card"}
+          ]}]}]}
+          """,
+        )
+        .jsonObject
+    val chosen =
+      mcp(
+          "render_dashboard",
+          buildJsonObject {
+            put("session", session)
+            put("dashboard", choices)
+          },
+        )
+        .data()
+    val notes =
+      chosen.getValue("cards").jsonArray.associate {
+        it.jsonObject.getValue("path").jsonPrimitive.content to
+          it.jsonObject.getValue("notes").toString()
+      }
+    assertContains(notes.getValue("views[0].sections[0].cards[0]"), "ignored on a bare card")
+    assertContains(notes.getValue("views[0].sections[0].cards[1]"), "pack:nothing-here")
+    assertContains(
+      chosen
+        .getValue("undrawable")
+        .jsonArray
+        .first { it.jsonObject.getValue("path").jsonPrimitive.content.endsWith("cards[2]") }
+        .toString(),
+      "needs its card",
+    )
+    assertContains(
+      read.getValue("designIdNote").jsonPrimitive.content,
+      "custom:remote-compose-card",
+    )
+  }
+
+  @Test
+  fun checkAndSubmitRefuseTheSamePictureBindings() {
+    val png = byteArrayOf(0x89.toByte(), 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3)
+    fun document(digest: String, mediaType: String = "image/png") = buildJsonObject {
+      putJsonObject("assets") {
+        putJsonObject("door") {
+          put("mediaType", mediaType)
+          put("contentDigest", digest)
+        }
+      }
+    }
+    val good = "sha256:${ee.schimke.ha.design.Sha256.hex(png)}"
+    assertEquals(
+      emptyList(),
+      AgentDesignSessions.bindingProblems(document(good), mapOf("door" to png)),
+    )
+    assertContains(
+      AgentDesignSessions.bindingProblems(document(good), emptyMap()).single(),
+      "isn't attached",
+    )
+    // A stale digest, as after replacing the picture under the same key.
+    assertContains(
+      AgentDesignSessions.bindingProblems(document("sha256:00"), mapOf("door" to png)).single(),
+      "doesn't match its binding",
+    )
+    assertContains(
+      AgentDesignSessions.bindingProblems(document(good, "image/jpeg"), mapOf("door" to png))
+        .single(),
+      "doesn't match its binding",
+    )
   }
 
   @Test
