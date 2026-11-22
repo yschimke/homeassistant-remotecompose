@@ -19,7 +19,13 @@ MCP_OFF = "off"
 CONF_AGENT = "agent"
 # The built-in agent's options before Home Assistant's agents answered sessions: the migration to
 # entry version 1.2 removes them, with the API key.
-LEGACY_AGENT_OPTIONS = (CONF_AGENT,)
+LEGACY_AGENT_OPTIONS = ("agent_provider", "agent_api_key", "agent_model", "agent_base_url")
+MCP_URL = "/api/terrazzo/mcp"
+# RFC 9728's well-known location for MCP_URL's protected-resource metadata.
+MCP_METADATA_URL = f"/.well-known/oauth-protected-resource{MCP_URL}"
+
+
+AGENT_OPTIONS = (CONF_AGENT,)
 
 
 def clean_options(values):
