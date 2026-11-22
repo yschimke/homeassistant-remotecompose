@@ -1,0 +1,187 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "thermostat-controls-skeuomorphic",
+  "title": "Thermostat · Wall unit",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 280,
+    "heightDp": 320,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "climate.s0.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Hallway",
+      "persistence": "host"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "uber-theme-5"
+        ]
+      }
+    },
+    "uber-theme-5": {
+      "id": "uber-theme-5",
+      "componentId": "ha-cards/uber-theme",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "value": "braun"
+        },
+        "dark": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "collapsible-column-4"
+        ]
+      }
+    },
+    "collapsible-column-4": {
+      "id": "collapsible-column-4",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 10.0
+        },
+        "horizontalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "thermostat-2",
+          "thermometer-1",
+          "remote-text-3"
+        ]
+      }
+    },
+    "thermostat-2": {
+      "id": "thermostat-2",
+      "componentId": "ha-cards/thermostat",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Hallway"
+        },
+        "current": {
+          "type": "float",
+          "value": 19.5
+        },
+        "target": {
+          "type": "float",
+          "value": 21.0
+        },
+        "min": {
+          "type": "float",
+          "value": 7.0
+        },
+        "max": {
+          "type": "float",
+          "value": 30.0
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
+        },
+        "mode": {
+          "type": "string",
+          "value": "heat"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "thermometer-1": {
+      "id": "thermometer-1",
+      "componentId": "ha-cards/thermometer",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Room"
+        },
+        "value": {
+          "type": "float",
+          "value": 19.5
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        },
+        "presentation": {
+          "type": "string",
+          "value": "compact"
+        },
+        "attribute": {
+          "type": "string",
+          "value": "current_temperature"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "remote-text-3": {
+      "id": "remote-text-3",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "climate.s0.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF5F5E62"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

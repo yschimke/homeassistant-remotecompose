@@ -1,0 +1,370 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "garage-door-controls-material3",
+  "title": "Garage door · Material 3",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 236,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "cover.s0.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Garage door",
+      "persistence": "host"
+    },
+    "cover.s0.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Closed",
+      "persistence": "host"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "uber-theme-13"
+        ]
+      }
+    },
+    "uber-theme-13": {
+      "id": "uber-theme-13",
+      "componentId": "ha-cards/uber-theme",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "value": "expressive"
+        },
+        "dark": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "collapsible-column-12"
+        ]
+      }
+    },
+    "collapsible-column-12": {
+      "id": "collapsible-column-12",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 16.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "collapsible-row-6",
+          "bar-meter-7",
+          "collapsible-row-11"
+        ]
+      }
+    },
+    "collapsible-row-6": {
+      "id": "collapsible-row-6",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        },
+        "horizontalArrangement": {
+          "type": "enum",
+          "value": "spaceBetween"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "icon-1",
+          "collapsible-column-4",
+          "status-chip-5"
+        ]
+      }
+    },
+    "icon-1": {
+      "id": "icon-1",
+      "componentId": "ha-cards/icon",
+      "properties": {
+        "icon": {
+          "type": "string",
+          "value": "door"
+        },
+        "sizeDp": {
+          "type": "int",
+          "value": 32
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "collapsible-column-4": {
+      "id": "collapsible-column-4",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 2.0
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "remote-text-2",
+          "remote-text-3"
+        ]
+      }
+    },
+    "remote-text-2": {
+      "id": "remote-text-2",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "cover.s0.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 16.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF1B1B1F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "remote-text-3": {
+      "id": "remote-text-3",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "cover.s0.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF5F5E62"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "status-chip-5": {
+      "id": "status-chip-5",
+      "componentId": "ha-cards/status-chip",
+      "properties": {
+        "status": {
+          "type": "state",
+          "variable": "cover.s0.state"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        },
+        "isOn": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "bar-meter-7": {
+      "id": "bar-meter-7",
+      "componentId": "ha-cards/bar-meter",
+      "properties": {
+        "value": {
+          "type": "float",
+          "value": 0.0
+        },
+        "min": {
+          "type": "float",
+          "value": 0.0
+        },
+        "max": {
+          "type": "float",
+          "value": 100.0
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        },
+        "attribute": {
+          "type": "string",
+          "value": "current_position"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "collapsible-row-11": {
+      "id": "collapsible-row-11",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 8.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        },
+        "horizontalArrangement": {
+          "type": "enum",
+          "value": "spaceEvenly"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "button-8",
+          "button-9",
+          "button-10"
+        ]
+      }
+    },
+    "button-8": {
+      "id": "button-8",
+      "componentId": "ha-cards/button",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Open"
+        },
+        "icon": {
+          "type": "string",
+          "value": "door"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        },
+        "showName": {
+          "type": "bool",
+          "value": true
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "button-9": {
+      "id": "button-9",
+      "componentId": "ha-cards/button",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Stop"
+        },
+        "icon": {
+          "type": "string",
+          "value": "power"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        },
+        "showName": {
+          "type": "bool",
+          "value": true
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "button-10": {
+      "id": "button-10",
+      "componentId": "ha-cards/button",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Close"
+        },
+        "icon": {
+          "type": "string",
+          "value": "door"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        },
+        "showName": {
+          "type": "bool",
+          "value": true
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

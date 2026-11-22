@@ -1,0 +1,81 @@
+{
+  "schema": "harc-device-pack/v1",
+  "id": "thermostat",
+  "title": "Thermostat",
+  "audience": {
+    "entity.domain": "climate"
+  },
+  "exampleEntity": "climate.hallway",
+  "designs": [
+    {
+      "kind": "controls",
+      "variant": "material3",
+      "surface": "card",
+      "file": "controls-material3.uid",
+      "designId": "thermostat-controls-material3",
+      "title": "Thermostat · Material 3"
+    },
+    {
+      "kind": "controls",
+      "variant": "skeuomorphic",
+      "surface": "card",
+      "file": "controls-skeuomorphic.uid",
+      "designId": "thermostat-controls-skeuomorphic",
+      "title": "Thermostat · Wall unit"
+    },
+    {
+      "kind": "controls",
+      "variant": "overlay",
+      "surface": "spatial",
+      "file": "controls-overlay.uid",
+      "designId": "thermostat-controls-overlay",
+      "title": "Thermostat · Overlay"
+    },
+    {
+      "kind": "alert",
+      "variant": "default",
+      "surface": "card",
+      "file": "alert.uid",
+      "designId": "thermostat-alert",
+      "title": "Thermostat · Alert",
+      "showWhen": [
+        {
+          "binding": "climate.s0.is_available",
+          "equals": false,
+          "reason": "unavailable"
+        },
+        {
+          "expression": "climate.s0.target_temperature - climate.s0.current_temperature > 3",
+          "forMinutes": 120,
+          "reason": "not reaching the set point"
+        },
+        {
+          "expression": "climate.s0.current_temperature < 5",
+          "reason": "frost risk"
+        }
+      ],
+      "help": "https://www.home-assistant.io/integrations/climate/"
+    },
+    {
+      "kind": "toolbar",
+      "variant": "default",
+      "surface": "toolbar",
+      "file": "toolbar.uid",
+      "designId": "thermostat-toolbar",
+      "title": "Thermostat · Toolbar item"
+    },
+    {
+      "kind": "real-world",
+      "variant": "default",
+      "surface": "card",
+      "file": "real-world.uid",
+      "designId": "thermostat-real-world",
+      "title": "Thermostat · Real world",
+      "view": {
+        "source": "entity_picture",
+        "entity": "climate.hallway",
+        "fallback": "simulation"
+      }
+    }
+  ]
+}

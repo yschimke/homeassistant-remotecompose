@@ -1388,6 +1388,12 @@
           "notes": "The Home Assistant sensor this reading follows. Set, the text is the live `<entityId>.state` binding and the visual follows `<entityId>.numeric_state`, so an exported design keeps up with Home Assistant with no re-encode; a tap opens the entity's more-info. Blank, the reading is a constant."
         },
         {
+          "name": "attribute",
+          "jsonType": "string",
+          "required": false,
+          "notes": "With entityId set, the attribute binding to follow instead of the entity's state: `<entityId>.<attribute>`, such as a cover's `current_position` or a climate's `current_temperature` and `target_temperature`, whose state isn't their number. Unset follows the state."
+        },
+        {
           "name": "presentation",
           "jsonType": "string",
           "required": false,
@@ -1532,6 +1538,12 @@
           "notes": "The Home Assistant sensor this reading follows. Set, the text is the live `<entityId>.state` binding and the visual follows `<entityId>.numeric_state`, so an exported design keeps up with Home Assistant with no re-encode; a tap opens the entity's more-info. Blank, the reading is a constant."
         },
         {
+          "name": "attribute",
+          "jsonType": "string",
+          "required": false,
+          "notes": "With entityId set, the attribute binding to follow instead of the entity's state: `<entityId>.<attribute>`, such as a cover's `current_position` or a climate's `current_temperature` and `target_temperature`, whose state isn't their number. Unset follows the state."
+        },
+        {
           "name": "presentation",
           "jsonType": "string",
           "required": false,
@@ -1597,6 +1609,12 @@
           "notes": "Set, the arc follows `<entityId>.numeric_state` live."
         },
         {
+          "name": "attribute",
+          "jsonType": "string",
+          "required": false,
+          "notes": "With entityId set, the attribute binding to follow instead of the entity's state: `<entityId>.<attribute>`, such as a cover's `current_position` or a climate's `current_temperature` and `target_temperature`, whose state isn't their number. Unset follows the state."
+        },
+        {
           "name": "color",
           "jsonType": "string",
           "required": false,
@@ -1640,6 +1658,12 @@
           "jsonType": "string",
           "required": false,
           "notes": "Set, the bar follows `<entityId>.numeric_state` live."
+        },
+        {
+          "name": "attribute",
+          "jsonType": "string",
+          "required": false,
+          "notes": "With entityId set, the attribute binding to follow instead of the entity's state: `<entityId>.<attribute>`, such as a cover's `current_position` or a climate's `current_temperature` and `target_temperature`, whose state isn't their number. Unset follows the state."
         },
         {
           "name": "vertical",

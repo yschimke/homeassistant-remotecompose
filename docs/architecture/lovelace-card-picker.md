@@ -134,6 +134,9 @@ arranged differently, or one that needs its own typeface, which can't be bound) 
 or a separate design, chosen like any other. A device's choice is designs × card styles, and the
 two are picked separately.
 
+Beyond looks, a device has designs of different **kinds** (controls, an alert, a toolbar item,
+its real-world view): [device packs](../design/device-packs.md) group them per kind of device.
+
 ### Several designs in one scope
 
 Every design has its own `designId`, so two community designs for the X1 can both exist.

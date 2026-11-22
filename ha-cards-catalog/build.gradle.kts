@@ -94,11 +94,13 @@ kotlin {
   }
 }
 
-// CardLayoutPolicyTest and HaCard*Test read the policy and the checked-in card designs from disk:
+// CardLayoutPolicyTest, DevicePacksTest and HaCard*Test read the policy and the checked-in card
+// designs and device packs from disk:
 // declared, so a change to either re-runs them rather than reusing a cached result.
 tasks.withType<Test>().configureEach {
   inputs.file("ui-builder.policy.json").withPropertyName("uiBuilderPolicy")
   inputs.dir(rootProject.file("card-designs/ui-builder/designs")).withPropertyName("cardDesigns")
+  inputs.dir(rootProject.file("card-designs/ui-builder/packs")).withPropertyName("devicePacks")
 }
 
 // CI runs `./gradlew test` across modules; a multiplatform module has no `test` of its own, so

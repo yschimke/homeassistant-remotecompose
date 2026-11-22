@@ -1,0 +1,22 @@
+{
+  "schema": "harc-device-packs/v1",
+  "packs": [
+    {
+      "id": "garage-door",
+      "title": "Garage door opener",
+      "manifest": "garage-door/pack.json",
+      "audience": {
+        "entity.domain": "cover",
+        "entity.device_class": "garage"
+      }
+    },
+    {
+      "id": "thermostat",
+      "title": "Thermostat",
+      "manifest": "thermostat/pack.json",
+      "audience": {
+        "entity.domain": "climate"
+      }
+    }
+  ]
+}

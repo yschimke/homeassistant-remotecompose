@@ -566,9 +566,35 @@ private fun reading(
   kind: HaMeasureKind,
   min: Float,
   max: Float,
+  attribute: String = "",
 ): HaReading {
   val (lower, upper) = rangeOrNull(min, max)
   val u = unit.ifBlank { null }
+  val entity = entityId.entityOrNull()
+  val bound = attribute.trim()
+  if (entity != null && bound.isNotEmpty()) {
+    // A domain whose state isn't its number (a cover's `open`, a climate's `heat`) publishes the
+    // number as its own float binding (HaLiveBindings.attributeFloats): read that, and format the
+    // text in-document from it, so both follow the same value.
+    val range = kind.defaultRange(u)
+    val scaleStart = lower ?: range.start
+    val live = LiveValues.namedFloat(entity, bound, value)
+    // A host pushes HaLiveBindings.ABSENT for an attribute the entity stops reporting (a thermostat
+    // switched off drops its set point): a dash and an empty meter, as HaCardThermostat shows,
+    // never the sentinel. One fraction digit at most, whatever the seed: 21.5 reads 21.5, 21 reads
+    // 21.
+    val present = live.isGreaterThan(PresentAbove.rf)
+    return HaReading(
+      entityId = entity,
+      name = name,
+      text = present.select(live.toDecimalRemoteString(1) + (u?.let { " $it" } ?: "").rs, "—".rs),
+      value = present.select(live, scaleStart.toFloat().rf),
+      unit = u,
+      min = scaleStart,
+      max = upper ?: range.endInclusive,
+      kind = kind,
+    )
+  }
   return HaReading.live(
     entityId = entityId.entityOrNull(),
     name = name,
@@ -620,11 +646,16 @@ fun HaCardMeasurement(
   presentation: String = HaCardPresentationDefault,
   min: Float = 0f,
   max: Float = 0f,
+  attribute: String = "",
 ) {
   val measureKind =
     if (kind.trim().equals("auto", ignoreCase = true)) HaMeasureKind.of(null, unit.ifBlank { null })
     else HaMeasureKind.parse(kind)
-  Measurement(reading(name, value, unit, entityId, measureKind, min, max), presentation, modifier)
+  Measurement(
+    reading(name, value, unit, entityId, measureKind, min, max, attribute),
+    presentation,
+    modifier,
+  )
 }
 
 /** A temperature as a thermometer, filled blue → green → red along HA's comfort ramp. */
@@ -639,9 +670,10 @@ fun HaCardThermometer(
   presentation: String = HaCardPresentationDefault,
   min: Float = 0f,
   max: Float = 0f,
+  attribute: String = "",
 ) {
   Measurement(
-    reading(name, value, unit, entityId, HaMeasureKind.Temperature, min, max),
+    reading(name, value, unit, entityId, HaMeasureKind.Temperature, min, max, attribute),
     presentation,
     modifier,
   )
@@ -669,7 +701,8 @@ const val HaCardPresentationDefault = "standard"
 
 /**
  * A bare half-circle meter: [value] on [min]..[max], no text. Bound to an entity it follows
- * `<entityId>.numeric_state`. Size it with the modifier; it keeps its 2 : 1 shape inside.
+ * `<entityId>.numeric_state`, or `<entityId>.<attribute>` with [attribute] (a cover's
+ * `current_position`). Size it with the modifier; it keeps its 2 : 1 shape inside.
  */
 @Composable
 @RemoteComposable
@@ -680,8 +713,9 @@ fun HaCardArcMeter(
   max: Float = 100f,
   entityId: String = "",
   color: RemoteColor = HaStatusColors.None.rc,
+  attribute: String = "",
 ) {
-  val reading = reading("", value, "", entityId, HaMeasureKind.Generic, min, max)
+  val reading = reading("", value, "", entityId, HaMeasureKind.Generic, min, max, attribute)
   RemoteHaArcMeter(reading.fraction(), color, modifier)
 }
 
@@ -696,8 +730,9 @@ fun HaCardBarMeter(
   entityId: String = "",
   vertical: Boolean = false,
   color: RemoteColor = HaStatusColors.None.rc,
+  attribute: String = "",
 ) {
-  val reading = reading("", value, "", entityId, HaMeasureKind.Generic, min, max)
+  val reading = reading("", value, "", entityId, HaMeasureKind.Generic, min, max, attribute)
   RemoteHaBarMeter(reading.fraction(), color, modifier, vertical = vertical)
 }
 
