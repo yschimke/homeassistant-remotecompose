@@ -50,6 +50,17 @@ export function deviceMatches(match, device) {
   });
 }
 
+/**
+ * `DeviceMatch.rank` (`ha-model`): a model design over a brand design over a role design, however
+ * many fields each sets, then more fields within a scope. Zero for an empty match.
+ */
+export function deviceRank(match) {
+  const set = (field) => typeof match?.[field] === 'string' && match[field].trim() !== '';
+  const fields = ['integration', 'manufacturer', 'model', 'translationKey'].filter(set).length;
+  const scope = set('model') ? 3 : set('integration') || set('manufacturer') ? 2 : set('translationKey') ? 1 : 0;
+  return scope === 0 ? 0 : scope * 8 + fields;
+}
+
 /** The card a suggestion draws [entityId] with: Home Assistant's own config for [cardType]. */
 function suggestedCard(cardType, entityId) {
   return { type: cardType, entity: entityId };
@@ -77,9 +88,8 @@ export function entitySuggestions(hass, entityId, index) {
     seen.add(key);
     matches.push(design);
   }
-  const specificity = (match) => Object.values(match ?? {}).filter((v) => typeof v === 'string' && v.trim()).length;
   return matches
-    .sort((a, b) => specificity(b.device) - specificity(a.device))
+    .sort((a, b) => deviceRank(b.device) - deviceRank(a.device))
     .slice(0, MAX_SUGGESTIONS)
     .map((design) => ({
       config: {

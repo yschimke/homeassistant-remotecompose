@@ -681,7 +681,7 @@ fun designOptions(
   return fits
     .groupBy { it.stableDesignId!! }
     .map { (id, entries) ->
-      val best = entries.maxBy { it.device?.specificity ?: 0 }
+      val best = entries.maxBy { it.device?.rank ?: 0 }
       DesignOption(
         designId = id,
         title = entries.firstNotNullOfOrNull { it.title },

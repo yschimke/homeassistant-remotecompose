@@ -54,6 +54,37 @@ class DeviceMatchTest {
   }
 
   @Test
+  fun aModelDesignBeatsABrandDesignThatSetsMoreFields() {
+    val candidates =
+      listOf<Pair<DeviceMatch?, String>>(
+        DeviceMatch(integration = "vaillant", manufacturer = "Vaillant") to "brand",
+        DeviceMatch(model = "ecoTEC*") to "model",
+        DeviceMatch(translationKey = "flow_temperature") to "role",
+      )
+    assertEquals("model", DeviceMatch.pick(candidates, boiler))
+    assertEquals("brand", DeviceMatch.pick(candidates, boiler.copy(model = "aroTHERM")))
+    assertEquals(
+      "role",
+      DeviceMatch.pick(candidates, DeviceInfo(translationKey = "flow_temperature")),
+    )
+  }
+
+  @Test
+  fun withinAScopeMoreFieldsRankHigher() {
+    val brand = DeviceMatch(integration = "vaillant")
+    val brandRole = DeviceMatch(integration = "vaillant", translationKey = "flow_temperature")
+    assertTrue(brandRole.rank > brand.rank)
+    assertTrue(brand.rank > DeviceMatch(translationKey = "flow_temperature").rank)
+    assertTrue(
+      DeviceMatch(model = "ecoTEC*").rank >
+        DeviceMatch(integration = "vaillant", manufacturer = "v", translationKey = "t").rank,
+    )
+    assertEquals(DeviceScope.Model, DeviceMatch(manufacturer = "v", model = "x").scope)
+    assertEquals(0, DeviceMatch().rank)
+    assertNull(DeviceMatch(model = " ").scope)
+  }
+
+  @Test
   fun matchesThatDifferOnlyInCaseNormalizeToTheSameMatch() {
     assertEquals(
       DeviceMatch(manufacturer = "vaillant", model = "ecotec*"),
