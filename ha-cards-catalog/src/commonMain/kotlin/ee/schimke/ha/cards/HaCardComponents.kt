@@ -577,15 +577,20 @@ private fun reading(
     // number as its own float binding (HaLiveBindings.attributeFloats): read that, and format the
     // text in-document from it, so both follow the same value.
     val range = kind.defaultRange(u)
+    val scaleStart = lower ?: range.start
     val live = LiveValues.namedFloat(entity, bound, value)
-    val decimals = if (value == value.toInt().toFloat()) 0 else 1
+    // A host pushes HaLiveBindings.ABSENT for an attribute the entity stops reporting (a thermostat
+    // switched off drops its set point): a dash and an empty meter, as HaCardThermostat shows,
+    // never the sentinel. One fraction digit at most, whatever the seed: 21.5 reads 21.5, 21 reads
+    // 21.
+    val present = live.isGreaterThan(PresentAbove.rf)
     return HaReading(
       entityId = entity,
       name = name,
-      text = live.toDecimalRemoteString(decimals) + (u?.let { " $it" } ?: "").rs,
-      value = live,
+      text = present.select(live.toDecimalRemoteString(1) + (u?.let { " $it" } ?: "").rs, "—".rs),
+      value = present.select(live, scaleStart.toFloat().rf),
       unit = u,
-      min = lower ?: range.start,
+      min = scaleStart,
       max = upper ?: range.endInclusive,
       kind = kind,
     )
