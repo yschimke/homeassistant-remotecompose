@@ -5,7 +5,7 @@ import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.client.agent.AgentGrantStore
 import ee.schimke.ha.client.cache.OfflineCacheStore
 import ee.schimke.ha.client.dashboard.AgentEdits
-import ee.schimke.ha.client.dashboard.BuiltInAgent
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
@@ -220,7 +220,7 @@ class CachedHaSession(
   override val agentEdits: AgentEdits?
     get() = terrazzo?.agentEdits
 
-  override suspend fun builtInAgent() = terrazzo?.builtInAgent() ?: BuiltInAgent.Off
+  override suspend fun dashboardAgent() = terrazzo?.dashboardAgent() ?: DashboardAgent.Off
 
   override fun cloudAgentEdits(
     server: String,

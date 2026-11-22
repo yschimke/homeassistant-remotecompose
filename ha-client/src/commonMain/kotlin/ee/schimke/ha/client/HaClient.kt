@@ -2,7 +2,7 @@ package ee.schimke.ha.client
 
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
-import ee.schimke.ha.client.dashboard.BuiltInAgent
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
@@ -724,15 +724,15 @@ class HaClient(
   }
 
   /**
-   * The Terrazzo integration's built-in dashboard agent: whether Home Assistant answers edit
-   * sessions itself. [BuiltInAgent.Off] for an integration too old to have one; fails with
+   * The conversation agent that answers the Terrazzo integration's edit sessions, if one does, and
+   * its name. [DashboardAgent.Off] for an integration too old to have one; fails with
    * [HaCommandException] for other refusals, and when the integration isn't installed.
    */
-  suspend fun terrazzoBuiltInAgent(): BuiltInAgent =
+  suspend fun terrazzoDashboardAgent(): DashboardAgent =
     try {
-      json.decodeFromJsonElement(BuiltInAgent.serializer(), runCommand("terrazzo/agent/info"))
+      json.decodeFromJsonElement(DashboardAgent.serializer(), runCommand("terrazzo/agent/info"))
     } catch (e: HaCommandException) {
-      if (e.code == "unknown_command") BuiltInAgent.Off else throw e
+      if (e.code == "unknown_command") DashboardAgent.Off else throw e
     }
 
   /** Put an externally prepared draft into an HA edit session as this signed-in user. */

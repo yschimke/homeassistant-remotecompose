@@ -31,7 +31,7 @@ fun DashboardPickerScreen(
   state: DashboardListState,
   onDashboardPicked: (urlPath: String?) -> Unit,
   contentPadding: PaddingValues = PaddingValues(0.dp),
-  /** Above the list: New dashboard, while the integration's built-in agent builds them. */
+  /** Above the list: New dashboard, while the integration's dashboard agent builds them. */
   header: (@Composable () -> Unit)? = null,
 ) {
   when (state) {

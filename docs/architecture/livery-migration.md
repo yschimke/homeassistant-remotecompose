@@ -534,7 +534,7 @@ as **optional modules**, apart from the client core.
 | `livery-sessions-server` | JVM, Ktor, in `livery-server` | The person's HTTPS routes (long-polls of at most 25 s, no SSE) and the agent's MCP endpoint: `connect`, `await_request`, `request_access`, `get_session`, `set_status`, `send_message`, `submit_draft`, `put_asset`, `await_feedback`, `get_render`, served through `livery-mcp-core` | `AgentRelayRoutes`, `AgentRelayMcp`, `AgentDesignMcp` (~1,060) |
 | Livery's own template gate | in `livery-sessions-server` | A template draft checked as `DocumentAdmission` checks a document (contract, target, features), then rendered with the contract's examples or the person's data | the generic part of `AgentDesignSessions` (~150) |
 | `livery-sessions-client` | KMP, Ktor | The person's side: link, long-poll, comment, decision, sharing a render; resumes after a reload | `AgentRelayClient`, `AgentLiveControls` (~460) |
-| `livery-sessions-compose` | Compose Multiplatform, Material 3 | `LiveryAgentPanel`: presence line, the transcript (the agent by name, its steps grouped into turns), composer with a pinned target and `@` mentions, the fixed action row (**Use it** / **Create it**, **Adjust**, **Stop**, **Undo**) and draft chips. Also a `SessionReview` scaffold with a preview slot the app fills, the session list, and "Connect an agent" | `AgentLivePanel`, `AgentTranscript`, the generic body of `AgentEditScreen`, `BuiltInAgentUi` (~1,500) |
+| `livery-sessions-compose` | Compose Multiplatform, Material 3 | `LiveryAgentPanel`: presence line, the transcript (the agent by name, its steps grouped into turns), composer with a pinned target and `@` mentions, the fixed action row (**Use it** / **Create it**, **Adjust**, **Stop**, **Undo**) and draft chips. Also a `SessionReview` scaffold with a preview slot the app fills, the session list, and "Connect an agent" | `AgentLivePanel`, `AgentTranscript`, the generic body of `AgentEditScreen`, `DashboardAgentUi` (~1,500) |
 | `livery-sessions-agent-render` | Android, JVM, optional | A `TurnRenderer` on agent-render (Markdown replies, expandable tool calls) | `AgentTurnView.agentRender.kt` and the `agentRenderMain` source set |
 | `livery-agent` | KMP | The built-in agent: a tool-calling loop over the same session tools, on any OpenAI-compatible chat-completions endpoint (Gemini, OpenRouter, a custom URL). Keys stay in the caller's memory | `AgentCardDesigner` (~300) |
 | `livery-uibuilder` (extended) | KMP + JVM | Run or reach UI Builder (`UiBuilderConfig`, its process, tokens, the admin listing), bounded app-to-browser **handoffs** (one-time tokens, 10 min), seeding a design from a contract (already there), the **`edits` channel publisher**, and `livery ui-builder import` plus a reusable workflow that opens the pull request back to the repo | `UiBuilder`, the handoff half of `CardStudio`, `LibraryEditPublisher`, `import-card-designs.py`/`.yml` (~1,500) |
@@ -551,7 +551,7 @@ the generic half of `AgentEditScreenTest`, `UiBuilderTest`, and the handoff half
 - **The target labeler.** "Living room temperature (view 1, section 2, card 2)" is
   `cardLabel` plus the friendly name, as an implementation of `TargetLabeler`.
 - **The preview.** The app draws its own cards in the review scaffold's slot.
-- **Home Assistant's direct path.** `edit_sessions.py`, `edits.py`, `mcp.py`, `assistant.py` and
+- **Home Assistant's direct path.** `edit_sessions.py`, `edits.py`, `mcp.py`, `dashboard_agent.py` and
   `cloud_relay.py` run inside HA, in Python, and are HA-specific by nature.
   - They keep their own code, but **speak the same session wire format**: Livery's session spec
     (`docs/SESSIONS.md`) and its conformance fixtures, which the Python tests also run.
@@ -675,7 +675,7 @@ Assistant.
 | L6 | Manifest split by contract | only if the step-1 count is too big | — |
 | L7 | `livery-server` catalog channels: upload-what-changed, mirror, server-side `derive/`, fetch counting | step 8 | `LibraryChannels` + `LibraryMirror` (656), `UsageStats` (304) |
 | L8 | Phone → watch blob sync over the Data Layer | step 6, optional | the design half of `MobileWearSyncManager` |
-| **L9** | **Agent sessions** (`livery-sessions-*`, `livery-agent`): see [Agent and UI Builder flows](#agent-and-ui-builder-flows-as-optional-livery-modules) | track A, any time | relay, links, MCP surface, session client, live panel, built-in agent runner (~4,000 + tests) |
+| **L9** | **Agent sessions** (`livery-sessions-*`, `livery-agent`): see [Agent and UI Builder flows](#agent-and-ui-builder-flows-as-optional-livery-modules) | track A, any time | relay, links, MCP surface, session client, live panel, dashboard agent runner (~4,000 + tests) |
 | **L10** | **UI Builder flows** in `livery-uibuilder`: handoffs, editor process, an `edits` channel publisher, import back to the repo | track A | `UiBuilder` config and process, `CardStudio` handoffs, `LibraryEditPublisher`, the import workflow (~1,500) |
 
 **Also deleted once the steps land:** `DesignRepository`, `DesignQuery`, `DeviceMatch`,

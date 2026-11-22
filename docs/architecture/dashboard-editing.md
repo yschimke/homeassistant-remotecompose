@@ -12,8 +12,8 @@ permissions of the person who made it.
 - **Anything further needs the Terrazzo integration** (`custom_components/terrazzo`, installed
   from the Marketplace). It hosts the web panel and the MCP endpoint, and holds agent edit sessions.
 - **No new credentials.** Each caller signs in the way it already does (below); nobody hands a
-  general-purpose token to an agent. The one optional secret is an AI service's API key for the
-  [built-in agent](#built-in-agent), which stays in Home Assistant and grants nothing in it.
+  general-purpose token to an agent. The [dashboard agent](#dashboard-agent) is one of Home
+  Assistant's own conversation agents, whose provider key stays in its own integration.
 - **An agent never saves.** It submits drafts; a person previews them with real cards and applies
   them with their own session.
 
@@ -43,45 +43,46 @@ Assistant is the editor in practice.
 | Web panel | — | Full editor (add cards, sections and views, card settings); **Ask your agent** and the same draft preview |
 | Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session. Also as a Home Assistant LLM API (**Terrazzo dashboards**, `llm_api.py`): any conversation agent the person has set up, or HA's MCP Server, gets the same editing tools, run as the conversation's user |
 
-## Built-in agent
+## Dashboard agent
 
-With an API key in the integration's options (**Dashboard agent**: Gemini, OpenRouter, or any
-OpenAI-compatible service), Home Assistant runs the agent itself, and the apps change their
-assumption about editing: a dashboard is changed by chatting with that agent, not by hand.
+With a conversation agent chosen in the integration's options (**Dashboard agent**: any of Home
+Assistant's, such as OpenAI, Gemini, Anthropic or Ollama, with **Terrazzo dashboards** on among its
+APIs), Home Assistant answers every edit session with it, and the apps lead with it: editing a
+dashboard opens a chat with that agent, and editing by hand is the alternative.
 
-| | Built-in agent off | Built-in agent on |
+| | No dashboard agent | Dashboard agent chosen |
 | --- | --- | --- |
-| Phone | Light editor; **Ask your agent** (relay or MCP) | **Chat with your agent** in place of **Edit dashboard**; **New dashboard**; a section heading's long press opens that section's chat |
-| Web panel, desktop | Full editor; **Ask your agent** | **Chat with your agent**, no **Edit dashboard**; **New dashboard** in the menu and on the dashboard list |
+| Phone | Light editor; **Ask your agent** (relay or MCP) | **Chat with your agent** first, **Edit by hand** beside it; **New dashboard**; a section heading's long press opens that section's chat |
+| Web panel, desktop | Full editor; **Ask your agent** | **Edit** opens the chat; **Chat with your agent** first in the menu, **Edit by hand** beside it; **New dashboard** in the menu and on the dashboard list |
 | Sessions | Design server relay when an agent is linked | Home Assistant's own sessions only: no relay, no prompt to copy, no **Adjust** |
 
-How it works (`assistant.py`, `assistant_hass.py`):
+How it works (`dashboard_agent.py`, `agent_turn.py`):
 
 - **When.** The integration watches every edit session. A session nobody has answered gets a
   turn as soon as it starts; after that, each note the person leaves (a message, or a comment
   pinned to a card) gets one. A session's `assistant.handled` records the newest note a turn has
   taken, so a note that arrives during a turn runs another; one turn runs at a time per session.
-  A session an outside agent already answered gets no greeting, but its later notes are answered.
-- **As whom.** A turn acts as the person who started the session, through the same home object
-  the MCP server uses (`mcp_view.HassHome`): only the entities and dashboards they can see, and a
-  draft naming any other entity is refused. Nothing a turn does saves a dashboard.
-- **The turn.** The conversation is rebuilt from the session each time (the request, notes,
-  messages and drafts in order), with a system prompt holding the card guide, the scope, and the
-  dashboard as it stands: the newest draft, else the saved dashboard. The model calls
-  `find_entities`, `get_entity_state`, `home_overview` (areas and their entities, counts per
-  domain), `list_dashboards`, `get_dashboard` and `submit_draft` (the config as JSON text, which
-  every provider's schema rules accept); a refused draft goes back to it with the reason. Its
-  final text is posted as the agent's message; the tool it is running is its live status. At most
-  12 model calls per turn.
-- **Providers.** All speak OpenAI's chat completions with tools: Gemini through
-  `generativelanguage.googleapis.com/v1beta/openai`, OpenRouter at `openrouter.ai/api/v1`, or the
-  person's own base URL. A refused key, a rate limit or an unreachable service is said in the
-  chat and kept as the session's `assistant_error` until the next turn.
-- **Steps in the chat.** Each tool call is kept on the session as a step (`steps`: the tool, what
-  it asked and what it got in a few words, and whether it worked; `describe_step`), numbered in
-  the same sequence as the notes and messages, so the person watches the agent work between
-  their message and its reply. Steps are for the person only; the model's context is rebuilt
-  without them. The newest 100 are kept.
+  A session an outside agent already answered gets no first turn, but its later notes are answered.
+- **The turn.** One `conversation.async_converse` call to the chosen agent, as the person who
+  started the session (their user in the call's context). Its text is what the person said since
+  the last turn (the request, on a first turn), and its extra system prompt (`agent_turn.py`)
+  names the session to answer, its scope, how to reply, and a recap of the exchange so far. Each
+  turn is a new conversation: Home Assistant forgets one after a few idle minutes, and a session
+  lasts days, so the recap is the agent's memory. The agent's own instructions and the **Terrazzo
+  dashboards** API (`llm_api.py`, `llm_tools.py`) do the rest: it reads the session with
+  `get_edit_session`, looks entities up, and drafts with `submit_draft`; a refused draft goes back
+  to it with the reason. Its reply is posted as the agent's message.
+- **As whom.** The dashboard tools run as the conversation's user, through the same home object
+  the MCP server uses (`mcp_view.HassHome`): only the entities and dashboards that person can see,
+  and a draft naming any other entity is refused. Nothing a turn does saves a dashboard.
+- **Steps and status.** While a turn runs, `llm_api.TURN` (a context variable around the call)
+  links the dashboard tools to the session: before each tool the chat's status line says what it
+  is doing, and after it the call is kept on the session as a step (`steps`: the tool, what it
+  asked and what it got in a few words, and whether it worked; `agent_turn.describe_step`),
+  numbered in the same sequence as the notes and messages, so the person watches the agent work
+  between their message and its reply. The newest 100 are kept. An agent that fails (its service
+  refused or out of reach) says so in the chat, kept as the session's `assistant_error` until the
+  next turn.
 - **The chat (`app-ui`, `AgentTranscript.kt`, `AgentLivePanel.kt`).** A turn is the agent's
   steps up to its next message. On Android and desktop it is drawn with
   [agent-render](https://github.com/0xZhangKe/compose-agent-render) (`agentRenderMain`), whose
@@ -92,9 +93,12 @@ How it works (`assistant.py`, `assistant_hass.py`):
   preview's cards (picking one pins the message to it, as its Comment button does) and the home's
   entities (sent as `@Name (entity_id)`). These are kept apart from the rest of the app's screens:
   the agent session flows are expected to move into a shared Livery module.
-- **What clients see.** `terrazzo/agent/info` returns `enabled`, `provider`, `provider_label` and
-  `model`, never the key; `HaClient.terrazzoBuiltInAgent()` reads it (off for an older
-  integration).
+- **What clients see.** `terrazzo/agent/info` (capability `agent` 2) returns `enabled`,
+  `agent_id` and `name` (the agent's name as Home Assistant shows it);
+  `HaClient.terrazzoDashboardAgent()` reads it (off for an older integration).
+- **Before.** Until entry version 1.2 the integration called an OpenAI-compatible service itself,
+  with a provider, model and API key in its own options. The migration removes those options, the
+  key with them; choose a conversation agent afresh.
 
 ### New dashboards
 

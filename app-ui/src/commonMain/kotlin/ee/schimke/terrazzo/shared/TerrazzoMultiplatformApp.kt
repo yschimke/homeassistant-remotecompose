@@ -41,8 +41,8 @@ import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.TerrazzoIntegration
 import ee.schimke.ha.client.UnsupportedDashboardException
 import ee.schimke.ha.client.cache.OfflineCacheStore
-import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
 import ee.schimke.ha.client.detectTerrazzo
@@ -464,7 +464,7 @@ private fun DashboardShell(
       } ?: DashboardListState.Loading,
     )
   }
-  // Bumped to read the list again: a dashboard the built-in agent built was just created.
+  // Bumped to read the list again: a dashboard the dashboard agent built was just created.
   var dashboardListGeneration by remember(connection) { mutableIntStateOf(0) }
   var home by remember { mutableStateOf<NavKey>(DashboardDestination(initialDashboardPath)) }
   val stack = remember { mutableStateListOf(home) }
@@ -570,8 +570,9 @@ private fun DashboardShell(
     (it is TerrazzoIntegration.Installed && it.info.capabilities.edit != null) ||
       it is TerrazzoIntegration.TooOld
   }
-  // With the integration's own agent on, editing is a chat with it: no manual editor, no relay.
-  var builtInAgent by remember(connection) { mutableStateOf(BuiltInAgent.Off) }
+  // With a dashboard agent answering, Edit opens a chat with it; the manual editor stays in the
+  // menu, and the design server relay is off (the agent answers every session).
+  var dashboardAgent by remember(connection) { mutableStateOf(DashboardAgent.Off) }
   var privateDesignServer by remember(connection) { mutableStateOf(false) }
   var dashboardRefreshGeneration by remember(connection) { mutableIntStateOf(0) }
   LaunchedEffect(connection) {
@@ -589,15 +590,15 @@ private fun DashboardShell(
       integration = found
       // Each command is asked only when the integration offers it; an older one is tried.
       val offered = found.offers()
-      builtInAgent =
-        if (offered?.agent == false) BuiltInAgent.Off
+      dashboardAgent =
+        if (offered?.agent == false) DashboardAgent.Off
         else
           try {
-            connection.client.terrazzoBuiltInAgent()
+            connection.client.terrazzoDashboardAgent()
           } catch (e: CancellationException) {
             throw e
           } catch (_: Exception) {
-            builtInAgent
+            dashboardAgent
           }
       privateDesignServer =
         offered?.designServer != false &&
@@ -642,7 +643,7 @@ private fun DashboardShell(
           ({
             (stack.lastOrNull() as? DashboardDestination)?.let {
               stack.add(
-                if (builtInAgent.enabled) AgentEditDestination(it.path)
+                if (dashboardAgent.enabled) AgentEditDestination(it.path)
                 else DashboardEditDestination(it.path),
               )
             }
@@ -703,11 +704,11 @@ private fun DashboardShell(
                     list,
                     onDashboardPicked = { stack.add(DashboardDestination(it)) },
                     header =
-                      if (builtInAgent.enabled)
+                      if (dashboardAgent.enabled)
                         ({
                           NewDashboardSessions(
                             connection.client.agentEdits,
-                            builtInAgent,
+                            dashboardAgent,
                             onOpen = { stack.add(AgentEditDestination(it.urlPath, it.id)) },
                             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                           )
@@ -771,7 +772,7 @@ private fun DashboardShell(
               if (newDashboard)
                 NewDashboardChooser(
                   connection.client.agentEdits,
-                  builtInAgent,
+                  dashboardAgent,
                   onDismiss = { newDashboard = false },
                   onOpen = {
                     newDashboard = false
@@ -795,18 +796,18 @@ private fun DashboardShell(
                       if (customizing)
                         TextButton(onClick = { customizing = false }) { Text("Done customizing") }
                       DashboardMoreMenu(
-                        // The integration's built-in agent replaces the manual editor.
-                        onEdit =
-                          if (builtInAgent.enabled) null
-                          else ({ stack.add(DashboardEditDestination(route.path)) }),
+                        // Editing by hand stays here beside the chat with the dashboard agent,
+                        // which Edit opens while one answers.
+                        onEdit = { stack.add(DashboardEditDestination(route.path)) },
                         // The Home Assistant integration's own agent (its MCP user) answers this.
                         onAskAgent =
                           if (editSessions) ({ stack.add(AgentEditDestination(route.path)) })
                           else null,
                         askAgentLabel =
-                          if (builtInAgent.enabled) CHAT_WITH_AGENT else "Ask your agent",
+                          if (dashboardAgent.enabled) CHAT_WITH_AGENT else "Ask your agent",
                         onNewDashboard =
-                          if (builtInAgent.enabled) ({ newDashboard = true }) else null,
+                          if (dashboardAgent.enabled) ({ newDashboard = true }) else null,
+                        agentFirst = dashboardAgent.enabled,
                         onCustomize = if (customizing) null else ({ customizing = true }),
                       )
                       headerActions()
@@ -839,7 +840,7 @@ private fun DashboardShell(
                     designServer,
                     cardStyle,
                     dark,
-                    cloudDashboardEdits.takeUnless { builtInAgent.enabled },
+                    cloudDashboardEdits.takeUnless { dashboardAgent.enabled },
                     dashboardModifier,
                     onOpenSession = { id -> stack.add(AgentEditDestination(route.path, id)) },
                     onApplied = { dashboardRefreshGeneration++ },
@@ -877,9 +878,9 @@ private fun DashboardShell(
                 designServer = designServer,
                 cardStyle = cardStyle,
                 dark = dark,
-                // The built-in agent works in Home Assistant's sessions: no design server relay.
-                cloudEdits = cloudDashboardEdits.takeUnless { builtInAgent.enabled },
-                builtInAgent = builtInAgent,
+                // The dashboard agent works in Home Assistant's sessions: no design server relay.
+                cloudEdits = cloudDashboardEdits.takeUnless { dashboardAgent.enabled },
+                dashboardAgent = dashboardAgent,
                 sessionId = route.sessionId,
                 onApplied = {
                   dashboardRefreshGeneration++
@@ -922,7 +923,7 @@ private fun AgentEditEntry(
   cardStyle: String,
   dark: Boolean,
   cloudEdits: CloudDashboardAgentEdits?,
-  builtInAgent: BuiltInAgent,
+  dashboardAgent: DashboardAgent,
   sessionId: String?,
   onApplied: () -> Unit,
   onBack: () -> Unit,
@@ -944,7 +945,7 @@ private fun AgentEditEntry(
     initialSessionId = sessionId,
     // The dashboard below shows the session's drafts as they come (DashboardDraftEntry).
     onDashboard = onBack,
-    builtInAgent = builtInAgent,
+    dashboardAgent = dashboardAgent,
   ) { _, card ->
     preview(card, snapshot)
   }
@@ -1104,7 +1105,11 @@ internal fun HeaderActions(
     }
 }
 
-/** A dashboard's less frequent actions, behind one "More options" button. */
+/**
+ * A dashboard's less frequent actions, behind one "More options" button. With [agentFirst] (a
+ * dashboard agent answers) the chat with it leads, and editing by hand is the alternative, "Edit by
+ * hand".
+ */
 @Composable
 internal fun DashboardMoreMenu(
   onEdit: (() -> Unit)?,
@@ -1112,6 +1117,7 @@ internal fun DashboardMoreMenu(
   onCustomize: (() -> Unit)?,
   askAgentLabel: String = "Ask your agent",
   onNewDashboard: (() -> Unit)? = null,
+  agentFirst: Boolean = false,
 ) {
   var expanded by remember { mutableStateOf(false) }
   Box {
@@ -1119,22 +1125,33 @@ internal fun DashboardMoreMenu(
       Icon(Icons.Filled.MoreVert, contentDescription = "More options")
     }
     DropdownMenu(expanded, { expanded = false }) {
-      if (onEdit != null)
-        DropdownMenuItem(
-          text = { Text("Edit dashboard") },
-          onClick = {
-            expanded = false
-            onEdit()
-          },
-        )
-      if (onAskAgent != null)
-        DropdownMenuItem(
-          text = { Text(askAgentLabel) },
-          onClick = {
-            expanded = false
-            onAskAgent()
-          },
-        )
+      val edit: @Composable () -> Unit = {
+        if (onEdit != null)
+          DropdownMenuItem(
+            text = { Text(if (agentFirst) "Edit by hand" else "Edit dashboard") },
+            onClick = {
+              expanded = false
+              onEdit()
+            },
+          )
+      }
+      val ask: @Composable () -> Unit = {
+        if (onAskAgent != null)
+          DropdownMenuItem(
+            text = { Text(askAgentLabel) },
+            onClick = {
+              expanded = false
+              onAskAgent()
+            },
+          )
+      }
+      if (agentFirst) {
+        ask()
+        edit()
+      } else {
+        edit()
+        ask()
+      }
       if (onNewDashboard != null)
         DropdownMenuItem(
           text = { Text("New dashboard") },

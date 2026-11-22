@@ -27,27 +27,15 @@
           "title": "Sidebar title",
           "dashboard": "Dashboard to open first",
           "mcp_user": "MCP server user",
-          "agent_provider": "Dashboard agent",
-          "agent_api_key": "Agent API key",
-          "agent_model": "Agent model",
-          "agent_base_url": "Agent service URL"
+          "agent": "Dashboard agent"
         },
         "data_description": {
           "title": "The name of the panel in the sidebar.",
           "dashboard": "Leave empty to start on the dashboard picker.",
           "mcp_user": "Off, or the one Home Assistant user an AI assistant may act as through /api/terrazzo/mcp, with that user's permissions on this instance only. Only that user's access tokens are accepted. Locks and alarm panels stay read-only.",
-          "agent_provider": "Off, or the AI service Home Assistant calls itself to edit dashboards. While it is on, the Terrazzo apps and panel replace their dashboard editors with a chat: the agent drafts changes as the person chatting, with their permissions, and they apply them.",
-          "agent_api_key": "A Gemini API key (Google AI Studio), an OpenRouter key, or your service's key. Kept in Home Assistant and never sent to the apps. Leave empty to keep the saved key.",
-          "agent_model": "Optional for Gemini (gemini-flash-latest) and OpenRouter (openrouter/auto); or any model id the service offers that supports tool calling. Required for another service.",
-          "agent_base_url": "Only for another OpenAI-compatible service, such as Ollama or LM Studio: its base URL, the part before /chat/completions. Use https:// unless the service runs on your own network."
+          "agent": "Empty, or the Home Assistant conversation agent that edits dashboards from the Terrazzo panel and apps: one of an AI integration's agents (OpenAI, Google Gemini, Anthropic, Ollama, OpenRouter, …) with \"Terrazzo dashboards\" turned on among the APIs it may control, in that agent's own options. The apps then open a chat with it to edit a dashboard: it drafts changes as the person chatting, with their permissions, and they apply them."
         }
       }
-    },
-    "error": {
-      "agent_key_required": "Enter the API key for the dashboard agent.",
-      "agent_base_url_required": "Enter the service's URL.",
-      "agent_model_required": "Enter the model to use with this service.",
-      "agent_base_url_https": "The service's URL must start with https:// (or http:// for one on your own network)."
     }
   },
   "issues": {

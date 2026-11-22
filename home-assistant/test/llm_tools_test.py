@@ -80,5 +80,16 @@ class LlmToolsTest(unittest.TestCase):
         self.assertEqual(llm_tools.API_ID, 'terrazzo_dashboards')
 
 
+    def test_a_read_only_mcp_server_keeps_the_reading_tools(self):
+        # Home Assistant's MCP Server, set to read only, serves only tools marked read only.
+        read_only = {spec['name'] for spec in llm_tools.tool_specs() if llm_tools.annotations(spec)['read_only']}
+        self.assertEqual({'start_edit_session', 'submit_draft'}, {s['name'] for s in llm_tools.tool_specs()} - read_only)
+        self.assertIn('home_overview', read_only)
+        for spec in llm_tools.tool_specs():
+            hints = llm_tools.annotations(spec)
+            self.assertFalse(hints['destructive'], spec['name'])
+            # Only find_designs reaches outside Home Assistant: the design server's index.
+            self.assertEqual(spec['name'] == 'find_designs', hints['open_world'], spec['name'])
+
 if __name__ == '__main__':
     unittest.main()

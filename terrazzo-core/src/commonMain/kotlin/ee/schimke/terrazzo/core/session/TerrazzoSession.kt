@@ -4,8 +4,8 @@ import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.client.TerrazzoIntegration
 import ee.schimke.ha.client.agent.AgentGrantStore
 import ee.schimke.ha.client.dashboard.AgentEdits
-import ee.schimke.ha.client.dashboard.BuiltInAgent
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
+import ee.schimke.ha.client.dashboard.DashboardAgent
 
 /**
  * The Terrazzo integration's commands, for a session with a Home Assistant behind it that may have
@@ -37,11 +37,11 @@ interface TerrazzoSession {
     get() = null
 
   /**
-   * The integration's built-in dashboard agent (`terrazzo/agent/info`): while it's on, the app
-   * edits dashboards by chatting with it instead of by hand. Off without the integration, or when
-   * it can't be asked.
+   * The conversation agent that answers the integration's edit sessions (`terrazzo/agent/info`):
+   * while one does, the app's Edit opens a chat with it. Off without the integration, or when it
+   * can't be asked.
    */
-  suspend fun builtInAgent(): BuiltInAgent = BuiltInAgent.Off
+  suspend fun dashboardAgent(): DashboardAgent = DashboardAgent.Off
 
   /**
    * Edit sessions whose agent works through the design [server]'s relay (agent-sessions.md): the

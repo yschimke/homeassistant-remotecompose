@@ -20,7 +20,7 @@ EDIT = 1  # terrazzo/edit/* (start, list, get, subscribe, note, submit, discard,
 PUSH = 1  # terrazzo/push/{register,take,watch}
 DESIGN_SELECTIONS = 1  # terrazzo/design_selections/{get,set}
 WEB_ORIGIN = 1  # terrazzo/web_origin
-AGENT = 1  # terrazzo/agent/info
+AGENT = 2  # terrazzo/agent/info (2: Home Assistant's conversation agent, with its name)
 WALL = "v1"  # the wall display API's path version (wall_api.API)
 # An administrator's, left out for everyone else.
 EDIT_APPLY = 1  # terrazzo/edit/{apply,undo}

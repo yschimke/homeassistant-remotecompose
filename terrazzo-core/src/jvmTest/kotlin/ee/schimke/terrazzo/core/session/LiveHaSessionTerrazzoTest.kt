@@ -2,7 +2,7 @@ package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.TerrazzoIntegration
 import ee.schimke.ha.client.cache.OfflineCacheStorage
-import ee.schimke.ha.client.dashboard.BuiltInAgent
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -94,7 +94,7 @@ class LiveHaSessionTerrazzoTest {
       assertNull(session.registerSilentPush("hook", "fcm", "https://relay.test"))
       assertNull(session.watchStates("hook", listOf("light.kitchen"), 60))
       assertEquals(emptyList(), session.takeHeldNotifications("hook"))
-      assertEquals(BuiltInAgent.Off, session.builtInAgent())
+      assertEquals(DashboardAgent.Off, session.dashboardAgent())
       assertNull(session.privateDesignLink("/designs"))
       // One terrazzo/info for the connection; none of the left-out commands were sent.
       assertEquals(listOf("terrazzo/info"), sent.terrazzo())
@@ -218,6 +218,6 @@ class LiveHaSessionTerrazzoTest {
     val cacheOnly = assertNotNull(CachedHaSession.cacheOnly("http://ha.test", store).terrazzo)
     assertNull(cacheOnly.terrazzoIntegration())
     assertNull(cacheOnly.sharedDesignSelections())
-    assertEquals(BuiltInAgent.Off, cacheOnly.builtInAgent())
+    assertEquals(DashboardAgent.Off, cacheOnly.dashboardAgent())
   }
 }
