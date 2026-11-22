@@ -5,6 +5,7 @@
   "audience": {
     "entity.domain": "climate"
   },
+  "contract": "ha-device/climate@1",
   "exampleEntity": "climate.hallway",
   "designs": [
     {

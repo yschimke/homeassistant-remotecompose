@@ -87,6 +87,11 @@ kotlin {
       implementation(libs.composeai.data.render.core)
     }
     jvmTest.dependencies {
+      // The device packs' contracts are checked by Livery's own gate (ContractBinder), as the
+      // catalog they become will be: DevicePacksTest.
+      implementation(project.dependencies.platform(libs.livery.bom))
+      implementation(libs.livery.client)
+      implementation(libs.livery.protocol)
       implementation(libs.kotlin.test)
       implementation(libs.kotlin.test.junit)
       implementation(libs.kotlinx.serialization.json)

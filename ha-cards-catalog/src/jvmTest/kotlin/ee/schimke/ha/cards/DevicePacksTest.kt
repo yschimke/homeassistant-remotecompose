@@ -1,5 +1,11 @@
 package ee.schimke.ha.cards
 
+import ee.schimke.livery.client.BindResult
+import ee.schimke.livery.client.ContractBinder
+import ee.schimke.livery.protocol.ActionKinds
+import ee.schimke.livery.protocol.Contract
+import ee.schimke.livery.protocol.DataSource
+import ee.schimke.livery.protocol.ValueType
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,10 +14,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * Holds the device packs (`card-designs/ui-builder/packs/<device>/`, docs/design/device-packs.md)
@@ -56,35 +64,21 @@ class DevicePacksTest {
   /** The modifiers a card design uses (see CardDesign.MODIFIERS). */
   private val modifiers = setOf("fillMaxWidth", "fillMaxHeight", "fillMaxSize")
 
-  /**
-   * The named values a host pushes for a pack's entity (HaLiveBindings), plus the alert text the
-   * alert rule supplies. A pack binds `<domain>.s0.<suffix>`: its one entity, slot 0.
-   */
-  private val bindings =
-    mapOf(
-      "cover" to
-        setOf(
-          "name",
-          "state",
-          "state_int",
-          "is_on",
-          "is_available",
-          "current_position",
-          "supported_features",
-          "last_changed",
-        ),
-      "climate" to
-        setOf(
-          "name",
-          "state",
-          "is_on",
-          "is_available",
-          "current_temperature",
-          "target_temperature",
-          "last_changed",
-        ),
-      "alert" to setOf("message", "detail"),
-    )
+  /** Livery's own reading of a contract file: unknown keys are mistakes, not extensions. */
+  private val contractJson = Json { ignoreUnknownKeys = false }
+
+  private val contractDir = File("../card-designs/ui-builder/packs/contracts")
+
+  /** The packs' contracts (the JSON files in `contracts/`), by reference (`ha-device/cover@1`). */
+  private val contracts: Map<String, Contract> =
+    contractDir
+      .listFiles { file -> file.extension == "json" }
+      .orEmpty()
+      .map { contractJson.decodeFromString(Contract.serializer(), it.readText()) }
+      .associateBy { it.ref }
+
+  private fun contractOf(dir: File): Contract? =
+    read(File(dir, "pack.json"))["contract"]?.jsonPrimitive?.content?.let(contracts::get)
 
   private val kinds = setOf("controls", "alert", "toolbar", "real-world")
 
@@ -107,7 +101,10 @@ class DevicePacksTest {
   private val packDir = File("../card-designs/ui-builder/packs")
 
   private val packs: Map<String, File> =
-    packDir.listFiles { file -> file.isDirectory }.orEmpty().associateBy { it.name }
+    packDir
+      .listFiles { file -> file.isDirectory && file.name != "contracts" }
+      .orEmpty()
+      .associateBy { it.name }
 
   private fun read(file: File): JsonObject = Json.parseToJsonElement(file.readText()).jsonObject
 
@@ -249,24 +246,34 @@ class DevicePacksTest {
       "ha-cards/bar-meter",
     )
 
-  /** Domains whose state isn't their number, and the float bindings they publish instead. */
-  private val attributeFloats =
-    mapOf(
-      "cover" to setOf("current_position", "supported_features"),
-      "climate" to setOf("current_temperature", "target_temperature"),
-    )
+  /**
+   * The float attributes [contract]'s entity has besides its state: `<domain>.s0.<attribute>`
+   * inputs, by attribute. A cover's or a climate's state is a word, so a reading names one.
+   */
+  private fun attributeFloats(contract: Contract): Set<String> =
+    contract.inputs
+      .filter { (input, spec) ->
+        spec.type == ValueType.Float &&
+          input.count { it == '.' } == 2 &&
+          input.split('.')[1] == "s0"
+      }
+      .keys
+      .map { it.substringAfterLast('.') }
+      .toSet()
 
   @Test
   fun aReadingOfACoverOrClimateFollowsOneOfItsFloats() {
     val problems = buildList {
       for ((name, dir) in packs) {
+        val contract = contractOf(dir) ?: continue
+        val floats = attributeFloats(contract)
         for (file in dir.listFiles { f -> f.extension == "uid" }.orEmpty().sortedBy { it.name }) {
           for ((id, element) in read(file)["nodes"]!!.jsonObject) {
             val node = element.jsonObject
             val component = node["componentId"]!!.jsonPrimitive.content
             val props = node["properties"]?.jsonObject.orEmpty()
             val domain = props["entityId"]?.literal()?.substringBefore('.') ?: continue
-            val floats = attributeFloats[domain] ?: continue
+            if ("ha-device/$domain" != contract.id) continue
             val attribute = props["attribute"]?.literal()
             when {
               component in readings && attribute !in floats ->
@@ -285,9 +292,17 @@ class DevicePacksTest {
   }
 
   @Test
-  fun everyBoundValueIsDeclaredLiveAndOneAHostPushes() {
+  fun everyBoundValueIsAHostValueItsContractDeclares() {
+    val types =
+      mapOf(
+        "string" to ValueType.String,
+        "int" to ValueType.Int,
+        "float" to ValueType.Float,
+        "bool" to ValueType.Bool,
+      )
     val problems = buildList {
       for ((name, dir) in packs) {
+        val contract = contractOf(dir) ?: continue
         for (file in dir.listFiles { f -> f.extension == "uid" }.orEmpty().sortedBy { it.name }) {
           val at = "$name/${file.name}"
           val design = read(file)
@@ -301,24 +316,86 @@ class DevicePacksTest {
             }
           }
           (used - declared.keys).forEach { add("$at: binds undeclared `$it`") }
-          for ((variable, spec) in declared) {
-            if (spec.jsonObject["persistence"]?.jsonPrimitive?.content != "host")
+          for ((variable, element) in declared) {
+            val spec = element.jsonObject
+            if (spec["persistence"]?.jsonPrimitive?.content != "host")
               add("$at: `$variable` is not a host value")
-            val parts = variable.split('.')
-            val domain = parts.first()
-            val suffix = parts.last()
-            val known = bindings[domain]
+            val input = contract.inputs[variable]
+            val type = types[spec["valueType"]?.jsonPrimitive?.content]
             when {
-              known == null -> add("$at: `$variable` is no binding of a pack entity")
-              domain != "alert" && (parts.size != 3 || parts[1] != "s0") ->
-                add("$at: `$variable` isn't the pack entity's slot 0")
-              suffix !in known -> add("$at: `$variable`: a host pushes no `$suffix` for $domain")
+              input == null -> add("$at: `$variable` is no input of ${contract.ref}")
+              input.type != type ->
+                add("$at: `$variable` is ${input.type} in ${contract.ref}, not $type")
             }
           }
         }
       }
     }
     assertTrue(packs.isNotEmpty())
+    assertEquals(emptyList(), problems)
+  }
+
+  @Test
+  fun everyPackNamesAContractForItsDomain() {
+    assertEquals(setOf("ha-device/climate@1", "ha-device/cover@1"), contracts.keys)
+    val problems = buildList {
+      for ((name, dir) in packs) {
+        val ref = read(File(dir, "pack.json"))["contract"]?.jsonPrimitive?.content
+        val contract = ref?.let(contracts::get)
+        if (contract == null) {
+          add("$name: pack.json's contract `$ref` is not in contracts/")
+          continue
+        }
+        val domain =
+          read(File(dir, "pack.json"))["audience"]!!
+            .jsonObject["entity.domain"]!!
+            .jsonPrimitive
+            .content
+        if (contract.id != "ha-device/$domain") add("$name: a $domain pack names ${contract.ref}")
+      }
+    }
+    assertEquals(emptyList(), problems)
+  }
+
+  @Test
+  fun theContractsAreOnesLiveryAccepts() {
+    val builtIn =
+      setOf(
+        ActionKinds.OPEN_URL,
+        ActionKinds.NAVIGATE,
+        ActionKinds.DISMISS,
+        ActionKinds.TRACK,
+        ActionKinds.REFRESH,
+        ActionKinds.SET,
+      )
+    val settable =
+      setOf(ValueType.String, ValueType.Int, ValueType.Long, ValueType.Float, ValueType.Bool)
+    val problems = buildList {
+      for (contract in contracts.values) {
+        val at = contract.ref
+        if (contract.dataSource != DataSource.App) add("$at: the app fills it")
+        for ((name, action) in contract.actions) {
+          if (action.kind !in builtIn && !action.kind.startsWith("app:"))
+            add("$at $name: kind `${action.kind}` is neither built in nor `app:`")
+          if (action.kind == ActionKinds.SET) {
+            val input = action.input?.let(contract.inputs::get)
+            if (input == null) add("$at $name: a set names no input of the contract")
+            else if (input.type !in settable) add("$at $name: a set can't carry ${input.type}")
+            if (action.args.isNotEmpty()) add("$at $name: a set declares no args")
+          } else if (action.input != null) add("$at $name: only a set names an input")
+        }
+        if (contract.examples.isEmpty()) add("$at: no examples")
+        // Every example passes the gate every dataset does (PROTOCOL.md §4.1), and so does the
+        // least a host can push: the required inputs alone, every optional one at its default.
+        val least = buildJsonObject {
+          contract.inputs.filterValues { it.required }.forEach { (input, _) -> put(input, "x") }
+        }
+        for ((example, data) in contract.examples + ("least" to least)) {
+          val bound = ContractBinder.bind(contract, data)
+          if (bound is BindResult.Invalid) add("$at example `$example`: ${bound.problems}")
+        }
+      }
+    }
     assertEquals(emptyList(), problems)
   }
 }
