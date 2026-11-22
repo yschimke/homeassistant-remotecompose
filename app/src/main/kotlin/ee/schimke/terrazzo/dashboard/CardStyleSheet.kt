@@ -46,6 +46,7 @@ import ee.schimke.ha.design.CardDesignOverrides
 import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.cardDevice
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates

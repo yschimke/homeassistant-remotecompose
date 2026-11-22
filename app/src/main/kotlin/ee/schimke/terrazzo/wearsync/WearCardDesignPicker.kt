@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.wearsync
 
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DeviceMatch
+import ee.schimke.ha.design.cardDevice
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -10,7 +11,6 @@ import ee.schimke.ha.rc.sharedDesignNames
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.dashboard.CardDesigns
-import ee.schimke.terrazzo.dashboard.cardDevice
 import ee.schimke.terrazzo.wearsync.proto.WearSlotDesign
 
 /**

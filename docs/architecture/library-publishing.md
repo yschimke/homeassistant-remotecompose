@@ -86,6 +86,12 @@ To change the group, edit `HarcPublishing.GROUP`.
    each snapshot `playback.bindings(snapshot, clock)`; taps `playback.resolveTap(action, snapshot)`.
 5. `RemoteComposeCard(bytes, bindings = …)`, which seeds values before the first frame.
 
+Device-specific designs: `cardDevice(card, snapshot)` (`ee.schimke.ha.design`, `ha-model`) is the
+device a card's design is matched against, the one the Terrazzo apps use: its first design slot's
+entity, else the first entity its config names, looked up in `HaSnapshot.devices` (which
+`HaClient` fills from the registries). Pass it to `DeviceMatch.pick`, `designOptions` or
+`DesignsById.forCard`; a card passed no device gets the designs for every device.
+
 Fonts and glyphs work offline: `InMemoryFontStore` + `HaFontLibrary.install(faces)`;
 `InMemoryGlyphStore` + `GlyphCache.stored()`.
 
