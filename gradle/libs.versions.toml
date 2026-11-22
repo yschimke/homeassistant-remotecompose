@@ -130,7 +130,7 @@ cmp-adaptive = "1.3.0"
 # (`ee.schimke.composeai.rccreation`) and modules (`rc-creation-*`), so it sits beside AndroidX's
 # `remote-creation-compose` on Android. Cards are written against it on every target, which needs
 # 3.1.0: its writer keeps a declaration where it is made and its capture takes a `Profile`.
-rc-players = "3.5.3"
+rc-players = "3.12.0"
 # Livery (yschimke/livery): the agent session relay design-server runs on.
 livery = "0.22.0"
 compose-webview = "2.0.3"

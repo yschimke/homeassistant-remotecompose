@@ -85,11 +85,6 @@
       "groupName": "rc-players",
       "enabled": true,
       "schedule": ["at any time"]
-    },
-    {
-      "description": "rc-players-bom >= 3.6.0 (tested 3.6.0, 3.7.0, 3.8.0) breaks ConsoleDesignRenderTest and LogbookLiveDocumentTest (commit f407845 caches frameEpochMillis per document so LocalRcTimeSource changes do not advance player clock without an active frame loop). Skipped from https://github.com/yschimke/homeassistant-remotecompose/pull/1629. Remove when upstream rc-players addresses this.",
-      "matchPackageNames": ["ee.schimke.composeai:rc-players-bom"],
-      "allowedVersions": "/^3\\.[0-5]\\.[0-9.]+$/"
     }
   ]
 }
