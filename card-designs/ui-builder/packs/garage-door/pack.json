@@ -1,0 +1,91 @@
+{
+  "schema": "harc-device-pack/v1",
+  "id": "garage-door",
+  "title": "Garage door opener",
+  "audience": {
+    "entity.domain": "cover",
+    "entity.device_class": "garage"
+  },
+  "exampleEntity": "cover.garage_door",
+  "designs": [
+    {
+      "kind": "controls",
+      "variant": "material3",
+      "surface": "card",
+      "file": "controls-material3.uid",
+      "designId": "garage-door-controls-material3",
+      "title": "Garage door · Material 3"
+    },
+    {
+      "kind": "controls",
+      "variant": "skeuomorphic",
+      "surface": "card",
+      "file": "controls-skeuomorphic.uid",
+      "designId": "garage-door-controls-skeuomorphic",
+      "title": "Garage door · Wall console"
+    },
+    {
+      "kind": "controls",
+      "variant": "overlay",
+      "surface": "spatial",
+      "file": "controls-overlay.uid",
+      "designId": "garage-door-controls-overlay",
+      "title": "Garage door · Overlay"
+    },
+    {
+      "kind": "alert",
+      "variant": "default",
+      "surface": "card",
+      "file": "alert.uid",
+      "designId": "garage-door-alert",
+      "title": "Garage door · Alert",
+      "showWhen": [
+        {
+          "binding": "cover.s0.state_int",
+          "in": [
+            4,
+            5
+          ],
+          "reason": "unavailable or unknown"
+        },
+        {
+          "binding": "cover.s0.state_int",
+          "equals": 1,
+          "forMinutes": 30,
+          "reason": "left open"
+        },
+        {
+          "binding": "cover.s0.state_int",
+          "in": [
+            2,
+            3
+          ],
+          "forMinutes": 2,
+          "reason": "stuck moving"
+        }
+      ],
+      "help": "https://www.home-assistant.io/integrations/cover/"
+    },
+    {
+      "kind": "toolbar",
+      "variant": "default",
+      "surface": "toolbar",
+      "file": "toolbar.uid",
+      "designId": "garage-door-toolbar",
+      "title": "Garage door · Toolbar item"
+    },
+    {
+      "kind": "real-world",
+      "variant": "default",
+      "surface": "card",
+      "file": "real-world.uid",
+      "designId": "garage-door-real-world",
+      "title": "Garage door · Real world",
+      "view": {
+        "source": "camera",
+        "entity": "camera.garage",
+        "fallback": "entity_picture"
+      }
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "garage-door-controls-skeuomorphic",
+  "title": "Garage door · Wall console",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 280,
+    "heightDp": 320,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "cover.s0.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Garage door",
+      "persistence": "host"
+    },
+    "cover.s0.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Closed",
+      "persistence": "host"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "uber-theme-6"
+        ]
+      }
+    },
+    "uber-theme-6": {
+      "id": "uber-theme-6",
+      "componentId": "ha-cards/uber-theme",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "value": "rugged"
+        },
+        "dark": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "collapsible-column-5"
+        ]
+      }
+    },
+    "collapsible-column-5": {
+      "id": "collapsible-column-5",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 14.0
+        },
+        "horizontalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "remote-text-1",
+          "button-3",
+          "arc-meter-4",
+          "status-chip-2"
+        ]
+      }
+    },
+    "remote-text-1": {
+      "id": "remote-text-1",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "cover.s0.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 14.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FFC9C5CA"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "button-3": {
+      "id": "button-3",
+      "componentId": "ha-cards/button",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Push"
+        },
+        "icon": {
+          "type": "string",
+          "value": "door"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        },
+        "showName": {
+          "type": "bool",
+          "value": false
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "arc-meter-4": {
+      "id": "arc-meter-4",
+      "componentId": "ha-cards/arc-meter",
+      "properties": {
+        "value": {
+          "type": "float",
+          "value": 0.0
+        },
+        "min": {
+          "type": "float",
+          "value": 0.0
+        },
+        "max": {
+          "type": "float",
+          "value": 100.0
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "status-chip-2": {
+      "id": "status-chip-2",
+      "componentId": "ha-cards/status-chip",
+      "properties": {
+        "status": {
+          "type": "state",
+          "variable": "cover.s0.state"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        },
+        "isOn": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

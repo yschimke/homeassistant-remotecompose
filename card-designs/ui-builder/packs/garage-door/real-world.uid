@@ -1,0 +1,222 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "garage-door-real-world",
+  "title": "Garage door · Real world",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 300,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "cover.s0.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Garage door",
+      "persistence": "host"
+    },
+    "cover.s0.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Closed",
+      "persistence": "host"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "uber-theme-8"
+        ]
+      }
+    },
+    "uber-theme-8": {
+      "id": "uber-theme-8",
+      "componentId": "ha-cards/uber-theme",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "value": "classic"
+        },
+        "dark": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "collapsible-column-7"
+        ]
+      }
+    },
+    "collapsible-column-7": {
+      "id": "collapsible-column-7",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 0.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "picture-entity-card-image-1",
+          "collapsible-row-6"
+        ]
+      }
+    },
+    "picture-entity-card-image-1": {
+      "id": "picture-entity-card-image-1",
+      "componentId": "ha-cards/picture-entity-card-image",
+      "properties": {
+        "fill": {
+          "type": "bool",
+          "value": true
+        },
+        "hideName": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "collapsible-row-6": {
+      "id": "collapsible-row-6",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        },
+        "horizontalArrangement": {
+          "type": "enum",
+          "value": "spaceBetween"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "collapsible-column-4",
+          "toggle-5"
+        ]
+      }
+    },
+    "collapsible-column-4": {
+      "id": "collapsible-column-4",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 2.0
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "remote-text-2",
+          "remote-text-3"
+        ]
+      }
+    },
+    "remote-text-2": {
+      "id": "remote-text-2",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "cover.s0.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 15.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF1B1B1F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "remote-text-3": {
+      "id": "remote-text-3",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "cover.s0.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF5F5E62"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "toggle-5": {
+      "id": "toggle-5",
+      "componentId": "ha-cards/toggle",
+      "properties": {
+        "isOn": {
+          "type": "bool",
+          "value": false
+        },
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

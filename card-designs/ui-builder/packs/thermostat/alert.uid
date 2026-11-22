@@ -1,0 +1,388 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "thermostat-alert",
+  "title": "Thermostat · Alert",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 260,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "alert.detail": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Heating for 2 hours and the room is still 16 °C. Check the boiler pressure.",
+      "persistence": "host"
+    },
+    "alert.message": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Not reaching 21 °C",
+      "persistence": "host"
+    },
+    "climate.s0.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Hallway",
+      "persistence": "host"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "uber-theme-14"
+        ]
+      }
+    },
+    "uber-theme-14": {
+      "id": "uber-theme-14",
+      "componentId": "ha-cards/uber-theme",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "value": "classic"
+        },
+        "dark": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "collapsible-column-13"
+        ]
+      }
+    },
+    "collapsible-column-13": {
+      "id": "collapsible-column-13",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "collapsible-row-5",
+          "remote-text-12",
+          "collapsible-row-8",
+          "collapsible-row-11"
+        ]
+      }
+    },
+    "collapsible-row-5": {
+      "id": "collapsible-row-5",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "icon-1",
+          "collapsible-column-4"
+        ]
+      }
+    },
+    "icon-1": {
+      "id": "icon-1",
+      "componentId": "ha-cards/icon",
+      "properties": {
+        "icon": {
+          "type": "string",
+          "value": "alert"
+        },
+        "sizeDp": {
+          "type": "int",
+          "value": 28
+        },
+        "color": {
+          "type": "string",
+          "value": "#FFB3261E"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "collapsible-column-4": {
+      "id": "collapsible-column-4",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 2.0
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "remote-text-2",
+          "remote-text-3"
+        ]
+      }
+    },
+    "remote-text-2": {
+      "id": "remote-text-2",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "alert.message"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 16.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FFB3261E"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "remote-text-3": {
+      "id": "remote-text-3",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "climate.s0.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF5F5E62"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "remote-text-12": {
+      "id": "remote-text-12",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "alert.detail"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 14.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF1B1B1F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 3
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "collapsible-row-8": {
+      "id": "collapsible-row-8",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 24.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "metric-6",
+          "metric-7"
+        ]
+      }
+    },
+    "metric-6": {
+      "id": "metric-6",
+      "componentId": "ha-cards/metric",
+      "properties": {
+        "label": {
+          "type": "string",
+          "value": "Room"
+        },
+        "value": {
+          "type": "string",
+          "value": "16"
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "metric-7": {
+      "id": "metric-7",
+      "componentId": "ha-cards/metric",
+      "properties": {
+        "label": {
+          "type": "string",
+          "value": "Target"
+        },
+        "value": {
+          "type": "string",
+          "value": "21"
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "collapsible-row-11": {
+      "id": "collapsible-row-11",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 8.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        },
+        "horizontalArrangement": {
+          "type": "enum",
+          "value": "end"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "button-9",
+          "button-10"
+        ]
+      }
+    },
+    "button-9": {
+      "id": "button-9",
+      "componentId": "ha-cards/button",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Turn off"
+        },
+        "icon": {
+          "type": "string",
+          "value": "power"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        },
+        "showName": {
+          "type": "bool",
+          "value": true
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "button-10": {
+      "id": "button-10",
+      "componentId": "ha-cards/button",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Help"
+        },
+        "icon": {
+          "type": "string",
+          "value": "alert"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "alert.help"
+        },
+        "showName": {
+          "type": "bool",
+          "value": true
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

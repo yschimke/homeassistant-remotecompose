@@ -1,0 +1,126 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "garage-door-toolbar",
+  "title": "Garage door · Toolbar item",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 132,
+    "heightDp": 40,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "cover.s0.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Closed",
+      "persistence": "host"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "uber-theme-4"
+        ]
+      }
+    },
+    "uber-theme-4": {
+      "id": "uber-theme-4",
+      "componentId": "ha-cards/uber-theme",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "value": "classic"
+        },
+        "dark": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "collapsible-row-3"
+        ]
+      }
+    },
+    "collapsible-row-3": {
+      "id": "collapsible-row-3",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 6.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "icon-1",
+          "remote-text-2"
+        ]
+      }
+    },
+    "icon-1": {
+      "id": "icon-1",
+      "componentId": "ha-cards/icon",
+      "properties": {
+        "icon": {
+          "type": "string",
+          "value": "door"
+        },
+        "sizeDp": {
+          "type": "int",
+          "value": 20
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "remote-text-2": {
+      "id": "remote-text-2",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "cover.s0.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF1B1B1F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

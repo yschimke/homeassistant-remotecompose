@@ -1,0 +1,106 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "thermostat-toolbar",
+  "title": "Thermostat · Toolbar item",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 132,
+    "heightDp": 40,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "uber-theme-3"
+        ]
+      }
+    },
+    "uber-theme-3": {
+      "id": "uber-theme-3",
+      "componentId": "ha-cards/uber-theme",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "value": "classic"
+        },
+        "dark": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "collapsible-row-2"
+        ]
+      }
+    },
+    "collapsible-row-2": {
+      "id": "collapsible-row-2",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 6.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "thermometer-1"
+        ]
+      }
+    },
+    "thermometer-1": {
+      "id": "thermometer-1",
+      "componentId": "ha-cards/thermometer",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Hallway"
+        },
+        "value": {
+          "type": "float",
+          "value": 19.5
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        },
+        "presentation": {
+          "type": "string",
+          "value": "chip"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

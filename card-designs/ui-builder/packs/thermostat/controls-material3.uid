@@ -1,0 +1,334 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "thermostat-controls-material3",
+  "title": "Thermostat · Material 3",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 340,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "climate.s0.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Hallway",
+      "persistence": "host"
+    },
+    "climate.s0.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Heat",
+      "persistence": "host"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "uber-theme-12"
+        ]
+      }
+    },
+    "uber-theme-12": {
+      "id": "uber-theme-12",
+      "componentId": "ha-cards/uber-theme",
+      "properties": {
+        "theme": {
+          "type": "string",
+          "value": "expressive"
+        },
+        "dark": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "collapsible-column-11"
+        ]
+      }
+    },
+    "collapsible-column-11": {
+      "id": "collapsible-column-11",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "collapsible-row-3",
+          "thermostat-10",
+          "collapsible-row-9"
+        ]
+      }
+    },
+    "collapsible-row-3": {
+      "id": "collapsible-row-3",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        },
+        "horizontalArrangement": {
+          "type": "enum",
+          "value": "spaceBetween"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "remote-text-1",
+          "status-chip-2"
+        ]
+      }
+    },
+    "remote-text-1": {
+      "id": "remote-text-1",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "climate.s0.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 16.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF1B1B1F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "status-chip-2": {
+      "id": "status-chip-2",
+      "componentId": "ha-cards/status-chip",
+      "properties": {
+        "status": {
+          "type": "state",
+          "variable": "climate.s0.state"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        },
+        "isOn": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "thermostat-10": {
+      "id": "thermostat-10",
+      "componentId": "ha-cards/thermostat",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Hallway"
+        },
+        "current": {
+          "type": "float",
+          "value": 19.5
+        },
+        "target": {
+          "type": "float",
+          "value": 21.0
+        },
+        "min": {
+          "type": "float",
+          "value": 7.0
+        },
+        "max": {
+          "type": "float",
+          "value": 30.0
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
+        },
+        "mode": {
+          "type": "string",
+          "value": "heat"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "collapsible-row-9": {
+      "id": "collapsible-row-9",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 16.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        },
+        "horizontalArrangement": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "remote-button-5",
+          "metric-6",
+          "remote-button-8"
+        ]
+      }
+    },
+    "remote-button-5": {
+      "id": "remote-button-5",
+      "componentId": "ha-cards/remote-button",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "remote-text-4"
+        ]
+      }
+    },
+    "remote-text-4": {
+      "id": "remote-text-4",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "−"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 20.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF1B1B1F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "metric-6": {
+      "id": "metric-6",
+      "componentId": "ha-cards/metric",
+      "properties": {
+        "label": {
+          "type": "string",
+          "value": "Set to"
+        },
+        "value": {
+          "type": "string",
+          "value": "21"
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "remote-button-8": {
+      "id": "remote-button-8",
+      "componentId": "ha-cards/remote-button",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "remote-text-7"
+        ]
+      }
+    },
+    "remote-text-7": {
+      "id": "remote-text-7",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "+"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 20.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF1B1B1F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}
