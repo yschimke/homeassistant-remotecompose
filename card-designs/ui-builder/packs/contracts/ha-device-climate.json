@@ -1,7 +1,7 @@
 {
   "id": "ha-device/climate",
   "major": 1,
-  "minor": 0,
+  "minor": 1,
   "title": "A Home Assistant climate entity: a thermostat, heat pump or air conditioner",
   "dataSource": "App",
   "inputs": {
@@ -167,6 +167,11 @@
       "default": "°C",
       "maxLength": 4,
       "description": "The temperature unit the values are in: `°C` or `°F`."
+    },
+    "host.ambient": {
+      "type": "float",
+      "default": 0,
+      "description": "The host's ambient flag: 1 while its display is in a low-power always-on state, 0 otherwise. Every Home Assistant card reads it to draw its ambient look (docs/architecture/ambient-mode.md)."
     }
   },
   "actions": {
@@ -213,6 +218,10 @@
         }
       },
       "description": "Open alert.help_url, on hosts the app allowlists."
+    },
+    "ha": {
+      "kind": "app:ha.action",
+      "description": "A card's own tap, as Home Assistant's cards emit it: the host decodes the payload, an encoded HaAction (toggle, more-info, a service call, navigate), and runs it."
     }
   },
   "examples": {

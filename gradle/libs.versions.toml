@@ -132,7 +132,7 @@ cmp-adaptive = "1.3.0"
 # 3.1.0: its writer keeps a declaration where it is made and its capture takes a `Profile`.
 rc-players = "3.12.0"
 # Livery (yschimke/livery): the agent session relay design-server runs on.
-livery = "0.22.0"
+livery = "0.23.0"
 compose-webview = "2.0.3"
 keyring = "1.0.4"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
@@ -159,6 +159,7 @@ rc-players-bom = { module = "ee.schimke.composeai:rc-players-bom", version.ref =
 livery-bom = { module = "ee.schimke.composeai:livery-bom", version.ref = "livery" }
 livery-client = { module = "ee.schimke.composeai:livery-client" }
 livery-protocol = { module = "ee.schimke.composeai:livery-protocol" }
+livery-uibuilder-capture = { module = "ee.schimke.composeai:livery-uibuilder-capture" }
 livery-sessions-core = { module = "ee.schimke.composeai:livery-sessions-core" }
 livery-sessions-server = { module = "ee.schimke.composeai:livery-sessions-server" }
 rc-player-protocol = { module = "ee.schimke.composeai:rc-player-protocol" }
@@ -394,6 +395,7 @@ androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "and
 android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+livery-catalog = { id = "ee.schimke.composeai.livery.catalog", version.ref = "livery" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 # Renovate tracking hook for compose-ai-tools. The CLI auto-injects this

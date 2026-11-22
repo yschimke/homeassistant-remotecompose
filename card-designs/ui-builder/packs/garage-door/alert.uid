@@ -290,10 +290,6 @@
           "type": "string",
           "value": "alert"
         },
-        "entityId": {
-          "type": "string",
-          "value": "alert.help"
-        },
         "showName": {
           "type": "bool",
           "value": true
