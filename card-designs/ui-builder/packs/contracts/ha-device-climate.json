@@ -29,6 +29,24 @@
       "maxLength": 80,
       "description": "The card's own `title:`, when it has one."
     },
+    "climate.s0.attributes.current_temperature_label": {
+      "type": "string",
+      "default": "—",
+      "maxLength": 12,
+      "description": "The room temperature formatted with its unit (`19.5°C`), or `—` when it reports none: for a design that shows the reading as text."
+    },
+    "climate.s0.attributes.hvac_action_label": {
+      "type": "string",
+      "default": "",
+      "maxLength": 20,
+      "description": "What it is doing now, for display (`Heating`, `Idle`), else its mode."
+    },
+    "climate.s0.attributes.temperature_label": {
+      "type": "string",
+      "default": "—",
+      "maxLength": 16,
+      "description": "The set point formatted with its unit and an arrow (`↑ 21°C`), or `—` when it has none."
+    },
     "climate.s0.current_humidity": {
       "type": "float",
       "default": -9999,
@@ -205,7 +223,10 @@
       "climate.s0.hvac_mode": "heat",
       "climate.s0.hvac_action": "heating",
       "climate.s0.current_temperature": 19.5,
-      "climate.s0.target_temperature": 21
+      "climate.s0.target_temperature": 21,
+      "climate.s0.attributes.current_temperature_label": "19.5°C",
+      "climate.s0.attributes.temperature_label": "↑ 21°C",
+      "climate.s0.attributes.hvac_action_label": "Heating"
     },
     "idle": {
       "climate.s0.name": "Hallway",

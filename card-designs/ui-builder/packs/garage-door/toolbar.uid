@@ -110,10 +110,6 @@
           "type": "float",
           "value": 13.0
         },
-        "color": {
-          "type": "string",
-          "value": "#FF1B1B1F"
-        },
         "maxLines": {
           "type": "int",
           "value": 1

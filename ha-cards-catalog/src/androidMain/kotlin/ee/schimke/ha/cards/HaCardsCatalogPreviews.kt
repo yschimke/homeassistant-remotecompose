@@ -568,3 +568,33 @@ fun HaCardUberThemeIkeaSticker() = HaCardSticker {
     }
   }
 }
+
+// ── Devices ─────────────────────────────────────────────────────────────────────────────────────
+
+@CatalogComponent(
+  id = "HaCard/GarageDoor",
+  group = "Devices",
+  noReference = NO_KIT,
+  caption =
+    "A sectional garage door in a brick wall, part-way open: it follows the cover's " +
+      "`current_position` live and slides there, the porch light on while it moves.",
+)
+@Preview(widthDp = 240, heightDp = 200)
+@Composable
+fun HaCardGarageDoorSticker() = HaCardSticker {
+  HaCardGarageDoor(position = 40f, stateInt = 1, entityId = "cover.garage_door")
+}
+
+@CatalogComponent(
+  id = "HaCard/WallThermostat",
+  group = "Devices",
+  noReference = NO_KIT,
+  caption =
+    "A plain wall thermostat: the room temperature large on its display, the set point and " +
+      "mode beside it, and ▲ ▼ under it, all following the climate entity live.",
+)
+@Preview(widthDp = 200, heightDp = 200)
+@Composable
+fun HaCardWallThermostatSticker() = HaCardSticker {
+  HaCardWallThermostat(entityId = "climate.hallway")
+}

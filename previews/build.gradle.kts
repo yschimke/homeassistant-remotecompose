@@ -53,6 +53,8 @@ dependencies {
   implementation(project(":rc-card-shutter"))
   implementation(project(":rc-components-ui"))
   implementation(project(":rc-image-coil"))
+  // The device packs' designs and the renderer that draws them (DevicePackPreviews).
+  implementation(project(":ha-cards-catalog"))
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)

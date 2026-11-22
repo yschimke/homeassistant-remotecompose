@@ -11,7 +11,7 @@
   },
   "environment": {
     "widthDp": 280,
-    "heightDp": 320,
+    "heightDp": 232,
     "density": 2,
     "theme": "light",
     "locale": "en-US",
@@ -81,83 +81,10 @@
       ],
       "slots": {
         "children": [
-          "thermostat-2",
-          "thermometer-1",
+          "wall-thermostat-2",
           "remote-text-3"
         ]
       }
-    },
-    "thermostat-2": {
-      "id": "thermostat-2",
-      "componentId": "ha-cards/thermostat",
-      "properties": {
-        "name": {
-          "type": "string",
-          "value": "Hallway"
-        },
-        "current": {
-          "type": "float",
-          "value": 19.5
-        },
-        "target": {
-          "type": "float",
-          "value": 21.0
-        },
-        "min": {
-          "type": "float",
-          "value": 7.0
-        },
-        "max": {
-          "type": "float",
-          "value": 30.0
-        },
-        "unit": {
-          "type": "string",
-          "value": "°C"
-        },
-        "mode": {
-          "type": "string",
-          "value": "heat"
-        },
-        "entityId": {
-          "type": "string",
-          "value": "climate.hallway"
-        }
-      },
-      "modifiers": [],
-      "slots": {}
-    },
-    "thermometer-1": {
-      "id": "thermometer-1",
-      "componentId": "ha-cards/thermometer",
-      "properties": {
-        "name": {
-          "type": "string",
-          "value": "Room"
-        },
-        "value": {
-          "type": "float",
-          "value": 19.5
-        },
-        "unit": {
-          "type": "string",
-          "value": "°C"
-        },
-        "entityId": {
-          "type": "string",
-          "value": "climate.hallway"
-        },
-        "presentation": {
-          "type": "string",
-          "value": "compact"
-        },
-        "attribute": {
-          "type": "string",
-          "value": "current_temperature"
-        }
-      },
-      "modifiers": [],
-      "slots": {}
     },
     "remote-text-3": {
       "id": "remote-text-3",
@@ -171,13 +98,37 @@
           "type": "float",
           "value": 13.0
         },
-        "color": {
-          "type": "string",
-          "value": "#FF5F5E62"
-        },
         "maxLines": {
           "type": "int",
           "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "wall-thermostat-2": {
+      "id": "wall-thermostat-2",
+      "componentId": "ha-cards/wall-thermostat",
+      "properties": {
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        },
+        "current": {
+          "type": "float",
+          "value": 19.5
+        },
+        "target": {
+          "type": "float",
+          "value": 21.0
+        },
+        "mode": {
+          "type": "string",
+          "value": "Heat"
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
         }
       },
       "modifiers": [],

@@ -11,7 +11,7 @@
   },
   "environment": {
     "widthDp": 360,
-    "heightDp": 260,
+    "heightDp": 320,
     "density": 2,
     "theme": "light",
     "locale": "en-US",
@@ -194,10 +194,6 @@
           "type": "float",
           "value": 13.0
         },
-        "color": {
-          "type": "string",
-          "value": "#FF5F5E62"
-        },
         "maxLines": {
           "type": "int",
           "value": 1
@@ -218,10 +214,6 @@
           "type": "float",
           "value": 14.0
         },
-        "color": {
-          "type": "string",
-          "value": "#FF1B1B1F"
-        },
         "maxLines": {
           "type": "int",
           "value": 3
@@ -232,15 +224,11 @@
     },
     "collapsible-row-8": {
       "id": "collapsible-row-8",
-      "componentId": "layout/collapsible-row",
+      "componentId": "layout/collapsible-column",
       "properties": {
-        "horizontalSpacingDp": {
+        "verticalSpacingDp": {
           "type": "float",
-          "value": 24.0
-        },
-        "verticalAlignment": {
-          "type": "enum",
-          "value": "center"
+          "value": 4.0
         }
       },
       "modifiers": [
@@ -281,7 +269,7 @@
         },
         "presentation": {
           "type": "string",
-          "value": "compact"
+          "value": "chip"
         }
       },
       "modifiers": [],
@@ -313,7 +301,7 @@
         },
         "presentation": {
           "type": "string",
-          "value": "compact"
+          "value": "chip"
         }
       },
       "modifiers": [],

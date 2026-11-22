@@ -19,16 +19,28 @@
     "layoutDirection": "ltr"
   },
   "stateVariables": {
+    "climate.s0.attributes.current_temperature_label": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "19.5°C",
+      "persistence": "host"
+    },
+    "climate.s0.attributes.temperature_label": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "↑ 21°C",
+      "persistence": "host"
+    },
+    "climate.s0.attributes.hvac_action_label": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Heating",
+      "persistence": "host"
+    },
     "climate.s0.name": {
       "type": "text",
       "valueType": "string",
       "initialValue": "Hallway",
-      "persistence": "host"
-    },
-    "climate.s0.state": {
-      "type": "text",
-      "valueType": "string",
-      "initialValue": "Heat",
       "persistence": "host"
     }
   },
@@ -63,25 +75,17 @@
       "modifiers": [],
       "slots": {
         "content": [
-          "collapsible-row-6"
+          "body"
         ]
       }
     },
-    "collapsible-row-6": {
-      "id": "collapsible-row-6",
-      "componentId": "layout/collapsible-row",
+    "body": {
+      "id": "body",
+      "componentId": "layout/collapsible-column",
       "properties": {
-        "horizontalSpacingDp": {
+        "verticalSpacingDp": {
           "type": "float",
-          "value": 12.0
-        },
-        "verticalAlignment": {
-          "type": "enum",
-          "value": "center"
-        },
-        "horizontalArrangement": {
-          "type": "enum",
-          "value": "spaceBetween"
+          "value": 2.0
         }
       },
       "modifiers": [
@@ -91,63 +95,115 @@
       ],
       "slots": {
         "children": [
-          "thermometer-1",
-          "collapsible-column-4",
-          "thermometer-5"
+          "reading-row",
+          "context"
         ]
       }
     },
-    "thermometer-1": {
-      "id": "thermometer-1",
-      "componentId": "ha-cards/thermometer",
+    "reading-row": {
+      "id": "reading-row",
+      "componentId": "layout/collapsible-row",
       "properties": {
-        "name": {
-          "type": "string",
-          "value": "Room"
-        },
-        "value": {
+        "horizontalSpacingDp": {
           "type": "float",
-          "value": 19.5
+          "value": 12.0
         },
-        "unit": {
-          "type": "string",
-          "value": "°C"
+        "horizontalArrangement": {
+          "type": "enum",
+          "value": "spaceBetween"
         },
-        "entityId": {
-          "type": "string",
-          "value": "climate.hallway"
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "bottom"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "room",
+          "target"
+        ]
+      }
+    },
+    "room": {
+      "id": "room",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "climate.s0.attributes.current_temperature_label"
         },
-        "presentation": {
-          "type": "string",
-          "value": "glyph"
+        "fontSize": {
+          "type": "float",
+          "value": 44.0
         },
-        "attribute": {
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        },
+        "fontWeight": {
           "type": "string",
-          "value": "current_temperature"
+          "value": "bold"
         }
       },
       "modifiers": [],
       "slots": {}
     },
-    "collapsible-column-4": {
-      "id": "collapsible-column-4",
-      "componentId": "layout/collapsible-column",
+    "target": {
+      "id": "target",
+      "componentId": "ha-cards/remote-text",
       "properties": {
-        "verticalSpacingDp": {
+        "text": {
+          "type": "state",
+          "variable": "climate.s0.attributes.temperature_label"
+        },
+        "fontSize": {
           "type": "float",
-          "value": 0.0
+          "value": 20.0
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        },
+        "fontWeight": {
+          "type": "string",
+          "value": "bold"
         }
       },
       "modifiers": [],
+      "slots": {}
+    },
+    "context": {
+      "id": "context",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 8.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
       "slots": {
         "children": [
-          "remote-text-2",
-          "remote-text-3"
+          "name",
+          "action"
         ]
       }
     },
-    "remote-text-2": {
-      "id": "remote-text-2",
+    "name": {
+      "id": "name",
       "componentId": "ha-cards/remote-text",
       "properties": {
         "text": {
@@ -156,71 +212,35 @@
         },
         "fontSize": {
           "type": "float",
-          "value": 13.0
-        },
-        "color": {
-          "type": "string",
-          "value": "#FFC9C5CA"
+          "value": 15.0
         },
         "maxLines": {
           "type": "int",
           "value": 1
+        },
+        "fontWeight": {
+          "type": "string",
+          "value": "medium"
         }
       },
       "modifiers": [],
       "slots": {}
     },
-    "remote-text-3": {
-      "id": "remote-text-3",
+    "action": {
+      "id": "action",
       "componentId": "ha-cards/remote-text",
       "properties": {
         "text": {
           "type": "state",
-          "variable": "climate.s0.state"
+          "variable": "climate.s0.attributes.hvac_action_label"
         },
         "fontSize": {
           "type": "float",
-          "value": 18.0
-        },
-        "color": {
-          "type": "string",
-          "value": "#FFF4EFF4"
+          "value": 15.0
         },
         "maxLines": {
           "type": "int",
           "value": 1
-        }
-      },
-      "modifiers": [],
-      "slots": {}
-    },
-    "thermometer-5": {
-      "id": "thermometer-5",
-      "componentId": "ha-cards/thermometer",
-      "properties": {
-        "name": {
-          "type": "string",
-          "value": "Target"
-        },
-        "value": {
-          "type": "float",
-          "value": 21.0
-        },
-        "unit": {
-          "type": "string",
-          "value": "°C"
-        },
-        "entityId": {
-          "type": "string",
-          "value": "climate.hallway"
-        },
-        "attribute": {
-          "type": "string",
-          "value": "target_temperature"
-        },
-        "presentation": {
-          "type": "string",
-          "value": "compact"
         }
       },
       "modifiers": [],
