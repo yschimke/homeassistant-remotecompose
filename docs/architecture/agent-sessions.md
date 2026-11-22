@@ -118,6 +118,11 @@ joining takes the `session` argument (a `Bearer` header works too). Browser orig
 | `send_message(session, text)` | A message in the person's panel |
 | `submit_draft(session, revision, document \| dashboard, summary?)` | Validated by the per-kind gate (card contract, dashboard shape) |
 | `put_card_asset(session, key, imageBase64)` | Card images, as before |
+| `get_card_guide(session)` | Card: what a draft may use (the compiler's components with what each draws, modifiers, value forms and where they're live, expressions with arity, clock values, `graphicsLayer`), each binding with its `current` and `sample` value, the shared values, and the rules |
+| `check_card_draft(session, document)` | Card: the contract gate and the compiler's problems, without submitting: `{ok, problems}` |
+| `render_card(session, data?, document?, dark?)` | Card: the draft (default the submitted one) compiled and drawn as a PNG, with the card's current values (`data: "current"`) or sample ones (`"sample"`) |
+| `get_dashboard_guide(session)` | Dashboard: the card types Terrazzo draws, the library designs a card can name with `design_id`, and how to look at a draft |
+| `render_dashboard(session, dashboard?, view?, dark?)` | Dashboard: the draft's cards drawn with made-up sample states, stacked by view and section into a few PNGs, and the cards that couldn't be drawn and why |
 | `await_feedback(session, since)` | Waits up to 25 s for comments or a decision after `since` |
 
 `POST /api/agent/join {code}` trades a code for the session for agents without MCP; they then use
@@ -181,6 +186,24 @@ Assistant (`terrazzo/edit/render`, `get_draft_render`). Both return MCP image co
 kept in memory only, the newest per session; the app shares again whenever it draws a draft.
 A card draft is drawn by the app from the template the design server builds for it (the same
 build **Use it** publishes), so the person decides on what they will get.
+
+The agent can also look before it submits, on the design server (`AgentGuide`):
+
+- **A card** (`render_card`) is compiled with the same compiler and drawn on the server, with the
+  card's **current** values (the state variables' initial values, which the app sent when it
+  seeded the session) or **sample** ones: the library catalog's example for each binding (the
+  session's card type first), else one made up for it (a realistic state for its slot's domain, a
+  "Kitchen light" name, 21.5, true), and the shared values' daytime defaults. The server never
+  sees the app's design key, so it draws with the key the app last previewed the draft with
+  (`/api/studio/agent-session/preview` records it on the session, and it survives a restart), else
+  the library's design for the card type the session was seeded for.
+- **A dashboard** (`render_dashboard`) is drawn with sample states only: the session holds the
+  Lovelace config and never a home's states or identity. Every entity the config names gets a
+  made-up state for its domain (a light on, a temperature sensor at 21.5 °C, an open door), and
+  each card is drawn as `POST /api/cards/resolve` would draw it. The person's own data reaches the
+  agent only through `get_render`, after `submit_draft`.
+
+Every image is at most 1800 px a side and 1.5 MB.
 
 ## When the person isn't watching
 

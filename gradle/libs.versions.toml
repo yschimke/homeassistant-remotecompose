@@ -132,7 +132,7 @@ cmp-adaptive = "1.3.0"
 # 3.1.0: its writer keeps a declaration where it is made and its capture takes a `Profile`.
 rc-players = "3.12.0"
 # Livery (yschimke/livery): the agent session relay design-server runs on.
-livery = "0.22.0"
+livery = "0.24.0"
 compose-webview = "2.0.3"
 keyring = "1.0.4"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
