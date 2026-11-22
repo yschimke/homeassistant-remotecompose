@@ -8,11 +8,10 @@ package ee.schimke.ha.designs
 object LibraryCaptureProfile {
   val OPERATIONS: Set<Int> =
     (listOf(0, 2, 14, 16, 58, 59, 63, 64, 66, 67, 80, 81, 83, 93) +
-        (38..40) +
-        (42..49) +
+        (38..49) +
         (51..56) +
         (100..108) +
-        (123..131) +
+        (121..131) +
         (133..161) +
         (163..194) +
         (196..250))

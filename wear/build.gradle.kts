@@ -268,7 +268,7 @@ dependencies {
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
-  testImplementation("org.robolectric:robolectric:4.17")
+  testImplementation("org.robolectric:robolectric:4.18.1")
   // The AndroidX View player: what a slider card plays in (WearSliderTest).
   testImplementation(libs.remote.player.view)
   // Card designs authored in UI Builder, drawn by the catalog's components: the Wear surface is

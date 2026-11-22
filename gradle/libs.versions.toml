@@ -57,7 +57,7 @@ junit = "4.13.2"
 testcontainers = "2.0.5"
 # Robolectric 4.17's exact API 35 provider jar. Android-all versions identify platform images,
 # not interchangeable library releases; change this together with the tests' @Config(sdk = [35]).
-robolectric-sdk35 = "15-robolectric-13954326-i7"
+robolectric-sdk35 = "15-robolectric-14663667-2-i7"
 mockserver = "9.4.0"
 indriya = "2.2.4"
 

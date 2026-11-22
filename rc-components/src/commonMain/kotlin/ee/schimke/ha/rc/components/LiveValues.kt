@@ -99,8 +99,8 @@ object LiveValues {
 
   /**
    * Entity numeric state ↔ `<entityId>.numeric_state` — the parsed `Float` form of the primary
-   * state, used by gauges / arcs that tween value changes via [AnimatedRemoteFloat]. The host
-   * pushes each new value by name; the player tweens between them.
+   * state, used by gauges / arcs that tween value changes via [animateRemoteFloat]. The host pushes
+   * each new value by name; the player tweens between them.
    */
   fun numericState(entityId: String?, initial: Float): RemoteFloat =
     namedFloat(entityId, "numeric_state", initial)
