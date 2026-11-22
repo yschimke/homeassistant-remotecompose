@@ -1,6 +1,6 @@
 slug: card_designs
 name: Terrazzo Card Designs
-version: 0.1.99
+version: 0.1.100
 description: >-
   Your own card design server and UI Builder, private to this Home Assistant.
   The Terrazzo app finds it through the Terrazzo integration and keeps your
@@ -22,6 +22,4 @@ panel_admin: true
 hassio_api: true
 options: {}
 schema: {}
-# Pulled, not built on the box: release-build.yml publishes the add-on image for each release
-# version. The Supervisor substitutes {arch}.
 image: ghcr.io/yschimke/ha-card-designs-{arch}

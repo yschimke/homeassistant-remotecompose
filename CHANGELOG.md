@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.100](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.99...v0.1.100) (2026-11-22)
+
+
+### Features
+
+* **design:** device packs for a garage door opener and a thermostat ([#1720](https://github.com/yschimke/homeassistant-remotecompose/issues/1720)) ([61bea78](https://github.com/yschimke/homeassistant-remotecompose/commit/61bea782053253231c947d0fe7d6969979c47103))
+* **design:** Livery contracts for the cover and climate device packs ([#1721](https://github.com/yschimke/homeassistant-remotecompose/issues/1721)) ([5edc572](https://github.com/yschimke/homeassistant-remotecompose/commit/5edc572ded5b02e4b3cc54471e4617e0aed2d920))
+* **design:** render the device packs, with a real garage door and wall thermostat ([#1724](https://github.com/yschimke/homeassistant-remotecompose/issues/1724)) ([e554bad](https://github.com/yschimke/homeassistant-remotecompose/commit/e554bad3779c1ef6a394a1e849f46c7db6aad304))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ee.schimke.composeai:compose-preview-daemon-bom to v3.29.0 ([#1726](https://github.com/yschimke/homeassistant-remotecompose/issues/1726)) ([4b54116](https://github.com/yschimke/homeassistant-remotecompose/commit/4b54116ddae70238825e1880cd121d1bed8f36ff))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.148.0 ([#1723](https://github.com/yschimke/homeassistant-remotecompose/issues/1723)) ([66caa9d](https://github.com/yschimke/homeassistant-remotecompose/commit/66caa9dd0fa57f2fd51b7f972479e1142b46470e))
+
 ## [0.1.99](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.98...v0.1.99) (2026-11-22)
 
 
