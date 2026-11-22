@@ -410,7 +410,8 @@ Tools: `find_entities`, `get_entity_state`, `turn_on`, `turn_off`, `toggle`, `li
 (with each dashboard's `/terrazzo` link) and `get_dashboard` (its Lovelace configuration).
 
 For editing a dashboard there are `list_edit_sessions`, `start_edit_session`, `get_edit_session`, `get_card_guide` and
-`submit_draft`. The assistant never saves a dashboard: it submits drafts to an edit session, and a
+`submit_draft`, and `find_designs` lists harc's card designs made for an entity's device or kind,
+each as a ready card config. The assistant never saves a dashboard: it submits drafts to an edit session, and a
 person previews one and applies it with their own Home Assistant administrator account, only while
 the dashboard is still as it was when the session started. Home Assistant lets only
 administrators save dashboards anyway, so an MCP server user who isn't one can draft but not

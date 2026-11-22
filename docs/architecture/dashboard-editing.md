@@ -213,6 +213,14 @@ Assistant's storage:
    - The MCP server adds `list_edit_sessions`, `start_edit_session`, `get_edit_session` (the request, the dashboard as
      it is now, the latest draft and the notes), `get_card_guide` and `submit_draft`. No tool
      saves.
+   - `find_designs` (MCP server and the built-in assistant): harc's card designs made for an
+     entity's device or kind, best fit first, each with the card config that draws it (a
+     `custom:remote-compose-card` wrapping a Home Assistant card, with its `design_id`). The
+     integration matches the entity's registry facts and `device_class` against the public
+     library's suggestion index (`ha.coo.ee/designs/v1/suggestions.json`, cached ten minutes) as
+     the card picker does; the request carries nothing about the home. The card guide's
+     `remote_compose` rules tell the agent to call it when a person wants a device drawn as the
+     real thing, and never to invent a `design_id`.
    - Tests: `home-assistant/test/edit_sessions_test.py` and `mcp_test.py` with plain data and a
      fake home; `installed-edits.test.mjs` in a real Home Assistant: a non-admin's
      `lovelace/config/save` is refused, a session started over the WebSocket is drafted by the MCP

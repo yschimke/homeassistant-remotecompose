@@ -1,8 +1,9 @@
 # Device packs
 
 > Status: **first two packs drafted** (garage door opener, thermostat) as UI Builder documents in
-> `card-designs/ui-builder/packs/`, and **previewed** in this repository's build. No app offers them
-> yet: see [What isn't wired](#what-isnt-wired).
+> `card-designs/ui-builder/packs/`, **previewed** in this repository's build, and their controls
+> **published in the card design library**, where the card picker and the dashboard agent offer
+> them: see [In the design library](#in-the-design-library).
 
 A **device pack** is a set of designs for one kind of device, one per *kind* of placement. They are
 not reskins of one layout. Each kind answers a different question: an alert shows only when
@@ -143,6 +144,32 @@ every dataset passes.
 | `toolbar` | The room temperature as a chip. |
 | `real-world` | The device's own picture, with its simulation as the fallback, and the name, mode and room reading under it. |
 
+## In the design library
+
+The card design library (`:card-designs:generateCardDesigns`, served by the design server)
+publishes each pack's **controls** designs (`DevicePackLibrary`):
+
+- **Their own designs.** Each is a library design of its own, `pack:<designId>`
+  (`pack:garage-door-controls-skeuomorphic`), titled as `pack.json` names it. It is captured for
+  every theme the library keys its card by: a tile of the garage door, the thermostat card of a
+  climate entity. Its keys carry its own variant (`pack-<designId>`), so the card's library design
+  stays the automatic one: a card draws a pack design only when it is set to it (`design_id`).
+- **The card's own entity.** Each is drawn by `CardDesignDocument` with its example entity named
+  as the contract's slot (`DevicePacks.forSlots`: `cover.garage_door` is `cover.s0`), so it binds
+  the entity of whichever card it draws.
+- **Suggested for its class.** A pack for a `device_class` is a class design
+  (`DeviceMatch(deviceClass = "garage")`): the suggestion index lists it, so the card picker offers
+  the garage door designs on any garage door, after any design made for that device. A pack for a
+  whole domain (the thermostat) has no match: it can be chosen by id but isn't suggested on every
+  climate entity.
+- **To the dashboard agent.** The agent's `find_designs` tool reads the same index (see
+  [dashboard-editing.md](../architecture/dashboard-editing.md)), so asking for "the actual garage
+  door" gets a draft card set to it.
+
+Alerts, toolbar items and real-world views are placements other than a dashboard card (and an
+alert shows only while its rule holds), so they stay out of the library until those placements
+exist.
+
 ## What isn't wired
 
 These documents are designs to review and edit, ahead of the code that plays them:
@@ -169,8 +196,13 @@ These documents are designs to review and edit, ahead of the code that plays the
 - **Real world needs its source.** The picture is the card's entity picture
   (`picture-entity-card-image`). The camera entity and the simulation are in `pack.json`, not yet
   in the card config a host builds.
-- **Not selected.** The packs aren't in the design library, so the card picker doesn't offer them.
-  Their `audience` is ready for Livery's audience matching when the migration lands.
+- **Only the controls are selected.** They are in the design library
+  ([above](#in-the-design-library)); the other kinds aren't. Each pack's `audience` is ready for
+  Livery's audience matching when the migration lands.
+- **One entity per card.** A pack design draws one entity (slot 0). A garage opener's other
+  entities (its light, a vent or a half-open button) are its contract's optional inputs, not yet
+  filled from the device's other entities: that needs device cards
+  ([lovelace-card-picker.md](../architecture/lovelace-card-picker.md), stage 3).
 
 ## Publishing
 

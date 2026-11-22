@@ -118,10 +118,10 @@ test('the picker lists the card with a live preview, its documentation and sugge
 
 test('device facts come from the registries Home Assistant already holds', () => {
   assert.deepEqual(card.deviceInfo(printerHass, 'light.printer_chamber'), {
-    integration: 'bambu_lab', manufacturer: 'Bambu Lab', model: 'X1 Carbon', translationKey: 'chamber_light',
+    integration: 'bambu_lab', manufacturer: 'Bambu Lab', model: 'X1 Carbon', translationKey: 'chamber_light', deviceClass: null,
   });
   assert.deepEqual(card.deviceInfo(printerHass, 'sensor.no_device'), {
-    integration: 'template', manufacturer: null, model: null, translationKey: null,
+    integration: 'template', manufacturer: null, model: null, translationKey: null, deviceClass: null,
   });
   assert.equal(card.deviceInfo(printerHass, 'light.unknown'), null);
   assert.equal(card.deviceInfo({ states: {} }, 'light.kitchen'), null);
@@ -160,6 +160,30 @@ test('a model design is listed before a brand design that sets more fields', () 
   assert.deepEqual(ids, ['user:model', 'user:brand', 'user:role']);
   assert.ok(card.deviceRank({ integration: 'a', translationKey: 'b' }) > card.deviceRank({ integration: 'a' }));
   assert.equal(card.deviceRank({ model: ' ' }), 0);
+});
+
+test('a design for a class (every garage door) is offered on any entity of that class, after device designs', () => {
+  const hass = {
+    states: {
+      'cover.garage': { state: 'closed', attributes: { device_class: 'garage' } },
+      'cover.gate': { state: 'closed', attributes: { device_class: 'gate' } },
+    },
+    entities: {
+      'cover.garage': { platform: 'ratgdo', device_id: 'd1' },
+      'cover.gate': { platform: 'ratgdo', device_id: 'd1' },
+    },
+    devices: { d1: { manufacturer: 'Chamberlain', model: 'Security+ 2.0' } },
+  };
+  const index = { designs: [
+    { designId: 'pack:garage-door-controls-skeuomorphic', cardType: 'tile', device: { deviceClass: 'garage' }, domain: 'cover', title: 'Garage door · Wall console' },
+    { designId: 'user:ratgdo', cardType: 'tile', device: { integration: 'ratgdo' }, domain: 'cover', title: 'ratgdo' },
+  ] };
+  assert.equal(card.deviceInfo(hass, 'cover.garage').deviceClass, 'garage');
+  assert.deepEqual(card.entitySuggestions(hass, 'cover.garage', index).map((s) => s.config.design_id),
+    ['user:ratgdo', 'pack:garage-door-controls-skeuomorphic']);
+  assert.deepEqual(card.entitySuggestions(hass, 'cover.gate', index).map((s) => s.config.design_id), ['user:ratgdo']);
+  assert.ok(card.deviceRank({ translationKey: 'door' }) > card.deviceRank({ deviceClass: 'garage' }));
+  assert.ok(card.deviceRank({ deviceClass: 'garage' }) > 0);
 });
 
 test('an entity with nothing made for its device gets no suggestions', () => {

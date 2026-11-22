@@ -6,6 +6,7 @@ server-sent events, no batching, which every current MCP client accepts.
 """
 import base64
 import json
+import re
 
 # A tool result's PNG bytes under this key become MCP image content.
 IMAGE = "_png"
@@ -189,6 +190,24 @@ EDIT_TOOLS = [
         "annotations": {"readOnlyHint": True, "openWorldHint": False},
     },
     {
+        "name": "find_designs",
+        "title": "Find card designs for an entity",
+        "description": (
+            "Lists harc's card designs made for an entity's device or kind (a garage door drawn as "
+            "the door itself, a printer's own controls), best fit first, each with the card config "
+            "that draws it: a custom:remote-compose-card wrapping a Home Assistant card, with the "
+            "design's design_id. Put that config in a draft as it is. An empty list means Home "
+            "Assistant's own cards are the right choice for that entity."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {"entity_id": _entity_id_schema("The entity to find designs for, e.g. cover.garage_door.")},
+            "required": ["entity_id"],
+            "additionalProperties": False,
+        },
+        "annotations": {"readOnlyHint": True, "openWorldHint": True},
+    },
+    {
         "name": "get_card_guide",
         "title": "Get the card guide",
         "description": (
@@ -334,6 +353,17 @@ CARD_GUIDE = {
         'gauges, graphs, forecasts and lists read best "full".',
         "Cards fill a section's rows in order, so order them the way they should read.",
     ],
+    "remote_compose": [
+        "A card can be drawn by one of harc's card designs: wrap a Home Assistant card in "
+        '{"type": "custom:remote-compose-card", "card": {<the HA card>}, "design_id": "<id>"}. '
+        "The wrapped card keeps its entity, name and actions; the design only changes how it looks.",
+        "Get design ids only from find_designs, for the entity the card shows, and use the config "
+        "it returns. Never invent a design_id or wrap a card no design was found for.",
+        "When the user asks for a device to look like the real thing (skeuomorphic, the actual "
+        "garage door, a wall thermostat) or for a design made for their device, call find_designs "
+        "on its main entity first.",
+        "Size a design card like the card it wraps; a device design reads best at 6 columns or full.",
+    ],
     "designs": (
         "harc's card designs are published in the hosted Compose Preview catalog, an MCP server "
         "at https://preview.coo.ee/mcp (catalog homeassistant-remotecompose; reading needs a "
@@ -345,6 +375,85 @@ CARD_GUIDE = {
 
 TOOL_NAMES = frozenset(tool["name"] for tool in TOOLS)
 _SWITCH_SERVICES = {"turn_on": "turn_on", "turn_off": "turn_off", "toggle": "toggle"}
+
+
+# The Home Assistant cards a design can wrap, and how many designs find_designs lists.
+DESIGN_CARD_TYPES = ("tile", "button", "entity", "gauge", "thermostat")
+DESIGN_LIMIT = 5
+_MATCH_FIELDS = ("integration", "manufacturer", "model", "translationKey", "deviceClass")
+
+
+def _set_fields(match):
+    return [f for f in _MATCH_FIELDS if isinstance((match or {}).get(f), str) and match[f].strip()]
+
+
+def design_matches(match, device):
+    """`DeviceMatch.matches` (ha-model): every field [match] sets, without case; `*` in a model."""
+    fields = _set_fields(match)
+    if not device or not fields:
+        return False
+    for field in fields:
+        wanted = match[field].strip().lower()
+        actual = device.get(field)
+        if not isinstance(actual, str):
+            return False
+        if field == "model":
+            pattern = ".*".join(re.escape(part) for part in wanted.split("*"))
+            if not re.fullmatch(pattern, actual, re.IGNORECASE):
+                return False
+        elif wanted != actual.lower():
+            return False
+    return True
+
+
+def design_rank(match):
+    """`DeviceMatch.rank` (ha-model): model over brand over role over class, then field count."""
+    fields = _set_fields(match)
+    if "model" in fields:
+        scope = 4
+    elif "integration" in fields or "manufacturer" in fields:
+        scope = 3
+    elif "translationKey" in fields:
+        scope = 2
+    elif "deviceClass" in fields:
+        scope = 1
+    else:
+        return 0
+    return scope * 8 + len(fields)
+
+
+def find_designs(index, entity, device, limit=DESIGN_LIMIT):
+    """The designs in the library's suggestion [index] made for [entity]'s [device] or kind, best
+    fit first: what the card picker suggests (remote-compose-card.js), each with its card config."""
+    entity_id = entity["entity_id"]
+    domain = domain_of(entity_id)
+    facts = dict(device or {})
+    facts["deviceClass"] = (entity.get("attributes") or {}).get("device_class")
+    found = {}
+    for design in (index or {}).get("designs") or []:
+        if not isinstance(design, dict):
+            continue
+        design_id, card_type = design.get("designId"), design.get("cardType")
+        if not isinstance(design_id, str) or card_type not in DESIGN_CARD_TYPES:
+            continue
+        if design.get("domain") not in (None, domain) or not design_matches(design.get("device"), facts):
+            continue
+        found.setdefault((design_id, card_type), design)
+    ranked = sorted(found.values(), key=lambda d: -design_rank(d.get("device")))[:limit]
+    return [
+        {
+            "design_id": d["designId"],
+            "title": d.get("title") or f"Made for this device ({d['cardType']})",
+            "card_type": d["cardType"],
+            "made_for": {k: v for k, v in (d.get("device") or {}).items() if v},
+            "config": {
+                "type": "custom:remote-compose-card",
+                "card": {"type": d["cardType"], "entity": entity_id},
+                "design_id": d["designId"],
+            },
+        }
+        for d in ranked
+    ]
 
 
 def domain_of(entity_id):
@@ -464,6 +573,20 @@ async def call_tool(home, name, arguments):
         return await home.edit_session(_session_id(arguments))
     if name == "get_card_guide":
         return CARD_GUIDE
+    if name == "find_designs":
+        entity = _entity(home, arguments)
+        index = await home.design_index()
+        if index is None:
+            raise ToolError("The card design library can't be reached right now; use Home Assistant's own cards")
+        designs = find_designs(index, entity, home.device_info(entity["entity_id"]))
+        return {
+            "entity_id": entity["entity_id"],
+            "designs": designs,
+            "next": (
+                "Use a design's config as a card in the draft." if designs
+                else "Nothing is made for this entity: use Home Assistant's own cards."
+            ),
+        }
     if name == "await_request":
         since = arguments.get("since", 0)
         if not isinstance(since, (int, float)) or isinstance(since, bool) or since < 0:

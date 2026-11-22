@@ -79,6 +79,40 @@ class DeviceSuggestionsTest {
   }
 
   @Test
+  fun aLibraryDesignForAClassIsPublishedWithItsIdAndSuggestedForThatClass() {
+    // What the library generator publishes for a device pack (DevicePackLibrary).
+    val pack =
+      BuiltDesign(
+        key().copy(shape = "device_class=garage;domain=cover", variant = "pack-garage"),
+        1,
+        template,
+        designId = "pack:garage-door-controls-skeuomorphic",
+        title = "Garage door · Wall console",
+        device = DeviceMatch(deviceClass = "garage"),
+      )
+    val output = DesignPublisher.publish(listOf(BuiltDesign(key(), 1, template), pack), 3, 1)
+    val entry = output.manifest.designs.single { it.key.variant == "pack-garage" }
+    assertEquals("pack:garage-door-controls-skeuomorphic", entry.designId)
+    assertEquals("Garage door · Wall console", entry.title)
+    assertEquals(
+      "library:tile",
+      output.manifest.designs.single { it.key.variant == "default" }.designId,
+    )
+    assertEquals(
+      listOf(
+        DeviceSuggestions.Suggestion(
+          designId = "pack:garage-door-controls-skeuomorphic",
+          cardType = "tile",
+          device = DeviceMatch(deviceClass = "garage"),
+          title = "Garage door · Wall console",
+          domain = "cover",
+        ),
+      ),
+      DeviceSuggestions.index(3, output.manifest.designs).designs,
+    )
+  }
+
+  @Test
   fun revokedAndUnidentifiedDeviceDesignsAreNotSuggested() {
     val entries = library().manifest.designs
     val revoked = entries.map { if (it.device != null) it.copy(revoked = true) else it }

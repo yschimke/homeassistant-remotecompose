@@ -571,8 +571,9 @@ object DesignPublisher {
         sha256 = sha,
         bytes = design.bytes.size,
         slots = design.slots,
-        designId = DesignEntry.libraryDesignId(design.key.cardType),
-        title = DesignEntry.LIBRARY_TITLE,
+        designId = design.designId ?: DesignEntry.libraryDesignId(design.key.cardType),
+        title = design.title ?: DesignEntry.LIBRARY_TITLE,
+        device = design.device,
       )
     }
     val manifest =

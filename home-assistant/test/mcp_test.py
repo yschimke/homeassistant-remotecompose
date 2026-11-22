@@ -28,8 +28,25 @@ class FakeHome:
             entity('light.kitchen_ceiling', 'Kitchen ceiling', 'on'),
             entity('sensor.kitchen_temperature', 'Kitchen temperature', '21.5', unit_of_measurement='°C'),
             entity('lock.front_door', 'Front door', 'locked'),
+            entity('cover.garage_door', 'Garage door', 'closed', device_class='garage'),
+            entity('cover.side_gate', 'Side gate', 'closed', device_class='gate'),
         ]
         self.calls = []
+        self.index = {'serial': 1, 'designs': [
+            {'designId': 'pack:garage-door-controls-skeuomorphic', 'cardType': 'tile',
+             'device': {'deviceClass': 'garage'}, 'domain': 'cover', 'title': 'Garage door · Wall console'},
+            {'designId': 'user:ratgdo', 'cardType': 'tile', 'device': {'integration': 'ratgdo'}, 'domain': 'cover'},
+            {'designId': 'user:printer', 'cardType': 'tile', 'device': {'integration': 'bambu_lab'}, 'domain': 'light'},
+            {'designId': 'user:wall', 'cardType': 'picture-elements', 'device': {'deviceClass': 'garage'}},
+        ]}
+
+    def device_info(self, entity_id):
+        if entity_id.startswith('cover.'):
+            return {'integration': 'ratgdo', 'manufacturer': 'Chamberlain', 'model': None, 'translationKey': None}
+        return None
+
+    async def design_index(self):
+        return self.index
 
     def states(self):
         return list(self.entities)
@@ -179,11 +196,42 @@ class McpProtocolTest(unittest.TestCase):
         self.assertEqual(home.submitted, ('s1', config, 'Garden'))
         self.assertTrue(call(home, 'submit_draft', {'session_id': 's1', 'config': '{"views": []}'})['isError'])
 
+    def test_find_designs_lists_device_designs_then_class_designs_as_ready_cards(self):
+        result = call(FakeHome(), 'find_designs', {'entity_id': 'cover.garage_door'})['structuredContent']
+        self.assertEqual([d['design_id'] for d in result['designs']], ['user:ratgdo', 'pack:garage-door-controls-skeuomorphic'])
+        door = result['designs'][1]
+        self.assertEqual(door['title'], 'Garage door · Wall console')
+        self.assertEqual(door['made_for'], {'deviceClass': 'garage'})
+        self.assertEqual(door['config'], {
+            'type': 'custom:remote-compose-card',
+            'card': {'type': 'tile', 'entity': 'cover.garage_door'},
+            'design_id': 'pack:garage-door-controls-skeuomorphic',
+        })
+        # A gate is no garage door; a light has nothing made for its device here.
+        gate = call(FakeHome(), 'find_designs', {'entity_id': 'cover.side_gate'})['structuredContent']['designs']
+        self.assertEqual([d['design_id'] for d in gate], ['user:ratgdo'])
+        self.assertEqual(call(FakeHome(), 'find_designs', {'entity_id': 'light.kitchen'})['structuredContent']['designs'], [])
+
+    def test_find_designs_needs_a_known_entity_and_the_library(self):
+        self.assertTrue(call(FakeHome(), 'find_designs', {'entity_id': 'cover.nope'})['isError'])
+        offline = FakeHome()
+        offline.index = None
+        self.assertTrue(call(offline, 'find_designs', {'entity_id': 'cover.garage_door'})['isError'])
+
+    def test_design_matching_follows_device_match(self):
+        self.assertTrue(mcp.design_matches({'model': 'x1*'}, {'model': 'X1 Carbon'}))
+        self.assertFalse(mcp.design_matches({'model': 'x1'}, {'model': 'X1 Carbon'}))
+        self.assertFalse(mcp.design_matches({}, {'model': 'X1'}))
+        self.assertGreater(mcp.design_rank({'translationKey': 'door'}), mcp.design_rank({'deviceClass': 'garage'}))
+        self.assertGreater(mcp.design_rank({'deviceClass': 'garage'}), mcp.design_rank({}))
+
     def test_card_guide_names_the_native_types_and_sizes(self):
         guide = call(FakeHome(), 'get_card_guide')['structuredContent']
         self.assertIn('tile', guide['native_card_types'])
         self.assertTrue(any('grid_options' in rule for rule in guide['sizing']))
         self.assertIn('homeassistant-remotecompose', guide['designs'])
+        self.assertTrue(any('custom:remote-compose-card' in rule for rule in guide['remote_compose']))
+        self.assertTrue(any('find_designs' in rule for rule in guide['remote_compose']))
 
     def test_edit_tools_never_claim_to_save(self):
         # An agent submits drafts; only a person applies them.

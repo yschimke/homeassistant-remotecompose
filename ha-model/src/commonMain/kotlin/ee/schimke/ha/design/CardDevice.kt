@@ -3,6 +3,8 @@ package ee.schimke.ha.design
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cardEntityIds
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * The entity whose device a card's design is picked for: the entity of its first design slot
@@ -19,6 +21,17 @@ fun cardMainEntity(card: CardConfig): String? =
  * [snapshot]'s registry: what a device-specific design is matched against ([DeviceMatch.pick],
  * `designOptions`). Null when the card names no entity or the registry doesn't list it (the user
  * can't read the device registry), and the card gets the designs for every device.
+ *
+ * Its [DeviceInfo.deviceClass] is the entity's `device_class` from its state, as Home Assistant
+ * draws it: a design for a class (every garage door) matches on it.
  */
 fun cardDevice(card: CardConfig, snapshot: HaSnapshot): DeviceInfo? =
-  cardMainEntity(card)?.let { snapshot.devices[it] }
+  cardMainEntity(card)?.let { entityDevice(it, snapshot) }
+
+/** [entityId]'s registry facts in [snapshot], with its state's `device_class`: see [cardDevice]. */
+fun entityDevice(entityId: String, snapshot: HaSnapshot): DeviceInfo? {
+  val registered = snapshot.devices[entityId] ?: return null
+  val deviceClass =
+    (snapshot.states[entityId]?.attributes?.get("device_class") as? JsonPrimitive)?.contentOrNull
+  return if (deviceClass == null) registered else registered.copy(deviceClass = deviceClass)
+}

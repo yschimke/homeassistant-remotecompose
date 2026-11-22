@@ -70,7 +70,12 @@ object CardDesignLibrary {
 
     // A card type with a checked-in design (ui-builder/designs/<type>.uid) is captured from it, so
     // editing the design is what changes the library; the rest still come from their converters.
-    val built = examples.keys.map { CheckedInCardDesigns.capture(host, it) }
+    // A device pack's key is captured from the pack's own design (DevicePackLibrary).
+    val built =
+      examples.keys.map { key ->
+        DevicePackLibrary.designFor(key)?.let { DevicePackLibrary.capture(host, key, it) }
+          ?: CheckedInCardDesigns.capture(host, key)
+      }
     val now = System.currentTimeMillis()
     val output = DesignPublisher.publish(built, serial = now, nowEpochMs = now)
     // The checked-in designs the migrated card types were drawn from, so the design server can
@@ -141,7 +146,8 @@ object CardDesignLibrary {
       manifest.designs
         .filterNot { it.revoked }
         .map { entry ->
-          if (entry.key.cardType == cardType) {
+          // A device pack's key is its own design, not the card type's: it is kept as it is.
+          if (entry.key.cardType == cardType && DevicePackLibrary.designFor(entry.key) == null) {
             captured++
             CheckedInCardDesigns.captureDesign(host, entry.key, design)
           } else {
@@ -149,6 +155,9 @@ object CardDesignLibrary {
               entry.key,
               entry.slots,
               source.resolve(DesignManifest.blobPath(entry.sha256)).readBytes(),
+              designId = entry.designId,
+              title = entry.title,
+              device = entry.device,
             )
           }
         }
@@ -292,6 +301,11 @@ object CardDesignLibrary {
       for (key in libraryKeysOf(source)) examples.getOrPut(key) { source }
     }
     check(examples.isNotEmpty()) { "the demo dashboards produce no designs" }
+    // The device packs' designs, each in every theme the library keys its tile by.
+    for (design in DevicePackLibrary.published) {
+      val example = DevicePackLibrary.example(design)
+      for (key in DevicePackLibrary.keys(design)) examples.getOrPut(key) { example }
+    }
     return examples
   }
 
