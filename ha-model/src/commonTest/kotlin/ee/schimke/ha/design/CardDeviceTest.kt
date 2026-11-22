@@ -101,5 +101,13 @@ class CardDeviceTest {
       DeviceInfo(integration = "ratgdo", deviceClass = "garage"),
       cardDevice(card("""{"type":"tile","entity":"cover.garage"}"""), garage),
     )
+    // Without a registry entry (or the right to read it), the state's class still counts.
+    assertEquals(
+      DeviceInfo(deviceClass = "garage"),
+      cardDevice(
+        card("""{"type":"tile","entity":"cover.garage"}"""),
+        garage.copy(devices = emptyMap()),
+      ),
+    )
   }
 }

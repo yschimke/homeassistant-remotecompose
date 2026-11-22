@@ -25,7 +25,13 @@ const DESIGN_ID = /^[^\u0000-\u001f]{1,256}$/;
  */
 export function deviceInfo(hass, entityId) {
   const entity = hass?.entities?.[entityId];
-  if (!entity) return null;
+  const deviceClass = hass?.states?.[entityId]?.attributes?.device_class ?? null;
+  // An entity the registry doesn't list still has its state's class: a class design matches it.
+  if (!entity) {
+    return deviceClass == null ? null : {
+      integration: null, manufacturer: null, model: null, translationKey: null, deviceClass,
+    };
+  }
   const device = entity.device_id ? hass.devices?.[entity.device_id] : undefined;
   return {
     integration: entity.platform ?? null,
@@ -33,7 +39,7 @@ export function deviceInfo(hass, entityId) {
     model: device?.model ?? null,
     translationKey: entity.translation_key ?? null,
     // What kind of thing it is (`garage`), whoever made it: the state's attribute, as HA draws it.
-    deviceClass: hass?.states?.[entityId]?.attributes?.device_class ?? null,
+    deviceClass,
   };
 }
 

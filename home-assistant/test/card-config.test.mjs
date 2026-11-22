@@ -179,6 +179,11 @@ test('a design for a class (every garage door) is offered on any entity of that 
     { designId: 'user:ratgdo', cardType: 'tile', device: { integration: 'ratgdo' }, domain: 'cover', title: 'ratgdo' },
   ] };
   assert.equal(card.deviceInfo(hass, 'cover.garage').deviceClass, 'garage');
+  const unregistered = { ...hass, entities: {} };
+  assert.deepEqual(card.deviceInfo(unregistered, 'cover.garage'),
+    { integration: null, manufacturer: null, model: null, translationKey: null, deviceClass: 'garage' });
+  assert.deepEqual(card.entitySuggestions(unregistered, 'cover.garage', index).map((s) => s.config.design_id),
+    ['pack:garage-door-controls-skeuomorphic']);
   assert.deepEqual(card.entitySuggestions(hass, 'cover.garage', index).map((s) => s.config.design_id),
     ['user:ratgdo', 'pack:garage-door-controls-skeuomorphic']);
   assert.deepEqual(card.entitySuggestions(hass, 'cover.gate', index).map((s) => s.config.design_id), ['user:ratgdo']);

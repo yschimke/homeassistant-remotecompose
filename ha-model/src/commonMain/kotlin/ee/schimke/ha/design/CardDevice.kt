@@ -30,8 +30,13 @@ fun cardDevice(card: CardConfig, snapshot: HaSnapshot): DeviceInfo? =
 
 /** [entityId]'s registry facts in [snapshot], with its state's `device_class`: see [cardDevice]. */
 fun entityDevice(entityId: String, snapshot: HaSnapshot): DeviceInfo? {
-  val registered = snapshot.devices[entityId] ?: return null
+  val registered = snapshot.devices[entityId]
   val deviceClass =
     (snapshot.states[entityId]?.attributes?.get("device_class") as? JsonPrimitive)?.contentOrNull
-  return if (deviceClass == null) registered else registered.copy(deviceClass = deviceClass)
+  // An entity the registry doesn't list (or a user who can't read it) still has its state's class.
+  return when {
+    deviceClass == null -> registered
+    registered == null -> DeviceInfo(deviceClass = deviceClass)
+    else -> registered.copy(deviceClass = deviceClass)
+  }
 }
