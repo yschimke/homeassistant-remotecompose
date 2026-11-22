@@ -37,9 +37,9 @@ fun TopBarOverflowMenu(
   onInstallOnWatch: (() -> Unit)? = null,
   onEditDashboard: (() -> Unit)? = null,
   onOpenRoom: (() -> Unit)? = null,
-  /** What [onEditDashboard] is called: [CHAT_WITH_AGENT] while the built-in agent edits. */
+  /** What [onEditDashboard] is called: [CHAT_WITH_AGENT] while the dashboard agent edits. */
   editDashboardLabel: String = "Edit dashboard",
-  /** "New dashboard", built with the integration's built-in agent. */
+  /** "New dashboard", built with the integration's dashboard agent. */
   onNewDashboard: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }

@@ -3,22 +3,16 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    ConversationAgentSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
 )
 
-from .assistant import PROVIDERS
 from .const import (
-    AGENT_OFF,
-    CONF_AGENT_API_KEY,
-    CONF_AGENT_BASE_URL,
-    CONF_AGENT_MODEL,
-    CONF_AGENT_PROVIDER,
+    CONF_AGENT,
     CONF_DASHBOARD,
     CONF_MCP_USER,
     CONF_TITLE,
@@ -80,38 +74,22 @@ def _schema(hass, options, mcp_users=None):
         fields[vol.Required(CONF_MCP_USER, default=current)] = SelectSelector(
             SelectSelectorConfig(options=mcp_users, mode=SelectSelectorMode.DROPDOWN)
         )
-        fields.update(_agent_fields(options))
+        agent = options.get(CONF_AGENT) or ""
+        # The conversation agent that answers edit sessions: any of Home Assistant's, with the
+        # "Terrazzo dashboards" API on in its own options (dashboard_agent.py). Empty for none.
+        fields[vol.Optional(CONF_AGENT, description={"suggested_value": agent} if agent else None)] = (
+            ConversationAgentSelector()
+        )
     return vol.Schema(fields)
-
-
-def _agent_fields(options):
-    """The built-in agent: a provider, its API key (never shown back: blank keeps the saved one),
-    and optionally a model and, for an OpenAI-compatible service, its base URL."""
-    provider = options.get(CONF_AGENT_PROVIDER) or AGENT_OFF
-    if provider != AGENT_OFF and provider not in PROVIDERS:
-        provider = AGENT_OFF
-    model = options.get(CONF_AGENT_MODEL) or ""
-    base_url = options.get(CONF_AGENT_BASE_URL) or ""
-    return {
-        vol.Required(CONF_AGENT_PROVIDER, default=provider): SelectSelector(
-            SelectSelectorConfig(
-                options=[SelectOptionDict(value=AGENT_OFF, label="Off")]
-                + [SelectOptionDict(value=key, label=p["label"]) for key, p in PROVIDERS.items()],
-                mode=SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Optional(CONF_AGENT_API_KEY): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-        vol.Optional(CONF_AGENT_MODEL, description={"suggested_value": model} if model else None): TextSelector(),
-        vol.Optional(
-            CONF_AGENT_BASE_URL, description={"suggested_value": base_url} if base_url else None
-        ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-    }
 
 
 class TerrazzoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """One entry: the /terrazzo panel."""
 
     VERSION = 1
+    # 1.2: Home Assistant's conversation agents answer edit sessions; the built-in agent's
+    # provider, model, URL and API key are gone (`async_migrate_entry`).
+    MINOR_VERSION = 2
 
     async def async_step_user(self, user_input=None):
         if self._async_current_entries():
@@ -133,35 +111,17 @@ class TerrazzoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class TerrazzoOptionsFlow(config_entries.OptionsFlow):
-    """Change the sidebar title, the first dashboard, the MCP server's user and the built-in
-    agent; the panel reloads in place."""
+    """Change the sidebar title, the first dashboard, the MCP server's user and the conversation
+    agent that answers edit sessions; the panel reloads in place."""
 
     def __init__(self, config_entry):
         # Not `self.config_entry`: newer HA sets that itself and warns when a flow assigns it.
         self._entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        errors = {}
         if user_input is not None:
-            options = clean_options(user_input, self._entry.options)
-            provider = options[CONF_AGENT_PROVIDER]
-            if provider != AGENT_OFF and not options[CONF_AGENT_API_KEY]:
-                errors[CONF_AGENT_API_KEY] = "agent_key_required"
-            elif provider != AGENT_OFF and PROVIDERS[provider].get("base_url") is None and not options[CONF_AGENT_BASE_URL]:
-                errors[CONF_AGENT_BASE_URL] = "agent_base_url_required"
-            elif provider != AGENT_OFF and PROVIDERS[provider].get("default_model") is None and not options[CONF_AGENT_MODEL]:
-                errors[CONF_AGENT_MODEL] = "agent_model_required"
-            elif options[CONF_AGENT_BASE_URL] and not options[CONF_AGENT_BASE_URL].startswith(("https://", "http://")):
-                errors[CONF_AGENT_BASE_URL] = "agent_base_url_https"
-            else:
-                return self.async_create_entry(title="", data=options)
+            return self.async_create_entry(title="", data=clean_options(user_input))
         return self.async_show_form(
-            errors=errors,
             step_id="init",
-            # A refused form comes back with what was typed, except the key, which is never shown.
-            data_schema=_schema(
-                self.hass,
-                {**self._entry.options, **{k: v for k, v in (user_input or {}).items() if k != CONF_AGENT_API_KEY}},
-                await _mcp_user_options(self.hass),
-            ),
+            data_schema=_schema(self.hass, self._entry.options, await _mcp_user_options(self.hass)),
         )

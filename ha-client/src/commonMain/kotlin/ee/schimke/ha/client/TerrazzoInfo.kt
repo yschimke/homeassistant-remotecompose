@@ -39,7 +39,7 @@ data class TerrazzoCapabilities(
   @SerialName("design_server") val designServer: TerrazzoDesignServerCapability? = null,
   /** `terrazzo/web_origin`: asking HA to allow this page's origin (CORS). */
   @SerialName("web_origin") val webOrigin: Int? = null,
-  /** `terrazzo/agent/info`: the built-in dashboard agent. */
+  /** `terrazzo/agent/info`: the dashboard agent (2: Home Assistant's own, with its name). */
   val agent: Int? = null,
   /** The MCP server: told only to administrators and the one user it serves. */
   val mcp: TerrazzoMcpCapability? = null,

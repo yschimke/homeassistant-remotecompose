@@ -551,7 +551,7 @@ the generic half of `AgentEditScreenTest`, `UiBuilderTest`, and the handoff half
 - **The target labeler.** "Living room temperature (view 1, section 2, card 2)" is
   `cardLabel` plus the friendly name, as an implementation of `TargetLabeler`.
 - **The preview.** The app draws its own cards in the review scaffold's slot.
-- **Home Assistant's direct path.** `edit_sessions.py`, `edits.py`, `mcp.py`, `assistant.py` and
+- **Home Assistant's direct path.** `edit_sessions.py`, `edits.py`, `mcp.py`, `dashboard_agent.py` and
   `cloud_relay.py` run inside HA, in Python, and are HA-specific by nature.
   - They keep their own code, but **speak the same session wire format**: Livery's session spec
     (`docs/SESSIONS.md`) and its conformance fixtures, which the Python tests also run.
@@ -675,7 +675,7 @@ Assistant.
 | L6 | Manifest split by contract | only if the step-1 count is too big | — |
 | L7 | `livery-server` catalog channels: upload-what-changed, mirror, server-side `derive/`, fetch counting | step 8 | `LibraryChannels` + `LibraryMirror` (656), `UsageStats` (304) |
 | L8 | Phone → watch blob sync over the Data Layer | step 6, optional | the design half of `MobileWearSyncManager` |
-| **L9** | **Agent sessions** (`livery-sessions-*`, `livery-agent`): see [Agent and UI Builder flows](#agent-and-ui-builder-flows-as-optional-livery-modules) | track A, any time | relay, links, MCP surface, session client, live panel, built-in agent runner (~4,000 + tests) |
+| **L9** | **Agent sessions** (`livery-sessions-*`, `livery-agent`): see [Agent and UI Builder flows](#agent-and-ui-builder-flows-as-optional-livery-modules) | track A, any time | relay, links, MCP surface, session client, live panel, dashboard agent runner (~4,000 + tests) |
 | **L10** | **UI Builder flows** in `livery-uibuilder`: handoffs, editor process, an `edits` channel publisher, import back to the repo | track A | `UiBuilder` config and process, `CardStudio` handoffs, `LibraryEditPublisher`, the import workflow (~1,500) |
 
 **Also deleted once the steps land:** `DesignRepository`, `DesignQuery`, `DeviceMatch`,

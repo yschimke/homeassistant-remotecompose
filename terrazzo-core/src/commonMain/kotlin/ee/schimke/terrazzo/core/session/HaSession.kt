@@ -531,15 +531,15 @@ class LiveHaSession(
   override val agentEdits: ee.schimke.ha.client.dashboard.AgentEdits
     get() = client.agentEdits
 
-  override suspend fun builtInAgent(): ee.schimke.ha.client.dashboard.BuiltInAgent =
-    if (offers { it.agent } == false) ee.schimke.ha.client.dashboard.BuiltInAgent.Off
+  override suspend fun dashboardAgent(): ee.schimke.ha.client.dashboard.DashboardAgent =
+    if (offers { it.agent } == false) ee.schimke.ha.client.dashboard.DashboardAgent.Off
     else
       try {
-        client.terrazzoBuiltInAgent()
+        client.terrazzoDashboardAgent()
       } catch (e: kotlinx.coroutines.CancellationException) {
         throw e
       } catch (_: Exception) {
-        ee.schimke.ha.client.dashboard.BuiltInAgent.Off
+        ee.schimke.ha.client.dashboard.DashboardAgent.Off
       }
 
   override fun cloudAgentEdits(

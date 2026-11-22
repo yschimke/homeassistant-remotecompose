@@ -440,40 +440,39 @@ client completes that flow depends on its OAuth support; the long-lived token al
 The protocol layer is `custom_components/terrazzo/mcp.py`; `home-assistant/test/mcp_test.py`
 covers it and `home-assistant/test/installed-mcp.test.mjs` runs it inside a real Home Assistant.
 
-## Built-in dashboard agent
+## Dashboard agent
 
-Instead of connecting an agent of your own, you can give Terrazzo an AI service's API key and let
-Home Assistant run the agent itself. While it is on, the Terrazzo apps and the panel edit
-dashboards by chatting with it: **Edit dashboard** becomes **Chat with your agent**, and **New
-dashboard** asks it to build one from your entities.
+Instead of connecting an agent of your own, you can let one of Home Assistant's own conversation
+agents edit dashboards: any AI integration's agent (OpenAI, Google Gemini, Anthropic, Ollama,
+OpenRouter, …), with its own provider and key. While one is chosen, the Terrazzo apps and the panel
+open a chat with it when you edit a dashboard: **Chat with your agent** leads the dashboard's menu,
+**Edit by hand** stays beside it, and **New dashboard** asks it to build one from your entities.
 
-- Open the integration, choose **Configure**, and set **Dashboard agent** to **Google Gemini**,
-  **OpenRouter**, or **Other OpenAI-compatible service** (Ollama, LM Studio and the like, with its
-  URL). Enter the **Agent API key**: a Gemini key from Google AI Studio, or an OpenRouter key.
-  **Agent model** is optional for Gemini (`gemini-flash-latest`) and OpenRouter
-  (`openrouter/auto`); any model that supports tool calling works. **Off** turns it off and
-  forgets the key.
-- The key stays in Home Assistant, in the integration's options (`.storage/core.config_entries`,
-  like other integrations' keys), and is only sent to that service. The apps learn only that the
-  agent is on and which model it uses. Leave the key field empty when you change other settings
-  to keep the saved key.
-- The agent answers every edit session: a new session with a greeting (or a first draft, for a
-  new dashboard), and each message or card comment with a new draft or a question. It can change
-  a dashboard's structure (views, sections, their order), change any card (pin a comment to it),
-  or build a new dashboard from your areas and entities.
-- It acts as the person chatting, with their Home Assistant permissions only: it reads the
-  entities and dashboards they can see, and like any agent it only drafts. The person sees each
-  draft drawn with their own cards and live states and chooses **Use it** (or **Create it** for a
-  new dashboard, which then appears in Home Assistant's dashboards and sidebar). Only an
-  administrator can apply; **Undo** puts a dashboard back, or deletes a dashboard it created.
-- Each turn sends the service the dashboard's configuration, the conversation, and the names and
-  states of the entities the agent looks up. Use a provider you are comfortable sharing that with,
-  or a local model.
+- **Turn it on.** In the AI integration, open its conversation agent's options and turn on
+  **Terrazzo dashboards** among the APIs it may control (beside **Assist**, or instead of it). Then
+  open Terrazzo, choose **Configure**, and pick that agent as **Dashboard agent**. Empty turns it
+  off. An agent without Terrazzo dashboards on has no dashboard tools: it answers, but can't draft.
+- **No key in Terrazzo.** The provider and its key stay in that AI integration. The apps learn only
+  that an agent answers and its name (`terrazzo/agent/info`).
+- **Every session.** The agent answers every edit session: a new session gets a first turn (a first
+  draft, for a new dashboard), and each message or card comment another. It can change a
+  dashboard's structure (views, sections, their order), change any card (pin a comment to it), or
+  build a new dashboard from your areas and entities.
+- **As the person chatting.** Each turn runs as the person who started the session, with their
+  Home Assistant permissions only: the dashboard tools read the entities and dashboards they can
+  see, and like any agent it only drafts. The person sees each draft drawn with their own cards
+  and live states and chooses **Use it** (or **Create it** for a new dashboard, which then appears
+  in Home Assistant's dashboards and sidebar). Only an administrator can apply; **Undo** puts a
+  dashboard back, or deletes a dashboard it created.
+- **What it's sent.** Each turn sends the agent's service the session's request, the conversation
+  so far, and what the tools return: the dashboard's configuration and the names and states of the
+  entities it looks up. Use a provider you are comfortable sharing that with, or a local model
+  (Ollama).
 
-`custom_components/terrazzo/assistant.py` holds the turn and the providers;
-`home-assistant/test/assistant_test.py` covers it with a fake model, and
-`home-assistant/test/installed-agent-builtin.test.mjs` runs it inside a real Home Assistant
-against a fake OpenAI-compatible service.
+`custom_components/terrazzo/dashboard_agent.py` runs the turns and `agent_turn.py` writes what the
+agent is told (`home-assistant/test/agent_turn_test.py`);
+`home-assistant/test/installed-agent-ha.test.mjs` runs it inside a real Home Assistant, with Home
+Assistant's Ollama integration talking to a fake Ollama server.
 
 ## Your own conversation agent (LLM API)
 
@@ -484,6 +483,9 @@ key: OpenAI, Google Gemini, Anthropic, Ollama or any other LLM integration.
 - **Turn it on:** open that integration's conversation agent options and, under the APIs it may
   control (*Control Home Assistant*), choose **Terrazzo dashboards** (beside **Assist**, or
   instead of it). Then ask Assist, by text or voice, to change a dashboard.
+- **In the panel and apps too:** choose the same agent as Terrazzo's
+  [dashboard agent](#dashboard-agent), and editing a dashboard in the Terrazzo panel or app chats
+  with it there, with each draft drawn beside the conversation.
 - **Its tools:** `list_dashboards`, `get_dashboard`, `find_entities`, `get_entity_state`,
   `home_overview`, `find_designs`, `get_card_guide`, `list_edit_sessions`, `start_edit_session`,
   `get_edit_session` and `submit_draft`. They are the MCP server's, without switching (Assist

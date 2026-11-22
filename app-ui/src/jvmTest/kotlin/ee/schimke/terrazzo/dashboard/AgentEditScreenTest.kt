@@ -11,7 +11,7 @@ import ee.schimke.ha.client.agent.AgentPresence
 import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
-import ee.schimke.ha.client.dashboard.BuiltInAgent
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
@@ -428,7 +428,7 @@ class AgentEditScreenTest {
   }
 
   @Test
-  fun theBuiltInAgentIsNamedAndUseItStaysInReachInALongConversation() = runComposeUiTest {
+  fun theDashboardAgentIsNamedAndUseItStaysInReachInALongConversation() = runComposeUiTest {
     val said =
       (1..8).map { i ->
         AgentEditSession.Message("Reply $i: a longer answer about the layout of this dashboard.")
@@ -457,7 +457,7 @@ class AgentEditScreenTest {
           onSharePrompt = {},
           onApplied = {},
           initialSessionId = "s1",
-          builtInAgent = BuiltInAgent(true, "gemini", "Google Gemini", "gemini-flash-latest"),
+          dashboardAgent = DashboardAgent(true, "conversation.ollama", "Ollama"),
         ) { _, card ->
           Text("card:${card.type}")
         }
@@ -467,8 +467,8 @@ class AgentEditScreenTest {
     // However long the conversation, Use it isn't scrolled away with it.
     onNodeWithText("Use it").assertIsDisplayed()
     // The agent is named in its status and its messages.
-    onNodeWithText("Gemini · Waiting for you").assertExists()
-    assertTrue(onAllNodesWithText("Gemini").fetchSemanticsNodes().isNotEmpty())
+    onNodeWithText("Ollama · Waiting for you").assertExists()
+    assertTrue(onAllNodesWithText("Ollama").fetchSemanticsNodes().isNotEmpty())
     // Nothing to hand another agent.
     onNodeWithText("Copy prompt").assertDoesNotExist()
   }

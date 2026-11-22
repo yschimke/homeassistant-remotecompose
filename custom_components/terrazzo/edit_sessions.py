@@ -23,7 +23,7 @@ MAX_SESSIONS = 50
 MAX_DRAFTS = 10
 MAX_NOTES = 50
 MAX_MESSAGES = 50
-# The built-in agent's steps (its tool calls) kept per session, newest last.
+# The dashboard agent's steps (its tool calls) kept per session, newest last.
 MAX_STEPS = 100
 MAX_STEP_TEXT = 500
 MAX_STATUS = 120
@@ -272,7 +272,7 @@ class EditSessions:
             "messages": [],
             "agent": None,
             "scope": scope,
-            # The built-in agent's progress: the newest note it has answered (assistant.py).
+            # The dashboard agent's progress: the newest note it has answered (dashboard_agent.py).
             "assistant": None,
         }
         self._sessions[session["id"]] = session
@@ -463,7 +463,7 @@ class EditSessions:
 
     @staticmethod
     def assistant_pending(session):
-        """Whether the built-in agent owes [session] a turn: it is open and the person has said
+        """Whether the dashboard agent owes [session] a turn: it is open and the person has said
         something since the agent last answered, or it's new and nobody has answered yet."""
         if session["status"] != OPEN:
             return False
@@ -475,7 +475,7 @@ class EditSessions:
         return newest > handled
 
     def assistant_started(self, session_id, now):
-        """The built-in agent takes the notes so far: a note after this runs another turn."""
+        """The dashboard agent takes the notes so far: a note after this runs another turn."""
         session = self.get(session_id, now)
         newest = max((n.get("seq", 0) for n in session["notes"]), default=0)
         session["assistant"] = {**(session.get("assistant") or {}), "handled": newest, "error": None}
