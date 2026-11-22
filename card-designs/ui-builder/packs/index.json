@@ -8,7 +8,8 @@
       "audience": {
         "entity.domain": "cover",
         "entity.device_class": "garage"
-      }
+      },
+      "contract": "ha-device/cover@1"
     },
     {
       "id": "thermostat",
@@ -16,7 +17,12 @@
       "manifest": "thermostat/pack.json",
       "audience": {
         "entity.domain": "climate"
-      }
+      },
+      "contract": "ha-device/climate@1"
     }
+  ],
+  "contracts": [
+    "contracts/ha-device-climate.json",
+    "contracts/ha-device-cover.json"
   ]
 }

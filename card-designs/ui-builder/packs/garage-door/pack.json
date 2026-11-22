@@ -6,6 +6,7 @@
     "entity.domain": "cover",
     "entity.device_class": "garage"
   },
+  "contract": "ha-device/cover@1",
   "exampleEntity": "cover.garage_door",
   "designs": [
     {

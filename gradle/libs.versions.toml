@@ -157,6 +157,8 @@ cmp-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-
 cmp-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "cmp-adaptive" }
 rc-players-bom = { module = "ee.schimke.composeai:rc-players-bom", version.ref = "rc-players" }
 livery-bom = { module = "ee.schimke.composeai:livery-bom", version.ref = "livery" }
+livery-client = { module = "ee.schimke.composeai:livery-client" }
+livery-protocol = { module = "ee.schimke.composeai:livery-protocol" }
 livery-sessions-core = { module = "ee.schimke.composeai:livery-sessions-core" }
 livery-sessions-server = { module = "ee.schimke.composeai:livery-sessions-server" }
 rc-player-protocol = { module = "ee.schimke.composeai:rc-player-protocol" }

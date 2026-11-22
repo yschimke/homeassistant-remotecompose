@@ -38,7 +38,8 @@ More kinds worth adding, each with a different job, not another look:
 
 ```
 card-designs/ui-builder/packs/
-  index.json                 every pack: id, title, the entities it fits, its manifest
+  index.json                 every pack: id, title, the entities it fits, its contract, its manifest
+  contracts/<id>.json        the Livery contracts the packs implement (below)
   <pack>/pack.json           the pack: its designs by kind and variant, alert rules, real-world source
   <pack>/<kind>[-<variant>].uid   one UI Builder design (compose-ui-builder-document/v1, ha-cards)
 ```
@@ -48,6 +49,7 @@ card-designs/ui-builder/packs/
 - **`audience`**: the facts of the entities the pack fits (`entity.domain`, `entity.device_class`),
   written as [Livery audiences](https://github.com/yschimke/livery/blob/main/docs/PROTOCOL.md)
   will match them.
+- **`contract`**: the Livery contract every design in the pack implements (`ha-device/cover@1`).
 - **`designs[]`**: `kind`, `variant`, `surface`, `file`, `designId` (the `.uid`'s own `id`) and
   `title`.
   - An alert adds `showWhen`: conditions on the pack entity's bindings, each with a `reason` and
@@ -65,9 +67,56 @@ by the host:
   itself.
 - **Text** (`cover.s0.name`, `climate.s0.state`, the alert's `alert.message`) is a `host` state
   variable.
-`DevicePacksTest` (`:ha-cards-catalog`) holds every pack to the catalog policy, to the bindings a
-host pushes, and to its own manifest. It also checks that a cover or climate reading follows one of
-its domain's floats, and that no metric shows such an entity's state.
+`DevicePacksTest` (`:ha-cards-catalog`) holds every pack to the catalog policy, to its contract,
+and to its own manifest. It also checks that a cover or climate reading follows one of its
+contract's float attributes, and that no metric shows such an entity's state.
+
+## Contracts
+
+A pack's designs implement one [Livery contract](https://github.com/yschimke/livery/blob/main/docs/PROTOCOL.md#4-contracts-and-data)
+for the kind of entity they draw. It lists every value a design may read, each action it may
+emit, and example datasets:
+
+| Contract | File | For |
+| --- | --- | --- |
+| `ha-device/cover@1` | `contracts/ha-device-cover.json` | a garage door, gate, door, shutter or blind |
+| `ha-device/climate@1` | `contracts/ha-device-climate.json` | a thermostat, heat pump or air conditioner |
+
+- **Inputs are the names designs read today:** the entity's slot 0, `cover.s0.state`,
+  `climate.s0.target_temperature`. The [Livery migration](../architecture/livery-migration.md)'s
+  reference lists (`slots.0.*`) will replace them with a new major.
+- **Only the name and the formatted state are required.** Every other input is optional with a
+  default, because devices differ:
+  - **Absent numbers:** a number a device may not report (a cover's position, a thermostat's set
+    point while it is off) defaults to `-9999`, the `HaLiveBindings.ABSENT` a host pushes. A design
+    shows a dash for it, as the attribute readings do.
+  - **Optional covers' fields:** `device_class`, tilt, an obstruction sensor, the opener's light,
+    a lockout and a sensor battery.
+  - **Optional climate fields:** the raw and active modes, a heat/cool range, humidity, °C or °F
+    with its own limits and step, presets and fan modes.
+  - **Alert text:** `alert.message`, `alert.detail` and `alert.help_url`, empty unless an alert
+    rule fills them.
+  - **A picture:** `<domain>.s0.picture` for a real-world design.
+- **Actions:**
+  - **Changing a value** is a `set` of the input it changes, which the host turns into the service
+    call: `set_position`, `set_temperature`, `set_hvac_mode` and the range's two set points.
+  - **The rest are `app:ha.*` kinds** the app handles: `open`, `close`, `stop`, `toggle`,
+    `turn_off` and `more_info`.
+  - **`help`** is a built-in `open-url`.
+- **Examples** cover the variance: a cover that's closed, open, opening, with no position, stopped
+  by an obstruction, left open, or unavailable; a thermostat that's heating, idle, off with no set
+  point, holding a range, in °F, not reaching its set point, or unavailable.
+
+The test reads the contracts with Livery's own types and binds every example, and the least a
+host could push (the required inputs alone), through `ContractBinder` (`livery-client`), the gate
+every dataset passes.
+
+**Not wired yet:**
+- **Hosts don't push most of the optional inputs yet.** They push `name`, `state`, `is_on`,
+  `is_available`, `status`, `last_changed`, a cover's `state_int`, `current_position` and
+  `supported_features`, and a climate's two temperatures. The others take their defaults until
+  the card's converter pushes them.
+- **Designs don't emit the actions yet:** see below.
 
 ## The packs
 
@@ -101,8 +150,9 @@ These documents are designs to review and edit, ahead of the code that plays the
   `native` lane), which this repository's build doesn't run. The in-process `.uid` renderer
   (`CardDesign`) draws card parts only, not the collapsible layouts or Material text these use.
   Baselines come from the server once the files are uploaded; see [Publishing](#publishing).
-- **No distinct actions.** A button takes its card's own tap action (`entityId`). Open, Stop and
-  Close, − and +, and Help need action support in UI Builder designs, which
+- **No distinct actions.** A button takes its card's own tap action (`entityId`). The contracts
+  declare Open, Stop and Close, the set point and Help, but emitting them needs action support in
+  UI Builder designs, which
   [server-owned-card-designs.md](../architecture/server-owned-card-designs.md) leaves out of scope
   for now.
 - **Alerts are not evaluated.** No client reads `showWhen` yet, and `alert.message` and

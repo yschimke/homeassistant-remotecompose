@@ -1,0 +1,238 @@
+{
+  "id": "ha-device/cover",
+  "major": 1,
+  "minor": 0,
+  "title": "A Home Assistant cover: a garage door, gate, door, shutter or blind",
+  "dataSource": "App",
+  "inputs": {
+    "alert.detail": {
+      "type": "string",
+      "default": "",
+      "maxLength": 240,
+      "description": "An alert design's explanation and what to do; empty when nothing is wrong."
+    },
+    "alert.help_url": {
+      "type": "string",
+      "default": "",
+      "maxLength": 500,
+      "description": "Where an alert's Help goes: an HTTPS page the host chooses; empty for none."
+    },
+    "alert.message": {
+      "type": "string",
+      "default": "",
+      "maxLength": 80,
+      "description": "An alert design's headline (`Left open for 30 minutes`); empty when nothing is wrong."
+    },
+    "card.title": {
+      "type": "string",
+      "default": "",
+      "maxLength": 80,
+      "description": "The card's own `title:`, when it has one."
+    },
+    "cover.s0.battery": {
+      "type": "float",
+      "default": -9999,
+      "min": -9999,
+      "max": 100,
+      "description": "The battery level of the door's tilt or contact sensor, 0 to 100; -9999 (HaLiveBindings.ABSENT) when the entity doesn't report it."
+    },
+    "cover.s0.current_position": {
+      "type": "float",
+      "default": -9999,
+      "min": -9999,
+      "max": 100,
+      "description": "How far open, 0 closed to 100 open; -9999 (HaLiveBindings.ABSENT) when the entity doesn't report it."
+    },
+    "cover.s0.current_tilt_position": {
+      "type": "float",
+      "default": -9999,
+      "min": -9999,
+      "max": 100,
+      "description": "A tilting cover's slat tilt, 0 closed to 100 open; -9999 (HaLiveBindings.ABSENT) when the entity doesn't report it."
+    },
+    "cover.s0.device_class": {
+      "type": "string",
+      "default": "",
+      "maxLength": 20,
+      "description": "What kind of cover: `garage`, `gate`, `door`, `shutter`, `blind`, `awning`; empty when unset."
+    },
+    "cover.s0.is_available": {
+      "type": "bool",
+      "default": true,
+      "description": "False while the entity is unavailable or missing."
+    },
+    "cover.s0.is_on": {
+      "type": "bool",
+      "default": false,
+      "description": "Whether Home Assistant counts the state as on."
+    },
+    "cover.s0.last_changed": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "description": "When the state last changed, in whole Unix seconds; 0 when unknown."
+    },
+    "cover.s0.last_changed_offset": {
+      "type": "int",
+      "default": 0,
+      "description": "The UTC offset in force at last_changed in the host's time zone, in seconds."
+    },
+    "cover.s0.light_on": {
+      "type": "bool",
+      "default": false,
+      "description": "The opener's own light is on, for openers that have one; false otherwise."
+    },
+    "cover.s0.locked": {
+      "type": "bool",
+      "default": false,
+      "description": "The opener is locked out (vacation mode, a lock entity on the same device); false when there is none."
+    },
+    "cover.s0.name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80,
+      "description": "The door's name: the card's `name:`, else its friendly name."
+    },
+    "cover.s0.obstructed": {
+      "type": "bool",
+      "default": false,
+      "description": "An obstruction sensor on the same device reports something in the way; false when there is none."
+    },
+    "cover.s0.picture": {
+      "type": "image",
+      "description": "A picture of the device: a camera snapshot for a real-world design, else the entity's own picture, as `app:` or `https:` (PROTOCOL.md §6.1). Absent when the host has none; the design shows its own drawing."
+    },
+    "cover.s0.state": {
+      "type": "string",
+      "required": true,
+      "maxLength": 60,
+      "description": "Its state as Home Assistant formats it for display, in the person's language (`Closed`, `Heat`)."
+    },
+    "cover.s0.state_int": {
+      "type": "int",
+      "default": 5,
+      "min": 0,
+      "max": 5,
+      "description": "The state as a key: 0 closed, 1 open, 2 opening, 3 closing, 4 unavailable, 5 unknown (HaLiveBindings.coverStateInt)."
+    },
+    "cover.s0.status": {
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 3,
+      "description": "0 available, 1 unavailable, 2 unknown, 3 entity missing (CardDesignSlots.statusOf)."
+    },
+    "cover.s0.supported_features": {
+      "type": "float",
+      "default": -9999,
+      "min": -9999,
+      "description": "Home Assistant's supported_features bitmask: 1 open, 2 close, 4 set position, 8 stop, 16+ tilt; -9999 (HaLiveBindings.ABSENT) when the entity doesn't report it."
+    }
+  },
+  "actions": {
+    "open": {
+      "kind": "app:ha.cover.open_cover",
+      "description": "Open it (supported_features bit 1)."
+    },
+    "close": {
+      "kind": "app:ha.cover.close_cover",
+      "description": "Close it (bit 2)."
+    },
+    "stop": {
+      "kind": "app:ha.cover.stop_cover",
+      "description": "Stop it moving (bit 8)."
+    },
+    "toggle": {
+      "kind": "app:ha.cover.toggle",
+      "description": "Open it if closed, close it if open: a single push button."
+    },
+    "set_position": {
+      "kind": "set",
+      "input": "cover.s0.current_position",
+      "description": "The person moved its position (bit 4): the host calls set_cover_position."
+    },
+    "more_info": {
+      "kind": "app:ha.more-info",
+      "description": "Open Home Assistant's more-info dialog for the entity."
+    },
+    "help": {
+      "kind": "open-url",
+      "args": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "maxLength": 500
+        }
+      },
+      "description": "Open alert.help_url, on hosts the app allowlists."
+    }
+  },
+  "examples": {
+    "closed": {
+      "cover.s0.name": "Garage door",
+      "cover.s0.state": "Closed",
+      "cover.s0.state_int": 0,
+      "cover.s0.current_position": 0,
+      "cover.s0.supported_features": 15,
+      "cover.s0.device_class": "garage",
+      "cover.s0.last_changed": 1763800000
+    },
+    "open": {
+      "cover.s0.name": "Garage door",
+      "cover.s0.state": "Open",
+      "cover.s0.state_int": 1,
+      "cover.s0.is_on": true,
+      "cover.s0.current_position": 100,
+      "cover.s0.supported_features": 15,
+      "cover.s0.device_class": "garage"
+    },
+    "opening": {
+      "cover.s0.name": "Garage door",
+      "cover.s0.state": "Opening",
+      "cover.s0.state_int": 2,
+      "cover.s0.is_on": true,
+      "cover.s0.current_position": 40,
+      "cover.s0.supported_features": 15,
+      "cover.s0.device_class": "garage"
+    },
+    "no-position": {
+      "cover.s0.name": "Side gate",
+      "cover.s0.state": "Closed",
+      "cover.s0.state_int": 0,
+      "cover.s0.supported_features": 3,
+      "cover.s0.device_class": "gate"
+    },
+    "obstructed": {
+      "cover.s0.name": "Garage door",
+      "cover.s0.state": "Closing",
+      "cover.s0.state_int": 3,
+      "cover.s0.is_on": true,
+      "cover.s0.current_position": 60,
+      "cover.s0.supported_features": 15,
+      "cover.s0.device_class": "garage",
+      "cover.s0.obstructed": true,
+      "alert.message": "Something is in the way",
+      "alert.detail": "The door stopped closing at 60 %. Clear the doorway, then close it again."
+    },
+    "left-open": {
+      "cover.s0.name": "Garage door",
+      "cover.s0.state": "Open",
+      "cover.s0.state_int": 1,
+      "cover.s0.is_on": true,
+      "cover.s0.current_position": 100,
+      "cover.s0.supported_features": 15,
+      "cover.s0.device_class": "garage",
+      "cover.s0.light_on": true,
+      "alert.message": "Left open for 30 minutes",
+      "alert.detail": "The door has been open since 18:05. Close it, or check the camera.",
+      "alert.help_url": "https://www.home-assistant.io/integrations/cover/"
+    },
+    "unavailable": {
+      "cover.s0.name": "Garage door",
+      "cover.s0.state": "Unavailable",
+      "cover.s0.state_int": 4,
+      "cover.s0.is_available": false,
+      "cover.s0.status": 1
+    }
+  }
+}
