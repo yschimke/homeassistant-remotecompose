@@ -21,7 +21,7 @@ on:
     paths: &paths
       - card-designs/**
       - design-server/**
-      # Built on the box from the image, not part of it; each release sets its version.
+      # The add-on image is published per release by release-build.yml, not here; each release sets its version.
       - '!design-server/addon/**'
       - embed/**
       - lovelace-catalog/**
@@ -213,7 +213,7 @@ jobs:
           curl -sfI localhost:8081/studio/dashboard/assets/uiBuilder.wasm | grep -qi 'application/wasm'
       - name: Open an app draft in the bundled editor in Chromium
         run: STUDIO_SMOKE_REQUIRED=1 STUDIO_SERVER_URL=http://localhost:8081 STUDIO_OPERATOR_TOKEN=ci-token node --test design-server/test/*.test.mjs
-      # Both architectures: the Home Assistant add-on (design-server/addon) builds on this image, and
+      # Both architectures: the Home Assistant add-on image (design-server/addon) builds on this image, and
       # most Home Assistant boxes are arm64. Only the runtime stage differs; the JARs, library and
       # Wasm built above are the same for both.
       - name: Publish the image to GHCR

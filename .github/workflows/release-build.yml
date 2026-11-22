@@ -135,6 +135,46 @@ jobs:
       tag: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
       publish: ${{ github.event_name == 'push' || inputs.publish_release == true }}
 
+  # The Terrazzo Card Designs add-on (design-server/addon) names this image in its config.yaml, so
+  # the Supervisor pulls it instead of building it on the box (which left gigabytes of layers on
+  # small SD cards). It is the design server image as main last published it, plus the add-on's
+  # nginx front, tagged with the version this release wrote into config.yaml.
+  card-designs-addon:
+    name: Card Designs add-on image
+    if: github.event_name == 'push' || inputs.publish_release == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+          - arch: aarch64
+            platform: linux/arm64
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      - uses: docker/setup-qemu-action@v4.4.0
+      - uses: docker/setup-buildx-action@v4.4.1
+      - name: Build and push the add-on image
+        env:
+          IMAGE: ghcr.io/yschimke/ha-card-designs-${{ matrix.arch }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version=$(sed -nE 's/^version: *"?([^"]+)"?$/\1/p' design-server/addon/config.yaml)
+          test -n "$version"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker buildx build --platform "${{ matrix.platform }}" \
+            --build-arg BUILD_FROM=ghcr.io/yschimke/ha-card-design-server:latest \
+            --label io.hass.type=addon --label io.hass.arch=${{ matrix.arch }} \
+            --label io.hass.version="$version" \
+            -t "$IMAGE:$version" -t "$IMAGE:latest" --push design-server/addon
+
   push-relay:
     name: Deploy the push relay
     runs-on: ubuntu-latest

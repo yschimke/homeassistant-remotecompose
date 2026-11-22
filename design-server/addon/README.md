@@ -8,8 +8,9 @@ remote URL included, and needs no GitHub sign-in.
 
 1. Settings → Add-ons → Add-on store → ⋮ → Repositories: add
    `https://github.com/yschimke/homeassistant-remotecompose`.
-2. Install **Terrazzo Card Designs** and start it. The Supervisor builds it on the box from the
-   published `ghcr.io/yschimke/ha-card-design-server` image (amd64 and arm64).
+2. Install **Terrazzo Card Designs** and start it. The Supervisor pulls the released
+   `ghcr.io/yschimke/ha-card-designs-{arch}` image (amd64 and aarch64) rather than building it on
+   the box.
 3. Install the Terrazzo integration (from the Marketplace) too: it tells the app the add-on is there
    (`terrazzo/design_server`) and passes the app's calls on to it (`/api/terrazzo/designs`).
 
@@ -26,7 +27,8 @@ where it starts.
 
 Each Terrazzo release sets the add-on's `version`, so the Supervisor offers it as an update
 (`update.terrazzo_card_designs_update`) once it reloads the store, every three hours. Updating
-rebuilds it on the newest design server image. The Supervisor's own auto-update doesn't suit it:
+pulls that release's add-on image, built on the newest design server image when the release was
+cut. The Supervisor's own auto-update doesn't suit it:
 that waits for a version to be a day old, and releases come more often than that. Install the
 update from an automation instead, as for the integration, whose Marketplace update entity
 (`update.terrazzo_remote_compose_update`) needs a restart to take effect, for example nightly:
