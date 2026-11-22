@@ -166,10 +166,6 @@
           "type": "float",
           "value": 15.0
         },
-        "color": {
-          "type": "string",
-          "value": "#FF1B1B1F"
-        },
         "maxLines": {
           "type": "int",
           "value": 1
@@ -189,10 +185,6 @@
         "fontSize": {
           "type": "float",
           "value": 13.0
-        },
-        "color": {
-          "type": "string",
-          "value": "#FF5F5E62"
         },
         "maxLines": {
           "type": "int",

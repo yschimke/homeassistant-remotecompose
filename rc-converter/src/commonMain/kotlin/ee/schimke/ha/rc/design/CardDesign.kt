@@ -65,6 +65,13 @@ private constructor(
   private val roots: List<String> =
     document["roots"]?.jsonArray.orEmpty().map { it.jsonPrimitive.content }
 
+  /**
+   * The design's state variables (`stateVariables`), by name: what a `state` property names, with
+   * its `initialValue`, which seeds the value a component draws until a host pushes the live one.
+   */
+  internal val stateVariables: Map<String, JsonObject> =
+    document["stateVariables"]?.jsonObject.orEmpty().mapValues { it.value.jsonObject }
+
   /** The catalog the design is pinned to; only `ha-cards` designs are drawn. */
   val catalog: String? =
     document["catalogPin"]?.jsonObject?.get("systemId")?.jsonPrimitive?.contentOrNull
@@ -83,7 +90,10 @@ private constructor(
       }
       node["properties"]?.jsonObject?.forEach { (name, value) ->
         val type = value.jsonObject["type"]?.jsonPrimitive?.contentOrNull
-        if (type !in LITERAL_TYPES) add("$id.$name: a `$type` property is not a literal")
+        if (type == STATE) {
+          val variable = value.jsonObject["variable"]?.jsonPrimitive?.contentOrNull
+          if (variable !in stateVariables) add("$id.$name: state `$variable` is not declared")
+        } else if (type !in LITERAL_TYPES) add("$id.$name: a `$type` property is not a literal")
       }
       childrenOf(id).filter { it !in nodes }.forEach { add("$id: missing child $it") }
     }
@@ -151,7 +161,11 @@ private constructor(
 
     private val MODIFIERS = setOf("fillMaxWidth", "fillMaxHeight", "fillMaxSize")
 
-    private val LITERAL_TYPES = setOf("string", "bool", "int", "float", "color")
+    /** Literal kinds: an `enum` (an alignment, an arrangement) is its value's string. */
+    private val LITERAL_TYPES = setOf("string", "bool", "int", "float", "color", "enum")
+
+    /** A property bound to one of the design's state variables: `{"type":"state","variable":…}`. */
+    private const val STATE = "state"
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -192,8 +206,27 @@ internal constructor(
   /** The component id of child [childId]. */
   fun componentOf(childId: String): String? = design.componentOf(childId)
 
-  private fun literal(name: String): JsonPrimitive? =
-    properties[name]?.jsonObject?.get("value") as? JsonPrimitive
+  /**
+   * [name]'s value: its literal, or for a `state` property its variable's `initialValue`, the value
+   * it draws until a host pushes another.
+   */
+  private fun literal(name: String): JsonPrimitive? {
+    val property = properties[name]?.jsonObject ?: return null
+    stateOf(name)?.let {
+      return design.stateVariables[it]?.get("initialValue") as? JsonPrimitive
+    }
+    return property["value"] as? JsonPrimitive
+  }
+
+  /**
+   * The state variable [name] is bound to, or null for a literal: the named value a component binds
+   * so the host's pushes reach it (`climate.s0.state`).
+   */
+  fun stateOf(name: String): String? {
+    val property = properties[name]?.jsonObject ?: return null
+    if (property["type"]?.jsonPrimitive?.contentOrNull != "state") return null
+    return property["variable"]?.jsonPrimitive?.contentOrNull
+  }
 
   fun string(name: String, default: String = ""): String = literal(name)?.contentOrNull ?: default
 

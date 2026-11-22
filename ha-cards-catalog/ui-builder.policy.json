@@ -1138,6 +1138,17 @@
           "notes": "Size in sp, written `<n>.rsp`. Set by size: unlike remote-m3's own text, this catalog's text is written by the record-driven emitter, which has no spelling for a type role."
         },
         {
+          "name": "fontWeight",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "normal",
+            "medium",
+            "bold"
+          ],
+          "notes": "The text's weight, `normal` when unset: `bold` for a reading meant to be read from across a room or in a headset."
+        },
+        {
           "name": "color",
           "jsonType": "string",
           "required": false,
@@ -1676,6 +1687,96 @@
           "jsonType": "string",
           "required": false,
           "notes": "A `#AARRGGBB` literal for the value bar. Unset is HA's gauge blue, #FF03A9F4."
+        }
+      ]
+    },
+    "ha-cards/garage-door": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDevicesKt.HaCardGarageDoor",
+      "displayName": "Garage door",
+      "group": "Devices",
+      "insertContent": {
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "value": "cover.garage_door"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The Home Assistant cover it follows live. Blank, the drawing shows its seed values. The door follows `<entityId>.current_position`, or `<entityId>.state_int` when the cover reports no position, sliding there smoothly; the porch light is on while it moves."
+        },
+        {
+          "name": "position",
+          "jsonType": "number",
+          "required": false,
+          "notes": "The seed position: 0 closed (the default) to 100 open."
+        },
+        {
+          "name": "stateInt",
+          "jsonType": "integer",
+          "required": false,
+          "notes": "The seed state: 0 closed, 1 open, 2 opening, 3 closing (HaLiveBindings.coverStateInt)."
+        },
+        {
+          "name": "widthDp",
+          "jsonType": "integer",
+          "required": false,
+          "notes": "The drawing's width, 240 by default."
+        },
+        {
+          "name": "heightDp",
+          "jsonType": "integer",
+          "required": false,
+          "notes": "The drawing's height, 200 by default."
+        }
+      ]
+    },
+    "ha-cards/wall-thermostat": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardDevicesKt.HaCardWallThermostat",
+      "displayName": "Wall thermostat",
+      "group": "Devices",
+      "insertContent": {
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "value": "climate.hallway"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The Home Assistant climate entity it follows live. Blank, the drawing shows its seed values. The display reads `<entityId>.current_temperature` and `<entityId>.target_temperature` (a dash when absent), the mode from `<entityId>.state`, and the status light follows `<entityId>.is_on`."
+        },
+        {
+          "name": "current",
+          "jsonType": "number",
+          "required": false,
+          "notes": "The seed room temperature, 19.5 by default."
+        },
+        {
+          "name": "target",
+          "jsonType": "number",
+          "required": false,
+          "notes": "The seed set point, 21 by default."
+        },
+        {
+          "name": "mode",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The seed mode text, `Heat` by default."
+        },
+        {
+          "name": "unit",
+          "jsonType": "string",
+          "required": false,
+          "notes": "`°C` (the default) or `°F`."
         }
       ]
     },

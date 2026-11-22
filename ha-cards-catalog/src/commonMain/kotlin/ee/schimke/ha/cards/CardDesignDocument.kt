@@ -3,6 +3,8 @@
 package ee.schimke.ha.cards
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import ee.schimke.composeai.rccreation.compose.layout.RemoteComposable
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
@@ -18,8 +20,9 @@ import ee.schimke.ha.rc.design.CardDesigns
 /**
  * A UI Builder card design (`.uid`) on the `ha-cards` catalog, drawn in this process: the card
  * types' own structural components and parts ([CardDesigns.components], which the converters draw
- * their cards with) plus this catalog's scalar wrappers ([components]). The library and the
- * scheduled import capture checked-in designs with it (server-owned-card-designs.md).
+ * their cards with) plus this catalog's scalar wrappers ([components]) and the rest of its palette
+ * (`HaCardDesignLayouts`: layouts, text, buttons, measurements). The library and the scheduled
+ * import capture checked-in designs with it (server-owned-card-designs.md).
  */
 class CardDesignDocument private constructor(private val design: CardDesign) {
   val id: String
@@ -68,6 +71,11 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
 
     private fun CardDesignNode.color(name: String): RemoteColor? = argb(name)?.let { Color(it).rc }
 
+    private const val UBER_THEME = "ha-cards/uber-theme"
+
+    /** Set by a dashboard card for its card-style child: draw the card surface inside the style. */
+    private val LocalSurfaceInside = staticCompositionLocalOf { false }
+
     /**
      * This catalog's components, by id: its scalar wrappers over the `RemoteHa*` components, and a
      * dashboard card that puts anything but one whole card on the card surface.
@@ -79,8 +87,16 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
         "ha-cards/dashboard-card" to
           { node, modifier ->
             val only = node.children("content").singleOrNull()
-            if (only != null && node.componentOf(only).drawsWholeCard()) node.Child(only, modifier)
-            else HaCardSurface(modifier) { node.Children() }
+            when {
+              only != null && node.componentOf(only).drawsWholeCard() -> node.Child(only, modifier)
+              // A card in one card style: the style colours the card's own surface too, so it
+              // draws the surface inside itself rather than inside a surface in the default style.
+              only != null && node.componentOf(only) == UBER_THEME ->
+                CompositionLocalProvider(LocalSurfaceInside provides true) {
+                  node.Child(only, modifier)
+                }
+              else -> HaCardSurface(modifier) { node.Children() }
+            }
           },
         "ha-cards/dashboard-section" to
           { node, modifier ->
@@ -94,10 +110,17 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
           { node, modifier ->
             HaCardTemplate(modifier) { node.Children() }
           },
-        "ha-cards/uber-theme" to
+        UBER_THEME to
           { node, modifier ->
-            HaCardUberTheme(node.string("theme", "classic"), modifier, node.bool("dark")) {
-              node.Children()
+            val surface = LocalSurfaceInside.current
+            CompositionLocalProvider(LocalSurfaceInside provides false) {
+              HaCardUberTheme(
+                node.string("theme", "classic"),
+                if (surface) RemoteModifier else modifier,
+                node.bool("dark"),
+              ) {
+                if (surface) HaCardSurface(modifier) { node.Children() } else node.Children()
+              }
             }
           },
         "ha-cards/entity-tile" to
@@ -203,6 +226,11 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
 
     /** The design in [text], a `.uid` document. */
     fun parse(text: String): CardDesignDocument =
-      CardDesignDocument(CardDesign.parse(text, CardDesigns.components + components))
+      CardDesignDocument(
+        CardDesign.parse(
+          text,
+          CardDesigns.components + components + HaCardDesignLayouts.components,
+        ),
+      )
   }
 }

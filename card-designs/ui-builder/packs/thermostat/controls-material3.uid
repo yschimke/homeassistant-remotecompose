@@ -130,10 +130,6 @@
           "type": "float",
           "value": 16.0
         },
-        "color": {
-          "type": "string",
-          "value": "#FF1B1B1F"
-        },
         "maxLines": {
           "type": "int",
           "value": 1
@@ -217,10 +213,6 @@
         "verticalAlignment": {
           "type": "enum",
           "value": "center"
-        },
-        "horizontalArrangement": {
-          "type": "enum",
-          "value": "center"
         }
       },
       "modifiers": [
@@ -231,8 +223,8 @@
       "slots": {
         "children": [
           "remote-button-5",
-          "thermometer-6",
-          "remote-button-8"
+          "remote-button-8",
+          "thermometer-6"
         ]
       }
     },
@@ -258,10 +250,6 @@
         "fontSize": {
           "type": "float",
           "value": 20.0
-        },
-        "color": {
-          "type": "string",
-          "value": "#FF1B1B1F"
         },
         "maxLines": {
           "type": "int",
@@ -297,7 +285,7 @@
         },
         "presentation": {
           "type": "string",
-          "value": "compact"
+          "value": "chip"
         }
       },
       "modifiers": [],
@@ -325,10 +313,6 @@
         "fontSize": {
           "type": "float",
           "value": 20.0
-        },
-        "color": {
-          "type": "string",
-          "value": "#FF1B1B1F"
         },
         "maxLines": {
           "type": "int",

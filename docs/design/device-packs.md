@@ -1,7 +1,8 @@
 # Device packs
 
 > Status: **first two packs drafted** (garage door opener, thermostat) as UI Builder documents in
-> `card-designs/ui-builder/packs/`. Nothing plays them yet: see [What isn't wired](#what-isnt-wired).
+> `card-designs/ui-builder/packs/`, and **previewed** in this repository's build. No app offers them
+> yet: see [What isn't wired](#what-isnt-wired).
 
 A **device pack** is a set of designs for one kind of device, one per *kind* of placement. They are
 not reskins of one layout. Each kind answers a different question: an alert shows only when
@@ -125,7 +126,7 @@ every dataset passes.
 | Design | What it shows |
 | --- | --- |
 | `controls-material3` | Door icon, name and state, a status chip, the door's travel (`current_position`) as a bar, and Open, Stop and Close. |
-| `controls-skeuomorphic` | A wall console in the `rugged` style: one large push button, the travel as an inset arc, a status lamp. |
+| `controls-skeuomorphic` | The door itself (`ha-cards/garage-door`): a sectional door in a brick wall that rises with `current_position`, sections sliding up under the lintel, the garage showing beneath and the porch light on while it moves. Then the state and the wall push button. |
 | `controls-overlay` | Dark, `cockpit` style: the state in large type, the name, and a toggle. |
 | `alert` | Left open, stuck moving, or unavailable: what happened, the name, an explanation, **Close now** and **Help**. |
 | `toolbar` | Door glyph and state. |
@@ -136,7 +137,7 @@ every dataset passes.
 | Design | What it shows |
 | --- | --- |
 | `controls-material3` | Name and mode chip, the thermostat dial (room temperature and set point), and − / set point / +. |
-| `controls-skeuomorphic` | The wall unit in the `braun` style: the round dial, the room reading, the name. |
+| `controls-skeuomorphic` | A plain wall thermostat (`ha-cards/wall-thermostat`): a white plate with a grey display of the room temperature, the set point and mode, ▲ ▼ and a status light. |
 | `controls-overlay` | Dark, `cockpit` style: the room reading as a glyph, the mode, the target. |
 | `alert` | Unavailable, not reaching the set point for two hours, or frost risk: what is wrong, the room and target readings, **Turn off** and **Help**. |
 | `toolbar` | The room temperature as a chip. |
@@ -146,10 +147,14 @@ every dataset passes.
 
 These documents are designs to review and edit, ahead of the code that plays them:
 
-- **Not rendered here.** The `ha-cards` catalog renders on the preview server (its policy's
-  `native` lane), which this repository's build doesn't run. The in-process `.uid` renderer
-  (`CardDesign`) draws card parts only, not the collapsible layouts or Material text these use.
-  Baselines come from the server once the files are uploaded; see [Publishing](#publishing).
+- **Previews are this build's drawing, not UI Builder's.** `DevicePacks` (`:ha-cards-catalog`)
+  bundles the `.uid` files and plays them with `CardDesignDocument`, which adds the frame's rows and
+  columns, `RemoteText`, `RemoteButton` and the reading components to the card parts
+  (`HaCardDesignLayouts`); `DevicePackPreviews` (`:previews`) renders each design, plus the door at
+  three positions. `RemoteText` and `RemoteButton` are drawn in the HA theme, not by Wear Remote
+  Material 3, and collapsible layouts draw as plain ones. A `host` state variable shows its initial
+  value and is a named value the host can push. The server's `native` lane remains the reference;
+  see [Publishing](#publishing).
 - **No distinct actions.** A button takes its card's own tap action (`entityId`). The contracts
   declare Open, Stop and Close, the set point and Help, but emitting them needs action support in
   UI Builder designs, which
@@ -158,9 +163,9 @@ These documents are designs to review and edit, ahead of the code that plays the
 - **Alerts are not evaluated.** No client reads `showWhen` yet, and `alert.message` and
   `alert.detail` are values the rule would push. A client should hide the alert while no condition
   holds.
-- **Skeuomorphic and overlay are limited by the catalog.** It has no drawing primitives, so the
-  wall console and the wall unit are a card style (`rugged`, `braun`) and a layout, not a drawing
-  of the device. The overlay is a dark card, not a transparent layer over the scene.
+- **The overlay is a dark card**, not a transparent layer over the scene. The skeuomorphic designs
+  draw the device (`ha-cards/garage-door`, `ha-cards/wall-thermostat`, in `HaCardDevices.kt`), but
+  their ▲ ▼ keys are drawn, not yet actions.
 - **Real world needs its source.** The picture is the card's entity picture
   (`picture-entity-card-image`). The camera entity and the simulation are in `pack.json`, not yet
   in the card config a host builds.

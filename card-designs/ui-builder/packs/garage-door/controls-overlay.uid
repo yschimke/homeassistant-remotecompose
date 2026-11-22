@@ -108,10 +108,6 @@
         "sizeDp": {
           "type": "int",
           "value": 40
-        },
-        "color": {
-          "type": "string",
-          "value": "#FFF4EFF4"
         }
       },
       "modifiers": [],
@@ -146,10 +142,6 @@
           "type": "float",
           "value": 22.0
         },
-        "color": {
-          "type": "string",
-          "value": "#FFF4EFF4"
-        },
         "maxLines": {
           "type": "int",
           "value": 1
@@ -169,10 +161,6 @@
         "fontSize": {
           "type": "float",
           "value": 13.0
-        },
-        "color": {
-          "type": "string",
-          "value": "#FFC9C5CA"
         },
         "maxLines": {
           "type": "int",

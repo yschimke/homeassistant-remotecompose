@@ -11,7 +11,7 @@
   },
   "environment": {
     "widthDp": 280,
-    "heightDp": 320,
+    "heightDp": 360,
     "density": 2,
     "theme": "light",
     "locale": "en-US",
@@ -73,7 +73,7 @@
       "properties": {
         "verticalSpacingDp": {
           "type": "float",
-          "value": 14.0
+          "value": 10.0
         },
         "horizontalAlignment": {
           "type": "enum",
@@ -88,9 +88,9 @@
       "slots": {
         "children": [
           "remote-text-1",
-          "button-3",
-          "arc-meter-4",
-          "status-chip-2"
+          "garage-door-4",
+          "status-chip-2",
+          "button-3"
         ]
       }
     },
@@ -105,10 +105,6 @@
         "fontSize": {
           "type": "float",
           "value": 14.0
-        },
-        "color": {
-          "type": "string",
-          "value": "#FFC9C5CA"
         },
         "maxLines": {
           "type": "int",
@@ -146,34 +142,6 @@
       "modifiers": [],
       "slots": {}
     },
-    "arc-meter-4": {
-      "id": "arc-meter-4",
-      "componentId": "ha-cards/arc-meter",
-      "properties": {
-        "value": {
-          "type": "float",
-          "value": 0.0
-        },
-        "min": {
-          "type": "float",
-          "value": 0.0
-        },
-        "max": {
-          "type": "float",
-          "value": 100.0
-        },
-        "entityId": {
-          "type": "string",
-          "value": "cover.garage_door"
-        },
-        "attribute": {
-          "type": "string",
-          "value": "current_position"
-        }
-      },
-      "modifiers": [],
-      "slots": {}
-    },
     "status-chip-2": {
       "id": "status-chip-2",
       "componentId": "ha-cards/status-chip",
@@ -189,6 +157,26 @@
         "isOn": {
           "type": "bool",
           "value": false
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "garage-door-4": {
+      "id": "garage-door-4",
+      "componentId": "ha-cards/garage-door",
+      "properties": {
+        "entityId": {
+          "type": "string",
+          "value": "cover.garage_door"
+        },
+        "widthDp": {
+          "type": "int",
+          "value": 240
+        },
+        "heightDp": {
+          "type": "int",
+          "value": 200
         }
       },
       "modifiers": [],

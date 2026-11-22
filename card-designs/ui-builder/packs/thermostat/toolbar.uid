@@ -10,8 +10,8 @@
     "nativeRuntimeId": "candidate"
   },
   "environment": {
-    "widthDp": 132,
-    "heightDp": 40,
+    "widthDp": 148,
+    "heightDp": 52,
     "density": 2,
     "theme": "light",
     "locale": "en-US",
