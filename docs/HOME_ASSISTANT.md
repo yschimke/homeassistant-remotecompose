@@ -495,7 +495,9 @@ key: OpenAI, Google Gemini, Anthropic, Ollama or any other LLM integration.
   every entity that user may read, not only those exposed to Assist, so choose it for agents and
   people you trust with that. A conversation without a user (some voice satellites) is refused.
 - **Home Assistant's MCP Server** can serve the same tools to an outside agent: add the **Model
-  Context Protocol Server** integration and choose **Terrazzo dashboards** as its API.
+  Context Protocol Server** integration, then in its options (*Configure*) turn off *All LLM APIs*
+  and choose **Terrazzo dashboards** (Home Assistant 2026.11 and later; before, its setup form
+  asks).
 
 `custom_components/terrazzo/llm_tools.py` holds the tools and prompt (tested by
 `home-assistant/test/llm_tools_test.py`), `llm_api.py` registers them, and

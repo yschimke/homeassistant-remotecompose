@@ -22,16 +22,32 @@ test('the dashboard tools are an LLM API a conversation agent or the MCP Server 
   const owner = await signIn(api, 'panel', 'fixture-only-password');
   const headers = {Authorization:`Bearer ${owner.access_token}`};
 
-  // Home Assistant's MCP Server offers every registered LLM API; choose ours.
+  // Home Assistant's MCP Server serves the LLM APIs its entry chooses. Since 2026.11 a new entry
+  // serves every registered API and the choice is the entry's options; before, its setup form.
   const form = await (await api.post('/api/config/config_entries/flow', {headers, data:{handler:'mcp_server'}})).json();
   assert.equal(form.type, 'form', JSON.stringify(form));
-  const field = form.data_schema.find((item) => item.name === 'llm_hass_api');
-  const offered = field.selector.select.options.map((o) => o.value);
-  assert.ok(offered.includes('terrazzo_dashboards'), `offered: ${offered.join(', ')}`);
-  assert.equal(field.selector.select.options.find((o) => o.value === 'terrazzo_dashboards').label, 'Terrazzo dashboards');
+  const offersApi = (schema) => {
+    const field = (schema ?? []).find((item) => item.name === 'llm_hass_api');
+    if (!field) return false;
+    const option = field.selector.select.options.find((o) => o.value === 'terrazzo_dashboards');
+    assert.ok(option, `offered: ${field.selector.select.options.map((o) => o.value).join(', ')}`);
+    assert.equal(option.label, 'Terrazzo dashboards');
+    return true;
+  };
+  const chooseAtSetup = offersApi(form.data_schema);
   const created = await (await api.post(`/api/config/config_entries/flow/${form.flow_id}`,
-    {headers, data:{llm_hass_api:['terrazzo_dashboards']}})).json();
+    {headers, data:chooseAtSetup ? {llm_hass_api:['terrazzo_dashboards']} : {}})).json();
   assert.equal(created.type, 'create_entry', JSON.stringify(created));
+  if (!chooseAtSetup) {
+    // Only ours, so the tool list below is exactly the dashboard tools.
+    const options = await (await api.post('/api/config/config_entries/options/flow',
+      {headers, data:{handler:created.result.entry_id}})).json();
+    assert.equal(options.type, 'form', JSON.stringify(options));
+    assert.ok(offersApi(options.data_schema), `options: ${JSON.stringify(options.data_schema)}`);
+    const chosen = await (await api.post(`/api/config/config_entries/options/flow/${options.flow_id}`, {headers,
+      data:{all_llm_apis:false, llm_hass_api:['terrazzo_dashboards'], require_admin:true, read_only:false}})).json();
+    assert.equal(chosen.type, 'create_entry', JSON.stringify(chosen));
+  }
 
   const rpc = async (method, params) => {
     let response;
