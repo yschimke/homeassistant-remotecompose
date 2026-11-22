@@ -25,6 +25,7 @@ import ee.schimke.ha.design.GeneratedDesign
 import ee.schimke.ha.design.HaSharedValues
 import ee.schimke.ha.design.InMemoryDesignStore
 import ee.schimke.ha.design.Sha256
+import ee.schimke.ha.design.cardDevice
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -80,7 +81,6 @@ internal fun LibraryCard(
   val hint = remember(card, snapshot, exact) { cacheShapeHint(exact, card, snapshot) }
   val designKey =
     remember(card, hint, style, dark, requireExactDesign, exact, designId, snapshot.devices) {
-      val entity = CardDesignSlots.slotEntries(card).orEmpty().firstOrNull()?.entityId
       LibraryDesignKey(
         anonymousTemplateCard(card),
         style,
@@ -89,7 +89,7 @@ internal fun LibraryCard(
         exact,
         hint,
         designId,
-        entity?.let(snapshot.devices::get),
+        cardDevice(card, snapshot),
       )
     }
   fun bindings() =

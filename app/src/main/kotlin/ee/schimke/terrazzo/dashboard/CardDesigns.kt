@@ -24,12 +24,12 @@ import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.design.GeneratedDesigns
 import ee.schimke.ha.design.StoredManifest
+import ee.schimke.ha.design.cardDevice
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardTemplatePlayback
-import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.preloadForComposePlayer
@@ -414,14 +414,6 @@ suspend fun warmCardTemplates(
         }
     }
   }
-
-/**
- * The device behind [card]'s main entity (its `entity`, else its first listed one), as the
- * snapshot's registries know it; null when unknown.
- */
-internal fun cardDevice(card: CardConfig, snapshot: HaSnapshot): DeviceInfo? =
-  // Only the main entity counts: a later entity's device must not restyle the whole card.
-  cardEntityIds(card).firstOrNull()?.let { snapshot.devices[it] }
 
 /**
  * Where this process's cards got their designs: the server, or the app's own library because the
