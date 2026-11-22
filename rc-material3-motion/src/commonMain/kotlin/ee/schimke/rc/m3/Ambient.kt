@@ -5,13 +5,14 @@ package ee.schimke.rc.m3
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import ee.schimke.composeai.rccreation.compose.state.AnimatedRemoteFloat
 import ee.schimke.composeai.rccreation.compose.state.RemoteColor
 import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
 import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.animateRemoteFloat
 import ee.schimke.composeai.rccreation.compose.state.clamp
 import ee.schimke.composeai.rccreation.compose.state.lerp
 import ee.schimke.composeai.rccreation.compose.state.max
+import ee.schimke.composeai.rccreation.compose.state.remoteSpring
 import ee.schimke.composeai.rccreation.compose.state.rf
 
 /**
@@ -117,6 +118,20 @@ internal fun RemoteFloat.animateRaw(spec: RcMotionSpec): RemoteFloat {
   if (!LocalRcAnimationsEnabled.current) return this
   val played =
     if (spec is RcMotionSpec.Spring && !LocalRcSpringsSupported.current) spec.asTween() else spec
-  val description = played.encode() ?: return this
-  return remember(this, played) { AnimatedRemoteFloat(this, description) }
+  return remember(this, played) {
+    when (played) {
+      // The same description [encode] writes: rc-players computes the damping coefficient as
+      // [RcMotionSpec.Spring.dampingCoefficient] does.
+      is RcMotionSpec.Spring ->
+        remoteSpring(
+            played.dampingRatio,
+            played.stiffness,
+            played.stopThreshold,
+            played.bounds.mask,
+          )
+          .animate(this)
+      is RcMotionSpec.Tween -> animateRemoteFloat(this, played.seconds, played.easing)
+      RcMotionSpec.Snap -> this
+    }
+  }
 }

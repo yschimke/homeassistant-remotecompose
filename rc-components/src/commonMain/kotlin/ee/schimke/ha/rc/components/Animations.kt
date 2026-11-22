@@ -27,9 +27,9 @@ typealias RcEasing = ee.schimke.rc.m3.RcEasing
 val LocalRemoteAnimationsEnabled = LocalRcAnimationsEnabled
 
 /**
- * Wrap [input] in an [AnimatedRemoteFloat] so the player tweens between successive values whenever
- * the document state behind [input] changes (typically via `RemoteBoolean.select(1f.rf, 0f.rf)` or
- * a `MutableRemoteFloat` write).
+ * Wrap [input] in a player tween (rc-players' animated float) so the player tweens between
+ * successive values whenever the document state behind [input] changes (typically via
+ * `RemoteBoolean.select(1f.rf, 0f.rf)` or a `MutableRemoteFloat` write).
  *
  * The encoded animation spec is a 5-tuple `(duration, easingType, customCurve, wrap, offset)` — we
  * only ever need the first two, so the rest stay at their defaults.

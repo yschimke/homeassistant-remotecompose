@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -221,7 +222,12 @@ fun HaRcComposePlayer(
         )
       }
       if (frozenTime != null) {
-        CompositionLocalProvider(LocalRcTimeSource provides frozenTime, content = player)
+        // rc-players forwards the time source to a document's frames: swapping a frozen clock
+        // changes what it reads but draws no new frame, so a new frozen clock starts a new player.
+        // The live clock is never swapped; this is previews and tests moving time on.
+        key(frozenTime) {
+          CompositionLocalProvider(LocalRcTimeSource provides frozenTime, content = player)
+        }
       } else {
         player()
       }
