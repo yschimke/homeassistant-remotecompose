@@ -19,4 +19,9 @@ dependencies {
   implementation(
     "com.vanniktech:gradle-maven-publish-plugin:${libs.versions.maven.publish.get()}"
   )
+  // Livery's catalog plugin, at the version livery-bom pins (a release publishes only the modules
+  // that changed, so the plugin's version can trail the BOM's). A module applies it by id, with no
+  // version: `id("ee.schimke.composeai.livery.catalog")`.
+  implementation(platform(libs.livery.bom))
+  implementation(libs.livery.gradle.plugin)
 }

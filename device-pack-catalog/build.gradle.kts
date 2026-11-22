@@ -10,7 +10,8 @@ plugins {
   id("harc.base-conventions")
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.compose.compiler)
-  alias(libs.plugins.livery.catalog)
+  // From build-logic's classpath, at the version livery-bom pins.
+  id("ee.schimke.composeai.livery.catalog")
 }
 
 kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
