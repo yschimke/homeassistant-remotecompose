@@ -147,12 +147,13 @@ every dataset passes.
 ## In the design library
 
 The card design library (`:card-designs:generateCardDesigns`, served by the design server)
-publishes each pack's **controls** designs (`DevicePackLibrary`):
+publishes the garage door pack's **controls** designs (`DevicePackLibrary`); the thermostat's wait
+for a bindable unit (below):
 
 - **Their own designs.** Each is a library design of its own, `pack:<designId>`
   (`pack:garage-door-controls-skeuomorphic`), titled as `pack.json` names it. It is captured for
-  every theme the library keys its card by: a tile of the garage door, the thermostat card of a
-  climate entity. Its keys carry its own variant (`pack-<designId>`), so the card's library design
+  every theme the library keys its card by: a tile of the garage door (the thermostat card, for a
+  climate entity). Its keys carry its own variant (`pack-<designId>`), so the card's library design
   stays the automatic one: a card draws a pack design only when it is set to it (`design_id`).
 - **The card's own entity, live.** Each is drawn by `CardDesignDocument` with its example entity
   named as the contract's slot (`DevicePacks.forSlots`: `cover.garage_door` is `cover.s0`), so it
@@ -168,16 +169,20 @@ publishes each pack's **controls** designs (`DevicePackLibrary`):
 - **Suggested for its class.** A pack for a `device_class` is a class design
   (`DeviceMatch(deviceClass = "garage")`): the suggestion index lists it, so the card picker offers
   the garage door designs on any garage door, after any design made for that device. A pack for a
-  whole domain (the thermostat) has no match: it can be chosen by id but isn't suggested on every
-  climate entity.
+  whole domain (the thermostat) has no match: once published, it is chosen by id, not suggested
+  on every climate entity. Only cards `custom:remote-compose-card` wraps (tile, button, entity,
+  gauge) are suggested.
 - **To the dashboard agent.** The agent's `find_designs` tool reads the same index (see
   [dashboard-editing.md](../architecture/dashboard-editing.md)), so asking for "the actual garage
   door" gets a draft card set to it.
 
 Alerts, toolbar items and real-world views are placements other than a dashboard card (and an
 alert shows only while its rule holds), so they stay out of the library until those placements
-exist. So does the thermostat overlay: it reads its readings as formatted text
-(`climate.s0.attributes.current_temperature_label`), which no recipe produces yet.
+exist. So do the thermostat's designs for now: they bake `°C` and a 7–30 °C dial, and no binding
+pushes a thermostat's own unit or range yet, so a °F thermostat would read wrong. (Its overlay also
+reads formatted labels, `climate.s0.attributes.current_temperature_label`, that no recipe
+produces.) They are captured and bound like the garage door's (`CardBindingRecipes.CLIMATE`), ready
+for when the unit and range are bindable.
 
 ## What isn't wired
 

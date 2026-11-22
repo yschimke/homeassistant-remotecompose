@@ -38,6 +38,7 @@ class FakeHome:
             {'designId': 'user:ratgdo', 'cardType': 'tile', 'device': {'integration': 'ratgdo'}, 'domain': 'cover'},
             {'designId': 'user:printer', 'cardType': 'tile', 'device': {'integration': 'bambu_lab'}, 'domain': 'light'},
             {'designId': 'user:wall', 'cardType': 'picture-elements', 'device': {'deviceClass': 'garage'}},
+            {'designId': 'user:dial', 'cardType': 'thermostat', 'device': {'deviceClass': 'garage'}},
         ]}
 
     def device_info(self, entity_id):
@@ -207,6 +208,7 @@ class McpProtocolTest(unittest.TestCase):
             'card': {'type': 'tile', 'entity': 'cover.garage_door'},
             'design_id': 'pack:garage-door-controls-skeuomorphic',
         })
+        # Only cards the wrapper takes: no thermostat or picture-elements design is offered.
         # A gate is no garage door; a light has nothing made for its device here.
         gate = call(FakeHome(), 'find_designs', {'entity_id': 'cover.side_gate'})['structuredContent']['designs']
         self.assertEqual([d['design_id'] for d in gate], ['user:ratgdo'])

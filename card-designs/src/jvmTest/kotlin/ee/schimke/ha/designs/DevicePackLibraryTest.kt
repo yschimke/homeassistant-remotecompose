@@ -3,6 +3,7 @@ package ee.schimke.ha.designs
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
+import ee.schimke.ha.cards.DevicePacks
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -30,8 +31,6 @@ class DevicePackLibraryTest {
         "garage-door-controls-material3",
         "garage-door-controls-skeuomorphic",
         "garage-door-controls-overlay",
-        "thermostat-controls-material3",
-        "thermostat-controls-skeuomorphic",
       ),
       DevicePackLibrary.published.map { it.designId },
     )
@@ -40,7 +39,8 @@ class DevicePackLibraryTest {
   @Test
   fun aGarageDesignIsForEveryGarageDoorAndAThermostatIsChosenNotSuggested() {
     val garage = DevicePackLibrary.published.first { it.pack == "garage-door" }
-    val thermostat = DevicePackLibrary.published.first { it.pack == "thermostat" }
+    // Not published while its unit and range are baked, but it would be chosen, not suggested.
+    val thermostat = DevicePacks.designs.first { it.designId == "thermostat-controls-skeuomorphic" }
     assertEquals(DeviceMatch(deviceClass = "garage"), DevicePackLibrary.device(garage))
     assertNull(DevicePackLibrary.device(thermostat))
     assertEquals("pack:garage-door-controls-material3", DevicePackLibrary.designId(garage))
@@ -99,7 +99,10 @@ class DevicePackLibraryTest {
 
   @Test
   fun everyValueAPackReadsIsPushedAndFollowsTheEntity() {
-    for (design in DevicePackLibrary.published) {
+    // The published designs, and a thermostat's: kept bindable for when its unit is.
+    val thermostat =
+      DevicePacks.designs.filter { it.designId == "thermostat-controls-skeuomorphic" }
+    for (design in DevicePackLibrary.published + thermostat) {
       val example = DevicePackLibrary.example(design)
       val bytes =
         DevicePackLibrary.capture(host, DevicePackLibrary.keys(design).first(), design).bytes

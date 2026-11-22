@@ -373,7 +373,8 @@ _SWITCH_SERVICES = {"turn_on": "turn_on", "turn_off": "turn_off", "toggle": "tog
 
 
 # The Home Assistant cards a design can wrap, and how many designs find_designs lists.
-DESIGN_CARD_TYPES = ("tile", "button", "entity", "gauge", "thermostat")
+# The cards custom:remote-compose-card wraps (its setConfig refuses any other).
+DESIGN_CARD_TYPES = ("tile", "button", "entity", "gauge")
 DESIGN_LIMIT = 5
 _MATCH_FIELDS = ("integration", "manufacturer", "model", "translationKey", "deviceClass")
 

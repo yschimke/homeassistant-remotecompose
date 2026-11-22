@@ -71,11 +71,7 @@ object CardDesignLibrary {
     // A card type with a checked-in design (ui-builder/designs/<type>.uid) is captured from it, so
     // editing the design is what changes the library; the rest still come from their converters.
     // A device pack's key is captured from the pack's own design (DevicePackLibrary).
-    val built =
-      examples.keys.map { key ->
-        DevicePackLibrary.designFor(key)?.let { DevicePackLibrary.capture(host, key, it) }
-          ?: CheckedInCardDesigns.capture(host, key)
-      }
+    val built = examples.keys.map { capture(host, it) }
     val now = System.currentTimeMillis()
     val output = DesignPublisher.publish(built, serial = now, nowEpochMs = now)
     // The checked-in designs the migrated card types were drawn from, so the design server can
@@ -117,6 +113,16 @@ object CardDesignLibrary {
     publishTo(out, target)
     return built.size
   }
+
+  /**
+   * The library's design for [key], captured on [host]: a device pack's key from the pack's own
+   * design ([DevicePackLibrary]), every other from its card type's checked-in design or converter
+   * ([CheckedInCardDesigns]). What [generate] publishes, and what a check on another platform
+   * captures to compare with it.
+   */
+  fun capture(host: CaptureHost, key: DesignKey): BuiltDesign =
+    DevicePackLibrary.designFor(key)?.let { DevicePackLibrary.capture(host, key, it) }
+      ?: CheckedInCardDesigns.capture(host, key)
 
   /**
    * Writes into [target] the library in [source] with [cardType]'s designs captured again from

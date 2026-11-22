@@ -44,7 +44,10 @@ object DevicePackLibrary {
    * stays out rather than draw its example's numbers.
    */
   val published: List<DevicePacks.PackDesign>
-    get() = DevicePacks.designs.filter { it.kind == CONTROLS && it.designId !in NOT_BINDABLE }
+    get() =
+      DevicePacks.designs.filter {
+        it.kind == CONTROLS && it.designId !in NOT_BINDABLE && it.domain !in UNIT_BOUND
+      }
 
   /**
    * The values [design] reads beyond the slot bindings, as the recipe its template carries: a
@@ -145,6 +148,13 @@ object DevicePackLibrary {
   private const val PREFIX = "pack:"
   private const val CONTROLS = "controls"
   private val NOT_BINDABLE = setOf("thermostat-controls-overlay")
+
+  /**
+   * Domains whose readings carry a unit the designs bake (a thermostat's `°C`, its dial's 7–30
+   * range): no binding pushes the entity's own unit or range yet, so a °F thermostat would read
+   * wrong. Published once the unit and range are bindable.
+   */
+  private val UNIT_BOUND = setOf("climate")
   private val CARD_TYPES = mapOf("climate" to "thermostat")
   private val EXAMPLE_STATE = mapOf("cover" to "closed", "climate" to "heat")
 }

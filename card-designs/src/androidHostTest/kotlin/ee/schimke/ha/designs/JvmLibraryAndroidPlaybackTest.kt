@@ -74,7 +74,8 @@ class JvmLibraryAndroidPlaybackTest {
         .mapIndexed { i, entries -> entries[i % entries.size] }
     val different = sample.filterNot { entry ->
       val jvm = dir.resolve(DesignManifest.blobPath(entry.sha256)).readBytes()
-      val android = CheckedInCardDesigns.capture(context, entry.key).bytes
+      // Captured as the library captures it: a device pack's key from the pack's own design.
+      val android = CardDesignLibrary.capture(context, entry.key).bytes
       val drawn = render(jvm)
       // Two blank drawings would match: the design must draw something.
       assertTrue(drawn.pixels().distinct().size > 1, "${entry.key} draws nothing")
