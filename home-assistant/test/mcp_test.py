@@ -212,6 +212,16 @@ class McpProtocolTest(unittest.TestCase):
         self.assertEqual([d['design_id'] for d in gate], ['user:ratgdo'])
         self.assertEqual(call(FakeHome(), 'find_designs', {'entity_id': 'light.kitchen'})['structuredContent']['designs'], [])
 
+    def test_every_argument_is_a_plain_value_or_the_config_object(self):
+        # A property's own schema, never a nested input schema: an agent would send an object.
+        for tool in mcp.TOOLS:
+            for name, prop in tool['inputSchema'].get('properties', {}).items():
+                expected = 'object' if name == 'config' else prop['type']
+                self.assertIn(prop['type'], ('string', 'integer', 'number', 'boolean') if name != 'config' else ('object',), f"{tool['name']}.{name}")
+                self.assertEqual(prop['type'], expected)
+        designs = next(t for t in mcp.TOOLS if t['name'] == 'find_designs')
+        self.assertEqual(designs['inputSchema']['properties']['entity_id']['type'], 'string')
+
     def test_find_designs_needs_a_known_entity_and_the_library(self):
         self.assertTrue(call(FakeHome(), 'find_designs', {'entity_id': 'cover.nope'})['isError'])
         offline = FakeHome()

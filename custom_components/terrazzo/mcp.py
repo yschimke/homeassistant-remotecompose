@@ -199,12 +199,7 @@ EDIT_TOOLS = [
             "design's design_id. Put that config in a draft as it is. An empty list means Home "
             "Assistant's own cards are the right choice for that entity."
         ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {"entity_id": _entity_id_schema("The entity to find designs for, e.g. cover.garage_door.")},
-            "required": ["entity_id"],
-            "additionalProperties": False,
-        },
+        "inputSchema": _entity_id_schema("The entity to find designs for, e.g. cover.garage_door."),
         "annotations": {"readOnlyHint": True, "openWorldHint": True},
     },
     {
