@@ -109,6 +109,7 @@ jobs:
           fi
           node --test home-assistant/test/installed.test.mjs
           node --test home-assistant/test/installed-mcp.test.mjs
+          node --test home-assistant/test/installed-llm-api.test.mjs
           node --test home-assistant/test/installed-edits.test.mjs
           node --test home-assistant/test/installed-agent-live.test.mjs
           # The built-in agent against a fake OpenAI-compatible model this test serves.

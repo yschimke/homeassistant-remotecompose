@@ -41,7 +41,7 @@ Assistant is the editor in practice.
 | --- | --- | --- |
 | Phone | Light edits on the live dashboard; **Open in Home Assistant** for HA's own editor; an **Install from the Marketplace** card | Light edits; **Ask your agent** from the editor's top bar (dashboard or section sessions, copy a prompt); preview, apply or discard agent drafts, or **Adjust** one: it comes back into the editor as an unsaved edit to move and resize by hand and save |
 | Web panel | — | Full editor (add cards, sections and views, card settings); **Ask your agent** and the same draft preview |
-| Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session |
+| Agent | — (no supported path) | MCP: read dashboards and entities, read the card guide, submit drafts to an edit session. Also as a Home Assistant LLM API (**Terrazzo dashboards**, `llm_api.py`): any conversation agent the person has set up, or HA's MCP Server, gets the same editing tools, run as the conversation's user |
 
 ## Built-in agent
 
