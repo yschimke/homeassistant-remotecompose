@@ -154,9 +154,17 @@ publishes each pack's **controls** designs (`DevicePackLibrary`):
   every theme the library keys its card by: a tile of the garage door, the thermostat card of a
   climate entity. Its keys carry its own variant (`pack-<designId>`), so the card's library design
   stays the automatic one: a card draws a pack design only when it is set to it (`design_id`).
-- **The card's own entity.** Each is drawn by `CardDesignDocument` with its example entity named
-  as the contract's slot (`DevicePacks.forSlots`: `cover.garage_door` is `cover.s0`), so it binds
-  the entity of whichever card it draws.
+- **The card's own entity, live.** Each is drawn by `CardDesignDocument` with its example entity
+  named as the contract's slot (`DevicePacks.forSlots`: `cover.garage_door` is `cover.s0`), so it
+  binds the entity of whichever card it draws.
+  - **Recipes for attributes:** the slot bindings carry a state, never an attribute, so each
+    template carries a binding recipe for the attributes it reads (`DevicePackLibrary.recipe`).
+    `CardBindingRecipes.COVER` gives the door's `current_position`; `CLIMATE` gives the room
+    temperature and the set point.
+  - **Both hosts:** the browser card evaluates a template's recipe, and so does the app's playback
+    (`CardDesignTemplates.playback`, ahead of the card type's converter).
+  - **The guard:** `DevicePackLibraryTest` refuses a published design that reads a value no host
+    pushes, so none draws its example's numbers.
 - **Suggested for its class.** A pack for a `device_class` is a class design
   (`DeviceMatch(deviceClass = "garage")`): the suggestion index lists it, so the card picker offers
   the garage door designs on any garage door, after any design made for that device. A pack for a
@@ -168,7 +176,8 @@ publishes each pack's **controls** designs (`DevicePackLibrary`):
 
 Alerts, toolbar items and real-world views are placements other than a dashboard card (and an
 alert shows only while its rule holds), so they stay out of the library until those placements
-exist.
+exist. So does the thermostat overlay: it reads its readings as formatted text
+(`climate.s0.attributes.current_temperature_label`), which no recipe produces yet.
 
 ## What isn't wired
 

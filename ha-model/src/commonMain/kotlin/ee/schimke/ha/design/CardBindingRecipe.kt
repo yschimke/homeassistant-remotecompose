@@ -311,7 +311,28 @@ object CardBindingRecipes {
   /** [cover] for one cover: the built-in form a host may implement itself. */
   val COVER: CardBindingRecipe = cover(1)
 
-  private val byPrototype = listOf(GAUGE, TILE, COVER).associateBy { it.prototype }
+  /**
+   * `climate`: a thermostat's room temperature and set point, `<slot>.current_temperature` and
+   * `<slot>.target_temperature` (Home Assistant's `temperature` attribute), as
+   * `HaLiveBindings.attributeFloats` pushes them on the direct path: [HaLiveBindings.ABSENT] when
+   * the thermostat reports none (off, or holding a range). What a device pack's thermostat designs
+   * read.
+   */
+  val CLIMATE: CardBindingRecipe =
+    with(CardBindingRecipe) {
+      CardBindingRecipe(
+        prototype = "climate",
+        floats =
+          linkedMapOf(
+            "\$0.current_temperature" to
+              first(number(attr("current_temperature", 0)), literal(HaLiveBindings.ABSENT)),
+            "\$0.target_temperature" to
+              first(number(attr("temperature", 0)), literal(HaLiveBindings.ABSENT)),
+          ),
+      )
+    }
+
+  private val byPrototype = listOf(GAUGE, TILE, COVER, CLIMATE).associateBy { it.prototype }
 
   fun forPrototype(prototype: String): CardBindingRecipe? = byPrototype[prototype]
 }

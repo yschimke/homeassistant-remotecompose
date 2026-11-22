@@ -1,8 +1,13 @@
 package ee.schimke.ha.designs
 
+import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.ha.cards.CardDesignDocument
 import ee.schimke.ha.cards.DevicePacks
 import ee.schimke.ha.design.BuiltDesign
+import ee.schimke.ha.design.CardBindingRecipe
+import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.model.CardConfig
@@ -32,9 +37,25 @@ import kotlinx.serialization.json.put
  * alert is shown only by its rule), so they stay out until those placements exist.
  */
 object DevicePackLibrary {
-  /** The pack designs the library publishes: each pack's controls. */
+  /**
+   * The pack designs the library publishes: each pack's controls whose every value a host can push
+   * ([recipe]). The thermostat overlay reads its readings as formatted text
+   * (`climate.s0.attributes.current_temperature_label`), which no recipe can produce yet, so it
+   * stays out rather than draw its example's numbers.
+   */
   val published: List<DevicePacks.PackDesign>
-    get() = DevicePacks.designs.filter { it.kind == CONTROLS }
+    get() = DevicePacks.designs.filter { it.kind == CONTROLS && it.designId !in NOT_BINDABLE }
+
+  /**
+   * The values [design] reads beyond the slot bindings, as the recipe its template carries: a
+   * cover's position, a thermostat's two temperatures. Every host evaluates it, so the design
+   * follows the entity's attributes live rather than drawing the example's.
+   */
+  fun recipe(design: DevicePacks.PackDesign): CardBindingRecipe =
+    when (design.domain) {
+      "climate" -> CardBindingRecipes.CLIMATE
+      else -> CardBindingRecipes.COVER
+    }
 
   /** The library design id of [design]: one id across every theme key it is captured for. */
   fun designId(design: DevicePacks.PackDesign): String = "$PREFIX${design.designId}"
@@ -94,8 +115,11 @@ object DevicePackLibrary {
    */
   fun capture(host: CaptureHost, key: DesignKey, design: DevicePacks.PackDesign): BuiltDesign {
     val document = CardDesignDocument.parse(DevicePacks.forSlots(design))
+    // The box carries the recipe's declaration: the document's own root may not draw the modifier.
     val built =
-      CardDesignTemplates.captureWith(host, key) { _, _, modifier -> document.Render(modifier) }
+      CardDesignTemplates.captureWithRecipe(host, key, recipe(design)) { _, _, modifier ->
+        RemoteBox(modifier) { document.Render(RemoteModifier.fillMaxWidth()) }
+      }
     return BuiltDesign(
       key = built.key,
       slots = built.slots,
@@ -120,6 +144,7 @@ object DevicePackLibrary {
 
   private const val PREFIX = "pack:"
   private const val CONTROLS = "controls"
+  private val NOT_BINDABLE = setOf("thermostat-controls-overlay")
   private val CARD_TYPES = mapOf("climate" to "thermostat")
   private val EXAMPLE_STATE = mapOf("cover" to "closed", "climate" to "heat")
 }
