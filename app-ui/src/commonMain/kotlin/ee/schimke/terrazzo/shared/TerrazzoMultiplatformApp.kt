@@ -1389,7 +1389,7 @@ private fun LiveDashboard(
                 dark,
                 exact = exact,
                 designId = id,
-                device = entity?.let(shown.devices::get),
+                device = entity?.let { ee.schimke.ha.design.entityDevice(it, shown) },
               )
             val bytes =
               loadSelectedDesign(

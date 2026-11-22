@@ -1,11 +1,14 @@
 package ee.schimke.ha.design
 
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -77,5 +80,34 @@ class CardDeviceTest {
     assertEquals("light.hall", cardMainEntity(map))
     assertNull(cardMainEntity(card("""{"type":"markdown","content":"hi"}""")))
     assertNull(cardDevice(card("""{"type":"tile","entity":"light.unknown"}"""), snapshot))
+  }
+
+  @Test
+  fun theEntitysDeviceClassComesFromItsState() {
+    val garage =
+      HaSnapshot(
+        states =
+          mapOf(
+            "cover.garage" to
+              EntityState(
+                "cover.garage",
+                "closed",
+                JsonObject(mapOf("device_class" to JsonPrimitive("garage"))),
+              ),
+          ),
+        devices = mapOf("cover.garage" to DeviceInfo(integration = "ratgdo")),
+      )
+    assertEquals(
+      DeviceInfo(integration = "ratgdo", deviceClass = "garage"),
+      cardDevice(card("""{"type":"tile","entity":"cover.garage"}"""), garage),
+    )
+    // Without a registry entry (or the right to read it), the state's class still counts.
+    assertEquals(
+      DeviceInfo(deviceClass = "garage"),
+      cardDevice(
+        card("""{"type":"tile","entity":"cover.garage"}"""),
+        garage.copy(devices = emptyMap()),
+      ),
+    )
   }
 }

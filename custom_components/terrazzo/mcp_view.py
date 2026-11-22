@@ -7,15 +7,19 @@ to point it at another instance, no credential of its own and nothing stored: it
 Home Assistant serving it, and removing the user from the option switches it off at once.
 """
 import json
+import time
 from pathlib import Path
 
-from aiohttp import web
+from aiohttp import ClientError, ClientTimeout, web
 from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.ban import process_wrong_login
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import edits, mcp
 from .const import CONF_MCP_USER, DOMAIN, MCP_METADATA_URL, MCP_URL, PANEL_URL_PATH
@@ -151,6 +155,37 @@ class HassHome:
             if self._can(state.entity_id, POLICY_READ)
         ]
 
+    def device_info(self, entity_id):
+        """The registry facts design matching reads (`DeviceInfo`), or None for an unregistered entity."""
+        entry = er.async_get(self._hass).async_get(entity_id)
+        if entry is None:
+            return None
+        device = dr.async_get(self._hass).async_get(entry.device_id) if entry.device_id else None
+        return {
+            "integration": entry.platform,
+            "manufacturer": device.manufacturer if device else None,
+            "model": device.model if device else None,
+            "translationKey": entry.translation_key,
+        }
+
+    async def design_index(self):
+        """The card design library's suggestion index, cached a few minutes; None when unreachable.
+        The request carries nothing about this home: the matching happens here."""
+        cached = self._hass.data.setdefault(DOMAIN, {}).get(_DESIGN_INDEX)
+        now = time.monotonic()
+        if cached and now - cached[0] < DESIGN_INDEX_FOR:
+            return cached[1]
+        try:
+            async with async_get_clientsession(self._hass).get(
+                DESIGN_INDEX_URL, timeout=ClientTimeout(total=10)
+            ) as response:
+                response.raise_for_status()
+                index = await response.json(content_type=None)
+        except (ClientError, TimeoutError, ValueError):
+            return cached[1] if cached else None
+        self._hass.data[DOMAIN][_DESIGN_INDEX] = (now, index)
+        return index
+
     def state(self, entity_id):
         state = self._hass.states.get(entity_id)
         if state is None or not self._can(entity_id, POLICY_READ):
@@ -277,6 +312,13 @@ class HassHome:
         except edits.SessionError as failure:
             raise mcp.ToolError(str(failure)) from failure
         return {"status": "shown"}
+
+
+# The public card design library's suggestion index (what remote-compose-card.js reads), and
+# how long a fetched copy is used.
+DESIGN_INDEX_URL = "https://ha.coo.ee/designs/v1/suggestions.json"
+DESIGN_INDEX_FOR = 600
+_DESIGN_INDEX = "design_index"
 
 
 def _entity(state):

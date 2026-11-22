@@ -117,6 +117,16 @@ TOOLS = [
         "domain has. Use it to plan a new dashboard or a section about a room.",
     ),
     _function(
+        "find_designs",
+        "Lists harc's card designs made for an entity's device or kind (a garage door drawn as the "
+        "door itself, a printer's own controls), best fit first, each with the card config that "
+        "draws it. Call it on a device's main entity when the person wants a device to look like "
+        "the real thing or asks for a design made for it, and put a design's config in the draft as "
+        "it is. An empty list means Home Assistant's own cards are right for that entity.",
+        _ENTITY_ID,
+        ["entity_id"],
+    ),
+    _function(
         "list_dashboards",
         "Lists this home's dashboards, to borrow a layout or cards from another one.",
     ),
@@ -148,6 +158,7 @@ _STATUS = {
     "find_entities": "Looking up entities",
     "get_entity_state": "Reading an entity",
     "home_overview": "Looking around the home",
+    "find_designs": "Looking for card designs",
     "list_dashboards": "Reading dashboards",
     "get_dashboard": "Reading a dashboard",
     "submit_draft": "Drafting",
@@ -239,6 +250,9 @@ def describe_step(name, arguments, result):
     elif name == "home_overview":
         areas = result.get("areas") or []
         output = f"{len(areas)} areas: " + ", ".join(a.get("area", "") for a in areas[:8])
+    elif name == "find_designs":
+        designs = result.get("designs") or []
+        output = ", ".join(d.get("title", "") for d in designs[:3]) or "Nothing made for it"
     elif name == "list_dashboards":
         dashboards = result.get("dashboards") or []
         output = ", ".join(d.get("title", "") for d in dashboards[:8]) or "None"
@@ -285,7 +299,7 @@ async def _run_tool(home, session_id, name, arguments):
                 return {"error": "config_json must be the dashboard config object, as JSON"}
             summary = arguments.get("summary")
             return await home.submit_draft(session_id, config, summary if isinstance(summary, str) else "")
-        if name in ("find_entities", "get_entity_state", "list_dashboards", "get_dashboard"):
+        if name in ("find_entities", "get_entity_state", "find_designs", "list_dashboards", "get_dashboard"):
             return await mcp.call_tool(home, name, arguments)
         return {"error": f"Unknown tool {name}"}
     except mcp.ToolError as failure:

@@ -70,6 +70,8 @@ User-facing setup is in [`docs/HOME_ASSISTANT.md`](../HOME_ASSISTANT.md#mcp-serv
   `list_edit_sessions`, `start_edit_session`, `get_edit_session`, `get_card_guide`, `submit_draft`,
   and for the live loop `await_feedback` (waits up to 25 s for the person's notes), `send_message`
   and `set_status` ([agent-sessions.md](agent-sessions.md#agents-signed-in-to-home-assistant-directly)).
+  `find_designs` lists the card designs made for an entity's device or kind, from the public
+  design library's suggestion index, each as a card config a draft can use.
   An agent only submits drafts; a person applies one over the WebSocket with their own
   (administrator) session.
 - OAuth discovery hands clients to Home Assistant itself, which publishes RFC 8414 metadata with

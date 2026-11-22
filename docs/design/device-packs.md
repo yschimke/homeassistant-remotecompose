@@ -1,8 +1,9 @@
 # Device packs
 
 > Status: **first two packs drafted** (garage door opener, thermostat) as UI Builder documents in
-> `card-designs/ui-builder/packs/`, and **previewed** in this repository's build. No app offers them
-> yet: see [What isn't wired](#what-isnt-wired).
+> `card-designs/ui-builder/packs/`, **previewed** in this repository's build, and their controls
+> **published in the card design library**, where the card picker and the dashboard agent offer
+> them: see [In the design library](#in-the-design-library).
 
 A **device pack** is a set of designs for one kind of device, one per *kind* of placement. They are
 not reskins of one layout. Each kind answers a different question: an alert shows only when
@@ -143,6 +144,57 @@ every dataset passes.
 | `toolbar` | The room temperature as a chip. |
 | `real-world` | The device's own picture, with its simulation as the fallback, and the name, mode and room reading under it. |
 
+## In the design library
+
+The card design library (`:card-designs:generateCardDesigns`, served by the design server)
+publishes the garage door pack's wall console and overlay designs (`DevicePackLibrary`); its
+Material 3 design waits for distinct actions, and the thermostat's for a bindable unit (below):
+
+- **Their own designs.** Each is a library design of its own, `pack:<designId>`
+  (`pack:garage-door-controls-skeuomorphic`), titled as `pack.json` names it. It is captured for
+  every theme the library keys its card by: a tile of the garage door (the thermostat card, for a
+  climate entity). Its keys carry its own variant (`pack-<designId>`), so the card's library design
+  stays the automatic one: a card draws a pack design only when it is set to it (`design_id`).
+  - **One key for every state:** a pack draws its entity from bindings, so its keys publish every
+    shape property but `domain` and `device_class` as `*` (`DesignProperties.ANY`). A garage door
+    tile's `state_icon` follows the door (`garage`, `garage-open`, `arrow-up-box`,
+    `arrow-down-box`), and `state_icon=*` matches each of them.
+  - **Where the wildcard applies:** only a design chosen by id is matched that way
+    (`DesignKey.accepts`, in the app's `DesignsById.find` and `designOptions`). A card's own key never
+    carries `*`, and an automatic lookup stays exact.
+- **The card's own entity, live.** Each is drawn by `CardDesignDocument` with its example entity
+  named as the contract's slot (`DevicePacks.forSlots`: `cover.garage_door` is `cover.s0`), so it
+  binds the entity of whichever card it draws.
+  - **Recipes for attributes:** the slot bindings carry a state, never an attribute, so each
+    template carries a binding recipe for the attributes it reads (`DevicePackLibrary.recipe`).
+    `CardBindingRecipes.COVER` gives the door's `current_position`; `CLIMATE` gives the room
+    temperature and the set point.
+  - **Both hosts:** the browser card evaluates a template's recipe, and so does the app's playback
+    (`CardDesignTemplates.playback`, ahead of the card type's converter).
+  - **The guard:** `DevicePackLibraryTest` refuses a published design that reads a value no host
+    pushes, so none draws its example's numbers.
+- **Suggested for its class.** A pack for a `device_class` is a class design
+  (`DeviceMatch(deviceClass = "garage")`): the suggestion index lists it, so the card picker offers
+  the garage door designs on any garage door, after any design made for that device. A pack for a
+  whole domain (the thermostat) has no match: once published, it is chosen by id, not suggested
+  on every climate entity. Only cards `custom:remote-compose-card` wraps (tile, button, entity,
+  gauge) are suggested.
+- **To the dashboard agent.** The agent's `find_designs` tool reads the same index (see
+  [dashboard-editing.md](../architecture/dashboard-editing.md)), so asking for "the actual garage
+  door" gets a draft card set to it.
+
+Alerts, toolbar items and real-world views are placements other than a dashboard card (and an
+alert shows only while its rule holds), so they stay out of the library until those placements
+exist. So does the garage door's Material 3 design: its Open, Stop and Close buttons can only send the
+card's own tap, the cover's toggle, so Close on a closed door would open it. It waits until a
+design can emit distinct cover actions (`open_cover`, `stop_cover`, `close_cover`; see
+[What isn't wired](#what-isnt-wired)). The wall console's one push button and the overlay's
+toggle are toggles, as a garage's own wall button is. So do the thermostat's designs for now: they bake `°C` and a 7–30 °C dial, and no binding
+pushes a thermostat's own unit or range yet, so a °F thermostat would read wrong. (Its overlay also
+reads formatted labels, `climate.s0.attributes.current_temperature_label`, that no recipe
+produces.) They are captured and bound like the garage door's (`CardBindingRecipes.CLIMATE`), ready
+for when the unit and range are bindable.
+
 ## What isn't wired
 
 These documents are designs to review and edit, ahead of the code that plays them:
@@ -169,8 +221,13 @@ These documents are designs to review and edit, ahead of the code that plays the
 - **Real world needs its source.** The picture is the card's entity picture
   (`picture-entity-card-image`). The camera entity and the simulation are in `pack.json`, not yet
   in the card config a host builds.
-- **Not selected.** The packs aren't in the design library, so the card picker doesn't offer them.
-  Their `audience` is ready for Livery's audience matching when the migration lands.
+- **Only the controls are selected.** They are in the design library
+  ([above](#in-the-design-library)); the other kinds aren't. Each pack's `audience` is ready for
+  Livery's audience matching when the migration lands.
+- **One entity per card.** A pack design draws one entity (slot 0). A garage opener's other
+  entities (its light, a vent or a half-open button) are its contract's optional inputs, not yet
+  filled from the device's other entities: that needs device cards
+  ([lovelace-card-picker.md](../architecture/lovelace-card-picker.md), stage 3).
 
 ## Publishing
 

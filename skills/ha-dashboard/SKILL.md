@@ -71,7 +71,9 @@ session in the phone app or the panel.
    scope (`view`, `section`) means change only `views[view].sections[section]`; still submit the
    complete dashboard, and the integration refuses a draft that changes anything else.
 2. `get_card_guide` for the card types harc draws and how to size them; `find_entities` for the
-   home's entities (search by name, area words or domain).
+   home's entities (search by name, area words or domain); `find_designs` for harc's card designs
+   made for an entity's device or kind (a garage door drawn as the door itself), each with the
+   card config that draws it.
 3. `submit_draft` with the **complete** new dashboard config and a one-line `summary`. The
    integration refuses a config without a `views` list or one naming entities the home doesn't
    have, and says which.
@@ -99,6 +101,11 @@ session in the phone app or the panel.
 - Reordering is an edit like any other: move cards within and between sections, and sections
   within a view, when the request asks for a different order or layout.
 - Do not add automations, scripts, scenes or helpers.
+- A card drawn by one of harc's designs wraps a Home Assistant card:
+  `{"type": "custom:remote-compose-card", "card": {…}, "design_id": "…"}`. Take design ids only
+  from `find_designs`, for the entity that card shows, and use the config it returns; never invent
+  one. Call it on a device's main entity when the person wants the device to look like the real
+  thing or asks for a design made for it.
 
 These rules match `CARD_GUIDE` in `custom_components/terrazzo/mcp.py`, which `get_card_guide`
 returns; change both together.

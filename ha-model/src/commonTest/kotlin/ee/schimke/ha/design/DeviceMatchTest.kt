@@ -92,4 +92,18 @@ class DeviceMatchTest {
     )
     assertEquals(0, DeviceMatch(integration = "  ").normalized().specificity)
   }
+
+  @Test
+  fun aClassDesignMatchesAnyDeviceOfThatClassBelowEveryOtherScope() {
+    val garage = DeviceMatch(deviceClass = "garage")
+    val opener =
+      DeviceInfo(integration = "ratgdo", manufacturer = "Chamberlain", deviceClass = "Garage")
+    assertEquals(DeviceScope.Class, garage.scope)
+    assertTrue(garage.matches(opener))
+    assertTrue(!garage.matches(opener.copy(deviceClass = "gate")))
+    assertTrue(!garage.matches(opener.copy(deviceClass = null)))
+    assertTrue(DeviceMatch(translationKey = "door").rank > garage.rank)
+    assertTrue(garage.rank > DeviceMatch().rank)
+    assertEquals("garage", DeviceMatch(deviceClass = " Garage ").normalized().deviceClass)
+  }
 }

@@ -79,7 +79,10 @@ design_id: user:abc
 ## Choosing a design by id
 
 `design_id` names a design across its themes, modes and shapes (`DesignEntry.stableDesignId`), so
-a card keeps its design when the card style or dark mode changes. The card sends it to
+a card keeps its design when the card style or dark mode changes. A design that doesn't follow one
+of its card's shape properties publishes it as `*` (`DesignProperties.ANY`; a device pack's
+`state_icon`), and the app's lookup of a chosen design (`DesignKey.accepts`) matches it to any
+value. A card's own key and automatic lookups stay exact. The card sends it to
 `POST /api/cards/resolve` as `designId`; `CardResolve.resolveChosen` serves that design's entry for
 the card's key and the requested style and mode, ahead of the exact and nearest paths, and the card
 resolves as usual when the library has no such entry. `design` (a SHA-256) remains the way to pin
@@ -97,13 +100,20 @@ A design's `DeviceMatch` sets its scope (`DeviceMatch.scope`, `DeviceScope`), wi
 | Scope | Example | Matches on | Status |
 | --- | --- | --- | --- |
 | Generic | any light tile | no device match; the key's `domain`, `device_class` | built |
+| Class (`DeviceScope.Class`) | any garage door | `deviceClass` alone: the entity's `device_class` | built |
 | Role (`DeviceScope.Role`) | a boiler's flow temperature on any boiler | `translationKey` alone | built |
-| Class across brands | any 3D printer | a `kind` (below) | planned |
+| Class across brands, without a `device_class` | any 3D printer | a `kind` (below) | planned |
 | Brand (`DeviceScope.Brand`) | every Bambu Lab printer | `integration` or `manufacturer` | built |
 | Model (`DeviceScope.Model`) | X1 Carbon | `model`, a glob (`X1*`) | built |
 | One device | *my* printer | none: a choice, not a scope | built as `design_id` |
 
-- **Classes across brands (planned).** Home Assistant has no device category: a Bambu Lab, an
+- **Classes with a `device_class` (built).** An entity's `device_class` (`garage`, `gate`,
+  `shade`) says what kind of thing it is, whoever made it. A design for a class
+  (`DeviceMatch(deviceClass = "garage")`) matches any entity of that class: the card reads it from
+  the entity's state, as Home Assistant draws it, and so does the app (`cardDevice`). It is the
+  widest scope, so a design made for the device itself ranks first. The
+  [device packs](../design/device-packs.md)' garage door designs are this scope.
+- **Classes across brands without one (planned).** Home Assistant has no device category: a Bambu Lab, an
   OctoPrint and a PrusaLink printer share nothing in the registry that says "printer". Two changes:
   - the match moves from each `DesignEntry` to the design, as a list (`devices: [match…]`), so a
     class design lists its integrations once instead of copying every entry per integration (the
@@ -117,10 +127,10 @@ A design's `DeviceMatch` sets its scope (`DeviceMatch.scope`, `DeviceScope`), wi
 
 ### Ranking by scope
 
-Designs that match one device rank by scope, narrowest first, then by how many fields they set
-within a scope (`DeviceMatch.rank`): a model design beats a brand design however many fields the
-brand design sets, and a brand's chamber-light design (integration and translation key) beats the
-brand's general one. `DeviceMatch.pick` (the app's automatic choice), `designOptions` (its
+Designs that match one device rank by scope, narrowest first (model, brand, role, class), then by
+how many fields they set within a scope (`DeviceMatch.rank`): a model design beats a brand design
+however many fields the brand design sets, a brand's chamber-light design (integration and
+translation key) beats the brand's general one, and every device design beats a class design. `DeviceMatch.pick` (the app's automatic choice), `designOptions` (its
 picker), the suggestion index's order and the card's `deviceRank` all use it. Before, they counted
 fields, so `integration` plus `manufacturer` outranked `model: X1*`.
 

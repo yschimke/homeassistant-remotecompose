@@ -41,6 +41,13 @@ class FakeHome:
     def state(self, entity_id):
         return next((e for e in self.entities if e['entity_id'] == entity_id), None)
 
+    def device_info(self, entity_id):
+        return {'integration': 'ratgdo'} if entity_id.startswith('cover.') else None
+
+    async def design_index(self):
+        return {'designs': [{'designId': 'pack:garage-door-controls-skeuomorphic', 'cardType': 'tile',
+                             'device': {'deviceClass': 'garage'}, 'domain': 'cover', 'title': 'Garage door · Wall console'}]}
+
     def overview(self):
         return {'areas': [{'area': 'Garden', 'entities': ['sensor.soil (Soil moisture): 31']}]}
 
@@ -107,6 +114,16 @@ class TurnTest(unittest.TestCase):
         self.assertIn('light.kitchen', first[0]['content'])
         self.assertIn('native_card_types', first[0]['content'])
         self.assertEqual({'role': 'user', 'content': 'Work on this dashboard with me.\n\nAdd the soil moisture'}, first[1])
+
+    def test_finds_a_design_made_for_a_garage_door_and_reports_it(self):
+        home = FakeHome({})
+        home.entities.append({'entity_id': 'cover.garage_door', 'state': 'closed',
+                              'attributes': {'friendly_name': 'Garage door', 'device_class': 'garage'}})
+        result = asyncio.run(assistant._run_tool(home, 's1', 'find_designs', {'entity_id': 'cover.garage_door'}))
+        self.assertEqual(result['designs'][0]['config']['design_id'], 'pack:garage-door-controls-skeuomorphic')
+        self.assertEqual(assistant.describe_step('find_designs', {'entity_id': 'cover.garage_door'}, result),
+                         ('cover.garage_door', 'Garage door · Wall console', True))
+        self.assertIn('find_designs', {tool['function']['name'] for tool in assistant.TOOLS})
 
     def test_each_step_is_reported_in_words(self):
         draft = {'views': [{'cards': [{'type': 'tile', 'entity': 'sensor.soil'}]}]}

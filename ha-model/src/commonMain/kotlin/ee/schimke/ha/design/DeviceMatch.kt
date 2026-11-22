@@ -30,12 +30,21 @@ data class DeviceInfo(
   val areaId: String? = null,
   val entityCategory: String? = null,
   val hidden: Boolean = false,
+  /**
+   * The entity's `device_class` (`garage`, `temperature`): what kind of thing it is, whoever made
+   * it. A design for a class ([DeviceMatch.deviceClass]) matches on it.
+   */
+  val deviceClass: String? = null,
 )
 
 /**
  * The devices a design is made for. A design without one is generic; with one, it is used only for
  * cards whose entity's device matches every field it sets, ahead of the generic design for the same
  * key. Text compares without case; [model] may use `*` as a wildcard (`ecoTEC*`).
+ *
+ * [deviceClass] is the entity's `device_class`: a design for every garage door, whichever brand
+ * made the opener ([DeviceScope.Class]). It is the widest scope, so a design made for the device
+ * itself ranks first.
  */
 @Serializable
 data class DeviceMatch(
@@ -43,10 +52,11 @@ data class DeviceMatch(
   val manufacturer: String? = null,
   val model: String? = null,
   val translationKey: String? = null,
+  val deviceClass: String? = null,
 ) {
   /** How many fields it sets; zero for a match that matches nothing. */
   val specificity: Int
-    get() = listOfNotNull(integration, manufacturer, model, translationKey).size
+    get() = listOfNotNull(integration, manufacturer, model, translationKey, deviceClass).size
 
   /**
    * Who the design is for, from the narrowest field it sets: a [DeviceScope.Model] design beats a
@@ -58,6 +68,7 @@ data class DeviceMatch(
         !model.isNullOrBlank() -> DeviceScope.Model
         !integration.isNullOrBlank() || !manufacturer.isNullOrBlank() -> DeviceScope.Brand
         !translationKey.isNullOrBlank() -> DeviceScope.Role
+        !deviceClass.isNullOrBlank() -> DeviceScope.Class
         else -> null
       }
 
@@ -75,7 +86,13 @@ data class DeviceMatch(
    */
   fun normalized(): DeviceMatch {
     fun norm(value: String?) = value?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }
-    return DeviceMatch(norm(integration), norm(manufacturer), norm(model), norm(translationKey))
+    return DeviceMatch(
+      norm(integration),
+      norm(manufacturer),
+      norm(model),
+      norm(translationKey),
+      norm(deviceClass),
+    )
   }
 
   /** Whether [device] satisfies every field this sets. An empty match matches nothing. */
@@ -84,7 +101,8 @@ data class DeviceMatch(
       same(integration, device.integration) &&
       same(manufacturer, device.manufacturer) &&
       (model == null || device.model?.let { glob(model).matches(it) } == true) &&
-      same(translationKey, device.translationKey)
+      same(translationKey, device.translationKey) &&
+      same(deviceClass, device.deviceClass)
 
   private fun same(wanted: String?, actual: String?) =
     wanted == null || (actual != null && wanted.equals(actual, ignoreCase = true))
@@ -124,6 +142,8 @@ enum class DeviceScope {
   Brand,
   /** An entity role on any device (`translationKey` alone). */
   Role,
+  /** Every entity of a kind, any device (`deviceClass` alone): every garage door. */
+  Class,
 }
 
 /** More than any [DeviceMatch.specificity], so scope always decides before field count. */

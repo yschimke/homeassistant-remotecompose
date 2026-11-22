@@ -70,7 +70,8 @@ object CardDesignLibrary {
 
     // A card type with a checked-in design (ui-builder/designs/<type>.uid) is captured from it, so
     // editing the design is what changes the library; the rest still come from their converters.
-    val built = examples.keys.map { CheckedInCardDesigns.capture(host, it) }
+    // A device pack's key is captured from the pack's own design (DevicePackLibrary).
+    val built = examples.keys.map { capture(host, it) }
     val now = System.currentTimeMillis()
     val output = DesignPublisher.publish(built, serial = now, nowEpochMs = now)
     // The checked-in designs the migrated card types were drawn from, so the design server can
@@ -114,6 +115,16 @@ object CardDesignLibrary {
   }
 
   /**
+   * The library's design for [key], captured on [host]: a device pack's key from the pack's own
+   * design ([DevicePackLibrary]), every other from its card type's checked-in design or converter
+   * ([CheckedInCardDesigns]). What [generate] publishes, and what a check on another platform
+   * captures to compare with it.
+   */
+  fun capture(host: CaptureHost, key: DesignKey): BuiltDesign =
+    DevicePackLibrary.designFor(key)?.let { DevicePackLibrary.capture(host, key, it) }
+      ?: CheckedInCardDesigns.capture(host, key)
+
+  /**
    * Writes into [target] the library in [source] with [cardType]'s designs captured again from
    * [design], a library design edited in UI Builder ([documentJson] is its text): what the design
    * server publishes when a library design changes, without a build. Every other design, preview
@@ -141,7 +152,8 @@ object CardDesignLibrary {
       manifest.designs
         .filterNot { it.revoked }
         .map { entry ->
-          if (entry.key.cardType == cardType) {
+          // A device pack's key is its own design, not the card type's: it is kept as it is.
+          if (entry.key.cardType == cardType && DevicePackLibrary.designFor(entry.key) == null) {
             captured++
             CheckedInCardDesigns.captureDesign(host, entry.key, design)
           } else {
@@ -149,6 +161,9 @@ object CardDesignLibrary {
               entry.key,
               entry.slots,
               source.resolve(DesignManifest.blobPath(entry.sha256)).readBytes(),
+              designId = entry.designId,
+              title = entry.title,
+              device = entry.device,
             )
           }
         }
@@ -292,6 +307,11 @@ object CardDesignLibrary {
       for (key in libraryKeysOf(source)) examples.getOrPut(key) { source }
     }
     check(examples.isNotEmpty()) { "the demo dashboards produce no designs" }
+    // The device packs' designs, each in every theme the library keys its tile by.
+    for (design in DevicePackLibrary.published) {
+      val example = DevicePackLibrary.example(design)
+      for (key in DevicePackLibrary.keys(design)) examples.getOrPut(key) { example }
+    }
     return examples
   }
 

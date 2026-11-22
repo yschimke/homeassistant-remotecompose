@@ -25,19 +25,29 @@ const DESIGN_ID = /^[^\u0000-\u001f]{1,256}$/;
  */
 export function deviceInfo(hass, entityId) {
   const entity = hass?.entities?.[entityId];
-  if (!entity) return null;
+  const deviceClass = hass?.states?.[entityId]?.attributes?.device_class ?? null;
+  // An entity the registry doesn't list still has its state's class: a class design matches it.
+  if (!entity) {
+    return deviceClass == null ? null : {
+      integration: null, manufacturer: null, model: null, translationKey: null, deviceClass,
+    };
+  }
   const device = entity.device_id ? hass.devices?.[entity.device_id] : undefined;
   return {
     integration: entity.platform ?? null,
     manufacturer: device?.manufacturer ?? null,
     model: device?.model ?? null,
     translationKey: entity.translation_key ?? null,
+    // What kind of thing it is (`garage`), whoever made it: the state's attribute, as HA draws it.
+    deviceClass,
   };
 }
 
+const MATCH_FIELDS = ['integration', 'manufacturer', 'model', 'translationKey', 'deviceClass'];
+
 /** `DeviceMatch.matches` (`ha-model`): every field the match sets, without case; `*` in a model. */
 export function deviceMatches(match, device) {
-  const fields = ['integration', 'manufacturer', 'model', 'translationKey'];
+  const fields = MATCH_FIELDS;
   const set = fields.filter((field) => typeof match?.[field] === 'string' && match[field].trim());
   if (!device || set.length === 0) return false;
   return set.every((field) => {
@@ -51,13 +61,18 @@ export function deviceMatches(match, device) {
 }
 
 /**
- * `DeviceMatch.rank` (`ha-model`): a model design over a brand design over a role design, however
- * many fields each sets, then more fields within a scope. Zero for an empty match.
+ * `DeviceMatch.rank` (`ha-model`): a model design over a brand design over a role design over a
+ * class design (`deviceClass`: every garage door), however many fields each sets, then more fields
+ * within a scope. Zero for an empty match.
  */
 export function deviceRank(match) {
   const set = (field) => typeof match?.[field] === 'string' && match[field].trim() !== '';
-  const fields = ['integration', 'manufacturer', 'model', 'translationKey'].filter(set).length;
-  const scope = set('model') ? 3 : set('integration') || set('manufacturer') ? 2 : set('translationKey') ? 1 : 0;
+  const fields = MATCH_FIELDS.filter(set).length;
+  const scope = set('model') ? 4
+    : set('integration') || set('manufacturer') ? 3
+    : set('translationKey') ? 2
+    : set('deviceClass') ? 1
+    : 0;
   return scope === 0 ? 0 : scope * 8 + fields;
 }
 

@@ -55,6 +55,17 @@ data class DesignKey(
   val container: String? = null,
   val widthDp: Int? = null,
 ) {
+  /**
+   * Whether a design published under this key draws a card keyed [card]: the same key but for its
+   * variant, which doesn't split a design, with this key's shape [DesignProperties.accepts]ing the
+   * card's (a property published as [DesignProperties.ANY] matches any value).
+   */
+  fun accepts(card: DesignKey): Boolean =
+    copy(variant = DEFAULT_VARIANT, shape = "") ==
+      card.copy(variant = DEFAULT_VARIANT, shape = "") &&
+      (shape == card.shape ||
+        DesignProperties.parse(shape).accepts(DesignProperties.parse(card.shape)))
+
   /** This design's Wear widget design for [container]: the same card, variant and theme. */
   fun forWearWidget(container: String): DesignKey =
     copy(surface = DesignSurface.WearWidget, container = container)

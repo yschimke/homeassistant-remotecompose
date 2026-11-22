@@ -13,6 +13,8 @@ import ee.schimke.composeai.rccreation.compose.state.RemoteString
 import ee.schimke.composeai.rcplayer.edit.hardcodeDensity
 import ee.schimke.composeai.rcplayer.edit.optimize
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
+import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
+import ee.schimke.composeai.rcplayer.protocol.RcTextData
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.design.BuiltDesign
 import ee.schimke.ha.design.CardBindingRecipe
@@ -32,6 +34,7 @@ import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
 import kotlin.concurrent.Volatile
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -180,6 +183,9 @@ object CardDesignTemplates {
           entityId?.let { tapActionOf(card, card.raw["tap_action"] as? JsonObject, it) },
         )
       }
+    // A template that carries its own recipe (a device pack's design, which reads attributes its
+    // card type's converter doesn't push) is bound by it, as the browser card binds it.
+    val embedded = embeddedRecipe(bytes)
     return CardTemplatePlayback(
       bytes = bytes,
       bindings = { snapshot, clock ->
@@ -188,7 +194,9 @@ object CardDesignTemplates {
         val slots =
           HaSharedValues.bindings(snapshot, clock.zone()) +
             CardDesignSlots.slotBindings(card, snapshot, clock.zone())
-        converter?.designBindings(card, snapshot, clock)?.let { slots + it } ?: slots
+        val level =
+          embedded?.evaluate(card, snapshot) ?: converter?.designBindings(card, snapshot, clock)
+        level?.let { slots + it } ?: slots
       },
       tapAction = tapActionOf(card, card.raw["tap_action"] as? JsonObject, entityId),
       slotTapActions = slotTaps,
@@ -268,7 +276,38 @@ object CardDesignTemplates {
     key: DesignKey,
     registry: CardRegistry = defaultTemplateRegistry,
     content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
-  ): BuiltDesign = runCaptureBlocking { captureSuspending(context, key, registry, content) }
+  ): BuiltDesign = runCaptureBlocking {
+    captureSuspending(context, key, registry, content = content)
+  }
+
+  /**
+   * [captureWith], the template carrying [recipe] instead of its card type's: for a design that
+   * reads values its card type's converter doesn't push (a device pack's garage door reads its
+   * cover's `current_position`). [content] must apply the modifier it is given, which declares it.
+   */
+  fun captureWithRecipe(
+    context: CaptureHost,
+    key: DesignKey,
+    recipe: CardBindingRecipe,
+    content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
+  ): BuiltDesign = runCaptureBlocking {
+    captureSuspending(context, key, defaultTemplateRegistry, recipe, content)
+  }
+
+  /**
+   * The recipe [template] carries ([CardBindingRecipe.BINDING]), or null when it has none or isn't
+   * a document: what a host binds it with, ahead of its card type's converter.
+   */
+  fun embeddedRecipe(template: ByteArray): CardBindingRecipe? = runCatching {
+    val operations = RcDocumentCodec.decode(template, RcWireLimits()).operations
+    val variable =
+      operations.filterIsInstance<RcNamedVariable>().firstOrNull {
+        it.name.removePrefix("USER:") == CardBindingRecipe.BINDING
+      } ?: return null
+    val text = operations.filterIsInstance<RcTextData>().first { it.id == variable.id }.text
+    CardBindingRecipe.parse(Json.parseToJsonElement(text) as JsonObject)
+  }
+    .getOrNull()
 
   /** [capture], suspending: what a host that cannot block (wasmJs) calls. */
   suspend fun captureSuspending(
@@ -285,13 +324,16 @@ object CardDesignTemplates {
     context: CaptureHost,
     key: DesignKey,
     registry: CardRegistry = defaultTemplateRegistry,
+    /** The recipe the template carries, when not its card type's ([CardConverter.designRecipe]). */
+    recipeOverride: CardBindingRecipe? = null,
     content: @Composable (card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) -> Unit,
   ): BuiltDesign {
     require(key.surface == DesignSurface.MobileApp) { "spike only builds mobile-app templates" }
     val (style, dark, cardStyle) = parseBakedTheme(key.theme)
     val (card, snapshot) = designInput(key, registry)
     val recipe =
-      registry.converterFor(key.cardType)?.designRecipe(DesignProperties.parse(key.shape))
+      recipeOverride
+        ?: registry.converterFor(key.cardType)?.designRecipe(DesignProperties.parse(key.shape))
     val palette = cardStyle.cardPalette(style, dark)
     val bytes = run {
       // Host density: every dp and sp reads the player's display, never the capture's, so a design

@@ -60,7 +60,7 @@ val bundledDevicePacks by tasks.registering {
     val files =
       packs.asFile
         .walkTopDown()
-        .filter { it.isFile && it.extension == "uid" }
+        .filter { it.isFile && (it.extension == "uid" || it.name == "pack.json") }
         .map { it.relativeTo(packs.asFile).invariantSeparatorsPath to it }
         .sortedBy { it.first }
         .toList()
@@ -77,7 +77,7 @@ val bundledDevicePacks by tasks.registering {
           appendLine("package ee.schimke.ha.cards")
           appendLine()
           appendLine("internal object BundledDevicePacks {")
-          appendLine("  /** Every pack design's `<pack>/<file>` path, in order. */")
+          appendLine("  /** Every pack design's and manifest's `<pack>/<file>` path, in order. */")
           appendLine("  val paths: List<String> = listOf(")
           for ((path, _) in files) appendLine("    ${literal(path)},")
           appendLine("  )")

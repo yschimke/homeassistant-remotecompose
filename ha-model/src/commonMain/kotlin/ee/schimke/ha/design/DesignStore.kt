@@ -89,4 +89,17 @@ fun interface InbuiltDesigns {
 }
 
 /** A built design before publishing: its key, slot count and template bytes. */
-class BuiltDesign(val key: DesignKey, val slots: Int, val bytes: ByteArray)
+class BuiltDesign(
+  val key: DesignKey,
+  val slots: Int,
+  val bytes: ByteArray,
+  /**
+   * The design it is one key of: its card type's library design ([DesignEntry.libraryDesignId])
+   * when null.
+   */
+  val designId: String? = null,
+  /** What a picker calls it: [DesignEntry.LIBRARY_TITLE] when null. */
+  val title: String? = null,
+  /** The devices it is made for ([DesignEntry.device]); null for a generic design. */
+  val device: DeviceMatch? = null,
+)
