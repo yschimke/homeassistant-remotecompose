@@ -63,7 +63,7 @@ Generic designs are not in it; the full manifest is about 9 MB, the index is a f
 design. The card matches with `DeviceMatch`'s rules (`deviceMatches`: every set field, without
 case, `*` in a model), keeps only designs for the entity's own domain (a printer's light design
 is no suggestion for its sensors, which the resolver could not draw with it) and the card types it
-binds live, lists the most specific first, and offers at most three, labelled by the design's
+binds live, lists the best ranked first (see [Ranking](#ranking-by-scope)), and offers at most three, labelled by the design's
 title.
 
 A suggestion is the card set to that design:
@@ -84,6 +84,80 @@ a card keeps its design when the card style or dark mode changes. The card sends
 the card's key and the requested style and mode, ahead of the exact and nearest paths, and the card
 resolves as usual when the library has no such entry. `design` (a SHA-256) remains the way to pin
 exact bytes, and the three of `design`, `design_id` and `template_url` exclude each other.
+
+## Many designs per device
+
+Three questions, kept apart: **who a design is for** (its device match), **how it looks** (the card
+style), and **which of several fitting designs a card uses** (a choice per card).
+
+### Scope: who a design is for
+
+A design's `DeviceMatch` sets its scope (`DeviceMatch.scope`, `DeviceScope`), widest first:
+
+| Scope | Example | Matches on | Status |
+| --- | --- | --- | --- |
+| Generic | any light tile | no device match; the key's `domain`, `device_class` | built |
+| Role (`DeviceScope.Role`) | a boiler's flow temperature on any boiler | `translationKey` alone | built |
+| Class across brands | any 3D printer | a `kind` (below) | planned |
+| Brand (`DeviceScope.Brand`) | every Bambu Lab printer | `integration` or `manufacturer` | built |
+| Model (`DeviceScope.Model`) | X1 Carbon | `model`, a glob (`X1*`) | built |
+| One device | *my* printer | none: a choice, not a scope | built as `design_id` |
+
+- **Classes across brands (planned).** Home Assistant has no device category: a Bambu Lab, an
+  OctoPrint and a PrusaLink printer share nothing in the registry that says "printer". Two changes:
+  - the match moves from each `DesignEntry` to the design, as a list (`devices: [match…]`), so a
+    class design lists its integrations once instead of copying every entry per integration (the
+    Livery migration's repeatable `device.*` design tags are the same shape);
+  - a `kind` table, catalog data in this repository and not Livery code
+    (`printer: [bambu_lab, octoprint, prusalink]`), lets a design say `kind: printer`.
+- **One device is not a published scope.** A device's registry id belongs to one home, so a design
+  for it is useless to anyone else. Picking a design for that device is a choice: the card's
+  `design_id`, or a person's choice kept by `card_selections.py`. A personal design is a design
+  published privately and chosen there.
+
+### Ranking by scope
+
+Designs that match one device rank by scope, narrowest first, then by how many fields they set
+within a scope (`DeviceMatch.rank`): a model design beats a brand design however many fields the
+brand design sets, and a brand's chamber-light design (integration and translation key) beats the
+brand's general one. `DeviceMatch.pick` (the app's automatic choice), `designOptions` (its
+picker), the suggestion index's order and the card's `deviceRank` all use it. Before, they counted
+fields, so `integration` plus `manufacturer` outranked `model: X1*`.
+
+### Look: theme packs are card styles, not designs
+
+A design is written once and re-themed into every card style
+([server-owned-card-designs.md](server-owned-card-designs.md), goal 6), so one printer design is a
+Classic, a Braun and an LCD card, chosen per card by `card_style`. In Livery a theme pack is values
+pushed beside the template, with nothing to download. A layout that differs (a Braun printer
+arranged differently, or one that needs its own typeface, which can't be bound) is a **variant**
+or a separate design, chosen like any other. A device's choice is designs × card styles, and the
+two are picked separately.
+
+### Several designs in one scope
+
+Every design has its own `designId`, so two community designs for the X1 can both exist.
+
+- **Automatic** (no choice made): the best-ranked curated library design. *Planned* to be the
+  only automatic one: the app's sync orders authors by its preference queries
+  (`DesignRepository.resolveDeviceDesigns`) rather than leaving shared designs out. As Livery's
+  `OnRequest` designs aren't drawn until installed, a card shouldn't change because someone else
+  published a design.
+- **Chosen**: the card's `design_id`; a design that has gone draws the automatic one, never nothing.
+- **Picker (planned)**: HA shows a label per suggestion and the card offers three, so offer the
+  best design at each scope rather than three from one ("For your X1 Carbon", "For Bambu Lab
+  printers", "For 3D printers"). Within a scope, library designs before shared ones, then by use
+  ([template-usage-tracking.md](../followups/template-usage-tracking.md)).
+- **Gallery (planned, stage 2 below)**: every fitting design grouped by scope, with a card-style
+  switcher redrawing all of them live.
+
+### Order of work
+
+1. Rank by scope (built: `DeviceMatch.scope` and `rank`, `deviceRank` in the card).
+2. Move the device match to the design, as a list.
+3. Add the `kind` table for classes across brands.
+4. Offer one suggestion per scope in the picker.
+5. Keep one device a choice per card or person, never a published scope.
 
 ## Later stages (planned)
 

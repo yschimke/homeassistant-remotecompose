@@ -58,7 +58,7 @@ object DeviceSuggestions {
           }
           .distinct()
           .sortedWith(
-            compareByDescending<Suggestion> { it.device.specificity }
+            compareByDescending<Suggestion> { it.device.rank }
               .thenBy { it.designId }
               .thenBy { it.cardType }
               .thenBy { it.domain.orEmpty() },

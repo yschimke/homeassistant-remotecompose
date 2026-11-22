@@ -44,9 +44,30 @@ data class DeviceMatch(
   val model: String? = null,
   val translationKey: String? = null,
 ) {
-  /** How many fields it sets: between two matching designs, the higher one is more specific. */
+  /** How many fields it sets; zero for a match that matches nothing. */
   val specificity: Int
     get() = listOfNotNull(integration, manufacturer, model, translationKey).size
+
+  /**
+   * Who the design is for, from the narrowest field it sets: a [DeviceScope.Model] design beats a
+   * [DeviceScope.Brand] one however many fields the brand design sets. Null for an empty match.
+   */
+  val scope: DeviceScope?
+    get() =
+      when {
+        !model.isNullOrBlank() -> DeviceScope.Model
+        !integration.isNullOrBlank() || !manufacturer.isNullOrBlank() -> DeviceScope.Brand
+        !translationKey.isNullOrBlank() -> DeviceScope.Role
+        else -> null
+      }
+
+  /**
+   * How designs that match one device rank: by [scope], narrowest first, then by [specificity]
+   * within a scope (a brand's chamber-light design over the brand's general one). Zero for an empty
+   * match, below every match that sets a field.
+   */
+  val rank: Int
+    get() = scope?.let { (DeviceScope.entries.size - it.ordinal) * RANK_STEP + specificity } ?: 0
 
   /**
    * This match in its canonical form: trimmed and lowercase, blank fields unset. Matching ignores
@@ -77,15 +98,33 @@ data class DeviceMatch(
   companion object {
     /**
      * The design to use among [candidates] (each a design's device match, or null for generic) for
-     * [device]: the most specific that matches, else the generic one, else null.
+     * [device]: the best-ranked ([rank]) that matches, else the generic one, else null.
      */
     fun <T> pick(candidates: List<Pair<DeviceMatch?, T>>, device: DeviceInfo?): T? {
       val specific = device?.let { d ->
         candidates
           .filter { (match, _) -> match != null && match.matches(d) }
-          .maxByOrNull { (match, _) -> match!!.specificity }
+          .maxByOrNull { (match, _) -> match!!.rank }
       }
       return (specific ?: candidates.firstOrNull { it.first == null })?.second
     }
   }
 }
+
+/**
+ * How wide a device design's audience is, narrowest first. A design for one model is the better fit
+ * than one for its brand, and a brand's than one for a role (`flow_temperature`) on any device. One
+ * particular device is not a scope: its registry id belongs to one home, so a design for it is
+ * chosen per card instead of published for everyone.
+ */
+enum class DeviceScope {
+  /** A model or model family (`model`, a glob). */
+  Model,
+  /** Every device of an integration or manufacturer. */
+  Brand,
+  /** An entity role on any device (`translationKey` alone). */
+  Role,
+}
+
+/** More than any [DeviceMatch.specificity], so scope always decides before field count. */
+private const val RANK_STEP = 8

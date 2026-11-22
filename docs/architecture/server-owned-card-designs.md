@@ -39,7 +39,8 @@ matters here:
 - **Forking copies the real source** for migrated types; for the rest, "Design in UI Builder"
   still rebuilds a lookalike from `ha-cards` components (`HaCardsSeed`).
 - **Device designs are picked, or chosen per card.** `DeviceMatch` (integration, manufacturer,
-  model glob, translation key) picks the most specific device design automatically
+  model glob, translation key) picks the best-ranked device design automatically (a model
+  design over a brand design over a role design, `DeviceMatch.rank`)
   (`CardDesigns.cardTemplateFor`); since D5 a card can be switched to any design by its id (see
   [Switching a device's card](#switching-a-devices-card)).
 - **User designs live only on the server volume.** Nothing backs them up or imports them.

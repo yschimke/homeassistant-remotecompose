@@ -150,6 +150,18 @@ test('an entity is offered the designs made for its device, most specific first'
   for (const { config } of suggestions) host().setConfig(config);
 });
 
+test('a model design is listed before a brand design that sets more fields', () => {
+  const index = { designs: [
+    { designId: 'user:brand', cardType: 'tile', device: { integration: 'bambu_lab', manufacturer: 'Bambu Lab' } },
+    { designId: 'user:model', cardType: 'tile', device: { model: 'X1*' } },
+    { designId: 'user:role', cardType: 'tile', device: { translationKey: 'chamber_light' } },
+  ] };
+  const ids = card.entitySuggestions(printerHass, 'light.printer_chamber', index).map((s) => s.config.design_id);
+  assert.deepEqual(ids, ['user:model', 'user:brand', 'user:role']);
+  assert.ok(card.deviceRank({ integration: 'a', translationKey: 'b' }) > card.deviceRank({ integration: 'a' }));
+  assert.equal(card.deviceRank({ model: ' ' }), 0);
+});
+
 test('an entity with nothing made for its device gets no suggestions', () => {
   assert.deepEqual(card.entitySuggestions(printerHass, 'light.kitchen', printerIndex), []);
   assert.deepEqual(card.entitySuggestions(printerHass, 'sensor.no_device', printerIndex), []);
