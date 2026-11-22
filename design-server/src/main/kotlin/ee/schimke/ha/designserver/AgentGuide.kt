@@ -9,9 +9,11 @@ import ee.schimke.ha.designs.UiBuilderDesignCompiler
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.MESSAGE_CARD_TYPE
+import ee.schimke.ha.model.remoteComposeCardStyle
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.cards.UnsupportedCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.livery.sessions.server.SessionImage
 import ee.schimke.livery.sessions.server.SessionToolResult
@@ -554,9 +556,20 @@ class AgentGuide(
     val library = library() ?: return CardOutcome.Undrawable("no design library")
     return try {
       val config = CardConfig(type = type, raw = card)
+      // A remote-compose card draws in its own card_style, as the app and the web card do.
+      val cardStyle =
+        if (!wrapped) HaUberTheme.Classic
+        else
+          remoteComposeCardStyle(CardConfig(type = REMOTE_COMPOSE_CARD, raw = placed))
+            ?.let(HaUberTheme::byId) ?: HaUberTheme.Classic
       val key =
-        CardDesignTemplates.keyFor(config, snapshot, ThemeStyle.entries.first(), dark)
-          ?: return CardOutcome.Undrawable("this card has no design template to draw it with")
+        CardDesignTemplates.keyFor(
+          config,
+          snapshot,
+          ThemeStyle.entries.first(),
+          dark,
+          cardStyle = cardStyle,
+        ) ?: return CardOutcome.Undrawable("this card has no design template to draw it with")
       val notes = mutableListOf<String>()
       if (!wrapped && placed.text("design_id") != null)
         notes +=
