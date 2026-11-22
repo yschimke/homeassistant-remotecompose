@@ -93,7 +93,7 @@ composeai-contracts = "3.45.0"
 compose-preview-daemon = "3.28.2"
 # `compose-preview-ui-builder-bom` from yschimke/compose-ui-builder, constraining the typed-catalog
 # consumer runtime on its own 3.x release line.
-compose-ui-builder = "3.147.0"
+compose-ui-builder = "3.148.0"
 tapmoc = "0.5.0"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
