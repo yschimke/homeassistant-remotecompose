@@ -90,6 +90,15 @@
       "description": "rc-players-bom >= 3.6.0 (tested 3.6.0, 3.7.0, 3.8.0) breaks ConsoleDesignRenderTest and LogbookLiveDocumentTest (commit f407845 caches frameEpochMillis per document so LocalRcTimeSource changes do not advance player clock without an active frame loop). Skipped from https://github.com/yschimke/homeassistant-remotecompose/pull/1629. Remove when upstream rc-players addresses this.",
       "matchPackageNames": ["ee.schimke.composeai:rc-players-bom"],
       "allowedVersions": "/^3\\.[0-5]\\.[0-9.]+$/"
+    },
+    {
+      "description": "compose-ai-tools >= 2.103.0 pulls rc-players-bom 3.10.0 onto :design-server's classpath (causing NoClassDefFoundError on AnimatedRemoteFloat in AmbientKt.animateRaw across WearWidgetDesignsTest, UserDesignsTest, and CardStudioLifecycleTest while this repo stays on rc-players 3.5.3) and requires Robolectric 4.18's android-all-instrumented-15-robolectric-14663667-2-i7.jar in :rc-card-shutter:composePreviewRenderAndroidResources while rc-card-shutter pins Robolectric 4.17. Skipped from https://github.com/yschimke/homeassistant-remotecompose/pull/1711. Remove when rc-players >= 3.10.0 and Robolectric 4.18 are adopted.",
+      "matchPackageNames": [
+        "yschimke/compose-ai-tools",
+        "/^ee\\.schimke\\.composeai\\.preview($|[.:])/",
+        "ee.schimke.composeai:compose-ai-tools-bom"
+      ],
+      "allowedVersions": "/^v?2\\.([0-9]|[1-9][0-9]|10[0-2])\\.[0-9.]+$/"
     }
   ]
 }
