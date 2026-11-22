@@ -164,7 +164,13 @@ object DevicePackLibrary {
 
   private const val PREFIX = "pack:"
   private const val CONTROLS = "controls"
-  private val NOT_BINDABLE = setOf("thermostat-controls-overlay")
+  private val NOT_BINDABLE =
+    setOf(
+      "thermostat-controls-overlay",
+      // Its Open, Stop and Close buttons can only send the card's own tap, a cover's toggle: Close
+      // on a closed door would open it. Published once a design can emit distinct cover actions.
+      "garage-door-controls-material3",
+    )
 
   /** The shape properties a pack design depends on: its entity's domain and class. */
   private val KEPT = setOf("domain", "device_class")

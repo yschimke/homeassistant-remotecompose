@@ -13,8 +13,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * The device packs in the card design library ([DevicePackLibrary]): each pack's controls are a
@@ -28,7 +31,6 @@ class DevicePackLibraryTest {
   fun publishesEachPacksControls() {
     assertEquals(
       listOf(
-        "garage-door-controls-material3",
         "garage-door-controls-skeuomorphic",
         "garage-door-controls-overlay",
       ),
@@ -43,7 +45,7 @@ class DevicePackLibraryTest {
     val thermostat = DevicePacks.designs.first { it.designId == "thermostat-controls-skeuomorphic" }
     assertEquals(DeviceMatch(deviceClass = "garage"), DevicePackLibrary.device(garage))
     assertNull(DevicePackLibrary.device(thermostat))
-    assertEquals("pack:garage-door-controls-material3", DevicePackLibrary.designId(garage))
+    assertEquals("pack:garage-door-controls-skeuomorphic", DevicePackLibrary.designId(garage))
   }
 
   @Test
@@ -170,6 +172,33 @@ class DevicePackLibraryTest {
           keys.any { it.accepts(card) },
           "no pack key for $state in ${card.theme}: ${card.shape}",
         )
+      }
+    }
+  }
+
+  @Test
+  fun aPublishedDesignsButtonsDoWhatTheySay() {
+    // A design can't emit its own action yet: every tap sends the card's, a cover's toggle. So a
+    // published design's buttons are toggles (a garage's wall push button), never Open, Stop or
+    // Close, which would all toggle: Close on a closed door would open it.
+    for (design in DevicePackLibrary.published) {
+      val nodes =
+        Json.parseToJsonElement(DevicePacks.forSlots(design))
+          .jsonObject
+          .getValue("nodes")
+          .jsonObject
+      for ((id, node) in nodes) {
+        val n = node.jsonObject
+        if (n["componentId"]?.jsonPrimitive?.content != "ha-cards/button") continue
+        val toggleable =
+          n["properties"]
+            ?.jsonObject
+            ?.get("toggleable")
+            ?.jsonObject
+            ?.get("value")
+            ?.jsonPrimitive
+            ?.content
+        assertEquals("true", toggleable, "${design.designId}/$id is a button that isn't a toggle")
       }
     }
   }

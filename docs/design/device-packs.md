@@ -147,8 +147,8 @@ every dataset passes.
 ## In the design library
 
 The card design library (`:card-designs:generateCardDesigns`, served by the design server)
-publishes the garage door pack's **controls** designs (`DevicePackLibrary`); the thermostat's wait
-for a bindable unit (below):
+publishes the garage door pack's wall console and overlay designs (`DevicePackLibrary`); its
+Material 3 design waits for distinct actions, and the thermostat's for a bindable unit (below):
 
 - **Their own designs.** Each is a library design of its own, `pack:<designId>`
   (`pack:garage-door-controls-skeuomorphic`), titled as `pack.json` names it. It is captured for
@@ -185,7 +185,11 @@ for a bindable unit (below):
 
 Alerts, toolbar items and real-world views are placements other than a dashboard card (and an
 alert shows only while its rule holds), so they stay out of the library until those placements
-exist. So do the thermostat's designs for now: they bake `°C` and a 7–30 °C dial, and no binding
+exist. So does the garage door's Material 3 design: its Open, Stop and Close buttons can only send the
+card's own tap, the cover's toggle, so Close on a closed door would open it. It waits until a
+design can emit distinct cover actions (`open_cover`, `stop_cover`, `close_cover`; see
+[What isn't wired](#what-isnt-wired)). The wall console's one push button and the overlay's
+toggle are toggles, as a garage's own wall button is. So do the thermostat's designs for now: they bake `°C` and a 7–30 °C dial, and no binding
 pushes a thermostat's own unit or range yet, so a °F thermostat would read wrong. (Its overlay also
 reads formatted labels, `climate.s0.attributes.current_temperature_label`, that no recipe
 produces.) They are captured and bound like the garage door's (`CardBindingRecipes.CLIMATE`), ready
