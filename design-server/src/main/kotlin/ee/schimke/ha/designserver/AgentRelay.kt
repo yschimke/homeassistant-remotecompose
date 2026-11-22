@@ -32,6 +32,8 @@ class AgentRelay(
   clock: () -> Long = System::currentTimeMillis,
   /** The longest a long-poll is held: under common reverse-proxy idle timeouts. */
   val maxWaitMs: Long = SessionRelay.MAX_WAIT_MS,
+  /** The kinds' own tools: guides, checks and sample renders ([AgentGuide]). */
+  guide: AgentGuide = AgentGuide(),
 ) {
   enum class Kind(val wire: String) {
     Card("card"),
@@ -87,7 +89,7 @@ class AgentRelay(
    */
   val server: SessionServer =
     SessionServer(
-      kinds = listOf(CardSessionKind(cards), DashboardSessionKind(dashboards)),
+      kinds = listOf(CardSessionKind(cards, guide), DashboardSessionKind(dashboards, guide)),
       text = TEXT,
       clock = clock,
       entropy = SecureEntropy(),
@@ -244,8 +246,11 @@ class AgentRelay(
             "person does, and await_feedback in a loop passing back its cursor, acting on each comment " +
             "(sometimes about one card; the person may comment before you join: act first on comments " +
             "already in get_session's conversation) until a decision arrives. Then go back to " +
-            "await_request. send_message asks the person something. You never apply a draft; the " +
-            "person does.",
+            "await_request. Before drafting, read get_card_guide or get_dashboard_guide: what you " +
+            "may build with. For a card, check_card_draft and render_card (its current values, or " +
+            "data sample) before submit_draft; for a dashboard, render_dashboard draws it with " +
+            "sample states, and get_render with the person's own. send_message asks the person " +
+            "something. You never apply a draft; the person does.",
         whereToEnterCode =
           "in Terrazzo: open Settings, Connect an agent, and enter it under Have a code from your " +
             "agent (or enter it on the card or dashboard they are asking about)",

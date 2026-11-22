@@ -202,7 +202,12 @@ fun Application.designServer(
     librarySourceRoutes(librarySources, uiBuilder, github)
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
-    val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions())
+    val agentRelay =
+      AgentRelay(
+        AgentDesignSessions(),
+        DashboardAgentSessions(),
+        guide = AgentGuide(holder, uiBuilder?.compiler ?: previewCompiler, generator),
+      )
     agentSessionsDir()?.let { dir ->
       val saved = AgentSessionFile(File(dir, "sessions.json"), agentRelay)
       saved.load()

@@ -39,7 +39,10 @@ their own cards and states, and talks to you there.
    until it returns a link or a session. Pass the `session` to every tool below.
 2. `get_session`: the request, the dashboard (or card document), its `revision` and the
    conversation so far.
-3. `set_status` with a few words while you work; `send_message` to ask a question.
+3. `set_status` with a few words while you work; `send_message` to ask a question. Read
+   `get_dashboard_guide` (or `get_card_guide` for a card) for what you can build with.
+   `render_dashboard` draws a draft with sample states before you submit; for a card,
+   `check_card_draft` and `render_card` (its current values, or `data: "sample"`).
 4. `submit_draft` with the `revision` you read, the **complete** `dashboard` (or `document` for a
    card) and a one-line `summary`. A stale revision is refused: read again. `get_render` then
    shows a dashboard draft exactly as the person's app draws it.

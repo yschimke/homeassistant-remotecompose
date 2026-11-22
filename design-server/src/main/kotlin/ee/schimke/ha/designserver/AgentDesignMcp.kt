@@ -149,35 +149,7 @@ object AgentDesignMcp {
                 put("instruction", session.instruction)
                 put("document", session.document)
                 put("revision", session.revision)
-                putJsonArray("sharedValues") {
-                  HaSharedValues.values.forEach { shared ->
-                    add(
-                      buildJsonObject {
-                        put("name", shared.name)
-                        put("description", shared.description)
-                        putJsonObject("definition") {
-                          put("type", "value")
-                          when (shared.kind) {
-                            HaSharedValues.Kind.Text -> {
-                              put("valueType", "string")
-                              put("initialValue", shared.daytime as String)
-                            }
-                            HaSharedValues.Kind.Bool -> {
-                              put("valueType", "bool")
-                              put("initialValue", shared.daytime as Boolean)
-                            }
-                            HaSharedValues.Kind.Float -> {
-                              put("valueType", "float")
-                              put("initialValue", (shared.daytime as Number).toFloat())
-                            }
-                          }
-                          put("nullable", false)
-                          put("persistence", "design")
-                        }
-                      },
-                    )
-                  }
-                }
+                put("sharedValues", sharedValues())
               }
             }
             "submit_card_draft" -> {
@@ -211,6 +183,40 @@ object AgentDesignMcp {
         return result(toolResult(data, false))
       }
       else -> return error(-32601, "Method not found")
+    }
+  }
+
+  /**
+   * The values every home shares (`HA:sun.sun.elevation`, …) as UI Builder state variables a draft
+   * may add, at their daytime defaults: what `get_card_request` and `get_card_guide` list.
+   */
+  fun sharedValues(): JsonArray = buildJsonArray {
+    HaSharedValues.values.forEach { shared ->
+      add(
+        buildJsonObject {
+          put("name", shared.name)
+          put("description", shared.description)
+          putJsonObject("definition") {
+            put("type", "value")
+            when (shared.kind) {
+              HaSharedValues.Kind.Text -> {
+                put("valueType", "string")
+                put("initialValue", shared.daytime as String)
+              }
+              HaSharedValues.Kind.Bool -> {
+                put("valueType", "bool")
+                put("initialValue", shared.daytime as Boolean)
+              }
+              HaSharedValues.Kind.Float -> {
+                put("valueType", "float")
+                put("initialValue", (shared.daytime as Number).toFloat())
+              }
+            }
+            put("nullable", false)
+            put("persistence", "design")
+          }
+        },
+      )
     }
   }
 
