@@ -165,6 +165,10 @@
         "entityId": {
           "type": "string",
           "value": "cover.garage_door"
+        },
+        "attribute": {
+          "type": "string",
+          "value": "current_position"
         }
       },
       "modifiers": [],

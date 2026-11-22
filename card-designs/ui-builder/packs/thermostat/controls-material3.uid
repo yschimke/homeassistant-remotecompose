@@ -231,7 +231,7 @@
       "slots": {
         "children": [
           "remote-button-5",
-          "metric-6",
+          "thermometer-6",
           "remote-button-8"
         ]
       }
@@ -271,17 +271,17 @@
       "modifiers": [],
       "slots": {}
     },
-    "metric-6": {
-      "id": "metric-6",
-      "componentId": "ha-cards/metric",
+    "thermometer-6": {
+      "id": "thermometer-6",
+      "componentId": "ha-cards/thermometer",
       "properties": {
-        "label": {
+        "name": {
           "type": "string",
           "value": "Set to"
         },
         "value": {
-          "type": "string",
-          "value": "21"
+          "type": "float",
+          "value": 21.0
         },
         "unit": {
           "type": "string",
@@ -290,6 +290,14 @@
         "entityId": {
           "type": "string",
           "value": "climate.hallway"
+        },
+        "attribute": {
+          "type": "string",
+          "value": "target_temperature"
+        },
+        "presentation": {
+          "type": "string",
+          "value": "compact"
         }
       },
       "modifiers": [],

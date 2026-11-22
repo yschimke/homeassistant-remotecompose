@@ -59,11 +59,15 @@ Each design is built only from the `ha-cards` catalog's components and the frame
 rows and columns, as the design server's own seeds are. Live values arrive two ways, both pushed
 by the host:
 - **Readings** (the door's travel, the room temperature and set point) follow the pack entity
-  through each component's `entityId`, as `ha-cards` components always do.
+  through each component's `entityId`. A cover's or a climate's state is a word (`open`, `heat`),
+  so its readings also name the float `attribute` they follow (`current_position`,
+  `current_temperature`, `target_temperature`). The thermostat dial binds both temperatures by
+  itself.
 - **Text** (`cover.s0.name`, `climate.s0.state`, the alert's `alert.message`) is a `host` state
   variable.
 `DevicePacksTest` (`:ha-cards-catalog`) holds every pack to the catalog policy, to the bindings a
-host pushes, and to its own manifest.
+host pushes, and to its own manifest. It also checks that a cover or climate reading follows one of
+its domain's floats, and that no metric shows such an entity's state.
 
 ## The packs
 

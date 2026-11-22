@@ -93,7 +93,7 @@
         "children": [
           "thermometer-1",
           "collapsible-column-4",
-          "metric-5"
+          "thermometer-5"
         ]
       }
     },
@@ -120,6 +120,10 @@
         "presentation": {
           "type": "string",
           "value": "glyph"
+        },
+        "attribute": {
+          "type": "string",
+          "value": "current_temperature"
         }
       },
       "modifiers": [],
@@ -190,17 +194,17 @@
       "modifiers": [],
       "slots": {}
     },
-    "metric-5": {
-      "id": "metric-5",
-      "componentId": "ha-cards/metric",
+    "thermometer-5": {
+      "id": "thermometer-5",
+      "componentId": "ha-cards/thermometer",
       "properties": {
-        "label": {
+        "name": {
           "type": "string",
           "value": "Target"
         },
         "value": {
-          "type": "string",
-          "value": "21"
+          "type": "float",
+          "value": 21.0
         },
         "unit": {
           "type": "string",
@@ -210,9 +214,13 @@
           "type": "string",
           "value": "climate.hallway"
         },
-        "valueColor": {
+        "attribute": {
           "type": "string",
-          "value": "#FFF4EFF4"
+          "value": "target_temperature"
+        },
+        "presentation": {
+          "type": "string",
+          "value": "compact"
         }
       },
       "modifiers": [],

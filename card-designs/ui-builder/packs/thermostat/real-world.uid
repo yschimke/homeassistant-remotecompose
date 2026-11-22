@@ -225,6 +225,10 @@
         "presentation": {
           "type": "string",
           "value": "compact"
+        },
+        "attribute": {
+          "type": "string",
+          "value": "current_temperature"
         }
       },
       "modifiers": [],

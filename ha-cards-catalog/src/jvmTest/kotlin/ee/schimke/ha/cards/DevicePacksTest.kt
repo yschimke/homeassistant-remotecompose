@@ -237,6 +237,53 @@ class DevicePacksTest {
     assertEquals(emptyList(), problems)
   }
 
+  /**
+   * The readings (a number on a scale) and what they follow: an entity's `numeric_state` unless an
+   * `attribute` names one of its domain's float bindings (HaLiveBindings.attributeFloats).
+   */
+  private val readings =
+    setOf(
+      "ha-cards/thermometer",
+      "ha-cards/measurement",
+      "ha-cards/arc-meter",
+      "ha-cards/bar-meter",
+    )
+
+  /** Domains whose state isn't their number, and the float bindings they publish instead. */
+  private val attributeFloats =
+    mapOf(
+      "cover" to setOf("current_position", "supported_features"),
+      "climate" to setOf("current_temperature", "target_temperature"),
+    )
+
+  @Test
+  fun aReadingOfACoverOrClimateFollowsOneOfItsFloats() {
+    val problems = buildList {
+      for ((name, dir) in packs) {
+        for (file in dir.listFiles { f -> f.extension == "uid" }.orEmpty().sortedBy { it.name }) {
+          for ((id, element) in read(file)["nodes"]!!.jsonObject) {
+            val node = element.jsonObject
+            val component = node["componentId"]!!.jsonPrimitive.content
+            val props = node["properties"]?.jsonObject.orEmpty()
+            val domain = props["entityId"]?.literal()?.substringBefore('.') ?: continue
+            val floats = attributeFloats[domain] ?: continue
+            val attribute = props["attribute"]?.literal()
+            when {
+              component in readings && attribute !in floats ->
+                add(
+                  "$name/${file.name} $id: a $domain reading follows `$attribute`, not one of $floats",
+                )
+              // A metric shows the entity's state text, which for these domains is a word (`heat`).
+              component == "ha-cards/metric" ->
+                add("$name/${file.name} $id: a metric shows a $domain's state, not a number")
+            }
+          }
+        }
+      }
+    }
+    assertEquals(emptyList(), problems)
+  }
+
   @Test
   fun everyBoundValueIsDeclaredLiveAndOneAHostPushes() {
     val problems = buildList {
