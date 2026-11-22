@@ -1,18 +1,34 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.client.design.validateCardDraft
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.Sha256
 import java.util.Base64
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /** Short-lived, capability-scoped card drafts. No Home Assistant credentials are held here. */
 class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMillis) {
   data class Access(val owner: String, val agent: String)
 
   data class Snapshot(val instruction: String, val document: JsonObject, val revision: Long)
+
+  /**
+   * What the agent's own tools ([AgentGuide]) need of its session: the seed's contract, the draft,
+   * its attached pictures, the card type it was seeded for and the design key the person's app last
+   * previewed it with ([rememberKey]).
+   */
+  data class Context(
+    val instruction: String,
+    val original: JsonObject,
+    val document: JsonObject,
+    val revision: Long,
+    val cardType: String?,
+    val key: DesignKey?,
+    val assets: Map<String, ByteArray>,
+  )
 
   data class Asset(val mediaType: String, val bytes: ByteArray) {
     val sha256: String
@@ -29,6 +45,10 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     var document: JsonObject,
     var revision: Long = 0,
     val assets: MutableMap<String, Asset> = mutableMapOf(),
+    /** The card type the seed was made for, when the route knew it. */
+    val cardType: String? = null,
+    /** The design key the person's app last previewed the draft with. */
+    var key: DesignKey? = null,
   )
 
   private val entries = mutableListOf<Entry>()
@@ -45,6 +65,8 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     val document: JsonObject,
     val revision: Long,
     val assets: Map<String, SavedAsset> = emptyMap(),
+    val cardType: String? = null,
+    val key: DesignKey? = null,
   )
 
   @Serializable data class SavedAsset(val mediaType: String, val base64: String)
@@ -65,6 +87,8 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
         e.assets.mapValues { (_, a) ->
           SavedAsset(a.mediaType, Base64.getEncoder().encodeToString(a.bytes))
         },
+        e.cardType,
+        e.key,
       )
     }
   }
@@ -88,6 +112,8 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
           s.assets
             .mapValues { (_, a) -> Asset(a.mediaType, Base64.getDecoder().decode(a.base64)) }
             .toMutableMap(),
+          s.cardType,
+          s.key,
         )
     }
   }
@@ -96,14 +122,24 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
   @Volatile var onChange: (owner: String) -> Unit = {}
 
   @Synchronized
-  fun create(instruction: String, document: JsonObject): Access {
+  fun create(instruction: String, document: JsonObject, cardType: String? = null): Access {
     expire()
     require(instruction.isNotBlank() && instruction.length <= 2000)
     check(entries.size < 128) { "Too many pending design sessions" }
     val owner = UiBuilderConfig.randomToken()
     val agent = UiBuilderConfig.randomToken()
     val now = clock()
-    entries += Entry(owner, agent, instruction.trim(), document, now, now + IDLE_MS, document)
+    entries +=
+      Entry(
+        owner,
+        agent,
+        instruction.trim(),
+        document,
+        now,
+        now + IDLE_MS,
+        document,
+        cardType = cardType,
+      )
     return Access(owner, agent)
   }
 
@@ -125,6 +161,34 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     val now = clock()
     entry.expiresAt = minOf(entry.createdAt + MAX_MS, maxOf(entry.expiresAt, now + IDLE_MS))
     return (entry.expiresAt - now) / 1000
+  }
+
+  /** The agent's session as its tools see it; null when [token] isn't a live agent's. */
+  @Synchronized
+  fun context(token: String): Context? {
+    expire()
+    val entry = entries.firstOrNull { it.agent == token } ?: return null
+    return Context(
+      entry.instruction,
+      entry.original,
+      entry.document,
+      entry.revision,
+      entry.cardType,
+      entry.key,
+      entry.assets.mapValues { (_, a) -> a.bytes.copyOf() },
+    )
+  }
+
+  /**
+   * Record the design key the person's app previews the draft with: the server never sees the app's
+   * own, so the agent's renders use the last one previewed. False when the session is gone.
+   */
+  @Synchronized
+  fun rememberKey(token: String, key: DesignKey): Boolean {
+    expire()
+    val entry = entries.firstOrNull { it.owner == token || it.agent == token } ?: return false
+    entry.key = key
+    return true
   }
 
   @Synchronized
@@ -171,6 +235,26 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     const val IDLE_MS = 60 * 60_000L
     const val MAX_MS = 24 * 60 * 60_000L
 
+    /**
+     * Why [document]'s pictures (`document.assets`, by key) can't be drawn from the session's
+     * uploaded [assets]: one not attached, or a binding whose `mediaType` or `contentDigest` isn't
+     * the upload's (a stale digest after replacing an image under the same key). Empty when every
+     * one matches. The submission gate and `check_card_draft` both ask this, so a draft the check
+     * passes is one submit accepts.
+     */
+    fun bindingProblems(document: JsonObject, assets: Map<String, ByteArray>): List<String> =
+      (document["assets"] as? JsonObject).orEmpty().mapNotNull { (key, definition) ->
+        val bytes =
+          assets[key] ?: return@mapNotNull "asset `$key` isn't attached: call put_card_asset first"
+        val binding = definition as? JsonObject
+        val mediaType = (binding?.get("mediaType") as? JsonPrimitive)?.contentOrNull
+        val digest = (binding?.get("contentDigest") as? JsonPrimitive)?.contentOrNull
+        if (mediaType == imageType(bytes) && digest == "sha256:${Sha256.hex(bytes)}") null
+        else
+          "asset `$key` doesn't match its binding: use the mediaType and contentDigest " +
+            "put_card_asset returned for it"
+      }
+
     internal fun imageType(bytes: ByteArray): String? {
       fun prefix(vararg expected: Int) =
         bytes.size >= expected.size &&
@@ -193,15 +277,8 @@ class AgentDesignSessions(private val clock: () -> Long = System::currentTimeMil
     val entry = entries.firstOrNull { it.agent == token } ?: return false
     require(revision == entry.revision) { "The design changed; read it again" }
     validateCardDraft(entry.original, document)
-    for ((key, definition) in (document["assets"] as? JsonObject).orEmpty()) {
-      val uploaded = entry.assets[key] ?: throw IllegalArgumentException("Image not attached")
-      val binding = definition.jsonObject
-      require(
-        binding["mediaType"]?.jsonPrimitive?.content == uploaded.mediaType &&
-          binding["contentDigest"]?.jsonPrimitive?.content == "sha256:${uploaded.sha256}",
-      ) {
-        "Image does not match its binding"
-      }
+    bindingProblems(document, entry.assets.mapValues { (_, a) -> a.bytes }).firstOrNull()?.let {
+      throw IllegalArgumentException(it)
     }
     entry.document = document
     entry.revision++

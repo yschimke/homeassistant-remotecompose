@@ -23,7 +23,11 @@ import kotlinx.serialization.json.putJsonObject
  * validate them through the same per-kind handlers ([AgentDesignMcp], [DashboardAgentMcp]) as the
  * per-session HTTP endpoints, so both ways in hold a draft to one gate.
  */
-class CardSessionKind(val sessions: AgentDesignSessions) : SessionKind {
+class CardSessionKind(
+  val sessions: AgentDesignSessions,
+  /** What the agent can learn and see beyond the request: [AgentGuide]. */
+  private val guide: AgentGuide = AgentGuide(),
+) : SessionKind {
   override val id = ID
 
   override val store: DraftStore =
@@ -63,6 +67,56 @@ class CardSessionKind(val sessions: AgentDesignSessions) : SessionKind {
         override suspend fun call(agent: String, arguments: JsonObject): SessionToolResult =
           call(agent, "put_card_asset", arguments).tool()
       },
+      object : SessionTool {
+        override val name = "get_card_guide"
+        override val description =
+          "Card sessions: what a draft may be built with (components, modifiers, value forms, " +
+            "expressions, clock values), the card's bindings with their current and sample " +
+            "values, the shared values, and the rules for a draft."
+        override val inputSchema = schema()
+
+        override suspend fun call(agent: String, arguments: JsonObject): SessionToolResult =
+          sessions.context(agent)?.let { SessionToolResult.Done(guide.cardGuide(it)) } ?: GONE
+      },
+      object : SessionTool {
+        override val name = "check_card_draft"
+        override val description =
+          "Card sessions: check a complete draft document against the card's binding contract " +
+            "and what the compiler draws, without submitting it. Returns ok and the problems."
+        override val inputSchema = schema("document" to "object")
+
+        override suspend fun call(agent: String, arguments: JsonObject): SessionToolResult {
+          val session = sessions.context(agent) ?: return GONE
+          val document =
+            arguments["document"] as? JsonObject
+              ?: return SessionToolResult.Failed("Pass the complete draft as document.")
+          return SessionToolResult.Done(guide.checkCard(session, document))
+        }
+      },
+      object : SessionTool {
+        override val name = "render_card"
+        override val description =
+          "Card sessions: draw a draft as a PNG, with the card's current values (data " +
+            "\"current\", the default) or sample ones (\"sample\"). document defaults to the " +
+            "submitted draft; dark draws it in dark mode."
+        override val inputSchema = buildJsonObject {
+          put("type", "object")
+          putJsonObject("properties") {
+            putJsonObject("data") {
+              put("type", "string")
+              putJsonArray("enum") {
+                add(JsonPrimitive(AgentGuide.CURRENT))
+                add(JsonPrimitive(AgentGuide.SAMPLE))
+              }
+            }
+            putJsonObject("document") { put("type", "object") }
+            putJsonObject("dark") { put("type", "boolean") }
+          }
+        }
+
+        override suspend fun call(agent: String, arguments: JsonObject): SessionToolResult =
+          sessions.context(agent)?.let { guide.renderCard(it, arguments) } ?: GONE
+      },
     )
 
   override val httpPath = "/api/studio/agent-session"
@@ -87,7 +141,11 @@ class CardSessionKind(val sessions: AgentDesignSessions) : SessionKind {
   }
 }
 
-class DashboardSessionKind(val sessions: DashboardAgentSessions) : SessionKind {
+class DashboardSessionKind(
+  val sessions: DashboardAgentSessions,
+  /** What the agent can learn and see beyond the request: [AgentGuide]. */
+  private val guide: AgentGuide = AgentGuide(),
+) : SessionKind {
   override val id = ID
 
   override val store: DraftStore =
@@ -130,6 +188,42 @@ class DashboardSessionKind(val sessions: DashboardAgentSessions) : SessionKind {
 
   override val submitWith = "submit_draft with revision, the complete dashboard and a summary"
 
+  override val tools: List<SessionTool> =
+    listOf(
+      object : SessionTool {
+        override val name = "get_dashboard_guide"
+        override val description =
+          "Dashboard sessions: the card types Terrazzo draws, the library designs a card can " +
+            "name with design_id, and how to see a draft (render_dashboard, get_render)."
+        override val inputSchema = schema()
+
+        override suspend fun call(agent: String, arguments: JsonObject): SessionToolResult =
+          if (sessions.read(agent, agentOnly = true) == null) GONE
+          else SessionToolResult.Done(guide.dashboardGuide())
+      },
+      object : SessionTool {
+        override val name = "render_dashboard"
+        override val description =
+          "Dashboard sessions: draw a dashboard's cards with made-up sample states (never the " +
+            "person's: get_render shows theirs after submit_draft). dashboard defaults to the " +
+            "submitted draft; view draws one view (from 0); dark draws dark mode."
+        override val inputSchema = buildJsonObject {
+          put("type", "object")
+          putJsonObject("properties") {
+            putJsonObject("dashboard") { put("type", "object") }
+            putJsonObject("view") { put("type", "integer") }
+            putJsonObject("dark") { put("type", "boolean") }
+          }
+        }
+
+        override suspend fun call(agent: String, arguments: JsonObject): SessionToolResult {
+          val session = sessions.read(agent, agentOnly = true) ?: return GONE
+          val dashboard = arguments["dashboard"] as? JsonObject ?: session.dashboard
+          return guide.renderDashboard(dashboard, arguments)
+        }
+      },
+    )
+
   override val httpPath = "/api/studio/dashboard-session"
 
   override fun attached(server: SessionServer) {
@@ -155,6 +249,9 @@ private val JSON = Json {
   ignoreUnknownKeys = true
   encodeDefaults = true
 }
+
+private val GONE =
+  SessionToolResult.Failed("This session ended or expired. Ask the person for a new code.")
 
 /** The per-kind handlers' "this session is gone" JSON-RPC error. */
 private const val UNAVAILABLE = -32001
@@ -205,8 +302,7 @@ private fun JsonObject?.tool(): SessionToolResult =
   when (val o = outcome()) {
     is Outcome.Ok -> SessionToolResult.Done(o.data)
     is Outcome.Refused -> SessionToolResult.Failed(o.reason)
-    Outcome.Gone ->
-      SessionToolResult.Failed("This session ended or expired. Ask the person for a new code.")
+    Outcome.Gone -> GONE
   }
 
 private fun schema(vararg props: Pair<String, String>) = buildJsonObject {

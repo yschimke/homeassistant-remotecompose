@@ -756,8 +756,53 @@ class UiBuilderDesignCompiler(
       }
   }
 
+  /**
+   * What a draft may use, as [problems] checks it: every component (with what it draws), modifier,
+   * literal and dynamic value type, expression (with its arity), clock value, remote call and its
+   * arguments, and colour token. An agent session's guide shows it, so an agent learns what this
+   * compiler draws rather than guessing and being refused.
+   */
+  data class Capabilities(
+    val catalog: String,
+    /** Component id to a line on what it draws. */
+    val components: Map<String, String>,
+    val modifiers: List<String>,
+    val literalTypes: List<String>,
+    /** The value types that read state: drawn live only in [dynamicLiveIn]. */
+    val dynamicTypes: List<String>,
+    /** Where a [dynamicTypes] value is drawn live; anywhere else it is refused. */
+    val dynamicLiveIn: List<String>,
+    /** Expression op to the number of values it takes. */
+    val expressions: Map<String, Int>,
+    val systemValues: List<String>,
+    /** The `remoteCall` modifiers drawn, to the arguments each takes. */
+    val remoteCalls: Map<String, List<String>>,
+    val colorTokens: List<String>,
+  )
+
   companion object {
     const val CATALOG = "ha-cards"
+
+    /** What a draft may use: see [Capabilities]. */
+    fun capabilities(): Capabilities =
+      Capabilities(
+        catalog = CATALOG,
+        components = COMPONENTS,
+        modifiers = MODIFIERS.toList(),
+        literalTypes = LITERALS.toList(),
+        dynamicTypes = DYNAMIC.toList(),
+        dynamicLiveIn =
+          listOf(
+            "any modifier's values",
+            "a $TEXT's text",
+            "a $SWITCH's checked (a slot's is_on only)",
+          ),
+        expressions = EXPRESSIONS,
+        systemValues = SYSTEM_VALUES.toList(),
+        remoteCalls = mapOf(GRAPHICS_LAYER to GRAPHICS_LAYER_ARGS.toList()),
+        colorTokens = COLOR_TOKENS.toList(),
+      )
+
     private val SHARED_DOMAIN = RemoteState.Domain(HaSharedValues.DOMAIN)
     private const val BOX = "layout/box"
     private const val COLUMN = "layout/column"
@@ -781,19 +826,27 @@ class UiBuilderDesignCompiler(
     private fun slotEntity(variable: String): String? =
       SLOT_IS_ON.find(variable)?.groupValues?.get(1)
 
-    private val COMPONENTS =
-      setOf(
-        BOX,
-        COLUMN,
-        ROW,
-        IMAGE,
-        TEXT,
-        COLLAPSIBLE_ROW,
-        COLLAPSIBLE_COLUMN,
-        SWITCH,
-        "ha-cards/dashboard-card",
-        "ha-cards/dashboard-section",
-        "ha-cards/remote-card",
+    /** The components drawn here, each with what it draws: [capabilities] tells an agent. */
+    private val COMPONENTS: Map<String, String> =
+      linkedMapOf(
+        BOX to "Stacks its children over one another, placed by its alignment.",
+        COLUMN to
+          "Lays its children out top to bottom; a child's weight shares the height left over.",
+        ROW to "Lays its children out left to right; a child's weight shares the width left over.",
+        IMAGE to "Draws a picture attached to the session (assetKey), scaled by contentScale.",
+        TEXT to "Draws text (text, color, fontSize, maxLines); its text may read state live.",
+        COLLAPSIBLE_ROW to
+          "A row whose children that don't fit drop out as the card narrows, never overflowing.",
+        COLLAPSIBLE_COLUMN to
+          "A column whose children that don't fit drop out as the card gets shorter.",
+        SWITCH to
+          "An on/off switch: checked reads a slot's is_on (light.s0.is_on); a tap toggles that " +
+            "slot's entity.",
+        "ha-cards/dashboard-card" to
+          "The card's own surface: the app draws its frame, so only its content is drawn.",
+        "ha-cards/dashboard-section" to "A section's surface: only its content is drawn.",
+        "ha-cards/remote-card" to
+          "The card's own surface: the app draws its frame, so only its content is drawn.",
       )
 
     private val MODIFIERS =

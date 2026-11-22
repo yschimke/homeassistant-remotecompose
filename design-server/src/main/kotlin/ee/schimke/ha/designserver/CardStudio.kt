@@ -51,6 +51,13 @@ class CardStudioDrafts(private val clock: () -> Long = System::currentTimeMillis
     return entries[token]?.document
   }
 
+  /** The card type [token]'s draft was seeded for, when it is still held and was given one. */
+  @Synchronized
+  fun cardType(token: String): String? {
+    expire()
+    return entries[token]?.cardType
+  }
+
   sealed interface Claim {
     data class Ready(val document: JsonObject, val cardType: String? = null) : Claim
 
@@ -181,6 +188,8 @@ fun Route.cardStudioRoutes(
         "A newer draft has arrived",
         status = HttpStatusCode.Conflict,
       )
+    // The agent's own renders (render_card) draw with the key the app plays the card with.
+    agentSessions.rememberKey(token, key)
     val compiler = integration?.compiler ?: previewCompiler
     val assets =
       (session.document["assets"] as? JsonObject)
@@ -244,7 +253,7 @@ fun Route.cardStudioRoutes(
     }
     val access =
       try {
-        agentSessions.create(instruction, document)
+        agentSessions.create(instruction, document, seeds.cardType(id.removePrefix("card-")))
       } catch (e: IllegalStateException) {
         return@post call.respondText(
           "Design session capacity reached",
@@ -366,7 +375,7 @@ fun Route.cardStudioRoutes(
         "UI Builder is not configured",
         status = HttpStatusCode.ServiceUnavailable,
       )
-    val seed =
+    val (seed, cardType) =
       try {
         val text = call.receiveText()
         require(text.length <= 128_000)
@@ -379,14 +388,14 @@ fun Route.cardStudioRoutes(
             schema.cardType,
             HaCardsSeed.card("app-card"),
           ) - "template",
-        )
+        ) to schema.cardType
       } catch (e: Exception) {
         if (e is CancellationException) throw e
         return@post call.respondText("Invalid card preview", status = HttpStatusCode.BadRequest)
       }
     val token =
       try {
-        seeds.put(seed)
+        seeds.put(seed, cardType)
       } catch (e: IllegalStateException) {
         return@post call.respondText(
           "Preview capacity reached",
@@ -755,4 +764,4 @@ private fun studioEscape(text: String): String =
     .replace("'", "&#39;")
 
 /** A compiler for previews where no UI Builder is configured: it needs none. */
-private val previewCompiler by lazy { ee.schimke.ha.designs.UiBuilderDesignCompiler() }
+internal val previewCompiler by lazy { ee.schimke.ha.designs.UiBuilderDesignCompiler() }
