@@ -39,7 +39,7 @@ from .const import (
     STATIC_URL,
     clean_options,
 )
-from . import assistant_hass, design_selections, design_server, edits, info, push, wall, web_origins
+from . import assistant_hass, design_selections, design_server, edits, info, llm_api, push, wall, web_origins
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -130,6 +130,10 @@ async def async_setup_entry(hass, entry):
     if not state.get("web_origins"):
         web_origins.async_register(hass)
         state["web_origins"] = True
+    # The dashboard tools as an LLM API, for the conversation agents the person already has
+    # (llm_api.py): registered once, like the commands, for as long as Home Assistant runs.
+    if "llm_api" not in state:
+        state["llm_api"] = llm_api.async_register(hass)
     # Which of the commands above this user has, and the integration's version (info.py).
     if not state.get("info"):
         info.async_register(hass)
