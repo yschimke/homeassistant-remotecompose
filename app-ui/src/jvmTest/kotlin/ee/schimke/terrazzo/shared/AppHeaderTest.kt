@@ -11,6 +11,7 @@ import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class AppHeaderTest {
@@ -89,6 +90,28 @@ class AppHeaderTest {
     onNodeWithText("Ask your agent").assertDoesNotExist()
     onNodeWithText("Customize").performClick()
     assertEquals("customize", opened)
+  }
+
+  @Test
+  fun withADashboardAgentTheChatLeadsAndEditingByHandStays() = runComposeUiTest {
+    var opened by mutableStateOf("")
+    setContent {
+      Row {
+        DashboardMoreMenu(
+          onEdit = { opened = "edit" },
+          onAskAgent = { opened = "chat" },
+          onCustomize = null,
+          askAgentLabel = "Chat with your agent",
+          agentFirst = true,
+        )
+      }
+    }
+    onNodeWithContentDescription("More options").performClick()
+    val chat = onNodeWithText("Chat with your agent").fetchSemanticsNode().boundsInRoot.top
+    val byHand = onNodeWithText("Edit by hand").fetchSemanticsNode().boundsInRoot.top
+    assertTrue(chat < byHand, "the chat with the agent comes first")
+    onNodeWithText("Edit by hand").performClick()
+    assertEquals("edit", opened)
   }
 
   @Test

@@ -12,6 +12,7 @@
   ],
   "config_flow": true,
   "dependencies": [
+    "conversation",
     "frontend",
     "http",
     "panel_custom"

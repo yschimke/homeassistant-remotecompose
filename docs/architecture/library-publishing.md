@@ -173,7 +173,7 @@ Proposed:
   user is answered without a round trip; an integration older than the handshake is still tried
   command by command. Settings shows the answer on Android and in the shared app
   (`TerrazzoIntegrationStatus`): installed, missing or too old (with an install or update link), or
-  newer than the app. The shared app gates its edit sessions, built-in agent and design server on
+  newer than the app. The shared app gates its edit sessions, dashboard agent and design server on
   the same handshake.
 - **Terrazzo members off `HaSession`:** done. They are on `TerrazzoSession`, which `LiveHaSession`
   and `CachedHaSession` implement; callers ask `session.terrazzo` (an `as?`). `DemoHaSession`,

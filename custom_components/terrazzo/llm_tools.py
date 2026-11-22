@@ -7,7 +7,7 @@ provider and key, by choosing "Terrazzo dashboards" beside or instead of Assist 
 Home Assistant's MCP Server can serve the same tools to an outside agent.
 
 The tools are the MCP server's (`mcp.py`), run by the same `mcp.call_tool` as the conversation's
-own user, plus the built-in assistant's `home_overview`. Only what fits a conversation turn: no
+own user, plus `home_overview`. Only what fits a conversation turn: no
 switching (Assist does that, for exposed entities), and no long-polling (`await_feedback`,
 `await_request`): the person answers in the chat, not in a session's notes.
 """
@@ -45,6 +45,7 @@ HOME_OVERVIEW = {
         "domain has. Use it to plan a new dashboard or a section about a room."
     ),
     "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+    "annotations": {"readOnlyHint": True, "openWorldHint": False},
 }
 
 API_PROMPT = "\n".join(
@@ -65,13 +66,29 @@ API_PROMPT = "\n".join(
 
 
 def tool_specs():
-    """Each tool as `{name, description, inputSchema}`: the MCP server's, then `home_overview`."""
+    """Each tool as `{name, description, inputSchema, annotations}`: the MCP server's, then
+    `home_overview`."""
     by_name = {tool["name"]: tool for tool in mcp.TOOLS}
     specs = [
-        {k: by_name[name][k] for k in ("name", "description", "inputSchema")}
+        {k: by_name[name][k] for k in ("name", "description", "inputSchema", "annotations")}
         for name in MCP_TOOL_NAMES
     ]
     return specs + [HOME_OVERVIEW]
+
+
+def annotations(spec):
+    """[spec]'s MCP annotations as Home Assistant's `llm.ToolAnnotations` fields. Home
+    Assistant's MCP Server, set to read only, serves only the tools marked read only: these keep
+    reading dashboards, entities, designs and sessions, and drop starting a session and drafting.
+    None deletes anything; open world is the MCP spec's (find_designs reads the design server)."""
+    hints = spec.get("annotations") or {}
+    read_only = bool(hints.get("readOnlyHint"))
+    return {
+        "read_only": read_only,
+        "destructive": False,
+        "idempotent": read_only,
+        "open_world": bool(hints.get("openWorldHint", False)),
+    }
 
 
 async def call(home, name, arguments):

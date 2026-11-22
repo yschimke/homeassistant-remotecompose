@@ -26,7 +26,7 @@ data class AgentEditSession(
   /** What the agent said to the person, in the same sequence as [notes]. */
   val messages: List<Message> = emptyList(),
   /**
-   * The steps the integration's built-in agent took (each tool it called, in words), in the same
+   * The steps the integration's dashboard agent took (each tool it called, in words), in the same
    * sequence as [notes] and [messages]: what the chat shows between the person's message and the
    * agent's reply.
    */
@@ -48,8 +48,8 @@ data class AgentEditSession(
   /** What the session is about: the whole dashboard (null) or one section of it. */
   val scope: EditScope? = null,
   /**
-   * Why the integration's built-in agent couldn't answer the last note (a refused key, its service
-   * out of reach), until its next turn; null when it answered or isn't on.
+   * Why the integration's dashboard agent couldn't answer the last note (its service refused or out
+   * of reach), until its next turn; null when it answered or isn't on.
    */
   @SerialName("assistant_error") val assistantError: String? = null,
 ) {
@@ -189,32 +189,29 @@ fun EditScope?.openingRequest(dashboardTitle: String?): String {
 }
 
 /**
- * The Terrazzo integration's built-in dashboard agent (`terrazzo/agent/info`): when [enabled], Home
- * Assistant itself answers every edit session with [model] from [providerLabel], so the apps offer
- * a chat with it in place of their manual editors. The API key never leaves Home Assistant.
+ * The conversation agent that answers the Terrazzo integration's edit sessions
+ * (`terrazzo/agent/info`): one of Home Assistant's own (OpenAI, Gemini, Anthropic, Ollama, …),
+ * chosen in the integration's options, with "Terrazzo dashboards" on among its APIs. When
+ * [enabled], Home Assistant answers every edit session with it, so the apps open a chat with it as
+ * the way to edit a dashboard. Its provider and key stay in its own integration. [name] is what
+ * Home Assistant calls it ("Ollama", "Google Generative AI").
  */
 @Serializable
-data class BuiltInAgent(
+data class DashboardAgent(
   val enabled: Boolean = false,
-  val provider: String? = null,
-  @SerialName("provider_label") val providerLabel: String? = null,
-  val model: String? = null,
+  @SerialName("agent_id") val agentId: String? = null,
+  val name: String? = null,
 ) {
-  /** How the conversation names it: "Gemini", "OpenRouter", or a custom service's model. */
+  /** How the conversation names it: its name, else "Agent". */
   val shortName: String
-    get() =
-      when (provider) {
-        "gemini" -> "Gemini"
-        "openrouter" -> "OpenRouter"
-        else -> model?.substringAfterLast('/')?.takeIf { it.isNotBlank() } ?: "Agent"
-      }
+    get() = name?.takeIf { it.isNotBlank() } ?: "Agent"
 
-  /** How the apps name it: "Gemini (gemini-flash-latest)". */
+  /** How the apps name it: its name, else "Your agent". */
   val displayName: String
-    get() = listOfNotNull(providerLabel ?: "Your agent", model?.let { "($it)" }).joinToString(" ")
+    get() = name?.takeIf { it.isNotBlank() } ?: "Your agent"
 
   companion object {
-    val Off = BuiltInAgent()
+    val Off = DashboardAgent()
   }
 }
 

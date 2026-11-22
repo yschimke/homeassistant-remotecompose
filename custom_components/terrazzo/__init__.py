@@ -7,9 +7,10 @@ own session. The app's notifications, while it holds no websocket, are held here
 the app is woken with a content-free FCM message and collects them with its own session.
 A Terrazzo page on another site can ask for its origin to be allowed (`web_origins.py`); only an
 admin's fix of the repair it raises changes HA's HTTP config.
-With an LLM API key in the options, the integration runs a dashboard agent itself
-(`assistant.py`, `assistant_hass.py`): it answers edit sessions as the person who started them,
-and like any agent it only drafts; a person applies.
+With a conversation agent chosen in the options, one of Home Assistant's own (OpenAI, Gemini,
+Anthropic, Ollama, …) answers edit sessions as the person who started them (`dashboard_agent.py`),
+through the dashboard tools registered as an LLM API (`llm_api.py`); like any agent it only
+drafts, and a person applies.
 Wall displays (`wall.py`) read dashboards as a grid and their cards' designs and values with a
 user's own access token, and their taps run as that user.
 Clients learn which of these this Home Assistant has, for their user, from `terrazzo/info`
@@ -35,11 +36,12 @@ from .const import (
     DATA_CARD_RESOURCE,
     DEFAULT_TITLE,
     DOMAIN,
+    LEGACY_AGENT_OPTIONS,
     PANEL_URL_PATH,
     STATIC_URL,
     clean_options,
 )
-from . import assistant_hass, design_selections, design_server, edits, info, llm_api, push, wall, web_origins
+from . import dashboard_agent, design_selections, design_server, edits, info, llm_api, push, wall, web_origins
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -60,7 +62,7 @@ async def async_setup(hass, config):
     if DOMAIN in config:
         options = clean_options(config[DOMAIN])
         if entries := hass.config_entries.async_entries(DOMAIN):
-            # The MCP server's user and the built-in agent are chosen in the UI only; YAML leaves
+            # The MCP server's user and the conversation agent are chosen in the UI only; YAML leaves
             # them as they were.
             options[CONF_MCP_USER] = entries[0].options.get(CONF_MCP_USER, "")
             for key in AGENT_OPTIONS:
@@ -89,6 +91,17 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_migrate_entry(hass, entry):
+    """1.1 → 1.2: the built-in agent's provider, model, URL and API key go; Home Assistant's own
+    conversation agents answer edit sessions now, chosen afresh in the options."""
+    if entry.version > 1:
+        return False  # A newer Terrazzo's entry: don't guess at it.
+    if entry.minor_version < 2:
+        options = {k: v for k, v in entry.options.items() if k not in LEGACY_AGENT_OPTIONS}
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
+    return True
+
+
 async def async_setup_entry(hass, entry):
     """Register static assets and an authenticated HA frontend panel at /terrazzo."""
     state = hass.data.setdefault(DOMAIN, {})
@@ -108,9 +121,10 @@ async def async_setup_entry(hass, entry):
     if "edits" not in state:
         state["edits"] = await edits.Edits.async_load(hass)
         edits.async_register(hass)
-    # The built-in agent answers edit sessions while the options give it an API key (assistant.py).
-    if "assistant" not in state:
-        state["assistant"] = assistant_hass.async_register(hass)
+    # The chosen conversation agent answers edit sessions while the options name one
+    # (dashboard_agent.py).
+    if "dashboard_agent" not in state:
+        state["dashboard_agent"] = dashboard_agent.async_register(hass)
     # Held notifications for the app's silent push, likewise (push.py).
     if "push" not in state:
         state["push"] = await push.Push.async_load(hass)

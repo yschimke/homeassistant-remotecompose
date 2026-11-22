@@ -49,7 +49,7 @@ import ee.schimke.ha.client.agent.AgentRelayMessage
 import ee.schimke.ha.client.agent.AgentRelayState
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
-import ee.schimke.ha.client.dashboard.BuiltInAgent
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.openingRequest
@@ -115,10 +115,10 @@ fun AgentEditScreen(
    */
   onEditDraft: ((draft: JsonObject, baseline: JsonObject?) -> Unit)? = null,
   /**
-   * The Terrazzo integration's own agent, when it answers every session ([BuiltInAgent.enabled]):
+   * The Terrazzo integration's own agent, when it answers every session ([DashboardAgent.enabled]):
    * there is no prompt to hand over, and the screen is a chat with it.
    */
-  builtInAgent: BuiltInAgent = BuiltInAgent.Off,
+  dashboardAgent: DashboardAgent = DashboardAgent.Off,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -237,8 +237,8 @@ fun AgentEditScreen(
     }
   }
   val copyPrompt: @Composable () -> Unit = {
-    // The built-in agent answers by itself: nothing to hand another agent.
-    if (current?.isOpen == true && !builtInAgent.enabled)
+    // The dashboard agent answers by itself: nothing to hand another agent.
+    if (current?.isOpen == true && !dashboardAgent.enabled)
       TextButton(
         enabled = !busy,
         onClick = {
@@ -320,7 +320,7 @@ fun AgentEditScreen(
                     directLive(
                       current,
                       sinceReply,
-                      builtInAgent.shortName.takeIf { builtInAgent.enabled } ?: "Agent",
+                      dashboardAgent.shortName.takeIf { dashboardAgent.enabled } ?: "Agent",
                     ),
                 ) ?: pendingLive(current, current.agentListening && sinceReply < LISTENING_SECONDS),
               liveBusy = busy,
@@ -344,8 +344,8 @@ fun AgentEditScreen(
                   )
                 }
               },
-              onEditDraft = onEditDraft.takeUnless { builtInAgent.enabled },
-              builtInAgent = builtInAgent,
+              onEditDraft = onEditDraft.takeUnless { dashboardAgent.enabled },
+              dashboardAgent = dashboardAgent,
               onUndo = {
                 run {
                   session = edits.undo(current.id)
@@ -474,7 +474,7 @@ private fun SessionReview(
   writeBlockedReason: String?,
   onApply: (AgentEditSession.Draft) -> Unit,
   onEditDraft: ((draft: JsonObject, baseline: JsonObject?) -> Unit)?,
-  builtInAgent: BuiltInAgent,
+  dashboardAgent: DashboardAgent,
   onUndo: () -> Unit,
   onDiscard: () -> Unit,
   onRender: (draftId: String, png: ByteArray) -> Unit,
@@ -544,9 +544,9 @@ private fun SessionReview(
           session.isApplied -> "Your dashboard uses it. Undo puts it back."
           !session.isOpen -> "This session was ${session.status}."
           draft == null && building ->
-            "A new dashboard: tell ${builtInAgent.providerLabel ?: "the agent"} what it should show."
-          draft == null && builtInAgent.enabled ->
-            "The dashboard as it is: comment on a card, or tell ${builtInAgent.displayName} " +
+            "A new dashboard: tell ${dashboardAgent.name ?: "the agent"} what it should show."
+          draft == null && dashboardAgent.enabled ->
+            "The dashboard as it is: comment on a card, or tell ${dashboardAgent.displayName} " +
               "what to change: its layout, a card, or a new section."
           draft == null -> "The dashboard as it is: comment on a card, or tell the agent below."
           else -> draft.summary.ifBlank { "Draft from the agent" }
@@ -797,7 +797,7 @@ internal fun cardLabel(key: CardKey, card: CardConfig, snapshot: HaSnapshot? = n
 internal fun directLive(
   session: AgentEditSession,
   sinceReply: Double = 0.0,
-  /** How the agent is named: the built-in agent's model family, else just "Agent". */
+  /** How the agent is named: the dashboard agent's name, else just "Agent". */
   name: String = "Agent",
 ): AgentRelayState? {
   val agent = session.agent ?: return null

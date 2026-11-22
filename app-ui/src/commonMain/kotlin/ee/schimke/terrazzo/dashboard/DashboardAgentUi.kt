@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
-import ee.schimke.ha.client.dashboard.BuiltInAgent
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.openingRequest
 import ee.schimke.ha.client.dashboard.scopeLabel
@@ -29,12 +29,13 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.launch
 
 /*
- * With the Terrazzo integration's built-in agent on ([BuiltInAgent.enabled]) the apps don't edit
- * dashboards by hand: every change, new dashboards included, is a chat with the agent in an edit
- * session ([AgentEditScreen]), which a person then applies. docs/architecture/dashboard-editing.md.
+ * With a dashboard agent answering the Terrazzo integration's edit sessions ([DashboardAgent.enabled],
+ * one of Home Assistant's own conversation agents), editing a dashboard opens a chat with it in an
+ * edit session ([AgentEditScreen]), new dashboards included, which a person then applies; editing
+ * by hand stays in the dashboard's menu. docs/architecture/dashboard-editing.md.
  */
 
-/** What the manual editor's entry points say instead, while the built-in agent is on. */
+/** What the chat's entry points say while a dashboard agent answers. */
 const val CHAT_WITH_AGENT = "Chat with your agent"
 
 /**
@@ -45,7 +46,7 @@ const val CHAT_WITH_AGENT = "Chat with your agent"
 @Composable
 fun NewDashboardDialog(
   edits: AgentEdits,
-  agent: BuiltInAgent,
+  agent: DashboardAgent,
   onDismiss: () -> Unit,
   onStarted: (AgentEditSession) -> Unit,
 ) {
@@ -111,13 +112,13 @@ fun NewDashboardDialog(
 }
 
 /**
- * New dashboards with the built-in agent, for a dashboard list: **New dashboard**, then the ones
+ * New dashboards with the dashboard agent, for a dashboard list: **New dashboard**, then the ones
  * still being built, to pick back up.
  */
 @Composable
 fun NewDashboardSessions(
   edits: AgentEdits,
-  agent: BuiltInAgent,
+  agent: DashboardAgent,
   onOpen: (AgentEditSession) -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -159,7 +160,7 @@ fun NewDashboardSessions(
 @Composable
 fun NewDashboardChooser(
   edits: AgentEdits,
-  agent: BuiltInAgent,
+  agent: DashboardAgent,
   onDismiss: () -> Unit,
   onOpen: (AgentEditSession) -> Unit,
 ) {

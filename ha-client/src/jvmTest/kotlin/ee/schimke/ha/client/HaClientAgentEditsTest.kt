@@ -1,6 +1,6 @@
 package ee.schimke.ha.client
 
-import ee.schimke.ha.client.dashboard.BuiltInAgent
+import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.scopeLabel
@@ -86,22 +86,23 @@ class HaClientAgentEditsTest {
   }
 
   @Test
-  fun theBuiltInAgentIsReadAndOffForAnOlderIntegration() {
+  fun theDashboardAgentIsReadAndOffForAnOlderIntegration() {
     fakeHa(
       mutableListOf(),
       { _, id ->
         listOf(
           result(
             id,
-            """{"enabled":true,"provider":"gemini","provider_label":"Google Gemini",
-              "model":"gemini-flash-latest"}""",
+            """{"enabled":true,"agent_id":"conversation.google_generative_ai",
+              "name":"Google Generative AI"}""",
           ),
         )
       },
     ) { client ->
-      val agent = client.terrazzoBuiltInAgent()
+      val agent = client.terrazzoDashboardAgent()
       assertTrue(agent.enabled)
-      assertEquals("Google Gemini (gemini-flash-latest)", agent.displayName)
+      assertEquals("conversation.google_generative_ai", agent.agentId)
+      assertEquals("Google Generative AI", agent.displayName)
     }
     fakeHa(
       mutableListOf(),
@@ -112,7 +113,7 @@ class HaClientAgentEditsTest {
         )
       },
     ) { client ->
-      assertEquals(BuiltInAgent.Off, client.terrazzoBuiltInAgent())
+      assertEquals(DashboardAgent.Off, client.terrazzoDashboardAgent())
     }
   }
 
