@@ -22,3 +22,6 @@ panel_admin: true
 hassio_api: true
 options: {}
 schema: {}
+# Pulled, not built on the box: release-build.yml publishes the add-on image for each release
+# version. The Supervisor substitutes {arch}.
+image: ghcr.io/yschimke/ha-card-designs-{arch}
