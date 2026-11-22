@@ -90,7 +90,7 @@ composeai-contracts = "3.45.0"
 # pin at a release version 404s the first time a release skips a module (the
 # daemon BOM 3.15.0 carries preview-annotations 3.13.2). Resolve it versionless
 # through the BOM. It must not predate the daemon baked into the preview plugin.
-compose-preview-daemon = "3.28.2"
+compose-preview-daemon = "3.29.0"
 # `compose-preview-ui-builder-bom` from yschimke/compose-ui-builder, constraining the typed-catalog
 # consumer runtime on its own 3.x release line.
 compose-ui-builder = "3.147.0"
