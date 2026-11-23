@@ -76,3 +76,90 @@ test('compressed entity events add, change and remove', () => {
   applyEntitiesEvent(states, { r: ['light.k'] });
   assert.deepEqual(states, {});
 });
+
+test('semantic named actions resolve explicit actions: map and preserve target/service data', async () => {
+  const { resolveNamedAction } = await import('../ha-card.js');
+  const card = { type: 'tile', entity: 'sensor.bosch_dw_operation_state' };
+  const actions = {
+    start: 'button.bosch_dw_start_pause',
+    power: 'switch.bosch_dw_power',
+    eco_50: {
+      service: 'home_connect.start_program',
+      data: { program: 'Dishcare.Dishwasher.Program.Eco50' },
+      target: { device_id: 'dw1' },
+    },
+    warm: {
+      action: 'perform-action',
+      perform_action: 'light.turn_on',
+      entity: 'light.living_room_hue',
+      data: { color_temp_kelvin: 2700 },
+    },
+    kettle_80: { entity: 'number.kettle_target_temp', value: 80 },
+    mode_auto: { entity: 'select.bosch_dw_program', option: 'Auto 45-65°' },
+    details: { action: 'more-info', entity: 'sensor.bosch_dw_operation_state' },
+  };
+
+  const start = resolveNamedAction(card, 'start', '', { actions });
+  assert.deepEqual(serviceCallFor(start), {
+    domain: 'button', service: 'press', service_data: {}, target: { entity_id: 'button.bosch_dw_start_pause' },
+  });
+  assert.equal(start.entityAction, true);
+
+  assert.deepEqual(serviceCallFor(resolveNamedAction(card, 'power', '', { actions })), {
+    domain: 'homeassistant', service: 'toggle', service_data: {}, target: { entity_id: 'switch.bosch_dw_power' },
+  });
+
+  assert.deepEqual(serviceCallFor(resolveNamedAction(card, 'eco_50', '', { actions })), {
+    domain: 'home_connect', service: 'start_program',
+    service_data: { program: 'Dishcare.Dishwasher.Program.Eco50' },
+    target: { device_id: 'dw1' },
+  });
+
+  assert.deepEqual(serviceCallFor(resolveNamedAction(card, 'warm', '', { actions })), {
+    domain: 'light', service: 'turn_on',
+    service_data: { color_temp_kelvin: 2700 },
+    target: { entity_id: 'light.living_room_hue' },
+  });
+
+  assert.deepEqual(serviceCallFor(resolveNamedAction(card, 'kettle_80', '', { actions })), {
+    domain: 'number', service: 'set_value',
+    service_data: { value: 80 },
+    target: { entity_id: 'number.kettle_target_temp' },
+  });
+
+  assert.deepEqual(serviceCallFor(resolveNamedAction(card, 'mode_auto', '', { actions })), {
+    domain: 'select', service: 'select_option',
+    service_data: { option: 'Auto 45-65°' },
+    target: { entity_id: 'select.bosch_dw_program' },
+  });
+
+  assert.deepEqual(resolveNamedAction(card, 'details', '', { actions }), {
+    kind: 'MoreInfo', entityId: 'sensor.bosch_dw_operation_state', entityAction: true,
+  });
+});
+
+test('semantic named actions auto-discover actionable sibling entities on the same device_id', async () => {
+  const { resolveNamedAction } = await import('../ha-card.js');
+  const card = { type: 'tile', entity: 'sensor.bosch_dw_operation_state' };
+  const entities = {
+    'sensor.bosch_dw_operation_state': { entity_id: 'sensor.bosch_dw_operation_state', device_id: 'dw1', translation_key: 'operation_state' },
+    'button.bosch_dw_start_pause': { entity_id: 'button.bosch_dw_start_pause', device_id: 'dw1', translation_key: 'start_pause' },
+    'switch.bosch_dw_power': { entity_id: 'switch.bosch_dw_power', device_id: 'dw1', translation_key: 'power' },
+    'select.bosch_dw_program': { entity_id: 'select.bosch_dw_program', device_id: 'dw1', translation_key: 'selected_program' },
+    'button.other_device_start_pause': { entity_id: 'button.other_device_start_pause', device_id: 'other', translation_key: 'start_pause' },
+    'lock.front_door': { entity_id: 'lock.front_door', device_id: 'other', translation_key: 'front_door' },
+  };
+
+  assert.deepEqual(serviceCallFor(resolveNamedAction(card, 'start_pause', '', { entities })), {
+    domain: 'button', service: 'press', service_data: {}, target: { entity_id: 'button.bosch_dw_start_pause' },
+  });
+  assert.deepEqual(serviceCallFor(resolveNamedAction(card, 'switch_power', '', { entities })), {
+    domain: 'homeassistant', service: 'toggle', service_data: {}, target: { entity_id: 'switch.bosch_dw_power' },
+  });
+  assert.deepEqual(serviceCallFor(resolveNamedAction(card, 'selected_program', 'Eco 50°', { entities })), {
+    domain: 'select', service: 'select_option', service_data: { option: 'Eco 50°' }, target: { entity_id: 'select.bosch_dw_program' },
+  });
+  // Unrelated device entities cannot be reached by a template's named action.
+  assert.deepEqual(resolveNamedAction(card, 'front_door', '', { entities }), { kind: 'None' });
+  assert.deepEqual(resolveNamedAction(card, 'lock.unlock', '', { entities }), { kind: 'None' });
+});

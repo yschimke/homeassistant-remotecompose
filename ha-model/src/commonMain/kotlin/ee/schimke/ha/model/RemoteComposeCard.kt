@@ -23,3 +23,27 @@ fun remoteComposeInnerCard(card: CardConfig): CardConfig? {
 fun remoteComposeCardStyle(card: CardConfig): String? =
   if (card.type != REMOTE_COMPOSE_CARD_TYPE) null
   else (card.raw["card_style"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
+
+/** The chosen library or pack design id (`design_id:`), or null. */
+fun remoteComposeDesignId(card: CardConfig): String? =
+  if (card.type != REMOTE_COMPOSE_CARD_TYPE) null
+  else (card.raw["design_id"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
+
+/** The direct RC template URL (`template_url:`), or null. */
+fun remoteComposeTemplateUrl(card: CardConfig): String? =
+  if (card.type != REMOTE_COMPOSE_CARD_TYPE) null
+  else
+    (card.raw["template_url"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
+
+/** The explicit HA device id (`device_id:`), or null. */
+fun remoteComposeDeviceId(card: CardConfig): String? =
+  if (card.type != REMOTE_COMPOSE_CARD_TYPE) null
+  else (card.raw["device_id"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
+
+/** The explicit multi-entity semantic bindings map (`bindings:`), or null. */
+fun remoteComposeBindings(card: CardConfig): JsonObject? =
+  if (card.type != REMOTE_COMPOSE_CARD_TYPE) null else card.raw["bindings"] as? JsonObject
+
+/** The explicit semantic button actions map (`actions:`), or null. */
+fun remoteComposeActions(card: CardConfig): JsonObject? =
+  if (card.type != REMOTE_COMPOSE_CARD_TYPE) null else card.raw["actions"] as? JsonObject

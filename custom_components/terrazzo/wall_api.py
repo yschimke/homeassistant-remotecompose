@@ -106,15 +106,62 @@ def card_id(view, card, section=None):
     return f"v{view}.c{card}" if section is None else f"v{view}.s{section}.c{card}"
 
 
-# Terrazzo's own Lovelace card wraps the card it draws in `card:`; a wall display draws that card.
+# Terrazzo's own Lovelace card wraps the card it draws in `card:`; preserve its design/binding
+# metadata when unwrapping so wall displays and the Terrazzo Panel keep the chosen design.
 WRAPPER_CARD = "custom:remote-compose-card"
+WRAPPER_META_KEYS = (
+    "design_id",
+    "design",
+    "template_url",
+    "card_style",
+    "library",
+    "device_id",
+    "bindings",
+    "actions",
+    "height",
+)
+
+
+def wrapper_meta(card):
+    """The Remote Compose wrapper metadata present on [card], as a plain dict."""
+    if not isinstance(card, dict):
+        return {}
+    return {key: card[key] for key in WRAPPER_META_KEYS if card.get(key) is not None}
+
+
+def strip_wrapper_meta(card):
+    """[card] without Remote Compose wrapper keys, for `/api/cards/resolve` card bodies."""
+    if not isinstance(card, dict):
+        return card
+    out = {k: v for k, v in card.items() if k not in WRAPPER_META_KEYS}
+    if isinstance(out.get("cards"), list):
+        out["cards"] = [strip_wrapper_meta(c) for c in out["cards"]]
+    if isinstance(out.get("card"), dict):
+        out["card"] = strip_wrapper_meta(out["card"])
+    return out
 
 
 def unwrap(card):
-    """[card], or the card a Remote Compose card wraps."""
+    """[card], or the card a Remote Compose card wraps, preserving wrapper metadata
+    (`design_id`, `template_url`, `bindings`, `actions`, `device_id`, `card_style`, `library`,
+    `design`, `height`, and `grid_options`)."""
+    meta = {}
+    grid_options = None
     while isinstance(card, dict) and card.get("type") == WRAPPER_CARD and isinstance(card.get("card"), dict):
+        for key in WRAPPER_META_KEYS:
+            if key not in meta and card.get(key) is not None:
+                meta[key] = card[key]
+        if grid_options is None and isinstance(card.get("grid_options"), dict):
+            grid_options = card["grid_options"]
         card = card["card"]
-    return card
+    if not isinstance(card, dict) or (not meta and grid_options is None):
+        return card
+    merged = dict(card)
+    if grid_options is not None and "grid_options" not in merged:
+        merged["grid_options"] = grid_options
+    for key, value in meta.items():
+        merged.setdefault(key, value)
+    return merged
 
 
 CONDITIONAL_CARD = "conditional"
@@ -370,11 +417,17 @@ def slot_entries(card):
 
 
 def entity_ids(card):
-    """The distinct entity ids [card] shows: what its values depend on."""
+    """The distinct entity ids [card] shows: what its values depend on, including `bindings:`."""
     seen = []
     for entity, _ in slot_entries(card) or []:
         if entity not in seen:
             seen.append(entity)
+    bindings = card.get("bindings") if isinstance(card, dict) else None
+    if isinstance(bindings, dict):
+        for spec in bindings.values():
+            entity = _text(spec) if isinstance(spec, str) else (_text(spec.get("entity")) if isinstance(spec, dict) else None)
+            if entity and "." in entity and entity not in seen:
+                seen.append(entity)
     return seen
 
 
@@ -501,19 +554,19 @@ def _cards_json(url_path, view_index, section_index, cards):
     out = []
     for (index, card), (w, h, auto), (x, y) in zip(indexed, sizes, pack([(w, h) for w, h, _ in sizes])):
         cid = card_id(view_index, index, section_index)
-        out.append(
-            {
-                "id": cid,
-                "type": _text(card.get("type")) or "",
-                "x": x,
-                "y": y,
-                "w": w,
-                "h": h,
-                "auto_height": auto,
-                "entities": entity_ids(card),
-                "card": f"{API}/cards/{url_path}/{cid}",
-            }
-        )
+        entry = {
+            "id": cid,
+            "type": _text(card.get("type")) or "",
+            "x": x,
+            "y": y,
+            "w": w,
+            "h": h,
+            "auto_height": auto,
+            "entities": entity_ids(card),
+            "card": f"{API}/cards/{url_path}/{cid}",
+        }
+        entry.update(wrapper_meta(card))
+        out.append(entry)
     return out
 
 
@@ -1122,15 +1175,85 @@ def default_tap_action(entity):
     return {"kind": kind, "entity_id": entity}
 
 
+def _action_for_entity(entity_id, value=None):
+    domain = domain_of(entity_id)
+    if domain in ("button", "input_button"):
+        return {"kind": "CallService", "domain": domain, "service": "press", "data": {}, "target": None, "entity_id": entity_id}
+    if domain in ("script", "scene"):
+        return {"kind": "CallService", "domain": domain, "service": "turn_on", "data": {}, "target": None, "entity_id": entity_id}
+    if domain in ("select", "input_select") and isinstance(value, str) and value.strip():
+        return {"kind": "CallService", "domain": domain, "service": "select_option", "data": {"option": value.strip()}, "target": None, "entity_id": entity_id}
+    if domain in ("number", "input_number"):
+        num = _finite(value)
+        if num is not None:
+            return {"kind": "CallService", "domain": domain, "service": "set_value", "data": {"value": num}, "target": None, "entity_id": entity_id}
+    return default_tap_action(entity_id)
+
+
+def _configured_named_action(cfg, default_entity, value=None):
+    if isinstance(cfg, str):
+        entity = cfg.strip()
+        return _action_for_entity(entity, value) if "." in entity else NONE
+    if not isinstance(cfg, dict):
+        return NONE
+    entity = _text(cfg.get("entity")) or _text(cfg.get("entity_id")) or default_entity
+    has_service = _text(cfg.get("perform_action")) or _text(cfg.get("service"))
+    if _text(cfg.get("action")) or has_service:
+        normalized = cfg if _text(cfg.get("action")) else {**cfg, "action": "perform-action"}
+        return parse_lovelace_action(normalized, entity) or NONE
+    if entity:
+        domain = domain_of(entity)
+        if domain in ("select", "input_select") and cfg.get("option") is not None:
+            return {"kind": "CallService", "domain": domain, "service": "select_option", "data": {"option": str(cfg["option"])}, "target": None, "entity_id": entity}
+        if domain in ("number", "input_number") and cfg.get("value") is not None:
+            num = _finite(cfg.get("value"))
+            if num is not None:
+                return {"kind": "CallService", "domain": domain, "service": "set_value", "data": {"value": num}, "target": None, "entity_id": entity}
+        return _action_for_entity(entity, value)
+    return NONE
+
+
+def resolve_named_action(card, name, value=None):
+    """Resolve a semantic button action [name] against [card]'s configured `actions:` map, or None."""
+    actions = card.get("actions") if isinstance(card, dict) else None
+    if not isinstance(actions, dict) or not isinstance(name, str) or not name.strip():
+        return None
+    key = name.strip()
+    entries = slot_entries(card) or []
+    first = entries[0][0] if entries else None
+    val_str = value.strip() if isinstance(value, str) else ""
+    if val_str and f"{key}:{val_str}" in actions:
+        return _configured_named_action(actions[f"{key}:{val_str}"], first, value)
+    if key in actions:
+        return _configured_named_action(actions[key], first, value)
+    return None
+
+
 def resolve_tap(card, value=None):
     """The card-local action a tap runs. [value] is the `ha` host action's string the document
-    fired, or None for a tap on the card itself. Only a slot it names is taken from it: never its
-    kind, service or data."""
+    fired, a semantic action name configured in `actions:`, or None for a tap on the card itself.
+    Only a slot or configured action name is taken from it: never a template's service or data."""
     entries = slot_entries(card) or []
     first = entries[0][0] if entries else None
 
     def card_action():
         return parse_lovelace_action(card.get("tap_action"), first) or default_tap_action(first)
+
+    if isinstance(value, str) and value.strip():
+        named = resolve_named_action(card, value)
+        if named is not None:
+            return named
+        if value.strip().startswith("{"):
+            try:
+                parsed = json.loads(value)
+            except ValueError:
+                parsed = None
+            if isinstance(parsed, dict) and not str(parsed.get("type", "")).startswith(HA_ACTION_TYPE):
+                action_name = _text(parsed.get("name")) or _text(parsed.get("action"))
+                if action_name:
+                    named = resolve_named_action(card, action_name, parsed.get("value"))
+                    if named is not None:
+                        return named
 
     template = decode_template_action(value)
     slot = template.get("entityId") if template else None

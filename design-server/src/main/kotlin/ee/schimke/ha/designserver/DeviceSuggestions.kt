@@ -33,6 +33,10 @@ object DeviceSuggestions {
     val title: String? = null,
     /** The entity domain the design draws (`light`), or null when its key doesn't say. */
     val domain: String? = null,
+    /** Contract semantic input variable names a multi-entity pack reads (for `bindings:`). */
+    val inputs: List<String>? = null,
+    /** Contract semantic button action names a multi-entity pack fires (for `actions:`). */
+    val actions: List<String>? = null,
   )
 
   @Serializable data class Index(val serial: Long, val designs: List<Suggestion>)

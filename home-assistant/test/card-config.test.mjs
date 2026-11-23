@@ -298,3 +298,46 @@ test('an entity action runs on the card\'s own entity, never on the tap action\'
     ['homeassistant', 'toggle', {}, { entity_id: 'cover.other' }],
   ]);
 });
+
+test('bindings, actions, device_id, and hass.entities are validated and forwarded to ha-card', () => {
+  const el = host();
+  const bindings = {
+    sensor_operation_state: 'sensor.dw_state',
+    sensor_remaining_program_time: { entity: 'sensor.dw_remaining', format: 'hhmm', fallback: '--:--' },
+  };
+  const actions = {
+    start: 'button.dw_start',
+    eco_50: { service: 'home_connect.start_program', data: { program: 'Eco50' } },
+  };
+  el.setConfig({
+    card: { type: 'tile', entity: 'sensor.dw_state' },
+    design_id: 'pack:bosch-dishwasher',
+    device_id: 'dev_dw1',
+    bindings,
+    actions,
+  });
+  assert.equal(el.attributes.get('device-id'), 'dev_dw1');
+  assert.deepEqual(JSON.parse(el.attributes.get('bindings')), bindings);
+  assert.deepEqual(JSON.parse(el.attributes.get('actions')), actions);
+
+  const entities = { 'sensor.dw_state': { entity_id: 'sensor.dw_state', device_id: 'dev_dw1' } };
+  el.hass = { states: {}, entities, themes: {} };
+  assert.equal(el.entityRegistry, entities);
+
+  // Invalid values fail before changing existing config.
+  const previous = el.config;
+  for (const bad of ['', '   ', 42]) {
+    assert.throws(() => el.setConfig({ ...config, device_id: bad }), /device_id/);
+    assert.equal(el.config, previous);
+  }
+  for (const bad of ['nope', [], { a: '' }, { a: 123 }]) {
+    assert.throws(() => el.setConfig({ ...config, bindings: bad }), /bindings/);
+    assert.throws(() => el.setConfig({ ...config, actions: bad }), /actions/);
+    assert.equal(el.config, previous);
+  }
+
+  // Cards with custom bindings or actions are edited in YAML.
+  const form = RemoteComposeCard.getConfigForm();
+  assert.throws(() => form.assertConfig({ card: { type: 'tile', entity: 'sensor.dw_state' }, bindings }), /YAML/);
+  assert.throws(() => form.assertConfig({ card: { type: 'tile', entity: 'sensor.dw_state' }, actions }), /YAML/);
+});

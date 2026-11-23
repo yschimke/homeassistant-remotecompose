@@ -295,6 +295,60 @@ class DraftNoticeTest(unittest.TestCase):
         self.assertEqual(notice['data']['tag'], f"terrazzo-edit-{session['id']}")
         self.assertEqual(es.draft_notice(session, {'summary': ''})['message'], 'Garden')
 
+    def test_remote_compose_card_bindings_actions_and_device_id_validate_in_drafts(self):
+        sessions = es.EditSessions()
+        session = sessions.create('kitchen', 'Dishwasher fascia', BASELINE, 'person', 100)
+        known = {'sensor.soil', 'sensor.rain', 'light.kitchen'}
+        good = {
+            'views': [{'cards': [{
+                'type': 'custom:remote-compose-card',
+                'card': {'type': 'tile', 'entity': 'sensor.soil'},
+                'design_id': 'pack:bosch-dishwasher',
+                'device_id': 'dev_dw1',
+                'bindings': {
+                    'sensor_moisture': 'sensor.soil',
+                    'sensor_rain': {'entity': 'sensor.rain', 'suffix': ' mm'},
+                },
+                'actions': {
+                    'power': 'light.kitchen',
+                    'eco': {'service': 'home_connect.start_program', 'data': {'program': 'Eco50'}},
+                },
+            }]}]
+        }
+        draft = sessions.submit(session['id'], good, 'Device card', known.__contains__, 'agent', 110)
+        self.assertEqual(draft['config'], good)
+        self.assertEqual(es.referenced_entities(good), {'sensor.soil', 'sensor.rain', 'light.kitchen'})
+
+        unknown_binding = {
+            'views': [{'cards': [{
+                'type': 'custom:remote-compose-card',
+                'card': {'type': 'tile', 'entity': 'sensor.soil'},
+                'bindings': {'sensor_temp': 'sensor.not_in_home'},
+            }]}]
+        }
+        with self.assertRaisesRegex(es.SessionError, 'sensor.not_in_home'):
+            sessions.submit(session['id'], unknown_binding, '', known.__contains__, 'agent', 111)
+
+        bad_shape = {
+            'views': [{'cards': [{
+                'type': 'custom:remote-compose-card',
+                'card': {'type': 'tile', 'entity': 'sensor.soil'},
+                'bindings': ['sensor.soil'],
+            }]}]
+        }
+        with self.assertRaisesRegex(es.SessionError, 'bindings must be an object'):
+            sessions.submit(session['id'], bad_shape, '', known.__contains__, 'agent', 112)
+
+        bad_device = {
+            'views': [{'cards': [{
+                'type': 'custom:remote-compose-card',
+                'card': {'type': 'tile', 'entity': 'sensor.soil'},
+                'device_id': '',
+            }]}]
+        }
+        with self.assertRaisesRegex(es.SessionError, 'device_id'):
+            sessions.submit(session['id'], bad_device, '', known.__contains__, 'agent', 113)
+
 
 if __name__ == '__main__':
     unittest.main()

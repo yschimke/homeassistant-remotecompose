@@ -11,8 +11,13 @@ import ee.schimke.ha.design.cardFingerprint
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.remoteComposeActions
+import ee.schimke.ha.model.remoteComposeBindings
 import ee.schimke.ha.model.remoteComposeCardStyle
+import ee.schimke.ha.model.remoteComposeDesignId
+import ee.schimke.ha.model.remoteComposeDeviceId
 import ee.schimke.ha.model.remoteComposeInnerCard
+import ee.schimke.ha.model.remoteComposeTemplateUrl
 import ee.schimke.ha.rc.cards.defaultRegistry
 import kotlinx.serialization.json.*
 
@@ -36,9 +41,15 @@ internal fun AuthenticatedCard(
 ) {
   DashboardCardTheme(style, dark) {
     CardCluster(card, snapshot) { outer ->
-      // A Remote Compose card is its inner card, drawn from a card design in the style it names.
+      // A Remote Compose card is its inner card, drawn from its chosen design/template and style.
       val leaf = remoteComposeInnerCard(outer) ?: outer
       val leafStyle = remoteComposeCardStyle(outer) ?: style
+      val explicitDesignId = remoteComposeDesignId(outer)
+      val explicitTemplateUrl = remoteComposeTemplateUrl(outer)
+      val explicitBindings = remoteComposeBindings(outer)
+      val explicitActions = remoteComposeActions(outer)
+      val explicitDeviceId = remoteComposeDeviceId(outer)
+      val hasExplicitDesign = explicitDesignId != null || explicitTemplateUrl != null
       // A history graph plots only its own window of the dashboard's shared history.
       val leafSnapshot = remember(leaf, snapshot) { withCardHistoryWindow(leaf, snapshot) }
       val drawLeaf: @Composable () -> Unit = {
@@ -77,7 +88,7 @@ internal fun AuthenticatedCard(
               )
           }
           // Input helpers and declared actions keep their native controls instead of a generic
-          // template.
+          // template, unless the card explicitly names a device design or template URL.
           val domains =
             CardDesignSlots.slotEntries(leaf).orEmpty().map { it.entityId.substringBefore('.') }
           val nativeControls = domains.any {
@@ -97,13 +108,15 @@ internal fun AuthenticatedCard(
             ((leaf.raw["tap_action"] as? JsonObject)?.get("action") as? JsonPrimitive)
               ?.contentOrNull
           if (
-            (leaf.type in DESIGNED_CARD_TYPES || hasCustomCardDesign(leaf)) &&
-              !nativeControls &&
-              // An entity Home Assistant no longer has: the built-in card says so, with no lookup.
-              !namesMissingEntity(leaf, leafSnapshot) &&
-              cardServiceAction(leaf) == null &&
-              tap in setOf(null, "toggle", "more-info", "none") &&
-              (leaf.raw["features"] as? JsonArray).orEmpty().isEmpty()
+            hasExplicitDesign ||
+              ((leaf.type in DESIGNED_CARD_TYPES || hasCustomCardDesign(leaf)) &&
+                !nativeControls &&
+                // An entity Home Assistant no longer has: the built-in card says so, with no
+                // lookup.
+                !namesMissingEntity(leaf, leafSnapshot) &&
+                cardServiceAction(leaf) == null &&
+                tap in setOf(null, "toggle", "more-info", "none") &&
+                (leaf.raw["features"] as? JsonArray).orEmpty().isEmpty())
           )
             LibraryCard(
               leaf,
@@ -116,8 +129,12 @@ internal fun AuthenticatedCard(
               // same dispatch as the card's other writes; a preview runs none.
               onAction = if (readOnly) null else onAction,
               designCache = designCache,
-              designId = designSelections[cardFingerprint(leaf)],
-              requireExactDesign = true,
+              designId = explicitDesignId ?: designSelections[cardFingerprint(leaf)],
+              templateUrl = explicitTemplateUrl,
+              semanticBindings = explicitBindings,
+              semanticActions = explicitActions,
+              deviceId = explicitDeviceId,
+              requireExactDesign = !hasExplicitDesign,
               onSource = { AppCardUsage.record(leaf, leafStyle, it) },
               fallback = fallback,
             )

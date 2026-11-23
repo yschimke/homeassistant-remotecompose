@@ -57,7 +57,8 @@ API_PROMPT = "\n".join(
         "cards and live states, and applies it themselves. Tell them where (the session's "
         "terrazzo_url) and what you changed.",
         "- Read get_card_guide before drafting: the card types Terrazzo draws, how to size them, and "
-        "how to use a card design made for a device (find_designs).",
+        "how to use a card design made for a device (find_designs), including collapsing a device's "
+        "entities into one custom:remote-compose-card with optional bindings, actions, and device_id.",
         "- Use only entity ids from find_entities or home_overview. These tools see every entity "
         "the person may read, not only those exposed to Assist.",
         "- These tools only edit dashboards: they never control devices or change automations.",

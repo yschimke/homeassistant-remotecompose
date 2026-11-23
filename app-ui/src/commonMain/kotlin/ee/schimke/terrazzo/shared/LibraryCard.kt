@@ -73,6 +73,10 @@ internal fun LibraryCard(
   requireExactDesign: Boolean = false,
   designCache: DashboardLoadCache<LibraryDesignKey, ByteArray?>? = null,
   designId: String? = null,
+  templateUrl: String? = null,
+  semanticBindings: JsonObject? = null,
+  semanticActions: JsonObject? = null,
+  deviceId: String? = null,
   /** Hears, once the design lookup settles, whether the card drew from a design or [fallback]. */
   onSource: ((UsageSource) -> Unit)? = null,
   fallback: @Composable () -> Unit,
@@ -84,13 +88,24 @@ internal fun LibraryCard(
         DashboardLoadCache(scope) { key: LibraryDesignKey -> loadLibraryDesign(key) }
       }
   val exact =
-    remember(card, snapshot, style, dark, designId) {
-      if (designId == null) exactDesignKey(card, snapshot, style, dark)
+    remember(card, snapshot, style, dark, designId, templateUrl) {
+      if (templateUrl != null) null
+      else if (designId == null) exactDesignKey(card, snapshot, style, dark)
       else selectedDesignKey(card, snapshot, style, dark)
     }
   val hint = remember(card, snapshot, exact) { cacheShapeHint(exact, card, snapshot) }
   val designKey =
-    remember(card, hint, style, dark, requireExactDesign, exact, designId, snapshot.devices) {
+    remember(
+      card,
+      hint,
+      style,
+      dark,
+      requireExactDesign,
+      exact,
+      designId,
+      templateUrl,
+      snapshot.devices,
+    ) {
       LibraryDesignKey(
         anonymousTemplateCard(card),
         style,
@@ -100,13 +115,19 @@ internal fun LibraryCard(
         hint,
         designId,
         cardDevice(card, snapshot),
+        templateUrl,
       )
     }
   // An exact design binds as the phone app plays it: by the recipe its own bytes carry, when they
-  // carry one (a device pack's thermostat: its unit, range and labels), else its converter.
-  fun bindings(template: ByteArray) =
-    if (exact != null) exactTemplateBindings(card, snapshot, template)
-    else templateBindings(card, snapshot)
+  // carry one (a device pack's thermostat: its unit, range and labels), else its converter, plus
+  // any explicit or device-discovered semantic bindings.
+  fun bindings(template: ByteArray): Map<String, RcNamedValue> {
+    val base =
+      if (exact != null) exactTemplateBindings(card, snapshot, template)
+      else templateBindings(card, snapshot)
+    val extra = semanticDeviceBindings(card, snapshot, template, semanticBindings, deviceId, base)
+    return if (extra.isEmpty()) base else base + extra
+  }
   var bytes by
     remember(card, designKey, cache) {
       mutableStateOf(cache.peek(designKey)?.takeIf { canBindWithCmp(it, bindings(it)) })
@@ -132,9 +153,13 @@ internal fun LibraryCard(
   // Computed in the same composition that first shows [bytes], so the player's first frame already
   // has the current values (docs/architecture/live-card-updates.md).
   val values =
-    remember(card, snapshot, tick, exact, playback) {
-      if (exact != null && playback != null) playback.namedBindings(snapshot)
-      else bindings(ByteArray(0))
+    remember(card, snapshot, tick, exact, playback, bytes, semanticBindings, deviceId) {
+      val base =
+        if (exact != null && playback != null) playback.namedBindings(snapshot)
+        else if (exact != null) exactTemplateBindings(card, snapshot, bytes ?: ByteArray(0))
+        else templateBindings(card, snapshot)
+      val extra = semanticDeviceBindings(card, snapshot, bytes, semanticBindings, deviceId, base)
+      if (extra.isEmpty()) base else base + extra
     }
   LaunchedEffect(designKey, cache) {
     try {
@@ -185,32 +210,48 @@ internal fun LibraryCard(
             playback
               ?.let { libraryEntityAction(it, payload, snapshot) }
               ?.let { onAction?.invoke(cardActionPayload(it)) }
+          } else if (event is RcPlayerEvent.HostNamedAction) {
+            val payload = (event.value as? RcHostActionValue.TextValue)?.value
+            resolveSemanticNamedAction(
+                card,
+                event.name,
+                payload,
+                snapshot,
+                semanticActions,
+                semanticBindings,
+                deviceId,
+              )
+              ?.let { action ->
+                if (action is HaAction.MoreInfo) onMoreInfo?.invoke(action.entityId)
+                else onAction?.invoke(cardActionPayload(action))
+              }
           }
         }
-        // Accessible host controls also work with templates without action regions.
-        CardDesignSlots.slotEntries(card)
-          .orEmpty()
-          .map { it.entityId }
-          .distinct()
-          .forEach { id ->
-            val entity = snapshot.states[id]
-            if (id.substringBefore('.') in setOf("light", "switch")) {
-              val label =
-                entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id
-              ListItem(
-                modifier = Modifier.entityDetails(id, onMoreInfo),
-                headlineContent = { Text(label) },
-                trailingContent = {
-                  Switch(
-                    modifier = Modifier.semantics { contentDescription = label },
-                    checked = entity?.state == "on",
-                    enabled = onToggle != null && entity?.state in setOf("on", "off"),
-                    onCheckedChange = { onToggle?.invoke(id) },
-                  )
-                },
-              )
+        // Accessible host controls also work with generic templates without action regions.
+        if (designId == null && templateUrl == null)
+          CardDesignSlots.slotEntries(card)
+            .orEmpty()
+            .map { it.entityId }
+            .distinct()
+            .forEach { id ->
+              val entity = snapshot.states[id]
+              if (id.substringBefore('.') in setOf("light", "switch")) {
+                val label =
+                  entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id
+                ListItem(
+                  modifier = Modifier.entityDetails(id, onMoreInfo),
+                  headlineContent = { Text(label) },
+                  trailingContent = {
+                    Switch(
+                      modifier = Modifier.semantics { contentDescription = label },
+                      checked = entity?.state == "on",
+                      enabled = onToggle != null && entity?.state in setOf("on", "off"),
+                      onCheckedChange = { onToggle?.invoke(id) },
+                    )
+                  },
+                )
+              }
             }
-          }
       }
     }
     if (
@@ -393,7 +434,7 @@ internal fun libraryEntityAction(
 ): HaAction.CallService? = playback.resolveEntityAction(payload, snapshot) as? HaAction.CallService
 
 /** [call] as the card action payload the host's dispatch runs ([cardActionCall]). */
-internal fun cardActionPayload(call: HaAction.CallService): String =
+internal fun cardActionPayload(call: HaAction): String =
   Json.encodeToString(HaAction.serializer(), call)
 
 private fun CardSnapshotBindings.toNamedValues(): Map<String, RcNamedValue> = buildMap {
@@ -478,6 +519,7 @@ internal data class LibraryDesignKey(
   val shapeHint: JsonObject = EMPTY_SHAPE_HINT,
   val designId: String? = null,
   val device: DeviceInfo? = null,
+  val templateUrl: String? = null,
 )
 
 /**
@@ -543,13 +585,40 @@ internal fun cardDesignGenerateUrl(server: String): String = "${cardDesignApiBas
 
 private val designJson = Json { ignoreUnknownKeys = true }
 
+internal fun resolveDirectTemplateUrl(templateUrl: String, homeBaseUrl: String?): String? {
+  val trimmed = templateUrl.trim()
+  if (trimmed.isEmpty()) return null
+  val resolved =
+    if (trimmed.startsWith("/") && !trimmed.startsWith("//")) {
+      val base = homeBaseUrl?.trim()?.trimEnd('/')?.takeIf { it.isNotEmpty() } ?: return null
+      base + trimmed
+    } else trimmed
+  val parsed = runCatching { Url(resolved) }.getOrNull() ?: return null
+  if (parsed.protocol != URLProtocol.HTTP && parsed.protocol != URLProtocol.HTTPS) return null
+  if (parsed.user != null || parsed.password != null) return null
+  return resolved
+}
+
 internal suspend fun loadLibraryDesign(
   key: LibraryDesignKey,
   server: String = DEFAULT_CARD_DESIGN_SERVER,
   client: String? = null,
+  homeBaseUrl: String? = null,
 ): ByteArray? {
-  key.exact?.let {
-    return loadDesignByKey(key, it, server, client)
+  key.templateUrl?.let { rawUrl ->
+    val resolvedUrl = resolveDirectTemplateUrl(rawUrl, homeBaseUrl) ?: return null
+    val http = HttpClient()
+    return try {
+      val response = http.get(resolvedUrl)
+      if (!response.status.isSuccess()) null else response.bodyAsBytes()
+    } finally {
+      http.close()
+    }
+  }
+  if (key.designId == null) {
+    key.exact?.let {
+      return loadDesignByKey(key, it, server, client)
+    }
   }
   val http = HttpClient()
   try {
@@ -562,6 +631,7 @@ internal suspend fun loadLibraryDesign(
             put("cardStyle", key.style)
             put("dark", key.dark)
             if (key.shapeHint.isNotEmpty()) put("shapeHint", key.shapeHint)
+            key.designId?.let { put("designId", it) }
           }
             .toString(),
         )

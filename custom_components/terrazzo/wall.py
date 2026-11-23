@@ -210,7 +210,16 @@ async def _resolve(hass, user, base, authorization, card, look):
     }
     for entity in wall_api.entity_ids(card):
         states.setdefault(entity, {"state": "unavailable", "attributes": {}})
-    body = {"card": card, "states": states, "cardStyle": style, "dark": dark}
+    design_id = card.get("design_id") if isinstance(card, dict) else None
+    card_style = (card.get("card_style") if isinstance(card, dict) else None) or style
+    body = {
+        "card": wall_api.strip_wrapper_meta(card),
+        "states": states,
+        "cardStyle": card_style,
+        "dark": dark,
+    }
+    if isinstance(design_id, str) and design_id.strip():
+        body["designId"] = design_id.strip()
     # The home's zone, not the add-on's: the sun's times are minutes of the home's local day.
     if time_zone := getattr(hass.config, "time_zone", None):
         body["timeZone"] = time_zone
@@ -540,18 +549,18 @@ class WallCardView(HomeAssistantView):
                 url_path, card_id, card, _pictures(self.hass, request["hass_user"], card)
             )
         )
-        return _json(
-            {
-                "id": card_id,
-                "type": card.get("type"),
-                "entities": wall_api.entity_ids(card),
-                "design": sha,
-                "rc": wall_api.blob_url(sha),
-                "exact": exact,
-                "values": values,
-                "tap": wall_api.resolve_tap(card),
-            }
-        )
+        payload = {
+            **wall_api.wrapper_meta(card),
+            "id": card_id,
+            "type": card.get("type"),
+            "entities": wall_api.entity_ids(card),
+            "design": sha,
+            "rc": wall_api.blob_url(sha),
+            "exact": exact,
+            "values": values,
+            "tap": wall_api.resolve_tap(card),
+        }
+        return _json(payload)
 
 
 class WallValuesView(HomeAssistantView):

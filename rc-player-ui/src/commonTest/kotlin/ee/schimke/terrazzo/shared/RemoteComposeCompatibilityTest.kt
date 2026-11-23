@@ -39,6 +39,7 @@ class RemoteComposeCompatibilityTest {
       )
     val bindings = mapOf("light.s0.state" to RcNamedValue.Text("Off"))
     assertTrue(canBindWithCmp(template("light.s0.state"), bindings))
+    assertTrue(canBindWithCmp(template("active_tab"), bindings))
     assertFalse(canBindWithCmp(template("card.md.content"), bindings))
     assertFalse(
       canBindWithCmp(

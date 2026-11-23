@@ -190,6 +190,57 @@ class TapTest(unittest.TestCase):
         self.assertEqual({'kind': 'Navigate', 'path': '/home/lights'}, wall.resolve_tap(card))
         self.assertIsNone(wall.service_call(wall.resolve_tap(card)))
 
+    def test_remote_compose_wrapper_preserves_design_bindings_and_actions(self):
+        config = {'views': [{'cards': [{
+            'type': 'custom:remote-compose-card',
+            'card': {'type': 'tile', 'entity': 'sensor.dw_state'},
+            'design_id': 'pack:bosch-dishwasher',
+            'template_url': '/designs/v1/blobs/abc.rc',
+            'device_id': 'dw1',
+            'card_style': 'braun',
+            'grid_options': {'columns': 12, 'rows': 3},
+            'bindings': {
+                'sensor_operation_state': 'sensor.dw_state',
+                'sensor_remaining': {'entity': 'sensor.dw_remaining', 'format': 'hhmm'},
+            },
+            'actions': {
+                'start': 'button.dw_start',
+                'eco_50': {'service': 'home_connect.start_program', 'data': {'program': 'Eco50'}},
+            },
+        }]}]}
+        layout_card = wall.layout(config, None)['views'][0]['sections'][0]['cards'][0]
+        self.assertEqual(layout_card['type'], 'tile')
+        self.assertEqual(layout_card['design_id'], 'pack:bosch-dishwasher')
+        self.assertEqual(layout_card['template_url'], '/designs/v1/blobs/abc.rc')
+        self.assertEqual(layout_card['device_id'], 'dw1')
+        self.assertEqual(layout_card['card_style'], 'braun')
+        self.assertEqual(layout_card['w'], 12)
+        self.assertEqual(layout_card['h'], 3)
+        self.assertEqual(layout_card['entities'], ['sensor.dw_state', 'sensor.dw_remaining'])
+        self.assertIn('sensor_remaining', layout_card['bindings'])
+        self.assertIn('eco_50', layout_card['actions'])
+
+        found = wall.find_card(config, 'v0.c0')
+        self.assertEqual(found['design_id'], 'pack:bosch-dishwasher')
+        self.assertEqual(found['template_url'], '/designs/v1/blobs/abc.rc')
+        stripped = wall.strip_wrapper_meta(found)
+        self.assertNotIn('design_id', stripped)
+        self.assertNotIn('bindings', stripped)
+        self.assertEqual(stripped['entity'], 'sensor.dw_state')
+
+        # Semantic actions resolve via the card's configured actions: map.
+        self.assertEqual(
+            ('button', 'press', {'entity_id': 'button.dw_start'}),
+            wall.service_call(wall.resolve_tap(found, 'start')),
+        )
+        self.assertEqual(
+            ('home_connect', 'start_program', {'program': 'Eco50', 'entity_id': 'sensor.dw_state'}),
+            wall.service_call(wall.resolve_tap(found, json.dumps({'name': 'eco_50'}))),
+        )
+        # Untrusted HaAction.CallService is still ignored.
+        evil = ha_action(kind='CallService', domain='lock', service='unlock', entityId='sensor.s0')
+        self.assertEqual({'kind': 'MoreInfo', 'entity_id': 'sensor.dw_state'}, wall.resolve_tap(found, evil))
+
 
 class ValueStoreTest(unittest.TestCase):
     def test_the_first_poll_gets_everything_then_only_changes(self):

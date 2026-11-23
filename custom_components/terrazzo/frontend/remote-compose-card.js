@@ -213,8 +213,15 @@ const CONFIG_FORM = {
     if (config.template_url != null || config.design != null) {
       throw new Error('A card with its own template is edited in YAML.');
     }
+    if (config.bindings != null || config.actions != null) {
+      throw new Error('A card with custom bindings or actions is edited in YAML.');
+    }
   },
 };
+
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
 
 // Register a distinct tag: HA already owns <ha-card> for its card chrome.
 export class RemoteComposeCard extends HaCardElement {
@@ -252,6 +259,31 @@ export class RemoteComposeCard extends HaCardElement {
       }
       if (config.design != null) throw new Error('Use template_url or design, not both.');
     }
+    if (config.device_id != null) {
+      if (typeof config.device_id !== 'string' || !config.device_id.trim()) {
+        throw new Error('device_id must be a non-empty string.');
+      }
+    }
+    if (config.bindings != null) {
+      if (!isPlainObject(config.bindings)) {
+        throw new Error('bindings must be an object mapping variable names to entities.');
+      }
+      for (const [key, value] of Object.entries(config.bindings)) {
+        if (!key.trim() || !(typeof value === 'string' ? value.trim() : isPlainObject(value))) {
+          throw new Error(`bindings.${key} must be an entity id or binding object.`);
+        }
+      }
+    }
+    if (config.actions != null) {
+      if (!isPlainObject(config.actions)) {
+        throw new Error('actions must be an object mapping action names to actions.');
+      }
+      for (const [key, value] of Object.entries(config.actions)) {
+        if (!key.trim() || !(typeof value === 'string' ? value.trim() : isPlainObject(value))) {
+          throw new Error(`actions.${key} must be an entity id or action object.`);
+        }
+      }
+    }
     const previous = JSON.stringify(this.config?.card);
     if (previous !== JSON.stringify(config.card)) this.inputDrafts?.clear();
     this.config = structuredClone(config);
@@ -259,6 +291,7 @@ export class RemoteComposeCard extends HaCardElement {
     else this.setAttribute('require-host-bindings', '');
     // Set local mode before attributes can trigger an asynchronous start/OAuth.
     this.hostValues = hostValuesFromConfig(this._hass?.config);
+    this.entityRegistry = isPlainObject(this._hass?.entities) ? this._hass.entities : null;
     this.setStates(this._hass?.states ?? {});
     const attrs = {
       card: JSON.stringify(config.card),
@@ -267,6 +300,9 @@ export class RemoteComposeCard extends HaCardElement {
       'design-id': config.design_id,
       'template-url': config.template_url,
       'card-style': config.card_style ?? 'classic',
+      'device-id': config.device_id,
+      bindings: config.bindings != null ? JSON.stringify(config.bindings) : undefined,
+      actions: config.actions != null ? JSON.stringify(config.actions) : undefined,
       // A face is square: by default as tall as the document is wide.
       height: config.height ?? (watchFace ? (config.card.size ?? WATCH_FACE_DEFAULT_SIZE) : undefined),
       theme: this._hass?.themes?.darkMode ? 'dark' : 'light',
@@ -283,6 +319,7 @@ export class RemoteComposeCard extends HaCardElement {
     this._hass = hass;
     // Home Assistant's own unit system, for a design that shows its unit (a °F thermostat).
     this.hostValues = hostValuesFromConfig(hass.config);
+    this.entityRegistry = isPlainObject(hass.entities) ? hass.entities : null;
     this.setStates(hass.states);
     if (!wasAuthenticated && this.player) this.configureInputPlayer(this.player, this.config.card);
     this.setAttribute('theme', hass.themes?.darkMode ? 'dark' : 'light');
