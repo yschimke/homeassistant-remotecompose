@@ -30,6 +30,7 @@ fun canBindWithCmp(bytes: ByteArray, bindings: Map<String, RcNamedValue>): Boole
   decodePlayableDocument(bytes).getOrNull()?.operations?.filterIsInstance<RcNamedVariable>()?.all {
     val name = it.name.removePrefix("USER:")
     it.type == RcNamedVariable.COLOR_TYPE ||
+      '.' !in name ||
       name.startsWith("meta.") ||
       name.startsWith("host.") ||
       acceptsBinding(it.type, bindings[name])

@@ -647,9 +647,24 @@ export function cardTitle(card) {
   return content(card.heading) ?? content(card.title);
 }
 
+/** Extract the entity id referenced by a semantic binding entry (string shorthand or object). */
+export function bindingEntityId(spec) {
+  if (typeof spec === 'string') return spec.trim() || null;
+  if (isObject(spec)) return content(spec.entity);
+  return null;
+}
+
 /** The distinct real entity ids a card binds: what the embed subscribes to. */
-export function cardEntityIds(card) {
-  return [...new Set((slotEntries(card) ?? []).map((e) => e.entityId))];
+export function cardEntityIds(card, bindingsConfig = null) {
+  const ids = new Set((slotEntries(card) ?? []).map((e) => e.entityId));
+  const map = isObject(bindingsConfig) ? bindingsConfig : isObject(card?.bindings) ? card.bindings : null;
+  if (map) {
+    for (const spec of Object.values(map)) {
+      const id = bindingEntityId(spec);
+      if (id !== null) ids.add(id);
+    }
+  }
+  return [...ids];
 }
 
 /**
@@ -871,15 +886,338 @@ export function recipeBindings(recipe, card, states, host = {}) {
   return { strings, floats };
 }
 
-/** Slot bindings with [recipe]'s card-level ones on top (`slotBindings + designBindings`). */
-export function cardBindings(card, states, recipe, host = {}) {
-  const bindings = slotBindings(card, states);
-  if (!recipe) return bindings;
-  const extra = recipeBindings(recipe, card, states, host);
+// ---------------------------------------------------------------------------------------------
+// Multi-entity semantic device bindings (`bindings:` + HA Device Registry auto-discovery).
+// ---------------------------------------------------------------------------------------------
+
+// Longest-first so multi-word domains (`binary_sensor`, `input_boolean`, `alarm_control_panel`)
+// match before shorter prefixes (`sensor`, `input`).
+const HA_DOMAINS = [
+  'alarm_control_panel', 'image_processing', 'binary_sensor', 'device_tracker',
+  'input_boolean', 'input_datetime', 'input_button', 'input_number', 'input_select',
+  'media_player', 'water_heater', 'air_quality', 'input_text', 'lawn_mower',
+  'humidifier', 'datetime', 'calendar', 'climate', 'weather', 'button', 'camera',
+  'number', 'notify', 'person', 'remote', 'script', 'select', 'sensor', 'switch',
+  'update', 'vacuum', 'cover', 'event', 'image', 'light', 'scene', 'siren', 'valve',
+  'lock', 'text', 'time', 'todo', 'fan',
+];
+
+const ACTIONABLE_DOMAINS = new Set([
+  'button', 'input_button', 'switch', 'input_boolean', 'light', 'fan', 'cover', 'lock',
+  'select', 'input_select', 'number', 'input_number', 'climate', 'media_player',
+  'vacuum', 'valve', 'script', 'scene', 'humidifier', 'water_heater', 'remote', 'siren',
+]);
+
+const SLOT_BINDING_KEY = /^[a-z0-9_]+\.s\d+\./;
+
+/** The HA `device_id` for [card]: explicit `deviceId`, or the primary/first bound entity's device. */
+export function resolveDeviceId(card, { deviceId = null, bindings = null, entities = null } = {}) {
+  const explicit = content(deviceId) ?? content(card?.device_id);
+  if (explicit !== null) return explicit;
+  if (!isObject(entities)) return null;
+  for (const id of cardEntityIds(card, bindings)) {
+    const found = content(entities[id]?.device_id);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
+/**
+ * Auto-discover a sibling entity on [deviceId] via HA's entity registry (`hass.entities`) matching
+ * a semantic variable or action name (`<domain>_<suffix>` or `translation_key`).
+ */
+export function discoverDeviceEntity(varName, deviceId, entityRegistry, { preferActionable = false } = {}) {
+  if (!varName || !deviceId || !isObject(entityRegistry)) return null;
+  const key = String(varName).replace(/^USER:/, '').trim().toLowerCase();
+  if (!key) return null;
+  const siblings = [];
+  for (const [id, entry] of Object.entries(entityRegistry)) {
+    if (!isObject(entry) || entry.device_id !== deviceId) continue;
+    const entityId = content(entry.entity_id) ?? id;
+    const dot = entityId.indexOf('.');
+    if (dot < 0) continue;
+    siblings.push({
+      entityId,
+      domain: entityId.substring(0, dot).toLowerCase(),
+      objectId: entityId.substring(dot + 1).toLowerCase(),
+      translationKey: typeof entry.translation_key === 'string' ? entry.translation_key.toLowerCase() : null,
+    });
+  }
+  if (siblings.length === 0) return null;
+
+  const pick = (candidates, suffix) => {
+    const ordered = preferActionable
+      ? [
+          ...candidates.filter((c) => ACTIONABLE_DOMAINS.has(c.domain)),
+          ...candidates.filter((c) => !ACTIONABLE_DOMAINS.has(c.domain)),
+        ]
+      : candidates;
+    const tail = `_${suffix}`;
+    return (
+      ordered.find((c) => c.translationKey === suffix)?.entityId ??
+      ordered.find((c) => c.objectId === suffix)?.entityId ??
+      ordered.find((c) => c.objectId.endsWith(tail))?.entityId ??
+      ordered.find((c) => c.translationKey !== null && c.translationKey.endsWith(tail))?.entityId ??
+      null
+    );
+  };
+
+  for (const domain of HA_DOMAINS) {
+    const prefix = `${domain}_`;
+    if (key.startsWith(prefix) && key.length > prefix.length) {
+      const suffix = key.substring(prefix.length);
+      const matched = pick(siblings.filter((c) => c.domain === domain), suffix);
+      if (matched) return matched;
+    }
+  }
+  return pick(siblings, key);
+}
+
+function matchesDefaultIf(raw, defaultIf) {
+  if (defaultIf === undefined || defaultIf === null) return false;
+  const list = Array.isArray(defaultIf) ? defaultIf : [defaultIf];
+  const rawLower = typeof raw === 'string' ? raw.toLowerCase() : null;
+  return list.some((item) => {
+    if (item === raw) return true;
+    if (rawLower !== null && typeof item === 'string') return rawLower === item.toLowerCase();
+    if (rawLower !== null && (typeof item === 'number' || typeof item === 'boolean')) {
+      return rawLower === String(item).toLowerCase();
+    }
+    return false;
+  });
+}
+
+function formatDurationValue(raw, unit, mode) {
+  if (typeof raw === 'string' && /^\d+:\d{2}(?::\d{2})?$/.test(raw.trim())) {
+    const parts = raw.trim().split(':').map(Number);
+    if (mode === 'hhmm' && parts.length === 3) return `${parts[0]}:${String(parts[1]).padStart(2, '0')}`;
+    return raw.trim();
+  }
+  let seconds = null;
+  if (typeof raw === 'string' && raw.includes('T')) {
+    const ts = Date.parse(raw);
+    if (Number.isFinite(ts)) seconds = Math.max(0, Math.round((ts - Date.now()) / 1000));
+  }
+  if (seconds === null) {
+    const num = typeof raw === 'number' ? raw : toDoubleOrNull(String(raw));
+    if (num === null || !Number.isFinite(num)) return String(raw);
+    const u = typeof unit === 'string' ? unit.trim().toLowerCase() : '';
+    const mult = ['h', 'hr', 'hrs', 'hour', 'hours'].includes(u)
+      ? 3600
+      : ['m', 'min', 'mins', 'minute', 'minutes'].includes(u)
+        ? 60
+        : 1;
+    seconds = Math.max(0, Math.round(num * mult));
+  }
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (mode === 'hhmm') return `${h}:${String(m).padStart(2, '0')}`;
+  if (mode === 'mmss') return `${Math.floor(seconds / 60)}:${String(s).padStart(2, '0')}`;
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+
+function truthyValue(entityId, raw, hasAttribute) {
+  if (!hasAttribute && entityId) return isOn(entityId, String(raw));
+  if (typeof raw === 'boolean') return raw;
+  if (typeof raw === 'number') return raw !== 0 && !Number.isNaN(raw);
+  const text = String(raw).trim().toLowerCase();
+  return text !== '' && !['0', 'false', 'off', 'closed', 'unavailable', 'unknown', 'none'].includes(text);
+}
+
+/**
+ * Evaluate one semantic binding ([spec]: entity id string or `{ entity, attribute, format, prefix,
+ * suffix, scale, on_text, off_text, uppercase, default_if, fallback }`) for a RemoteCompose
+ * variable of [variableType] (0 = string, 1 = float, 4 = int/bool).
+ */
+export function formatSemanticBinding(spec, states, variableType = 0) {
+  const cfg = typeof spec === 'string' ? { entity: spec } : isObject(spec) ? spec : {};
+  const entityId = content(cfg.entity);
+  const stateObj = entityId ? states?.[entityId] ?? null : null;
+  const hasAttr = cfg.attribute !== undefined && cfg.attribute !== null && cfg.attribute !== '';
+  const raw = hasAttr ? stateObj?.attributes?.[cfg.attribute] : stateObj?.state;
+  const unavailable =
+    raw === null ||
+    raw === undefined ||
+    raw === '' ||
+    (!hasAttr && (raw === 'unavailable' || raw === 'unknown'));
+  const hitDefault = matchesDefaultIf(raw, cfg.default_if);
+
+  if (unavailable || hitDefault) {
+    if (variableType === 1) {
+      if (typeof cfg.fallback === 'number' && Number.isFinite(cfg.fallback)) return Math.fround(cfg.fallback);
+      if (typeof cfg.fallback === 'string') {
+        const parsed = toDoubleOrNull(cfg.fallback);
+        if (parsed !== null && Number.isFinite(parsed)) return Math.fround(parsed);
+      }
+      return 0;
+    }
+    if (variableType === 4) {
+      if (typeof cfg.fallback === 'boolean') return cfg.fallback ? 1 : 0;
+      if (typeof cfg.fallback === 'number' && Number.isFinite(cfg.fallback)) return Math.round(cfg.fallback);
+      return 0;
+    }
+    let text;
+    if (cfg.fallback !== undefined && cfg.fallback !== null) text = String(cfg.fallback);
+    else if (hitDefault || hasAttr) text = '';
+    else text = entityId ? formatState(stateObj, entityId) : '';
+    return cfg.uppercase === true ? text.toUpperCase() : text;
+  }
+
+  const rawNum = typeof raw === 'number' ? raw : toDoubleOrNull(String(raw));
+  const scale = typeof cfg.scale === 'number' && Number.isFinite(cfg.scale) ? cfg.scale : null;
+  const num = rawNum !== null && Number.isFinite(rawNum) ? (scale !== null ? rawNum * scale : rawNum) : null;
+  const active = truthyValue(entityId, raw, hasAttr);
+
+  if (variableType === 1) {
+    return num !== null ? Math.fround(num) : active ? 1 : 0;
+  }
+  if (variableType === 4) {
+    if (!hasAttr && entityId && isActive(domainOf(entityId), String(raw)) !== null) return active ? 1 : 0;
+    if (typeof raw === 'boolean' || (typeof raw === 'string' && ['on', 'off', 'true', 'false'].includes(raw.toLowerCase()))) {
+      return active ? 1 : 0;
+    }
+    if (num !== null) return Math.round(num);
+    return active ? 1 : 0;
+  }
+
+  let text;
+  if (active && cfg.on_text !== undefined && cfg.on_text !== null) {
+    text = String(cfg.on_text);
+  } else if (!active && cfg.off_text !== undefined && cfg.off_text !== null) {
+    text = String(cfg.off_text);
+  } else {
+    const fmt = typeof cfg.format === 'string' ? cfg.format.trim().toLowerCase() : '';
+    const printfMatch = /^%\.(\d+)f$/.exec(fmt) ?? /^(\d+)dp$/.exec(fmt);
+    if (fmt === 'raw') {
+      text = num !== null && scale !== null ? formatRangeNumber(num) : String(raw);
+    } else if (fmt === 'int' || fmt === 'integer' || fmt === 'round') {
+      text = num !== null ? String(Math.round(num)) : String(raw);
+    } else if (printfMatch) {
+      const decimals = Math.min(Number(printfMatch[1]), 6);
+      text = num !== null ? num.toFixed(decimals) : String(raw);
+    } else if (fmt === 'float' || fmt === 'number') {
+      text = num !== null ? formatRangeNumber(num) : String(raw);
+    } else if (fmt === 'percent' || fmt === 'pct') {
+      text = num !== null ? `${Math.round(num)}${cfg.suffix != null ? '' : '%'}` : String(raw);
+    } else if (fmt === 'duration' || fmt === 'hhmm' || fmt === 'mmss' || fmt === 'timer') {
+      text = formatDurationValue(raw, stateObj?.attributes?.unit_of_measurement, fmt === 'timer' ? 'hhmm' : fmt);
+    } else if (fmt === 'title' || fmt === 'capitalize') {
+      const cleaned = String(raw).replaceAll('_', ' ');
+      text = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    } else if (fmt === 'lower' || fmt === 'lowercase') {
+      text = String(raw).toLowerCase();
+    } else if (fmt === 'upper' || fmt === 'uppercase') {
+      text = String(raw).toUpperCase();
+    } else if (scale !== null && num !== null) {
+      const unit = !hasAttr && cfg.suffix == null ? content(stateObj?.attributes?.unit_of_measurement) : null;
+      text = unit ? `${formatRangeNumber(num)} ${unit}` : formatRangeNumber(num);
+    } else if (hasAttr) {
+      text = typeof raw === 'number' ? formatRangeNumber(raw) : String(raw);
+    } else if (cfg.suffix != null) {
+      text = num !== null ? formatRangeNumber(num) : String(raw);
+    } else {
+      text = entityId ? formatState(stateObj, entityId) : String(raw);
+    }
+  }
+  if (typeof cfg.prefix === 'string') text = cfg.prefix + text;
+  if (typeof cfg.suffix === 'string') text = text + cfg.suffix;
+  if (cfg.uppercase === true) text = text.toUpperCase();
+  return text;
+}
+
+/**
+ * Multi-entity semantic bindings for [card] and [states]: explicit `bindings:` entries plus
+ * HA Device Registry auto-discovery for any unbound `namedVariables` on the same `device_id`.
+ */
+export function semanticBindings(card, states, options = {}) {
+  const strings = {};
+  const booleans = {};
+  const ints = {};
+  const floats = {};
+  const explicit = isObject(options?.bindings) ? options.bindings : isObject(card?.bindings) ? card.bindings : null;
+  const namedVariables = options?.namedVariables ?? null;
+  const existing = options?.existing ?? null;
+  const varTypeOf = (key) => {
+    const v = namedVariables?.get?.(`USER:${key}`);
+    return v && typeof v.type === 'number' ? v.type : 0;
+  };
+  const assign = (key, spec, type) => {
+    const value = formatSemanticBinding(spec, states, type);
+    if (type === 1) floats[key] = value;
+    else if (type === 4) ints[key] = value;
+    else strings[key] = value;
+  };
+  const boundKeys = new Set();
+  if (explicit) {
+    for (const [rawKey, spec] of Object.entries(explicit)) {
+      const key = rawKey.replace(/^USER:/, '');
+      if (!key) continue;
+      const type = varTypeOf(key);
+      if (type === 2) continue;
+      boundKeys.add(key);
+      assign(key, spec, type);
+    }
+  }
+  const entities = options?.entities ?? null;
+  const deviceId = resolveDeviceId(card, { deviceId: options?.deviceId, bindings: explicit, entities });
+  if (deviceId && namedVariables && entities) {
+    for (const [name, variable] of namedVariables) {
+      if (!variable || variable.type === 2) continue;
+      const key = name.replace(/^USER:/, '');
+      if (
+        !key ||
+        boundKeys.has(key) ||
+        key === AMBIENT_BINDING ||
+        key === RECIPE_BINDING ||
+        key === CARD_TITLE ||
+        key.startsWith('meta.') ||
+        key.startsWith('host.') ||
+        key.startsWith('HA:') ||
+        SLOT_BINDING_KEY.test(key)
+      ) {
+        continue;
+      }
+      if (
+        existing &&
+        (Object.hasOwn(existing.strings, key) ||
+          Object.hasOwn(existing.floats, key) ||
+          Object.hasOwn(existing.ints, key) ||
+          Object.hasOwn(existing.booleans, key))
+      ) {
+        continue;
+      }
+      const discovered = discoverDeviceEntity(key, deviceId, entities);
+      if (discovered) assign(key, discovered, variable.type);
+    }
+  }
+  return { strings, booleans, ints, floats };
+}
+
+/** Slot bindings with [recipe]'s card-level ones and optional semantic device bindings on top. */
+export function cardBindings(card, states, recipe, host = {}, options = null) {
+  let bindings = slotBindings(card, states);
+  if (recipe) {
+    const extra = recipeBindings(recipe, card, states, host);
+    bindings = {
+      ...bindings,
+      strings: { ...bindings.strings, ...extra.strings },
+      floats: { ...bindings.floats, ...extra.floats },
+    };
+  }
+  const hasSemantic =
+    isObject(options?.bindings) ||
+    isObject(card?.bindings) ||
+    (options?.entities && options?.namedVariables);
+  if (!hasSemantic) return bindings;
+  const semantic = semanticBindings(card, states, { ...options, existing: bindings });
   return {
-    ...bindings,
-    strings: { ...bindings.strings, ...extra.strings },
-    floats: { ...bindings.floats, ...extra.floats },
+    strings: { ...bindings.strings, ...semantic.strings },
+    booleans: { ...bindings.booleans, ...semantic.booleans },
+    ints: { ...bindings.ints, ...semantic.ints },
+    floats: { ...bindings.floats, ...semantic.floats },
   };
 }
 
@@ -1025,7 +1363,8 @@ export function serviceCallFor(action) {
   }
   if (action.kind === 'CallService') {
     const message = { domain: action.domain, service: action.service, service_data: action.serviceData ?? {} };
-    if (action.entityId) message.target = { entity_id: action.entityId };
+    if (isObject(action.target)) message.target = action.target;
+    else if (action.entityId) message.target = { entity_id: action.entityId };
     return message;
   }
   return null;
@@ -1144,6 +1483,144 @@ export function resolveEntityAction(card, value, states = {}, host = {}) {
     kind: 'CallService', domain: call.domain, service: call.service, entityId: call.entityId,
     serviceData: call.data, entityAction: true,
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Semantic named actions (`actions:` map + HA Device Registry auto-resolution for HostNamedAction).
+// ---------------------------------------------------------------------------------------------
+
+function actionForEntity(entityId, value = '') {
+  const domain = domainOf(entityId);
+  if (domain === 'button' || domain === 'input_button') {
+    return { kind: 'CallService', domain, service: 'press', entityId, serviceData: {}, entityAction: true };
+  }
+  if (domain === 'script' || domain === 'scene') {
+    return { kind: 'CallService', domain, service: 'turn_on', entityId, serviceData: {}, entityAction: true };
+  }
+  if (domain === 'select' || domain === 'input_select') {
+    const option = typeof value === 'string' ? value.trim() : '';
+    if (option) {
+      return { kind: 'CallService', domain, service: 'select_option', entityId, serviceData: { option }, entityAction: true };
+    }
+    return { kind: 'MoreInfo', entityId };
+  }
+  if (domain === 'number' || domain === 'input_number') {
+    const num = typeof value === 'number' ? value : typeof value === 'string' ? toDoubleOrNull(value) : null;
+    if (num !== null && Number.isFinite(num)) {
+      return { kind: 'CallService', domain, service: 'set_value', entityId, serviceData: { value: num }, entityAction: true };
+    }
+    return { kind: 'MoreInfo', entityId };
+  }
+  if (TOGGLE_DEFAULT.has(domain)) return { kind: 'Toggle', entityId, entityAction: true };
+  return { kind: 'MoreInfo', entityId };
+}
+
+function parseConfiguredAction(cfg, defaultEntityId, value = '') {
+  if (typeof cfg === 'string') {
+    const id = cfg.trim();
+    return id.includes('.') ? actionForEntity(id, value) : { kind: 'None' };
+  }
+  if (!isObject(cfg)) return { kind: 'None' };
+  const entityId = content(cfg.entity) ?? content(cfg.entity_id) ?? defaultEntityId;
+  const hasService = content(cfg.perform_action ?? cfg.service) !== null;
+  if (content(cfg.action) !== null || hasService) {
+    const normalized = content(cfg.action) !== null ? cfg : { ...cfg, action: 'perform-action' };
+    const parsed = parseLovelaceAction(normalized, entityId);
+    if (!parsed || parsed.kind === 'None') return { kind: 'None' };
+    const result = { ...parsed, entityAction: true };
+    if (parsed.kind === 'CallService' && isObject(cfg.target)) result.target = cfg.target;
+    return result;
+  }
+  if (entityId) {
+    const domain = domainOf(entityId);
+    if ((domain === 'select' || domain === 'input_select') && cfg.option !== undefined && cfg.option !== null) {
+      return {
+        kind: 'CallService', domain, service: 'select_option', entityId,
+        serviceData: { option: String(cfg.option) }, entityAction: true,
+      };
+    }
+    if ((domain === 'number' || domain === 'input_number') && cfg.value !== undefined && cfg.value !== null) {
+      const num = typeof cfg.value === 'number' ? cfg.value : toDoubleOrNull(String(cfg.value));
+      if (num !== null && Number.isFinite(num)) {
+        return {
+          kind: 'CallService', domain, service: 'set_value', entityId,
+          serviceData: { value: num }, entityAction: true,
+        };
+      }
+    }
+    return actionForEntity(entityId, value);
+  }
+  return { kind: 'None' };
+}
+
+/**
+ * Resolve a semantic button `HostNamedAction(name, value)` via explicit `actions:` config first,
+ * then HA Device Registry sibling auto-discovery on the card's `device_id`, then `CardEntityActions`
+ * on the card's primary entity. Templates only send semantic names; the host decides the service.
+ */
+export function resolveNamedAction(card, name, value = '', options = {}) {
+  const none = { kind: 'None' };
+  if (typeof name !== 'string' || !name.trim()) return none;
+  const entries = slotEntries(card) ?? [];
+  const primary = entries.length > 0 ? entries[0].entityId : null;
+  const actionsMap = isObject(options?.actions) ? options.actions : isObject(card?.actions) ? card.actions : null;
+  const valueText = typeof value === 'string' ? value.trim() : '';
+
+  let actionKey = name.trim();
+  let actionValue = value;
+  if ((actionKey === 'ha.device_action' || actionKey === 'ha.action') && valueText) {
+    if (valueText.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(valueText);
+        if (isObject(parsed) && typeof parsed.action === 'string' && parsed.action.trim()) {
+          actionKey = parsed.action.trim();
+          actionValue = parsed.value ?? '';
+        }
+      } catch {
+        // Treat raw string as action key.
+        actionKey = valueText;
+        actionValue = '';
+      }
+    } else {
+      actionKey = valueText;
+      actionValue = '';
+    }
+  }
+
+  if (actionsMap) {
+    const valStr = typeof actionValue === 'string' ? actionValue.trim() : '';
+    const compound = valStr ? `${actionKey}:${valStr}` : null;
+    if (compound && Object.hasOwn(actionsMap, compound)) {
+      return parseConfiguredAction(actionsMap[compound], primary, actionValue);
+    }
+    if (Object.hasOwn(actionsMap, actionKey)) {
+      return parseConfiguredAction(actionsMap[actionKey], primary, actionValue);
+    }
+    if (actionKey !== name.trim() && Object.hasOwn(actionsMap, name.trim())) {
+      return parseConfiguredAction(actionsMap[name.trim()], primary, value);
+    }
+  }
+
+  const deviceId = resolveDeviceId(card, {
+    deviceId: options?.deviceId,
+    bindings: options?.bindings,
+    entities: options?.entities,
+  });
+  if (deviceId && options?.entities) {
+    const matched = discoverDeviceEntity(actionKey, deviceId, options.entities, { preferActionable: true });
+    if (matched) return actionForEntity(matched, actionValue);
+  }
+
+  if (primary) {
+    const call = entityActionCall(primary, actionKey, options?.states ?? {}, options?.host ?? {});
+    if (call) {
+      return {
+        kind: 'CallService', domain: call.domain, service: call.service, entityId: call.entityId,
+        serviceData: call.data, entityAction: true,
+      };
+    }
+  }
+  return none;
 }
 
 /** Versioned form schema. Editing remains a player custom component, not a host-only control. */
@@ -1516,13 +1993,18 @@ async function sha256Hex(bytes) {
 
 const SHA256 = /^[0-9a-f]{64}$/;
 
-/** Fetch only template bytes; never send HA credentials or the embedding page's URL. */
+/** Fetch only template bytes; send cookies only for same-origin URLs, never cross-origin or referrer. */
 export async function fetchTemplateUrl(value, baseUrl, fetcher = fetch) {
   const url = new URL(value, baseUrl);
   if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) {
     throw new Error('template URL must be HTTP(S) without credentials');
   }
-  const response = await fetcher(url, { credentials: 'omit', referrerPolicy: 'no-referrer' });
+  const pageOrigin = globalThis.location?.origin ?? (baseUrl ? new URL(baseUrl).origin : null);
+  const sameOrigin = pageOrigin !== null && url.origin === pageOrigin;
+  const response = await fetcher(url, {
+    credentials: sameOrigin ? 'same-origin' : 'omit',
+    referrerPolicy: 'no-referrer',
+  });
   if (!response.ok) throw new Error(`template URL request failed (${response.status})`);
   return response.arrayBuffer();
 }
@@ -1672,7 +2154,7 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  */
 export class HaCardElement extends BaseElement {
   static get observedAttributes() {
-    return ['hass', 'card', 'design', 'design-key', 'design-id', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings', 'read-only', 'ambient'];
+    return ['hass', 'card', 'design', 'design-key', 'design-id', 'template-url', 'card-style', 'library', 'theme', 'height', 'require-host-bindings', 'read-only', 'ambient', 'bindings', 'device-id', 'actions'];
   }
 
   constructor() {
@@ -1685,6 +2167,7 @@ export class HaCardElement extends BaseElement {
     this.unsubscribe = null;
     this.localStates = null;
     this.localValues = null;
+    this.entityRegistry = null;
     // What a recipe's `host` expression reads (`hostValuesFromConfig`): Home Assistant's own unit.
     this.hostValues = {};
     const root = this.attachShadow({ mode: 'open' });
@@ -1710,7 +2193,9 @@ export class HaCardElement extends BaseElement {
     // pushed, so a tick that rolls no label over repaints nothing.
     this.clockTimer = setInterval(() => {
       const card = this.card;
-      if (card && cardEntityIds(card).some((id) => isRelativeTimeState(this.states[id], id))) this.render();
+      if (card && cardEntityIds(card, this.semanticBindingsConfig).some((id) => isRelativeTimeState(this.states[id], id))) {
+        this.render();
+      }
     }, RELATIVE_TIME_TICK_MS);
     if (globalThis.ResizeObserver) {
       this.resizer = new ResizeObserver(() => this.fit());
@@ -1727,8 +2212,19 @@ export class HaCardElement extends BaseElement {
   attributeChangedCallback(name, previous, next) {
     if (previous === next || !this.isConnected) return;
     // The host's state, pushed into the running card: a reload would skip the design's transition.
-    if (name === 'ambient') this.render();
-    else this.start();
+    if (name === 'ambient' || name === 'actions') {
+      if (name === 'ambient') this.render();
+    } else if ((name === 'bindings' || name === 'device-id') && this.player && this.localStates) {
+      this.render();
+    } else {
+      this.start();
+    }
+  }
+
+  /** Provide Home Assistant's entity registry (`hass.entities`) for sibling device auto-discovery. */
+  setEntityRegistry(entities) {
+    this.entityRegistry = isObject(entities) ? entities : null;
+    if (this.player) this.render();
   }
 
   /** Render from these states instead of a Home Assistant: entity id → `{ state, attributes }`. */
@@ -1761,6 +2257,32 @@ export class HaCardElement extends BaseElement {
     } catch {
       return null;
     }
+  }
+
+  get semanticBindingsConfig() {
+    try {
+      const raw = this.getAttribute('bindings');
+      if (raw === null) return null;
+      const parsed = JSON.parse(raw);
+      return isObject(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  get actionsConfig() {
+    try {
+      const raw = this.getAttribute('actions');
+      if (raw === null) return null;
+      const parsed = JSON.parse(raw);
+      return isObject(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  get deviceId() {
+    return content(this.getAttribute('device-id'));
   }
 
   stop() {
@@ -1811,7 +2333,10 @@ export class HaCardElement extends BaseElement {
         await this.connectHass(card, current);
         return;
       }
-      const library = new URL(this.getAttribute('library') ?? new URL('../../designs/v1/', import.meta.url));
+      const libraryAttr = this.getAttribute('library');
+      const library = libraryAttr !== null
+        ? new URL(libraryAttr, globalThis.document?.baseURI ?? import.meta.url)
+        : new URL('../../designs/v1/', import.meta.url);
       if (!library.pathname.endsWith('/')) library.pathname += '/';
       const designKey = this.getAttribute('design-key');
       let design = this.getAttribute('design');
@@ -1875,16 +2400,23 @@ export class HaCardElement extends BaseElement {
     this.inputRuntime = RC;
     this.inputSignature = card.type === MESSAGE_CARD_TYPE ? JSON.stringify(messageInputs(card, this.states)) : null;
     this.pushed.clear();
-    patchStringOverrides(player.getRemoteContext());
-    this.recipe = templateRecipe(player.getRemoteContext());
+    const context = player.getRemoteContext();
+    patchStringOverrides(context);
+    this.recipe = templateRecipe(context);
     if (this.hasAttribute('require-host-bindings')) {
-      const bindings = cardBindings(card, this.states, this.recipe, this.hostValues);
-      for (const [name, variable] of player.getRemoteContext().namedVariables) {
+      const bindings = cardBindings(card, this.states, this.recipe, this.hostValues, {
+        bindings: this.semanticBindingsConfig,
+        deviceId: this.deviceId,
+        entities: this.entityRegistry,
+        namedVariables: context.namedVariables,
+      });
+      for (const [name, variable] of context.namedVariables) {
         const key = name.replace(/^USER:/, '');
-        // Colors are template/theme constants. Every data declaration must have a host value;
-        // leaving a converter-specific declaration alone would display the library's fixture.
-        // The recipe declares the card-level values; it is read, never shown.
+        // Colors are template/theme constants; dot-less named variables are the design's own local
+        // state (UserDesignRoutes.kt), or semantic device bindings populated above. Every dotted
+        // data declaration must have a host value so a library fixture is never shown stale.
         const supported = variable.type === 2 ||
+          !key.includes('.') ||
           key === AMBIENT_BINDING ||
           (variable.type === 0 && key === RECIPE_BINDING) ||
           (variable.type === 0 && Object.hasOwn(bindings.strings, key)) ||
@@ -1902,6 +2434,16 @@ export class HaCardElement extends BaseElement {
       onAction: (name, value) => {
         if (name === HA_ACTION_NAME) this.tap(resolveTap(card, value));
         else if (name === ENTITY_ACTION_NAME) this.tap(resolveEntityAction(card, value, this.states, this.hostValues));
+        else if (name && name !== MESSAGE_SUBMIT) {
+          this.tap(resolveNamedAction(card, name, value, {
+            actions: this.actionsConfig,
+            bindings: this.semanticBindingsConfig,
+            deviceId: this.deviceId,
+            entities: this.entityRegistry,
+            states: this.states,
+            host: this.hostValues,
+          }));
+        }
       },
     });
     this.render();
@@ -1952,7 +2494,7 @@ export class HaCardElement extends BaseElement {
    * connected, [HaConnection] reconnects and resubscribes by itself.
    */
   async subscribe(session, card, current, delay) {
-    const entityIds = cardEntityIds(card);
+    const entityIds = cardEntityIds(card, this.semanticBindingsConfig);
     // Home Assistant reads an empty `entity_ids` as no filter, which would stream every entity.
     if (entityIds.length === 0) return this.setStatus('live');
     try {
@@ -2005,7 +2547,12 @@ export class HaCardElement extends BaseElement {
     }
     const context = player.getRemoteContext();
     if (!context) return;
-    const bindings = this.localValues ?? cardBindings(card, this.states, this.recipe, this.hostValues);
+    const bindings = this.localValues ?? cardBindings(card, this.states, this.recipe, this.hostValues, {
+      bindings: this.semanticBindingsConfig,
+      deviceId: this.deviceId,
+      entities: this.entityRegistry,
+      namedVariables: context.namedVariables,
+    });
     const push = (name, value, set) => {
       const key = `USER:${name}`;
       if (Object.is(this.pushed.get(key), value)) return false;

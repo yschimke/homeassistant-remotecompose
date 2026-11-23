@@ -42,8 +42,12 @@ class Conflict(SessionError):
     """The dashboard changed since the session started (or since its draft was applied)."""
 
 
+REMOTE_COMPOSE_CARD = "custom:remote-compose-card"
+
+
 def referenced_entities(config):
-    """Every entity id [config] names in an `entity` key or an `entities` list, at any depth."""
+    """Every entity id [config] names in an `entity` key, `entities` list, or `bindings`/`actions`
+    shorthand maps, at any depth."""
     found = set()
 
     def visit(node):
@@ -56,6 +60,12 @@ def referenced_entities(config):
                 for row in entities:
                     if isinstance(row, str) and "." in row:
                         found.add(row)
+            for map_key in ("bindings", "actions"):
+                mapping = node.get(map_key)
+                if isinstance(mapping, dict):
+                    for target in mapping.values():
+                        if isinstance(target, str) and "." in target:
+                            found.add(target)
             for value in node.values():
                 visit(value)
         elif isinstance(node, list):
@@ -64,6 +74,39 @@ def referenced_entities(config):
 
     visit(config)
     return found
+
+
+def _validate_remote_compose_cards(config):
+    """Validate optional `bindings`, `actions`, and `device_id` fields on
+    `custom:remote-compose-card` entries in [config]."""
+
+    def visit(node):
+        if isinstance(node, dict):
+            if node.get("type") == REMOTE_COMPOSE_CARD:
+                device_id = node.get("device_id")
+                if device_id is not None and (not isinstance(device_id, str) or not device_id.strip()):
+                    raise SessionError("custom:remote-compose-card device_id must be a non-empty string")
+                for field in ("bindings", "actions"):
+                    mapping = node.get(field)
+                    if mapping is None:
+                        continue
+                    if not isinstance(mapping, dict):
+                        raise SessionError(f"custom:remote-compose-card {field} must be an object")
+                    for key, value in mapping.items():
+                        if not isinstance(key, str) or not key.strip():
+                            raise SessionError(f"custom:remote-compose-card {field} keys must be non-empty strings")
+                        valid_val = (isinstance(value, str) and bool(value.strip())) or isinstance(value, dict)
+                        if not valid_val:
+                            raise SessionError(
+                                f"custom:remote-compose-card {field}.{key} must be an entity id or object"
+                            )
+            for value in node.values():
+                visit(value)
+        elif isinstance(node, list):
+            for value in node:
+                visit(value)
+
+    visit(config)
 
 
 def validate_draft(config, entity_exists):
@@ -75,6 +118,7 @@ def validate_draft(config, entity_exists):
         raise SessionError("A draft needs a views list of objects")
     if len(json.dumps(config, default=str)) > MAX_DRAFT_BYTES:
         raise SessionError(f"A draft may be at most {MAX_DRAFT_BYTES // 1024} KB")
+    _validate_remote_compose_cards(config)
     unknown = sorted(entity for entity in referenced_entities(config) if not entity_exists(entity))
     if unknown:
         shown = ", ".join(unknown[:_UNKNOWN_SHOWN])

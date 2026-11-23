@@ -244,6 +244,29 @@ class McpProtocolTest(unittest.TestCase):
         self.assertIn('homeassistant-remotecompose', guide['designs'])
         self.assertTrue(any('custom:remote-compose-card' in rule for rule in guide['remote_compose']))
         self.assertTrue(any('find_designs' in rule for rule in guide['remote_compose']))
+        self.assertTrue(any('bindings' in rule and 'device_id' in rule for rule in guide['remote_compose']))
+
+    def test_find_designs_includes_contract_inputs_and_actions_for_multi_entity_packs(self):
+        index = {
+            'designs': [{
+                'designId': 'pack:bosch-dishwasher-fascia',
+                'cardType': 'tile',
+                'domain': 'sensor',
+                'device': {'integration': 'home_connect', 'manufacturer': 'Bosch'},
+                'title': 'Bosch Dishwasher · Front Fascia',
+                'inputs': ['sensor_operation_state', 'sensor_remaining_program_time', 'binary_sensor_door'],
+                'actions': ['start', 'eco_50', 'auto'],
+            }],
+        }
+        entity = {'entity_id': 'sensor.dw_operation_state', 'state': 'run', 'attributes': {}}
+        device = {'integration': 'home_connect', 'manufacturer': 'Bosch'}
+        found = mcp.find_designs(index, entity, device)
+        self.assertEqual(len(found), 1)
+        self.assertEqual(
+            found[0]['inputs'],
+            ['sensor_operation_state', 'sensor_remaining_program_time', 'binary_sensor_door'],
+        )
+        self.assertEqual(found[0]['actions'], ['start', 'eco_50', 'auto'])
 
     def test_edit_tools_never_claim_to_save(self):
         # An agent submits drafts; only a person applies them.

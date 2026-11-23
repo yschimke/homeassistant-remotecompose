@@ -1306,9 +1306,22 @@ private fun LiveDashboard(
   val designCache =
     remember(connection, path, designServer, designGeneration, privateDesignServer) {
       DashboardLoadCache(scope) { key: LibraryDesignKey ->
-        if (key.designId != null && privateDesignServer)
+        if (key.templateUrl != null)
+          loadLibraryDesign(
+            key,
+            designServer,
+            AppCardUsage.userAgent?.header,
+            homeBaseUrl = connection.config.baseUrl,
+          )
+        else if (key.designId != null && privateDesignServer)
           loadSelectedDesign(key, connection.config.baseUrl, token = { connection.accessToken() })
-        else loadLibraryDesign(key, designServer, AppCardUsage.userAgent?.header)
+        else
+          loadLibraryDesign(
+            key,
+            designServer,
+            AppCardUsage.userAgent?.header,
+            homeBaseUrl = connection.config.baseUrl,
+          )
       }
     }
   val pictureCache =

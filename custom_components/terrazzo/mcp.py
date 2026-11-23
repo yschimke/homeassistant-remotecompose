@@ -194,10 +194,12 @@ EDIT_TOOLS = [
         "title": "Find card designs for an entity",
         "description": (
             "Lists harc's card designs made for an entity's device or kind (a garage door drawn as "
-            "the door itself, a printer's own controls), best fit first, each with the card config "
-            "that draws it: a custom:remote-compose-card wrapping a Home Assistant card, with the "
-            "design's design_id. Put that config in a draft as it is. An empty list means Home "
-            "Assistant's own cards are the right choice for that entity."
+            "the door itself, a printer's own controls, or a multi-entity device fascia), best fit "
+            "first, each with the card config that draws it: a custom:remote-compose-card wrapping "
+            "a Home Assistant card, with the design's design_id. Multi-entity packs also list their "
+            "contract `inputs` (and optional `actions`) so you can bind helper/virtual entities with "
+            "`bindings:` (and `actions:` / `device_id:`). An empty list means Home Assistant's own "
+            "cards are the right choice for that entity."
         ),
         "inputSchema": _entity_id_schema("The entity to find designs for, e.g. cover.garage_door."),
         "annotations": {"readOnlyHint": True, "openWorldHint": True},
@@ -352,6 +354,13 @@ CARD_GUIDE = {
         "A card can be drawn by one of harc's card designs: wrap a Home Assistant card in "
         '{"type": "custom:remote-compose-card", "card": {<the HA card>}, "design_id": "<id>"}. '
         "The wrapped card keeps its entity, name and actions; the design only changes how it looks.",
+        "Multi-entity device designs can collapse a device's entities into one "
+        "custom:remote-compose-card. Sibling entities on the same Home Assistant device "
+        "auto-discover by default; add optional `device_id`, `bindings` (mapping contract `inputs` "
+        "from find_designs to entity ids or {entity, attribute, format, prefix, suffix, scale, "
+        "on_text, off_text, uppercase, default_if, fallback}), and `actions` (mapping semantic "
+        "button names to entity ids or service calls) when binding helper/virtual entities or "
+        "customizing formatting.",
         "Get design ids only from find_designs, for the entity the card shows, and use the config "
         "it returns. Never invent a design_id or wrap a card no design was found for.",
         "When the user asks for a device to look like the real thing (skeuomorphic, the actual "
@@ -418,9 +427,20 @@ def design_rank(match):
     return scope * 8 + len(fields)
 
 
+def _string_list(design, *keys):
+    for key in keys:
+        raw = design.get(key)
+        if isinstance(raw, list):
+            items = [item.strip() for item in raw if isinstance(item, str) and item.strip()]
+            if items:
+                return items
+    return None
+
+
 def find_designs(index, entity, device, limit=DESIGN_LIMIT):
     """The designs in the library's suggestion [index] made for [entity]'s [device] or kind, best
-    fit first: what the card picker suggests (remote-compose-card.js), each with its card config."""
+    fit first: what the card picker suggests (remote-compose-card.js), each with its card config
+    and any contract `inputs` / `actions` the pack declares."""
     entity_id = entity["entity_id"]
     domain = domain_of(entity_id)
     facts = dict(device or {})
@@ -436,8 +456,9 @@ def find_designs(index, entity, device, limit=DESIGN_LIMIT):
             continue
         found.setdefault((design_id, card_type), design)
     ranked = sorted(found.values(), key=lambda d: -design_rank(d.get("device")))[:limit]
-    return [
-        {
+    out = []
+    for d in ranked:
+        item = {
             "design_id": d["designId"],
             "title": d.get("title") or f"Made for this device ({d['cardType']})",
             "card_type": d["cardType"],
@@ -448,8 +469,14 @@ def find_designs(index, entity, device, limit=DESIGN_LIMIT):
                 "design_id": d["designId"],
             },
         }
-        for d in ranked
-    ]
+        inputs = _string_list(d, "inputs", "contractInputs", "contract_inputs")
+        if inputs:
+            item["inputs"] = inputs
+        actions = _string_list(d, "actions", "contractActions", "contract_actions")
+        if actions:
+            item["actions"] = actions
+        out.append(item)
+    return out
 
 
 def domain_of(entity_id):
