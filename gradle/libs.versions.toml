@@ -18,20 +18,13 @@ ksp = "2.3.14"
 # Glimmer needs 1.13; this lines every module up on one 1.13 release.
 compose-bom = "2026.11.01"
 
-# RemoteCompose + the Wear widget stack that sits on it (APIs change per alpha).
-# These three move in lockstep — `remote-material3` and `glance-wear` both
-# declare `remote-creation*` in their POMs, and a skewed set has historically
-# produced runtime NoClassDefFoundErrors inside the wear components. They now
-# resolve from Google Maven releases rather than an androidx.dev snapshot, so
-# when bumping any one of them check the other two: `remote-material3`
-# 1.0.0-alpha15 and `glance-wear` 1.0.0-alpha22 both declare
-# `androidx.compose.remote:remote-creation*:1.0.0-alpha23`, which is what keeps
-# this set consistent.
-remote-compose = "1.0.0-alpha24"
+# The Wear widget stack on RemoteCompose (APIs change per alpha). RemoteCompose itself
+# (`androidx.compose.remote:*`) and Remote Foundation come from the Compose BOM above: their
+# libraries below are versionless. `remote-material3` and `glance-wear` aren't in the BOM and both
+# declare `remote-creation*` in their POMs, and a skewed set has historically produced runtime
+# NoClassDefFoundErrors inside the wear components. So when bumping either, or the Compose BOM,
+# check that the `remote-creation*` version they declare matches the one the BOM manages.
 remote-material3 = "1.0.0-alpha16"
-# The version `remote-material3` 1.0.0-alpha15 declares: rc-components draws icons with its
-# `RemoteBasicIcon` directly, so it moves with the set above.
-remote-foundation = "1.0.0-alpha07"
 
 # AndroidX Glance Wear (runtime feature gated on Wear OS 7+ / API 37 inside the
 # library; we use it for the per-slot wear widgets). Lockstep — see above.
@@ -194,16 +187,16 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 # RemoteCompose authoring / playback
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "okhttp" }
-remote-creation-compose = { module = "androidx.compose.remote:remote-creation-compose", version.ref = "remote-compose" }
-remote-creation = { module = "androidx.compose.remote:remote-creation", version.ref = "remote-compose" }
-remote-creation-core = { module = "androidx.compose.remote:remote-creation-core", version.ref = "remote-compose" }
-remote-core = { module = "androidx.compose.remote:remote-core", version.ref = "remote-compose" }
-remote-player-core = { module = "androidx.compose.remote:remote-player-core", version.ref = "remote-compose" }
-remote-player-compose = { module = "androidx.compose.remote:remote-player-compose", version.ref = "remote-compose" }
-remote-player-view = { module = "androidx.compose.remote:remote-player-view", version.ref = "remote-compose" }
-remote-tooling-preview = { module = "androidx.compose.remote:remote-tooling-preview", version.ref = "remote-compose" }
+remote-creation-compose = { module = "androidx.compose.remote:remote-creation-compose" }
+remote-creation = { module = "androidx.compose.remote:remote-creation" }
+remote-creation-core = { module = "androidx.compose.remote:remote-creation-core" }
+remote-core = { module = "androidx.compose.remote:remote-core" }
+remote-player-core = { module = "androidx.compose.remote:remote-player-core" }
+remote-player-compose = { module = "androidx.compose.remote:remote-player-compose" }
+remote-player-view = { module = "androidx.compose.remote:remote-player-view" }
+remote-tooling-preview = { module = "androidx.compose.remote:remote-tooling-preview" }
 remote-material3 = { module = "androidx.wear.compose.remote:remote-material3", version.ref = "remote-material3" }
-remote-foundation = { module = "androidx.compose.remote.foundation:foundation", version.ref = "remote-foundation" }
+remote-foundation = { module = "androidx.compose.remote.foundation:foundation" }
 
 # compose-preview render-harness seam. `IrSidecarChannel` is the process-static
 # hand-off the renderer drains after each preview composition into the
@@ -236,7 +229,7 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 # MaterialKolor currently raises Material 3 above the stable BOM mapping. Keep
 # that alpha aligned with Foundation 1.12's CustomStyle ABI.
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 # Jetpack Compose for XR: the room controls' spatial panels on Android XR headsets (`app/.../room`).
@@ -282,7 +275,7 @@ androidx-appfunctions-compiler = { module = "androidx.appfunctions:appfunctions-
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.12.0" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.2" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.2" }
-androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.5.0" }
+androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite" }
 appauth = { module = "net.openid:appauth", version = "0.11.1" }
 # Credential Manager Restore Credentials: escrows the token vault's key for zero-tap sign-in
 # restoration on a new phone (TokenVault, RestoreKeyEscrow).
