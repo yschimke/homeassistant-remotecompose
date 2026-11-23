@@ -48,7 +48,7 @@ class SelectedDesignTest {
     val anchor = assertNotNull(selectedDesignKey(card, snapshot, "classic", false))
     assertEquals("tile", anchor.cardType)
     assertEquals("device_class=garage;domain=cover;state_icon=garage", anchor.shape)
-    val values = exactTemplateBindings(card, snapshot)
+    val values = exactTemplateBindings(card, snapshot, ByteArray(0))
     assertTrue("cover.s0.is_on" in values)
     val many =
       CardConfig(

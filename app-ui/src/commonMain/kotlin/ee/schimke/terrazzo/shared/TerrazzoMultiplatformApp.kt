@@ -1414,7 +1414,9 @@ private fun LiveDashboard(
                 connection.config.baseUrl,
                 token = { connection.accessToken() },
               )
-            if (bytes == null || !canBindWithCmp(bytes, exactTemplateBindings(editing, shown)))
+            if (
+              bytes == null || !canBindWithCmp(bytes, exactTemplateBindings(editing, shown, bytes))
+            )
               throw CardSelectionException(
                 "The design was published but could not be loaded for this card. Try publishing again.",
               )

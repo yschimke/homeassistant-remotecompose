@@ -117,7 +117,10 @@ class LogbookLiveDocumentTest {
     listOf(
       5.seconds,
       2.minutes,
-      150.seconds, // a half: HA's Math.round makes it 3 min
+      // Past a half: HA's Math.round makes 2.53 min 3, where flooring would show 2. Not 150 s
+      // exactly: `last_changed` is pushed in whole seconds and the player reads its own clock,
+      // so an exact half can land a few milliseconds short and round down.
+      152.seconds,
       40.minutes,
       50.minutes,
       3.hours,
