@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.101](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.100...v0.1.101) (2026-11-23)
+
+
+### Features
+
+* **agent:** Home Assistant's own conversation agents answer edit sessions ([#1733](https://github.com/yschimke/homeassistant-remotecompose/issues/1733)) ([0038722](https://github.com/yschimke/homeassistant-remotecompose/commit/003872277d15f8dd7be977bff603f4b01bc07a05))
+* **agent:** the dashboard tools as a Home Assistant LLM API ([#1729](https://github.com/yschimke/homeassistant-remotecompose/issues/1729)) ([617ee57](https://github.com/yschimke/homeassistant-remotecompose/commit/617ee570af052698dae41cddd18d69b9f04d468f))
+* **design-server:** agent session tools to learn what to build and see a draft ([#1734](https://github.com/yschimke/homeassistant-remotecompose/issues/1734)) ([bdcc111](https://github.com/yschimke/homeassistant-remotecompose/commit/bdcc11195b70d4a0325e13371460059f8340789b))
+* **design:** publish the device packs and let the dashboard agent use them ([#1727](https://github.com/yschimke/homeassistant-remotecompose/issues/1727)) ([c39dda2](https://github.com/yschimke/homeassistant-remotecompose/commit/c39dda2736614cfdb0f70b2f7a7c7cd50d6461e8))
+* **designs:** publish the garage door's Material 3 and the thermostat pack designs ([#1740](https://github.com/yschimke/homeassistant-remotecompose/issues/1740)) ([81e9301](https://github.com/yschimke/homeassistant-remotecompose/commit/81e930116748f019dfec09dffccbed876d3c2942))
+* **device-packs:** build the device packs as a Livery catalog ([#1735](https://github.com/yschimke/homeassistant-remotecompose/issues/1735)) ([edb34fa](https://github.com/yschimke/homeassistant-remotecompose/commit/edb34fa424e25ba2573f3bc99ab790dc040ba382))
+
+
+### Bug Fixes
+
+* **app-ui:** run device-pack entity actions and binding recipes on desktop and Wasm ([#1742](https://github.com/yschimke/homeassistant-remotecompose/issues/1742)) ([bca066e](https://github.com/yschimke/homeassistant-remotecompose/commit/bca066e8787b20c841e4957a76da2bf30ebfd507))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-contracts-bom to v3.46.0 ([#1730](https://github.com/yschimke/homeassistant-remotecompose/issues/1730)) ([1d3df2d](https://github.com/yschimke/homeassistant-remotecompose/commit/1d3df2dd2a59a0eafc79e633e6aa9dabe8bcd52d))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.149.0 ([#1731](https://github.com/yschimke/homeassistant-remotecompose/issues/1731)) ([bdfeebb](https://github.com/yschimke/homeassistant-remotecompose/commit/bdfeebb688e7847cec1c8b02a1c9afd89bafb8d3))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.150.0 ([#1741](https://github.com/yschimke/homeassistant-remotecompose/issues/1741)) ([150f4c3](https://github.com/yschimke/homeassistant-remotecompose/commit/150f4c3d2dbcefb5150fe317de7e2fdbb00aa443))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.151.0 ([#1744](https://github.com/yschimke/homeassistant-remotecompose/issues/1744)) ([b9f3faf](https://github.com/yschimke/homeassistant-remotecompose/commit/b9f3faf9c6b504bbb078702ffcbf3475c96e2716))
+* **design-server:** render_dashboard draws a remote-compose card in its card_style ([#1736](https://github.com/yschimke/homeassistant-remotecompose/issues/1736)) ([1fa68a5](https://github.com/yschimke/homeassistant-remotecompose/commit/1fa68a5b56a409d5a837474fc090ee37c146d2c6))
+* **tile:** bind a cover tile's state line so its design shows "Open" ([#1738](https://github.com/yschimke/homeassistant-remotecompose/issues/1738)) ([c084e63](https://github.com/yschimke/homeassistant-remotecompose/commit/c084e6397c8c967bbc79957ef9b464c76233dd58))
+
 ## [0.1.100](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.99...v0.1.100) (2026-11-22)
 
 
