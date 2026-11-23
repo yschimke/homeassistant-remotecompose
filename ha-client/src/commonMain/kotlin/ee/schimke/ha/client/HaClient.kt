@@ -458,13 +458,15 @@ class HaClient(
     service: String,
     entityId: String? = null,
     serviceData: JsonObject = JsonObject(emptyMap()),
+    target: JsonObject? = null,
   ) {
     runCommand("call_service") {
       put("domain", domain)
       put("service", service)
       if (serviceData.isNotEmpty()) put("service_data", serviceData)
-      if (entityId != null) {
-        put("target", buildJsonObject { put("entity_id", entityId) })
+      when {
+        target != null && target.isNotEmpty() -> put("target", target)
+        entityId != null -> put("target", buildJsonObject { put("entity_id", entityId) })
       }
     }
   }

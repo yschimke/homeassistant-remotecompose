@@ -191,4 +191,97 @@ class SemanticDeviceBindingsTest {
     assertNull(resolveDirectTemplateUrl("javascript:alert(1)", "https://ha.example/"))
     assertNull(resolveDirectTemplateUrl("https://u:p@cdn.example/card.rc", "https://ha.example/"))
   }
+
+  @Test
+  fun semanticActionsPreserveFullTargetsWithoutSubstitutingPrimaryEntity() {
+    val card =
+      CardConfig(
+        "tile",
+        buildJsonObject {
+          put("type", "tile")
+          put("entity", "sensor.bosch_dw_operation_state")
+        },
+      )
+    val actions = buildJsonObject {
+      put(
+        "eco_device",
+        buildJsonObject {
+          put("service", "home_connect.start_program")
+          put("target", buildJsonObject { put("device_id", "dw1") })
+          put("data", buildJsonObject { put("program", "Eco50") })
+        },
+      )
+      put(
+        "lights_area",
+        buildJsonObject {
+          put("service", "light.turn_off")
+          put("target", buildJsonObject { put("area_id", "kitchen") })
+        },
+      )
+      put(
+        "lights_multi",
+        buildJsonObject {
+          put("service", "light.turn_on")
+          put(
+            "target",
+            buildJsonObject {
+              put(
+                "entity_id",
+                Json.parseToJsonElement("""["light.a","light.b"]"""),
+              )
+            },
+          )
+        },
+      )
+    }
+
+    val eco = resolveSemanticAction(card, "eco_device", "", HaSnapshot(), actions, null, null)!!
+    assertNull((eco.action as HaAction.CallService).entityId)
+    assertEquals(buildJsonObject { put("device_id", "dw1") }, eco.target)
+    val ecoCall = cardActionCall(semanticActionPayload(eco))!!
+    assertNull(ecoCall.entityId)
+    assertEquals(buildJsonObject { put("device_id", "dw1") }, ecoCall.target)
+
+    val area = resolveSemanticAction(card, "lights_area", "", HaSnapshot(), actions, null, null)!!
+    val areaCall = cardActionCall(semanticActionPayload(area))!!
+    assertNull(areaCall.entityId)
+    assertEquals(buildJsonObject { put("area_id", "kitchen") }, areaCall.target)
+
+    val multi = resolveSemanticAction(card, "lights_multi", "", HaSnapshot(), actions, null, null)!!
+    val multiCall = cardActionCall(semanticActionPayload(multi))!!
+    assertNull(multiCall.entityId)
+    assertEquals(
+      buildJsonObject { put("entity_id", Json.parseToJsonElement("""["light.a","light.b"]""")) },
+      multiCall.target,
+    )
+  }
+
+  @Test
+  fun standaloneNavigationUriHandlesNavigateAndUrlSafely() {
+    val navPayload = cardActionPayload(HaAction.Navigate("/lovelace/kitchen"))
+    assertEquals(
+      "https://ha.example/lovelace/kitchen",
+      standaloneNavigationUri(navPayload, "https://ha.example/"),
+    )
+    assertNull(
+      standaloneNavigationUri(
+        cardActionPayload(HaAction.Navigate("//evil.example")),
+        "https://ha.example",
+      ),
+    )
+    val urlPayload = cardActionPayload(HaAction.Url("https://docs.example/bosch"))
+    assertEquals(
+      "https://docs.example/bosch",
+      standaloneNavigationUri(urlPayload, "https://ha.example"),
+    )
+    assertNull(
+      standaloneNavigationUri(
+        cardActionPayload(HaAction.Url("javascript:alert(1)")),
+        "https://ha.example",
+      ),
+    )
+    assertNull(
+      standaloneNavigationUri(cardActionPayload(HaAction.Toggle("light.a")), "https://ha.example"),
+    )
+  }
 }

@@ -11,6 +11,7 @@ import ee.schimke.ha.rc.components.HaAction
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToInt
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -18,6 +19,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonObject
 
 private val HA_DOMAINS =
   listOf(
@@ -221,7 +223,19 @@ internal fun semanticDeviceBindings(
   return out
 }
 
-internal fun resolveSemanticNamedAction(
+internal data class ResolvedSemanticAction(
+  val action: HaAction,
+  val target: JsonObject? = null,
+)
+
+internal fun semanticActionPayload(resolved: ResolvedSemanticAction): String {
+  val base = cardActionPayload(resolved.action)
+  val target = resolved.target?.takeIf { it.isNotEmpty() } ?: return base
+  val obj = Json.parseToJsonElement(base).jsonObject
+  return JsonObject(obj + ("target" to target)).toString()
+}
+
+internal fun resolveSemanticAction(
   card: CardConfig,
   name: String,
   value: String?,
@@ -229,7 +243,7 @@ internal fun resolveSemanticNamedAction(
   explicitActions: JsonObject?,
   explicitBindings: JsonObject?,
   explicitDeviceId: String?,
-): HaAction? {
+): ResolvedSemanticAction? {
   val trimmed = name.trim()
   if (trimmed.isEmpty()) return null
   val primary = CardDesignSlots.slotEntries(card).orEmpty().firstOrNull()?.entityId
@@ -251,9 +265,29 @@ internal fun resolveSemanticNamedAction(
 
   val deviceId = resolveSemanticDeviceId(card, snapshot, explicitDeviceId, explicitBindings)
   val sibling = discoverDeviceSibling(actionKey, deviceId, snapshot, preferActionable = true)
-  if (sibling != null) return defaultEntityAction(sibling, actionValue)
+  if (sibling != null) return ResolvedSemanticAction(defaultEntityAction(sibling, actionValue))
   return null
 }
+
+internal fun resolveSemanticNamedAction(
+  card: CardConfig,
+  name: String,
+  value: String?,
+  snapshot: HaSnapshot,
+  explicitActions: JsonObject?,
+  explicitBindings: JsonObject?,
+  explicitDeviceId: String?,
+): HaAction? =
+  resolveSemanticAction(
+      card,
+      name,
+      value,
+      snapshot,
+      explicitActions,
+      explicitBindings,
+      explicitDeviceId,
+    )
+    ?.action
 
 private fun bindingEntityId(spec: JsonElement): String? =
   when (spec) {
@@ -412,16 +446,16 @@ private fun parseConfiguredAction(
   cfg: JsonElement,
   defaultEntity: String?,
   value: String,
-): HaAction? {
+): ResolvedSemanticAction? {
   if (cfg is JsonPrimitive) {
     val id = cfg.contentOrNull?.trim().orEmpty()
-    return if ('.' in id) defaultEntityAction(id, value) else null
+    return if ('.' in id) ResolvedSemanticAction(defaultEntityAction(id, value)) else null
   }
   val obj = cfg as? JsonObject ?: return null
-  val entityId =
+  val explicitEntity =
     (obj["entity"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
       ?: (obj["entity_id"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
-      ?: defaultEntity
+  val entityId = explicitEntity ?: defaultEntity
   val svc =
     (obj["perform_action"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { '.' in it }
       ?: (obj["service"] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf { '.' in it }
@@ -430,44 +464,55 @@ private fun parseConfiguredAction(
     val resolvedSvc = svc ?: return null
     val data =
       (obj["data"] as? JsonObject) ?: (obj["service_data"] as? JsonObject) ?: JsonObject(emptyMap())
+    val targetObj = (obj["target"] as? JsonObject)?.takeIf { it.isNotEmpty() }
     val targetEntity =
-      ((obj["target"] as? JsonObject)?.get("entity_id") as? JsonPrimitive)?.contentOrNull
-        ?: entityId
-    return HaAction.CallService(
-      domain = resolvedSvc.substringBefore('.'),
-      service = resolvedSvc.substringAfter('.'),
-      entityId = targetEntity,
-      serviceData = data,
+      if (targetObj != null) {
+        (targetObj["entity_id"] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+      } else {
+        entityId
+      }
+    return ResolvedSemanticAction(
+      action =
+        HaAction.CallService(
+          domain = resolvedSvc.substringBefore('.'),
+          service = resolvedSvc.substringAfter('.'),
+          entityId = targetEntity,
+          serviceData = data,
+        ),
+      target = targetObj,
     )
   }
-  return when (action) {
-    "toggle" -> entityId?.let(HaAction::Toggle)
-    "more-info" -> entityId?.let(HaAction::MoreInfo)
-    "navigate" -> (obj["navigation_path"] as? JsonPrimitive)?.contentOrNull?.let(HaAction::Navigate)
-    "url" -> (obj["url_path"] as? JsonPrimitive)?.contentOrNull?.let(HaAction::Url)
-    "none" -> null
-    else -> {
-      if (entityId == null) return null
-      val domain = entityId.substringBefore('.')
-      val opt = (obj["option"] as? JsonPrimitive)?.contentOrNull
-      val num = (obj["value"] as? JsonPrimitive)?.doubleOrNull
-      when {
-        domain in setOf("select", "input_select") && opt != null ->
-          HaAction.CallService(
-            domain,
-            "select_option",
-            entityId,
-            JsonObject(mapOf("option" to JsonPrimitive(opt))),
-          )
-        domain in setOf("number", "input_number") && num != null ->
-          HaAction.CallService(
-            domain,
-            "set_value",
-            entityId,
-            JsonObject(mapOf("value" to JsonPrimitive(num))),
-          )
-        else -> defaultEntityAction(entityId, value)
+  val resolved =
+    when (action) {
+      "toggle" -> entityId?.let(HaAction::Toggle)
+      "more-info" -> entityId?.let(HaAction::MoreInfo)
+      "navigate" ->
+        (obj["navigation_path"] as? JsonPrimitive)?.contentOrNull?.let(HaAction::Navigate)
+      "url" -> (obj["url_path"] as? JsonPrimitive)?.contentOrNull?.let(HaAction::Url)
+      "none" -> null
+      else -> {
+        if (entityId == null) return null
+        val domain = entityId.substringBefore('.')
+        val opt = (obj["option"] as? JsonPrimitive)?.contentOrNull
+        val num = (obj["value"] as? JsonPrimitive)?.doubleOrNull
+        when {
+          domain in setOf("select", "input_select") && opt != null ->
+            HaAction.CallService(
+              domain,
+              "select_option",
+              entityId,
+              JsonObject(mapOf("option" to JsonPrimitive(opt))),
+            )
+          domain in setOf("number", "input_number") && num != null ->
+            HaAction.CallService(
+              domain,
+              "set_value",
+              entityId,
+              JsonObject(mapOf("value" to JsonPrimitive(num))),
+            )
+          else -> defaultEntityAction(entityId, value)
+        }
       }
     }
-  }
+  return resolved?.let(::ResolvedSemanticAction)
 }

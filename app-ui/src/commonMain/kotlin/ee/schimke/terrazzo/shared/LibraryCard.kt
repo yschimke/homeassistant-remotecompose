@@ -118,12 +118,13 @@ internal fun LibraryCard(
         templateUrl,
       )
     }
-  // An exact design binds as the phone app plays it: by the recipe its own bytes carry, when they
-  // carry one (a device pack's thermostat: its unit, range and labels), else its converter, plus
-  // any explicit or device-discovered semantic bindings.
+  // An exact or direct-URL design binds as the phone app plays it: by the recipe its own bytes
+  // carry, when they carry one (a device pack's thermostat: its unit, range and labels), else its
+  // converter, plus any explicit or device-discovered semantic bindings.
+  val usesPlaybackBindings = exact != null || templateUrl != null
   fun bindings(template: ByteArray): Map<String, RcNamedValue> {
     val base =
-      if (exact != null) exactTemplateBindings(card, snapshot, template)
+      if (usesPlaybackBindings) exactTemplateBindings(card, snapshot, template)
       else templateBindings(card, snapshot)
     val extra = semanticDeviceBindings(card, snapshot, template, semanticBindings, deviceId, base)
     return if (extra.isEmpty()) base else base + extra
@@ -153,10 +154,19 @@ internal fun LibraryCard(
   // Computed in the same composition that first shows [bytes], so the player's first frame already
   // has the current values (docs/architecture/live-card-updates.md).
   val values =
-    remember(card, snapshot, tick, exact, playback, bytes, semanticBindings, deviceId) {
+    remember(
+      card,
+      snapshot,
+      tick,
+      usesPlaybackBindings,
+      playback,
+      bytes,
+      semanticBindings,
+      deviceId,
+    ) {
       val base =
-        if (exact != null && playback != null) playback.namedBindings(snapshot)
-        else if (exact != null) exactTemplateBindings(card, snapshot, bytes ?: ByteArray(0))
+        if (usesPlaybackBindings && playback != null) playback.namedBindings(snapshot)
+        else if (usesPlaybackBindings) exactTemplateBindings(card, snapshot, bytes ?: ByteArray(0))
         else templateBindings(card, snapshot)
       val extra = semanticDeviceBindings(card, snapshot, bytes, semanticBindings, deviceId, base)
       if (extra.isEmpty()) base else base + extra
@@ -212,7 +222,7 @@ internal fun LibraryCard(
               ?.let { onAction?.invoke(cardActionPayload(it)) }
           } else if (event is RcPlayerEvent.HostNamedAction) {
             val payload = (event.value as? RcHostActionValue.TextValue)?.value
-            resolveSemanticNamedAction(
+            resolveSemanticAction(
                 card,
                 event.name,
                 payload,
@@ -221,9 +231,11 @@ internal fun LibraryCard(
                 semanticBindings,
                 deviceId,
               )
-              ?.let { action ->
-                if (action is HaAction.MoreInfo) onMoreInfo?.invoke(action.entityId)
-                else onAction?.invoke(cardActionPayload(action))
+              ?.let { resolved ->
+                when (val action = resolved.action) {
+                  is HaAction.MoreInfo -> onMoreInfo?.invoke(action.entityId)
+                  else -> onAction?.invoke(semanticActionPayload(resolved))
+                }
               }
           }
         }
