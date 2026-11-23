@@ -259,7 +259,14 @@ def _register_terrazzo_panel(
 class TerrazzoPanelManager:
     """Keeps `/terrazzo` and promoted `/terrazzo-<slug>` sidebar panels in sync with Lovelace."""
 
-    def __init__(self, hass: Any, frontend_mod: Any = None) -> None:
+    def __init__(
+        self,
+        hass: Any,
+        frontend_mod: Any = None,
+        *,
+        default_state: dict[str, Any] | None = None,
+        on_default_state_changed: Any = None,
+    ) -> None:
         self.hass = hass
         self._frontend = frontend_mod
         self._lock = asyncio.Lock()
@@ -268,8 +275,26 @@ class TerrazzoPanelManager:
         self._options: dict[str, Any] = {}
         self._version: str = ""
         self._active: bool = False
-        self._previous_default_panel: str | None = None
-        self._managed_default_panel: str | None = None
+        state = default_state if isinstance(default_state, dict) else {}
+        self._previous_default_panel: str | None = state.get("previous")
+        self._managed_default_panel: str | None = state.get("managed")
+        self._on_default_state_changed = on_default_state_changed
+
+    @property
+    def options(self) -> dict[str, Any]:
+        return dict(self._options)
+
+    def default_state(self) -> dict[str, Any] | None:
+        if self._managed_default_panel is None and self._previous_default_panel is None:
+            return None
+        return {
+            "managed": self._managed_default_panel,
+            "previous": self._previous_default_panel,
+        }
+
+    def _notify_default_state(self) -> None:
+        if self._on_default_state_changed is not None:
+            self._on_default_state_changed(self.default_state())
 
     def _get_frontend(self) -> Any:
         if self._frontend is None:
@@ -397,7 +422,12 @@ class TerrazzoPanelManager:
                 and current not in self._promoted_specs
             ):
                 updated = {k: v for k, v in core.items() if k != "default_panel"}
+                if self._previous_default_panel:
+                    updated["default_panel"] = self._previous_default_panel
                 await system_store.async_set_item("core", updated)
+                if self._previous_default_panel is not None:
+                    self._previous_default_panel = None
+                    self._notify_default_state()
             return
 
         try:
@@ -406,6 +436,7 @@ class TerrazzoPanelManager:
             return
         core = dict((system_store.data or {}).get("core") or {})
         current = core.get("default_panel")
+        before_state = self.default_state()
 
         if target_panel is not None:
             if current != target_panel:
@@ -425,6 +456,10 @@ class TerrazzoPanelManager:
                     core.pop("default_panel", None)
                 await system_store.async_set_item("core", core)
             self._managed_default_panel = None
+            self._previous_default_panel = None
+
+        if self.default_state() != before_state:
+            self._notify_default_state()
 
     async def async_unload(self) -> None:
         """Remove `/terrazzo` and all promoted `/terrazzo-*` panels and restore default_panel."""
@@ -459,3 +494,5 @@ class TerrazzoPanelManager:
                 except Exception:
                     pass
                 self._managed_default_panel = None
+                self._previous_default_panel = None
+                self._notify_default_state()

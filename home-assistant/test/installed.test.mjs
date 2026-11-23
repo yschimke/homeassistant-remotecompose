@@ -111,6 +111,8 @@ test('installed HA /terrazzo and Lovelace custom card render and act as the sign
     });
     await page.goto(`${base}/terrazzo-second-panel`);
     await page.frameLocator('terrazzo-panel iframe').getByText('Second dashboard is selected', {exact:true}).waitFor({timeout:60_000});
+    // Leave the promoted panel before disabling top-level mode removes its route.
+    await page.goto(`${base}/terrazzo`);
     // Back to the YAML's settings for the read-only user below, who expects the wall panel.
     const restore = await (await api.post('/api/config/config_entries/options/flow', {headers, data:{handler:entries[0].entry_id}})).json();
     await api.post(`/api/config/config_entries/options/flow/${restore.flow_id}`,

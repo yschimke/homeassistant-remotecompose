@@ -300,23 +300,40 @@ class PanelsTest(unittest.TestCase):
                     ),
                 },
             )
-            manager = panels_mod.TerrazzoPanelManager(hass, fe)
-            await manager.async_configure(
-                const.clean_options(
-                    {
-                        const.CONF_TOP_LEVEL_DASHBOARDS: const.TOP_LEVEL_HIDDEN,
-                        const.CONF_DEFAULT_DASHBOARD: "kitchen",
-                    }
-                ),
-                "0.1.102",
+            persisted = {"state": None}
+            options = const.clean_options(
+                {
+                    const.CONF_TOP_LEVEL_DASHBOARDS: const.TOP_LEVEL_HIDDEN,
+                    const.CONF_DEFAULT_DASHBOARD: "kitchen",
+                }
             )
+            manager = panels_mod.TerrazzoPanelManager(
+                hass,
+                fe,
+                on_default_state_changed=lambda s: persisted.__setitem__("state", s),
+            )
+            await manager.async_configure(options, "0.1.102")
+            self.assertEqual(store.data["core"]["default_panel"], "terrazzo-kitchen")
+            self.assertEqual(
+                persisted["state"],
+                {"managed": "terrazzo-kitchen", "previous": "home"},
+            )
+
+            # Simulate an HA restart: fresh manager hydrated from persisted state restores "home".
+            restarted = panels_mod.TerrazzoPanelManager(
+                hass,
+                fe,
+                default_state=persisted["state"],
+                on_default_state_changed=lambda s: persisted.__setitem__("state", s),
+            )
+            await restarted.async_configure(options, "0.1.102")
             self.assertEqual(store.data["core"]["default_panel"], "terrazzo-kitchen")
 
-            # Unloading removes promoted panels and restores the prior default_panel.
-            await manager.async_unload()
+            await restarted.async_unload()
             self.assertNotIn("terrazzo-kitchen", hass.data[FakeFrontend.DATA_PANELS])
             self.assertNotIn("terrazzo", hass.data[FakeFrontend.DATA_PANELS])
             self.assertEqual(store.data["core"]["default_panel"], "home")
+            self.assertIsNone(persisted["state"])
 
         asyncio.run(run())
 

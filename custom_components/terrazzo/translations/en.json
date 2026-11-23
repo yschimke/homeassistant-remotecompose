@@ -14,7 +14,7 @@
         "data_description": {
           "title": "The name of the /terrazzo panel in the sidebar.",
           "dashboard": "Leave empty to start on the dashboard picker. Any dashboard can still be opened from the panel, or bookmarked as /terrazzo?dashboard= followed by its URL path.",
-          "top_level_dashboards": "Show Lovelace dashboards directly in the sidebar as Terrazzo panels (/terrazzo-<slug>) and hide the generic Terrazzo link. Choose \"Hidden Lovelace dashboards\" to automatically promote dashboards whose \"Show in sidebar\" toggle is off in Settings → Dashboards while keeping native Lovelace reachable for editing.",
+          "top_level_dashboards": "Show Lovelace dashboards directly in the sidebar as Terrazzo panels (under /terrazzo-...) and hide the generic Terrazzo link. Choose \"Hidden Lovelace dashboards\" to automatically promote dashboards whose \"Show in sidebar\" toggle is off in Settings → Dashboards while keeping native Lovelace reachable for editing.",
           "sidebar_dashboards": "Used when Top-level sidebar dashboards is set to \"Selected dashboards\".",
           "default_dashboard": "Optionally make one of the promoted Terrazzo dashboards Home Assistant's system default panel."
         }
@@ -41,7 +41,7 @@
         "data_description": {
           "title": "The name of the /terrazzo panel in the sidebar.",
           "dashboard": "Leave empty to start on the dashboard picker.",
-          "top_level_dashboards": "Show Lovelace dashboards directly in the sidebar as Terrazzo panels (/terrazzo-<slug>) and hide the generic Terrazzo link. Choose \"Hidden Lovelace dashboards\" to automatically promote dashboards whose \"Show in sidebar\" toggle is off in Settings → Dashboards while keeping native Lovelace reachable for editing.",
+          "top_level_dashboards": "Show Lovelace dashboards directly in the sidebar as Terrazzo panels (under /terrazzo-...) and hide the generic Terrazzo link. Choose \"Hidden Lovelace dashboards\" to automatically promote dashboards whose \"Show in sidebar\" toggle is off in Settings → Dashboards while keeping native Lovelace reachable for editing.",
           "sidebar_dashboards": "Used when Top-level sidebar dashboards is set to \"Selected dashboards\".",
           "default_dashboard": "Optionally make one of the promoted Terrazzo dashboards Home Assistant's system default panel.",
           "mcp_user": "Off, or the one Home Assistant user an AI assistant may act as through /api/terrazzo/mcp, with that user's permissions on this instance only. Only that user's access tokens are accepted. Locks and alarm panels stay read-only.",

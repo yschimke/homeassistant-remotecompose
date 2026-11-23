@@ -10,6 +10,8 @@ STATIC_URL = "/terrazzo-static"
 CARD_URL = f"{STATIC_URL}/remote-compose-card.js"
 # Entry data: the Lovelace resource id Terrazzo added for the card, or None for the user's own.
 DATA_CARD_RESOURCE = "card_resource"
+# Entry data: persisted {managed, previous} default_panel ownership so restoration survives restarts.
+DATA_DEFAULT_PANEL_STATE = "default_panel_state"
 # Option: promote Lovelace dashboards to top-level Terrazzo sidebar panels (`/terrazzo-<slug>`)
 # and hide the generic `/terrazzo` sidebar link while at least one dashboard is promoted.
 CONF_TOP_LEVEL_DASHBOARDS = "top_level_dashboards"

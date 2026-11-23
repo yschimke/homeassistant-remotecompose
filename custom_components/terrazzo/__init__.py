@@ -38,6 +38,7 @@ from .const import (
     CONF_TITLE,
     CONF_TOP_LEVEL_DASHBOARDS,
     DATA_CARD_RESOURCE,
+    DATA_DEFAULT_PANEL_STATE,
     DEFAULT_TITLE,
     DOMAIN,
     LEGACY_AGENT_OPTIONS,
@@ -183,12 +184,28 @@ async def async_setup_entry(hass, entry):
     options = entry.options
     # Static files are served without Cache-Control, so a browser may keep an old release's panel
     # and renderer for hours after an update. Each release gets its own URLs instead.
-    version = (await async_get_integration(hass, DOMAIN)).version
-    panel_manager = state.get("panel_manager")
-    if panel_manager is None:
-        panel_manager = panels.TerrazzoPanelManager(hass)
-        state["panel_manager"] = panel_manager
-    await panel_manager.async_configure(options, str(version))
+    version = str((await async_get_integration(hass, DOMAIN)).version)
+    state["version"] = version
+
+    def _save_default_state(default_state):
+        data = dict(entry.data)
+        if default_state is None:
+            if DATA_DEFAULT_PANEL_STATE not in data:
+                return
+            data.pop(DATA_DEFAULT_PANEL_STATE, None)
+        else:
+            if data.get(DATA_DEFAULT_PANEL_STATE) == default_state:
+                return
+            data[DATA_DEFAULT_PANEL_STATE] = default_state
+        hass.config_entries.async_update_entry(entry, data=data)
+
+    panel_manager = panels.TerrazzoPanelManager(
+        hass,
+        default_state=entry.data.get(DATA_DEFAULT_PANEL_STATE),
+        on_default_state_changed=_save_default_state,
+    )
+    state["panel_manager"] = panel_manager
+    await panel_manager.async_configure(options, version)
 
     def _sync_panels(_event):
         hass.async_create_task(panel_manager.async_sync())
@@ -262,4 +279,14 @@ async def _async_add_card_resource(hass, entry):
 
 
 async def _async_options_updated(hass, entry):
-    await hass.config_entries.async_reload(entry.entry_id)
+    state = hass.data.get(DOMAIN, {})
+    panel_manager = state.get("panel_manager")
+    if panel_manager is None:
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
+    # Updating entry.data (default_panel ownership) fires the update listener without changing options.
+    if dict(entry.options) == panel_manager.options:
+        return
+    version = state.get("version") or str((await async_get_integration(hass, DOMAIN)).version)
+    await panel_manager.async_configure(entry.options, version)
+    dashboard_agent.async_check(hass, entry)

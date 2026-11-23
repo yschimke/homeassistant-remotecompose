@@ -1596,9 +1596,15 @@ internal fun privateDesignEditorUrl(home: String, path: String): String? =
   if (path.matches(Regex("/api/terrazzo/designs-open/[A-Za-z0-9_-]+"))) home.trimEnd('/') + path
   else null
 
-/** Resolves a Home Assistant sub-view URL segment (path name or 0-based index) into [views]. */
+/**
+ * Resolves a Home Assistant sub-view URL segment into [views]: blank selects the first view (`0`),
+ * a named view path or 0-based index selects that view, and `null` (no host route) or an unknown
+ * segment returns `null`.
+ */
 internal fun resolveViewIndex(views: List<View>, viewPath: String?): Int? {
-  val segment = viewPath?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+  if (viewPath == null || views.isEmpty()) return null
+  val segment = viewPath.trim()
+  if (segment.isEmpty()) return 0
   val byPath = views.indexOfFirst { it.path?.trim()?.equals(segment, ignoreCase = true) == true }
   if (byPath >= 0) return byPath
   val asInt = segment.toIntOrNull()

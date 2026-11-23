@@ -16,7 +16,8 @@ class PanelViewRouteTest {
   @Test
   fun resolveViewIndexMatchesNamedPathAndNumericIndex() {
     assertNull(resolveViewIndex(views, null))
-    assertNull(resolveViewIndex(views, ""))
+    assertNull(resolveViewIndex(emptyList(), ""))
+    assertEquals(0, resolveViewIndex(views, ""))
     assertEquals(1, resolveViewIndex(views, "kitchen"))
     assertEquals(1, resolveViewIndex(views, "KITCHEN"))
     assertEquals(2, resolveViewIndex(views, "climate-room"))
