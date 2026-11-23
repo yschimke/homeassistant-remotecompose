@@ -108,6 +108,30 @@ class CardBindingRecipeTemplateTest {
   }
 
   @Test
+  fun aCoverTileCarriesTheCoverRecipe() {
+    val garage =
+      EntityState(
+        "cover.garage_door",
+        "open",
+        JsonObject(mapOf("current_position" to JsonPrimitive(70))),
+      )
+    val card =
+      CardConfig(
+        "tile",
+        buildJsonObject {
+          put("type", "tile")
+          put("entity", garage.entityId)
+        },
+      )
+    val snapshot = HaSnapshot(states = mapOf(garage.entityId to garage))
+    assertEquals(CardBindingRecipes.COVER.toJson(), embeddedRecipe(template(card, snapshot)))
+    // The position its state line reads, as the host computes it.
+    val bindings = registry.converterFor("tile")?.designBindings(card, snapshot)
+    assertEquals(CardBindingRecipes.COVER.evaluate(card, snapshot), bindings)
+    assertEquals(70f, bindings?.floats?.get("cover.s0.current_position"))
+  }
+
+  @Test
   fun gaugeRecipeMatchesTheConvertersBindings() {
     val card =
       CardConfig(

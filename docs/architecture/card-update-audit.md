@@ -60,7 +60,7 @@ Classes:
 | Media control | playing | bindable now | `is_on`. |
 | | title, artist | new binding | a generic attribute-string binding. |
 | | progress | new binding | `media_position`, `media_duration` and `updated_at` floats with in-document clock math. |
-| Tile (`TileContent.bakes`) | `state_content` line, hvac badge, feature payloads and resting values | new binding | `<id>.state_label` from `TileContent.secondaryText` moved to ha-model; the climate `state_int`; value floats. Mode lists are structure. |
+| Tile (`TileContent.bakes`) | `state_content` line (not a cover's default `state` · `current_position`, which is path 1), hvac badge, feature payloads and resting values | new binding | `<id>.state_label` from `TileContent.secondaryText` moved to ha-model; the climate `state_int`; value floats. Mode lists are structure. |
 | Entities (input rows) | input value and options | structure | `RemoteHaInput` takes a plain string; the options are structure. |
 | Message | native input values, choices | structure | — |
 | Entity filter | membership | structure | the signature also folds in the shown card's entity data, so a filtered glance re-encodes on every value. It should key on membership only. |
