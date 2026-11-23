@@ -95,7 +95,15 @@ def _validate_remote_compose_cards(config):
                     for key, value in mapping.items():
                         if not isinstance(key, str) or not key.strip():
                             raise SessionError(f"custom:remote-compose-card {field} keys must be non-empty strings")
-                        valid_val = (isinstance(value, str) and bool(value.strip())) or isinstance(value, dict)
+                        if field == "actions":
+                            valid_val = (
+                                value is None
+                                or value is False
+                                or isinstance(value, str)
+                                or isinstance(value, dict)
+                            )
+                        else:
+                            valid_val = (isinstance(value, str) and bool(value.strip())) or isinstance(value, dict)
                         if not valid_val:
                             raise SessionError(
                                 f"custom:remote-compose-card {field}.{key} must be an entity id or object"
