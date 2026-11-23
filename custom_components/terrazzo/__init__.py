@@ -19,9 +19,10 @@ Clients learn which of these this Home Assistant has, for their user, from `terr
 from pathlib import Path
 
 import voluptuous as vol
-from homeassistant.components import frontend, panel_custom
+from homeassistant.components import frontend
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import EVENT_PANELS_UPDATED
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.collection import ItemNotFound
@@ -31,17 +32,33 @@ from .const import (
     AGENT_OPTIONS,
     CARD_URL,
     CONF_DASHBOARD,
+    CONF_DEFAULT_DASHBOARD,
     CONF_MCP_USER,
+    CONF_SIDEBAR_DASHBOARDS,
     CONF_TITLE,
+    CONF_TOP_LEVEL_DASHBOARDS,
     DATA_CARD_RESOURCE,
     DEFAULT_TITLE,
     DOMAIN,
     LEGACY_AGENT_OPTIONS,
     PANEL_URL_PATH,
     STATIC_URL,
+    TOP_LEVEL_MODES,
+    TOP_LEVEL_OFF,
     clean_options,
 )
-from . import dashboard_agent, design_selections, design_server, edits, info, llm_api, push, wall, web_origins
+from . import (
+    dashboard_agent,
+    design_selections,
+    design_server,
+    edits,
+    info,
+    llm_api,
+    panels,
+    push,
+    wall,
+    web_origins,
+)
 from .mcp_view import TerrazzoMcpMetadataView, TerrazzoMcpView
 
 CONFIG_SCHEMA = vol.Schema(
@@ -50,6 +67,13 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_DASHBOARD, default=""): cv.string,
                 vol.Optional(CONF_TITLE, default=DEFAULT_TITLE): cv.string,
+                vol.Optional(CONF_TOP_LEVEL_DASHBOARDS, default=TOP_LEVEL_OFF): vol.In(
+                    TOP_LEVEL_MODES
+                ),
+                vol.Optional(CONF_SIDEBAR_DASHBOARDS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_DEFAULT_DASHBOARD, default=""): cv.string,
             }
         )
     },
@@ -160,16 +184,17 @@ async def async_setup_entry(hass, entry):
     # Static files are served without Cache-Control, so a browser may keep an old release's panel
     # and renderer for hours after an update. Each release gets its own URLs instead.
     version = (await async_get_integration(hass, DOMAIN)).version
-    await panel_custom.async_register_panel(
-        hass,
-        frontend_url_path=PANEL_URL_PATH,
-        webcomponent_name="terrazzo-panel",
-        sidebar_title=options.get(CONF_TITLE) or DEFAULT_TITLE,
-        sidebar_icon="mdi:view-dashboard",
-        module_url=f"{STATIC_URL}/terrazzo-panel.js?v={version}",
-        config={"dashboard": options.get(CONF_DASHBOARD, ""), "version": str(version)},
-        require_admin=False,
-    )
+    panel_manager = state.get("panel_manager")
+    if panel_manager is None:
+        panel_manager = panels.TerrazzoPanelManager(hass)
+        state["panel_manager"] = panel_manager
+    await panel_manager.async_configure(options, str(version))
+
+    def _sync_panels(_event):
+        hass.async_create_task(panel_manager.async_sync())
+
+    entry.async_on_unload(hass.bus.async_listen(EVENT_PANELS_UPDATED, _sync_panels))
+    entry.async_on_unload(hass.bus.async_listen("lovelace_updated", _sync_panels))
     # Before the update listener: recording the resource in the entry must not reload it.
     await _async_add_card_resource(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
@@ -180,8 +205,12 @@ async def async_setup_entry(hass, entry):
 
 
 async def async_unload_entry(hass, entry):
-    """Take the panel out of the sidebar; the static code stays served until restart."""
-    frontend.async_remove_panel(hass, PANEL_URL_PATH)
+    """Take Terrazzo's panels out of the sidebar; the static code stays served until restart."""
+    panel_manager = hass.data.get(DOMAIN, {}).get("panel_manager")
+    if panel_manager is not None:
+        await panel_manager.async_unload()
+    else:
+        frontend.async_remove_panel(hass, PANEL_URL_PATH)
     return True
 
 

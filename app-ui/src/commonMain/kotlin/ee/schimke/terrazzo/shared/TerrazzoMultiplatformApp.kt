@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -173,6 +174,11 @@ fun TerrazzoMultiplatformApp(
   hostedConfig: HaConfig? = null,
   hostedAccessToken: (suspend () -> String)? = null,
   initialDashboardPath: String? = null,
+  initialDashboardPinned: Boolean = false,
+  initialViewPath: String? = null,
+  onViewPathChanged: ((String) -> Unit)? = null,
+  onOpenHostMenu: (() -> Unit)? = null,
+  onNavigateDashboard: ((String?) -> Boolean)? = null,
   hostedAction: ((String) -> Boolean)? = null,
   registerReturnHome: ((() -> Unit) -> Unit)? = null,
   signInWithHomeAssistant: ((String) -> Unit)? = null,
@@ -287,7 +293,12 @@ fun TerrazzoMultiplatformApp(
             DashboardShell(
               active,
               initialDashboardPath,
-              registerReturnHome,
+              initialDashboardPinned = initialDashboardPinned,
+              initialViewPath = initialViewPath,
+              onViewPathChanged = onViewPathChanged,
+              onOpenHostMenu = onOpenHostMenu,
+              onNavigateDashboard = onNavigateDashboard,
+              registerReturnHome = registerReturnHome,
               signInRemembered = active.hosted && onSignOut != null,
               onSignOut = {
                 if (!signingOut) {
@@ -445,6 +456,11 @@ internal fun validServerUrl(value: String): Boolean = runCatching {
 private fun DashboardShell(
   connection: AppConnection,
   initialDashboardPath: String?,
+  initialDashboardPinned: Boolean = false,
+  initialViewPath: String? = null,
+  onViewPathChanged: ((String) -> Unit)? = null,
+  onOpenHostMenu: (() -> Unit)? = null,
+  onNavigateDashboard: ((String?) -> Boolean)? = null,
   registerReturnHome: ((() -> Unit) -> Unit)?,
   signInRemembered: Boolean,
   onSignOut: () -> Unit,
@@ -468,7 +484,9 @@ private fun DashboardShell(
   var dashboardListGeneration by remember(connection) { mutableIntStateOf(0) }
   var home by remember { mutableStateOf<NavKey>(DashboardDestination(initialDashboardPath)) }
   val stack = remember { mutableStateListOf(home) }
-  var startupResolved by remember { mutableStateOf(initialDashboardPath != null) }
+  var startupResolved by remember {
+    mutableStateOf(initialDashboardPath != null || initialDashboardPinned)
+  }
   LaunchedEffect(list) {
     val ready = list as? DashboardListState.Ready ?: return@LaunchedEffect
     if (!startupResolved) {
@@ -698,12 +716,27 @@ private fun DashboardShell(
           entryProvider {
             entry<DashboardsDestination> {
               Scaffold(
-                topBar = { TopAppBar(title = { Text("Dashboards") }, actions = headerActions) },
+                topBar = {
+                  TopAppBar(
+                    title = { Text("Dashboards") },
+                    navigationIcon = {
+                      onOpenHostMenu?.let { openMenu ->
+                        IconButton(onClick = openMenu) {
+                          Icon(Icons.Filled.Menu, contentDescription = "Open menu")
+                        }
+                      }
+                    },
+                    actions = headerActions,
+                  )
+                },
               ) { padding ->
                 Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
                   DashboardPickerScreen(
                     list,
-                    onDashboardPicked = { stack.add(DashboardDestination(it)) },
+                    onDashboardPicked = { target ->
+                      if (onNavigateDashboard?.invoke(target) != true)
+                        stack.add(DashboardDestination(target))
+                    },
                     header =
                       if (dashboardAgent.enabled)
                         ({
@@ -783,11 +816,21 @@ private fun DashboardShell(
               Scaffold(
                 topBar = {
                   TopAppBar(
+                    navigationIcon = {
+                      onOpenHostMenu?.let { openMenu ->
+                        IconButton(onClick = openMenu) {
+                          Icon(Icons.Filled.Menu, contentDescription = "Open menu")
+                        }
+                      }
+                    },
                     title = {
                       DashboardSwitcher(
                         (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
                         route.path,
-                        onSwitch = { select(DashboardDestination(it)) },
+                        onSwitch = { target ->
+                          if (onNavigateDashboard?.invoke(target) != true)
+                            select(DashboardDestination(target))
+                        },
                       )
                     },
                     actions = {
@@ -836,6 +879,10 @@ private fun DashboardShell(
                     customizing,
                     dashboardRefreshGeneration,
                     privateDesignServer,
+                    initialViewPath =
+                      if (route.path == initialDashboardPath) initialViewPath else null,
+                    onViewPathChanged =
+                      if (route.path == initialDashboardPath) onViewPathChanged else null,
                   )
                 }
                 if (editSessions && !customizing)
@@ -1256,6 +1303,8 @@ private fun LiveDashboard(
   customizing: Boolean,
   refreshGeneration: Int,
   privateDesignServer: Boolean,
+  initialViewPath: String? = null,
+  onViewPathChanged: ((String) -> Unit)? = null,
 ) {
   val uriHandler = LocalUriHandler.current
   var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
@@ -1471,7 +1520,14 @@ private fun LiveDashboard(
       if (error == null) CircularProgressIndicator(Modifier.padding(24.dp))
     } else
       Column(Modifier.weight(1f)) {
-        DashboardContent(current, path, shown, Modifier.weight(1f)) { _, card ->
+        DashboardContent(
+          current,
+          path,
+          shown,
+          Modifier.weight(1f),
+          initialViewPath = initialViewPath,
+          onViewPathChanged = onViewPathChanged,
+        ) { _, card ->
           Column {
             AuthenticatedCard(
               card,
@@ -1540,6 +1596,24 @@ internal fun privateDesignEditorUrl(home: String, path: String): String? =
   if (path.matches(Regex("/api/terrazzo/designs-open/[A-Za-z0-9_-]+"))) home.trimEnd('/') + path
   else null
 
+/** Resolves a Home Assistant sub-view URL segment (path name or 0-based index) into [views]. */
+internal fun resolveViewIndex(views: List<View>, viewPath: String?): Int? {
+  val segment = viewPath?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+  val byPath = views.indexOfFirst { it.path?.trim()?.equals(segment, ignoreCase = true) == true }
+  if (byPath >= 0) return byPath
+  val asInt = segment.toIntOrNull()
+  if (asInt != null && asInt in views.indices) return asInt
+  return null
+}
+
+/** Route segment to reflect the active view in the HA panel URL (`""` for single-view default). */
+internal fun viewRouteSegment(views: List<View>, index: Int): String {
+  val view = views.getOrNull(index) ?: return ""
+  val named = view.path?.trim()?.takeIf { it.isNotEmpty() }
+  if (named != null) return named
+  return if (index == 0) "" else index.toString()
+}
+
 /** Common adaptive grid. The caller supplies generation so Android can retain local converters. */
 @Composable
 fun DashboardContent(
@@ -1547,9 +1621,17 @@ fun DashboardContent(
   path: String?,
   snapshot: HaSnapshot,
   modifier: Modifier = Modifier,
+  initialViewPath: String? = null,
+  onViewPathChanged: ((String) -> Unit)? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
-  var selectedView by rememberSaveable(path) { mutableIntStateOf(0) }
+  var selectedView by
+    rememberSaveable(path) {
+      mutableIntStateOf(resolveViewIndex(dashboard.views, initialViewPath) ?: 0)
+    }
+  LaunchedEffect(dashboard.views, initialViewPath) {
+    resolveViewIndex(dashboard.views, initialViewPath)?.let { selectedView = it }
+  }
   val index = selectedView.coerceIn(0, (dashboard.views.size - 1).coerceAtLeast(0))
   val view = dashboard.views.getOrNull(index)
   Column(modifier) {
@@ -1562,7 +1644,10 @@ fun DashboardContent(
           val icon = remember(v.icon) { HaIconMap.mdi(v.icon) }
           FilterChip(
             selected = i == index,
-            onClick = { selectedView = i },
+            onClick = {
+              selectedView = i
+              onViewPathChanged?.invoke(viewRouteSegment(dashboard.views, i))
+            },
             leadingIcon =
               icon?.let {
                 {

@@ -95,9 +95,30 @@ test('installed HA /terrazzo and Lovelace custom card render and act as the sign
     const issues = await page.evaluate(() => document.querySelector('home-assistant').hass.callWS({type:'repairs/list_issues'}));
     assert.ok(issues.issues.some((issue) => issue.domain === 'terrazzo' && issue.issue_id === 'yaml_overrides_ui'),
       'YAML users are told it overrides the UI');
+    // Hidden Lovelace dashboards (like `second-panel`, show_in_sidebar: false) can be promoted to
+    // top-level Terrazzo sidebar panels while hiding the generic `/terrazzo` hub link.
+    const promoteForm = await (await api.post('/api/config/config_entries/options/flow', {headers, data:{handler:entries[0].entry_id}})).json();
+    const promoted = await api.post(`/api/config/config_entries/options/flow/${promoteForm.flow_id}`,
+      {headers, data:{title:'Terrazzo', dashboard:'wall-panel', top_level_dashboards:'hidden'}});
+    assert.equal((await promoted.json()).type, 'create_entry');
+    await page.waitForFunction(() => {
+      const panels = document.querySelector('home-assistant')?.hass?.panels;
+      return panels?.['terrazzo-second-panel']?.show_in_sidebar === true
+        && panels?.['terrazzo-second-panel']?.title === 'Second panel'
+        && panels?.terrazzo?.show_in_sidebar === false
+        && panels?.['second-panel']?.component_name === 'lovelace'
+        && !panels?.['terrazzo-wall-panel'];
+    });
+    await page.goto(`${base}/terrazzo-second-panel`);
+    await page.frameLocator('terrazzo-panel iframe').getByText('Second dashboard is selected', {exact:true}).waitFor({timeout:60_000});
     // Back to the YAML's settings for the read-only user below, who expects the wall panel.
     const restore = await (await api.post('/api/config/config_entries/options/flow', {headers, data:{handler:entries[0].entry_id}})).json();
-    await api.post(`/api/config/config_entries/options/flow/${restore.flow_id}`, {headers, data:{title:'Terrazzo', dashboard:'wall-panel'}});
+    await api.post(`/api/config/config_entries/options/flow/${restore.flow_id}`,
+      {headers, data:{title:'Terrazzo', dashboard:'wall-panel', top_level_dashboards:'off'}});
+    await page.waitForFunction(() => {
+      const panels = document.querySelector('home-assistant')?.hass?.panels;
+      return panels?.terrazzo?.show_in_sidebar === true && !panels?.['terrazzo-second-panel'];
+    });
     await page.goto(`${base}/wall-panel/0`);
     const card = page.locator('remote-compose-card');
     await card.waitFor({timeout:60_000});

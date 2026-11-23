@@ -14,28 +14,49 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_AGENT,
     CONF_DASHBOARD,
+    CONF_DEFAULT_DASHBOARD,
     CONF_MCP_USER,
+    CONF_SIDEBAR_DASHBOARDS,
     CONF_TITLE,
+    CONF_TOP_LEVEL_DASHBOARDS,
+    DEFAULT_DASHBOARD_NONE,
     DEFAULT_TITLE,
     DOMAIN,
     MCP_OFF,
+    TOP_LEVEL_HIDDEN,
+    TOP_LEVEL_OFF,
+    TOP_LEVEL_SELECTED,
     clean_options,
 )
 
 
-def _dashboard_options(hass):
-    """Lovelace dashboards by URL path. Lovelace's data shape differs across HA releases."""
+def _lovelace_dashboards(hass):
     data = hass.data.get("lovelace")
     dashboards = getattr(data, "dashboards", None)
     if dashboards is None and isinstance(data, dict):
         dashboards = data.get("dashboards")
+    return dashboards or {}
+
+
+def _dashboard_options(hass, include_lovelace=False, annotate_hidden=False):
+    """Lovelace dashboards by URL path. Lovelace's data shape differs across HA releases."""
+    dashboards = _lovelace_dashboards(hass)
     options = []
-    for url_path, dashboard in (dashboards or {}).items():
-        if not url_path or url_path == "lovelace":
+    seen = set()
+    for url_path, dashboard in dashboards.items():
+        if not url_path:
+            continue
+        if url_path == "lovelace" and not include_lovelace:
             continue  # The default Overview; the panel's picker offers it when it can draw it.
+        if url_path in seen:
+            continue
+        seen.add(url_path)
         config = getattr(dashboard, "config", None) or {}
         title = config.get("title") if isinstance(config, dict) else None
-        options.append(SelectOptionDict(value=url_path, label=f"{title} ({url_path})" if title else url_path))
+        hidden = isinstance(config, dict) and config.get("show_in_sidebar") is False
+        base = f"{title} ({url_path})" if title else url_path
+        label = f"{base} — hidden in Lovelace" if annotate_hidden and hidden else base
+        options.append(SelectOptionDict(value=url_path, label=label))
     return sorted(options, key=lambda option: option["label"].casefold())
 
 
@@ -51,10 +72,31 @@ async def _mcp_user_options(hass):
     )
 
 
+def _top_level_mode_options():
+    return [
+        SelectOptionDict(value=TOP_LEVEL_OFF, label="Off (single Terrazzo link)"),
+        SelectOptionDict(
+            value=TOP_LEVEL_HIDDEN,
+            label="Hidden Lovelace dashboards (show hidden dashboards in sidebar as Terrazzo)",
+        ),
+        SelectOptionDict(
+            value=TOP_LEVEL_SELECTED,
+            label="Selected dashboards (choose below)",
+        ),
+    ]
+
+
 def _schema(hass, options, mcp_users=None):
-    """Title and an optional first dashboard; leaving it empty opens the dashboard picker. The
-    options form adds the MCP server's user ([mcp_users]); setup leaves the server off."""
+    """Title, optional first dashboard, and top-level sidebar dashboard promotion settings. The
+    options form adds the MCP server's user ([mcp_users]) and conversation agent."""
     dashboard = options.get(CONF_DASHBOARD) or ""
+    top_level_mode = options.get(CONF_TOP_LEVEL_DASHBOARDS) or TOP_LEVEL_OFF
+    sidebar_dashboards = list(options.get(CONF_SIDEBAR_DASHBOARDS) or [])
+    default_dashboard = options.get(CONF_DEFAULT_DASHBOARD) or DEFAULT_DASHBOARD_NONE
+    top_level_choices = _dashboard_options(hass, include_lovelace=True, annotate_hidden=True)
+    default_choices = [
+        SelectOptionDict(value=DEFAULT_DASHBOARD_NONE, label="Keep Home Assistant's default")
+    ] + top_level_choices
     fields = {
         vol.Required(CONF_TITLE, default=options.get(CONF_TITLE) or DEFAULT_TITLE): TextSelector(),
         vol.Optional(
@@ -62,6 +104,27 @@ def _schema(hass, options, mcp_users=None):
         ): SelectSelector(
             SelectSelectorConfig(
                 options=_dashboard_options(hass),
+                custom_value=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(CONF_TOP_LEVEL_DASHBOARDS, default=top_level_mode): SelectSelector(
+            SelectSelectorConfig(
+                options=_top_level_mode_options(),
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(CONF_SIDEBAR_DASHBOARDS, default=sidebar_dashboards): SelectSelector(
+            SelectSelectorConfig(
+                options=top_level_choices,
+                multiple=True,
+                custom_value=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(CONF_DEFAULT_DASHBOARD, default=default_dashboard): SelectSelector(
+            SelectSelectorConfig(
+                options=default_choices,
                 custom_value=True,
                 mode=SelectSelectorMode.DROPDOWN,
             )

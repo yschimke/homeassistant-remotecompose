@@ -172,6 +172,57 @@ test('panel passes only same-origin session capability, refreshes auth and clean
       history.replaceState(null, '', '/terrazzo');
       return {explicit, picker, configured: panel.frame.terrazzoHost.getDashboard()};
     }), {explicit:'second-panel', picker:'', configured:'wall-panel'});
+    assert.deepEqual(await page.evaluate(() => {
+      const panel = document.querySelector('terrazzo-panel');
+      const narrowEvents = [];
+      let menuToggles = 0;
+      const viewEvents = [];
+      panel.addEventListener('hass-toggle-menu', () => { menuToggles++; });
+      panel.frame.terrazzoHost.setNarrowListener((v) => narrowEvents.push(v));
+      panel.frame.terrazzoHost.setViewPathListener((v) => viewEvents.push(v));
+      panel.narrow = true;
+      panel.frame.terrazzoHost.toggleMenu();
+      panel.panel = { url_path: 'terrazzo-wall', config: { dashboard: 'wall-panel', pinned_dashboard: true, terrazzo_managed: true, version: '1.2.3' } };
+      panel.hass = {
+        auth: panel._hass.auth,
+        panels: {
+          'terrazzo-wall': panel._panel,
+          'terrazzo-second': { url_path: 'terrazzo-second', show_in_sidebar: true, config: { dashboard: 'second-panel', pinned_dashboard: true, terrazzo_managed: true } },
+        },
+      };
+      history.replaceState(null, '', '/terrazzo-wall/kitchen?wall');
+      panel.route = { path: '/kitchen' };
+      const initialView = panel.frame.terrazzoHost.getViewPath();
+      panel.frame.terrazzoHost.setViewPath('living');
+      const updatedUrl = location.pathname + location.search;
+      let locationChanged = 0;
+      window.addEventListener('location-changed', () => { locationChanged++; }, { once: true });
+      const navigated = panel.frame.terrazzoHost.openDashboard('second-panel');
+      const afterNav = location.pathname;
+      return {
+        isNarrow: panel.frame.terrazzoHost.isNarrow(),
+        narrowEvents,
+        menuToggles,
+        pinned: panel.frame.terrazzoHost.isPinnedDashboard(),
+        initialView,
+        viewEvents,
+        updatedUrl,
+        navigated,
+        locationChanged,
+        afterNav,
+      };
+    }), {
+      isNarrow: true,
+      narrowEvents: [true],
+      menuToggles: 1,
+      pinned: true,
+      initialView: 'kitchen',
+      viewEvents: ['kitchen'],
+      updatedUrl: '/terrazzo-wall/living?wall',
+      navigated: true,
+      locationChanged: 1,
+      afterNav: '/terrazzo-second',
+    });
     assert.equal(result.denied, true);
     assert.equal(result.reattached, result.path);
   } finally { await browser.close(); }

@@ -21,6 +21,33 @@ export function wallSettings(search) {
   };
 }
 
+/** First sub-view segment from HA's `route.path` (e.g. `/kitchen/details` -> `kitchen`, `/` -> `''`). */
+export function viewPathFromRoute(route) {
+  const raw = typeof route?.path === 'string' ? route.path : '';
+  const segment = raw.replace(/^\/+|\/+$/g, '').split('/')[0] || '';
+  if (!segment) return '';
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
+/** Find a promoted top-level Terrazzo sidebar panel matching `dashboardPath`, if one exists. */
+export function promotedPanelForDashboard(panels, dashboardPath, currentUrlPath = '') {
+  if (!panels || typeof panels !== 'object') return null;
+  const target = (dashboardPath || '').trim();
+  for (const panel of Object.values(panels)) {
+    const cfg = panel?.config;
+    if (!cfg?.terrazzo_managed || !cfg?.pinned_dashboard) continue;
+    if (panel.show_in_sidebar === false) continue;
+    if ((cfg.dashboard || '') !== target) continue;
+    if (!panel.url_path || panel.url_path === currentUrlPath) continue;
+    return panel.url_path;
+  }
+  return null;
+}
+
 /** Home Assistant's theme variables the dashboard draws its chrome in. */
 const THEME_VARIABLES = {
   primary: '--primary-color',
@@ -101,6 +128,40 @@ export class TerrazzoPanel extends HTMLElement {
         const query = new URLSearchParams(location.search);
         return query.has('dashboard') ? query.get('dashboard') : this._panel?.config?.dashboard || '';
       },
+      isPinnedDashboard: () => {
+        const query = new URLSearchParams(location.search);
+        if (query.has('dashboard')) return false;
+        return !!this._panel?.config?.pinned_dashboard;
+      },
+      // HA hides the sidebar behind a drawer on narrow viewports and expects panels to open it.
+      isNarrow: () => !!this._narrow,
+      setNarrowListener: (listener) => { this.narrowListener = listener; },
+      toggleMenu: () => {
+        this.dispatchEvent(new CustomEvent('hass-toggle-menu', { bubbles: true, composed: true }));
+      },
+      getViewPath: () => viewPathFromRoute(this._route),
+      setViewPathListener: (listener) => { this.viewPathListener = listener; },
+      setViewPath: (viewPath) => {
+        const panelPath = this._panel?.url_path;
+        if (!panelPath) return;
+        const prefix = `/${panelPath}`;
+        if (location.pathname !== prefix && !location.pathname.startsWith(`${prefix}/`)) return;
+        const clean = typeof viewPath === 'string' ? viewPath.trim() : '';
+        const nextPathname = clean ? `${prefix}/${encodeURIComponent(clean)}` : prefix;
+        if (location.pathname === nextPathname) return;
+        history.replaceState(null, '', `${nextPathname}${location.search}${location.hash}`);
+      },
+      openDashboard: (dashboardPath) => {
+        const target = promotedPanelForDashboard(
+          this._hass?.panels,
+          dashboardPath,
+          this._panel?.url_path || '',
+        );
+        if (!target) return false;
+        history.pushState(null, '', `/${target}`);
+        window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
+        return true;
+      },
       // The dashboard hands over how to go back to where it started, for `return_after`.
       setReturnHome: (returnHome) => { this.returnHome = returnHome; },
       // HA's active theme, so the dashboard's chrome matches the rest of Home Assistant.
@@ -139,6 +200,19 @@ export class TerrazzoPanel extends HTMLElement {
       this._themes = hass?.themes;
       requestAnimationFrame(() => { if (this.isConnected) this.themeListener?.(this.theme()); });
     }
+  }
+  set narrow(narrow) {
+    const next = !!narrow;
+    if (next !== this._narrow) {
+      this._narrow = next;
+      this.narrowListener?.(next);
+    }
+  }
+  set route(route) {
+    const prev = viewPathFromRoute(this._route);
+    this._route = route;
+    const next = viewPathFromRoute(route);
+    if (next !== prev) this.viewPathListener?.(next);
   }
   /** JSON: HA's dark mode and resolved theme colors; a color the theme doesn't set is ''. */
   theme() {
@@ -179,6 +253,8 @@ export class TerrazzoPanel extends HTMLElement {
     this.returnHome = null;
     this.themeListener = null;
     this.fullscreenListener = null;
+    this.narrowListener = null;
+    this.viewPathListener = null;
     this.cover.hidden = true;
   }
   active() {
