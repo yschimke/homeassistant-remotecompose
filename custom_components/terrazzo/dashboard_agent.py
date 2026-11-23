@@ -28,10 +28,11 @@ from .const import CONF_AGENT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def agent_id(hass):
-    """The chosen agent's id while the entry is loaded and the agent exists, else None."""
+def agent_id(hass, setting_up=None):
+    """The chosen agent's id while the entry is loaded and the agent exists, else None. [setting_up]
+    is an entry in `async_setup_entry`, read before Home Assistant marks it loaded."""
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.state is ConfigEntryState.LOADED:
+        if entry.state is ConfigEntryState.LOADED or entry is setting_up:
             chosen = entry.options.get(CONF_AGENT) or None
             if chosen and conversation.async_get_agent_info(hass, chosen) is not None:
                 return chosen
@@ -99,11 +100,11 @@ def info(hass, user=None):
 
 
 @callback
-def async_check(hass):
-    """Raises or clears the setup repairs for how things stand now. Run when the entry loads, when a
-    client asks for the agent, and before each turn, so turning the tools on clears the repair the
-    next time anything looks."""
-    chosen = agent_id(hass)
+def async_check(hass, setting_up=None):
+    """Raises or clears the setup repairs for how things stand now. Run when the entry loads (with
+    [setting_up], the entry not yet marked loaded), when a client asks for the agent, and before each
+    turn, so turning the tools on clears the repair the next time anything looks."""
+    chosen = agent_id(hass, setting_up)
     if chosen is not None:
         ir.async_delete_issue(hass, DOMAIN, ISSUE_MOVED)
     found = _agent_entry(hass, chosen) if chosen is not None else None

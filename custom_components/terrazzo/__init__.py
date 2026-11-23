@@ -174,7 +174,8 @@ async def async_setup_entry(hass, entry):
     await _async_add_card_resource(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     # The agent's setup repairs, for the options as they now stand (dashboard_agent.py).
-    dashboard_agent.async_check(hass)
+    # The entry isn't marked loaded until this returns, so it is named.
+    dashboard_agent.async_check(hass, entry)
     return True
 
 
