@@ -64,8 +64,14 @@ private fun App(panel: Boolean, signedInServer: String) {
   // In the panel the app draws in Home Assistant's theme and follows it when it changes.
   var hostTheme by remember { mutableStateOf(if (panel) HostTheme.parse(panelTheme()) else null) }
   var fullScreen by remember { mutableStateOf(isFullScreen(panel)) }
+  var narrow by remember { mutableStateOf(if (panel) panelIsNarrow() else false) }
+  var viewPath by remember { mutableStateOf(if (panel) panelViewPath() else "") }
   DisposableEffect(Unit) {
-    if (panel) watchPanelTheme { hostTheme = HostTheme.parse(it) }
+    if (panel) {
+      watchPanelTheme { hostTheme = HostTheme.parse(it) }
+      watchPanelNarrow { narrow = it }
+      watchPanelViewPath { viewPath = it }
+    }
     watchFullScreen(panel) { fullScreen = it }
     onDispose {}
   }
@@ -77,6 +83,11 @@ private fun App(panel: Boolean, signedInServer: String) {
       hostedConfig = HaConfig(homeAssistantOrigin(), ""),
       hostedAccessToken = ::currentPanelAccessToken,
       initialDashboardPath = panelDashboard().ifBlank { null },
+      initialDashboardPinned = panelDashboardPinned(),
+      initialViewPath = viewPath,
+      onViewPathChanged = ::panelSetViewPath,
+      onOpenHostMenu = if (narrow) ::panelToggleMenu else null,
+      onNavigateDashboard = { target -> panelOpenDashboard(target ?: "") },
       hostedAction = ::panelAction,
       registerReturnHome = ::panelReturnHome,
       hostTheme = hostTheme,
@@ -103,6 +114,30 @@ private external fun panelTheme(): String
 
 @JsFun("(listener) => window.frameElement.terrazzoHost.setThemeListener?.(listener)")
 private external fun watchPanelTheme(listener: (String) -> Unit)
+
+@JsFun("() => !!window.frameElement.terrazzoHost.isPinnedDashboard?.()")
+private external fun panelDashboardPinned(): Boolean
+
+@JsFun("() => !!window.frameElement.terrazzoHost.isNarrow?.()")
+private external fun panelIsNarrow(): Boolean
+
+@JsFun("(listener) => window.frameElement.terrazzoHost.setNarrowListener?.(listener)")
+private external fun watchPanelNarrow(listener: (Boolean) -> Unit)
+
+@JsFun("() => window.frameElement.terrazzoHost.toggleMenu?.()")
+private external fun panelToggleMenu()
+
+@JsFun("() => window.frameElement.terrazzoHost.getViewPath?.() ?? ''")
+private external fun panelViewPath(): String
+
+@JsFun("(listener) => window.frameElement.terrazzoHost.setViewPathListener?.(listener)")
+private external fun watchPanelViewPath(listener: (String) -> Unit)
+
+@JsFun("(viewPath) => window.frameElement.terrazzoHost.setViewPath?.(viewPath)")
+private external fun panelSetViewPath(viewPath: String)
+
+@JsFun("(dashboardPath) => !!window.frameElement.terrazzoHost.openDashboard?.(dashboardPath)")
+private external fun panelOpenDashboard(dashboardPath: String): Boolean
 
 // The panel fullscreens itself, hiding HA's sidebar too; elsewhere (or in an older panel) the page.
 @JsFun(

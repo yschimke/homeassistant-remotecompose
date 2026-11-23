@@ -135,6 +135,35 @@ with normal Lovelace views works. Unsupported/unavailable bookmarked dashboards
 show an explanation; choose another through **Dashboards**. If none are supported,
 create a Lovelace dashboard with explicit views in HA first, then reconnect.
 
+## Top-level sidebar dashboards
+
+If you want your Terrazzo dashboards directly in Home Assistant's sidebar without a separate
+**Terrazzo** link:
+
+1. In **Settings → Dashboards**, turn off **Show in sidebar** (`show_in_sidebar: false`) on each
+   Lovelace dashboard you want Terrazzo to render. Its native Lovelace page stays hidden from the
+   sidebar, while remaining reachable from **Settings → Dashboards** for native editing.
+2. In **Settings → Devices & services → Terrazzo → Configure**, set **Top-level sidebar
+   dashboards** to **Hidden Lovelace dashboards** (or choose **Selected dashboards** and pick an
+   explicit list if you also keep unrelated hidden dashboards).
+3. Optionally choose a **Default Home Assistant dashboard** to make one of those promoted Terrazzo
+   panels Home Assistant's system default panel (pinned at the top of the sidebar).
+
+Each promoted dashboard appears directly in the sidebar at `/terrazzo-<url_path>` with its
+Lovelace title, icon, and admin-only setting, and stays in sync as you rename, hide, show, or
+delete dashboards. While at least one top-level dashboard is active, the generic `/terrazzo` hub is
+hidden from the sidebar (direct URLs and `/terrazzo?wall` bookmarks keep working).
+
+YAML equivalent:
+
+```yaml
+terrazzo:
+  top_level_dashboards: hidden  # off | hidden | selected
+  # sidebar_dashboards:         # used when top_level_dashboards: selected
+  #   - wall-panel
+  default_dashboard: wall-panel # optional; must be one of the promoted dashboards
+```
+
 ## Look and layout
 
 The panel draws in Home Assistant's own theme: its light or dark mode, and with
