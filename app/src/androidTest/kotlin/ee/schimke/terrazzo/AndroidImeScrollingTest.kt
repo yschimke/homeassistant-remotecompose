@@ -45,6 +45,12 @@ import org.junit.runner.RunWith
 /** Long enough to outlast the IME's show/resize animation on a slow emulator. */
 private const val IME_SETTLE_MS = 600L
 
+/** How long [AndroidImeScrollingTest]'s bottom-gap check retries a settled measurement. */
+private const val IME_GAP_TIMEOUT_MS = 10_000L
+
+/** The gap below the form's last button at its scroll limit: its 24dp padding, plus slack. */
+private val EXPECTED_GAP_DP = 23f..41f
+
 /** Real IME tests: a frozen preview cannot verify viewport resizing or focus relocation. */
 @AndroidWindowInsetsRegression
 @RunWith(AndroidJUnit4::class)
@@ -355,10 +361,31 @@ class AndroidImeScrollingTest {
     compose.waitForIdle()
   }
 
+  /**
+   * At the scroll limit the form has 24dp of design padding below its last 48dp button. The gap is
+   * measured against max(IME, navigation bar), never their sum (important in three-button mode).
+   *
+   * The keyboard can still change height after the scroll that brought [lastAction] up (its
+   * suggestion strip comes and goes), and a measurement then pairs the button's old position with
+   * the new inset: CI saw -222dp and 346dp on two runs of one commit. So it is measured once the
+   * keyboard has held still and the form has scrolled to the bottom for that height, until
+   * [IME_GAP_TIMEOUT_MS]. A doubled or stale inset is a steady wrong gap, and still fails.
+   */
   private fun assertNoExtraBottomInset(lastAction: SemanticsNodeInteraction) {
-    // At the scroll limit the form has 24dp of design padding below its last 48dp button.
-    // Compare against max(IME, navigation bar), never their sum (important in three-button
-    // mode).
+    var gap = Float.NaN
+    val settled = runCatching {
+      compose.waitUntil(IME_GAP_TIMEOUT_MS) {
+        awaitImeSettled()
+        scrollFormToBottom()
+        gap = bottomGapDp(lastAction)
+        gap in EXPECTED_GAP_DP
+      }
+    }
+    // Text semantics exclude the button's internal padding; the range allows that plus rounding.
+    assertTrue("No doubled or stale bottom inset: gap=${gap}dp", settled.isSuccess)
+  }
+
+  private fun bottomGapDp(lastAction: SemanticsNodeInteraction): Float {
     val bounds = lastAction.fetchSemanticsNode().boundsInWindow
     val availableBottom = compose.runOnIdle {
       compose.activity.window.decorView.height -
@@ -366,10 +393,7 @@ class AndroidImeScrollingTest {
           .getInsets(WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.systemBars())
           .bottom
     }
-    val density = compose.activity.resources.displayMetrics.density
-    val gap = (availableBottom - bounds.bottom) / density
-    // Text semantics exclude the button's internal padding; allow that plus rounding.
-    assertTrue("No doubled or stale bottom inset: gap=${gap}dp", gap in 23f..41f)
+    return (availableBottom - bounds.bottom) / compose.activity.resources.displayMetrics.density
   }
 }
 
