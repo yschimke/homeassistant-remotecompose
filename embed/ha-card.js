@@ -2285,7 +2285,7 @@ export class HaCardElement extends BaseElement {
     if (previous === next || !this.isConnected) return;
     // The host's state, pushed into the running card: a reload would skip the design's transition.
     if (name === 'ambient' || name === 'actions') {
-      if (name === 'ambient') this.render();
+      this.render();
     } else if ((name === 'bindings' || name === 'device-id') && this.player && this.localStates) {
       this.render();
     } else {

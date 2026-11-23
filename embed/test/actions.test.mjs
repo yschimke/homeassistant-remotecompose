@@ -252,3 +252,64 @@ test('semantic action visibility variables hide unmapped/suppressed actions and 
     states: { 'cover.garage': { state: 'closed', attributes: { supported_features: 1 } } },
   }), true);
 });
+
+test('changing the actions attribute re-renders action visibility overrides on a live card', async () => {
+  const { HaCardElement } = await import('../ha-card.js');
+
+  const attrs = new Map([
+    ['card', JSON.stringify({ type: 'tile', entity: 'sensor.bosch_dw_operation_state' })],
+    ['actions', JSON.stringify({ eco: { service: 'home_connect.start_program' } })],
+  ]);
+  const intOverrides = new Map();
+  let repaints = 0;
+  let invalidations = 0;
+  let fits = 0;
+
+  const context = {
+    namedVariables: new Map([['USER:action_eco_visible', { type: 4 }]]),
+    setNamedIntegerOverride: (key, value) => intOverrides.set(key, value),
+    setNamedFloatOverride: () => {},
+    setNamedStringOverride: () => {},
+  };
+  const cardEl = Object.create(HaCardElement.prototype);
+  Object.assign(cardEl, {
+    isConnected: true,
+    states: {},
+    pushed: new Map(),
+    hostValues: {},
+    localValues: null,
+    entityRegistry: null,
+    recipe: null,
+    player: {
+      getRemoteContext: () => context,
+      getDocument: () => ({ invalidateMeasure: () => { invalidations += 1; } }),
+      repaint: () => { repaints += 1; },
+    },
+    getAttribute: (name) => attrs.get(name) ?? null,
+    fit: () => { fits += 1; },
+    start: () => { throw new Error('changing actions must not reload the card'); },
+  });
+
+  // Initial render binds eco as visible (1).
+  cardEl.render();
+  assert.equal(intOverrides.get('USER:action_eco_visible'), 1);
+  assert.equal(repaints, 1);
+
+  // Suppressing eco via the actions attribute updates visibility to GONE (0) without reloading.
+  const prev = attrs.get('actions');
+  const next = JSON.stringify({ eco: '' });
+  attrs.set('actions', next);
+  cardEl.attributeChangedCallback('actions', prev, next);
+  assert.equal(intOverrides.get('USER:action_eco_visible'), 0);
+  assert.equal(repaints, 2);
+  assert.equal(invalidations, 2);
+  assert.equal(fits, 2);
+
+  // Re-enabling eco via actions restores visibility to VISIBLE (1).
+  const restored = JSON.stringify({ eco: { service: 'home_connect.start_program' } });
+  attrs.set('actions', restored);
+  cardEl.attributeChangedCallback('actions', next, restored);
+  assert.equal(intOverrides.get('USER:action_eco_visible'), 1);
+  assert.equal(repaints, 3);
+});
+

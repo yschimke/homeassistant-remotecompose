@@ -147,7 +147,9 @@ export class TerrazzoPanel extends HTMLElement {
         const prefix = `/${panelPath}`;
         if (location.pathname !== prefix && !location.pathname.startsWith(`${prefix}/`)) return;
         const clean = typeof viewPath === 'string' ? viewPath.trim() : '';
-        const nextPathname = clean ? `${prefix}/${encodeURIComponent(clean)}` : prefix;
+        const nextSubPath = clean ? `/${encodeURIComponent(clean)}` : '';
+        const nextPathname = `${prefix}${nextSubPath}`;
+        this._route = { ...(this._route || {}), prefix, path: nextSubPath };
         if (location.pathname === nextPathname) return;
         history.replaceState(null, '', `${nextPathname}${location.search}${location.hash}`);
       },

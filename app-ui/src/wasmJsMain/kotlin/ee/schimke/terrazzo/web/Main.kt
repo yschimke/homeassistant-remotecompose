@@ -85,7 +85,10 @@ private fun App(panel: Boolean, signedInServer: String) {
       initialDashboardPath = panelDashboard().ifBlank { null },
       initialDashboardPinned = panelDashboardPinned(),
       initialViewPath = viewPath,
-      onViewPathChanged = ::panelSetViewPath,
+      onViewPathChanged = { next ->
+        viewPath = next
+        panelSetViewPath(next)
+      },
       onOpenHostMenu = if (narrow) ::panelToggleMenu else null,
       onNavigateDashboard = { target -> panelOpenDashboard(target ?: "") },
       hostedAction = ::panelAction,
