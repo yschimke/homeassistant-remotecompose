@@ -10,6 +10,7 @@ import ee.schimke.composeai.rcplayer.edit.validateFor
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
+import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignSurface
@@ -164,6 +165,9 @@ fun userTemplateProblem(
       // The display's state, not the card's data: written by the host that knows it, the
       // document's own value otherwise (docs/architecture/ambient-mode.md).
       .filterNot { it == RcAmbientValue }
+      // The binding recipe the document carries for its host to read (a cover's position, a
+      // thermostat's temperatures), never a value pushed into it.
+      .filterNot { it == CardBindingRecipe.BINDING }
       .distinct()
       .sorted()
   if (unknown.isNotEmpty()) {

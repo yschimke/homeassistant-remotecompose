@@ -8,12 +8,15 @@ import ee.schimke.composeai.rccreation.compose.modifier.fillMaxSize
 import ee.schimke.composeai.rccreation.compose.modifier.fillMaxWidth
 import ee.schimke.composeai.rccreation.compose.state.RemoteString
 import ee.schimke.composeai.rccreation.compose.state.rc
+import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
 import ee.schimke.ha.design.CardBindingRecipe
 import ee.schimke.ha.design.CardBindingRecipes
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
@@ -40,6 +43,7 @@ import ee.schimke.ha.rc.components.TileTwoLineMinHeightDp
 import ee.schimke.ha.rc.components.haNeutralAccent
 import ee.schimke.ha.rc.components.tileFeatureRows
 import ee.schimke.ha.rc.components.tileNaturalHeightDp
+import ee.schimke.ha.rc.components.toPaddedRemoteString
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.design.DesignedCardConverter
 import ee.schimke.ha.rc.formatState
@@ -162,10 +166,13 @@ class TileCardConverter : DesignedCardConverter() {
 
   /**
    * A template that draws a meter glyph carries [CardBindingRecipes.TILE], so a non-numeric slot
-   * state rests the glyph at 0 instead of NaN. Every other tile template stays recipe-free.
+   * state rests the glyph at 0 instead of NaN; a cover's carries [CardBindingRecipes.COVER], for
+   * the position in its state line. Every other tile template stays recipe-free.
    */
   override fun designRecipe(properties: DesignProperties): CardBindingRecipe? {
     val slot = designTemplate(properties)?.snapshot?.states?.values?.firstOrNull() ?: return null
+    // A cover's state line reads its position ([coverStateLine]), which slot bindings don't carry.
+    if (properties[DOMAIN] == "cover") return CardBindingRecipes.COVER
     return CardBindingRecipes.TILE.takeIf { measureKind(slot.entityId, slot) != null }
   }
 
@@ -237,6 +244,8 @@ class TileCardConverter : DesignedCardConverter() {
     val content = TileContent.stateContent(card, entityId)
     val state =
       if (content == null) LiveValues.state(entityId, formatState(entity, snapshot))
+      else if (TileContent.isLivePositionLine(content, entityId))
+        coverStateLine(entityId, entity, snapshot)
       else
         LiveValues.named(
           entityId,
@@ -262,6 +271,30 @@ class TileCardConverter : DesignedCardConverter() {
       featuresPosition = TileContent.featuresPosition(card),
       reading = sensorReading(entityId, entity, name, state),
     )
+  }
+
+  /**
+   * A cover's default secondary line, HA's `state` · `current_position` ("Open · 70 %"), computed
+   * in-document from `<id>.state` ([formatState]) and `<id>.current_position`
+   * ([HaLiveBindings.attributeFloats], [HaLiveBindings.ABSENT] without one), so it follows the
+   * cover with no re-encode and a card design's template, captured from a placeholder, plays the
+   * live state. As [TileContent.secondaryText] has it, a position of 0 (or none) is left out.
+   */
+  private fun coverStateLine(
+    entityId: String?,
+    entity: EntityState?,
+    snapshot: HaSnapshot,
+  ): RemoteString {
+    val state = LiveValues.state(entityId, formatState(entity, snapshot))
+    val seed =
+      entity?.let {
+        HaLiveBindings.attributeFloats(it.entityId, it.attributes)[HaLiveBindings.CURRENT_POSITION]
+      } ?: HaLiveBindings.ABSENT
+    val position = LiveValues.namedFloat(entityId, HaLiveBindings.CURRENT_POSITION, seed)
+    return state +
+      position
+        .isGreaterThan(0f.rf)
+        .select(" · ".rs + position.toPaddedRemoteString(1) + " %".rs, "".rs)
   }
 
   /**
