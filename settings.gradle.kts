@@ -157,6 +157,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
     ":app-ui",
     ":rc-player-ui",
     ":ha-cards-catalog",
+    ":device-pack-catalog",
     ":room-ui",
     ":quest",
     ":glasses",

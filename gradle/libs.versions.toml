@@ -159,6 +159,10 @@ rc-players-bom = { module = "ee.schimke.composeai:rc-players-bom", version.ref =
 livery-bom = { module = "ee.schimke.composeai:livery-bom", version.ref = "livery" }
 livery-client = { module = "ee.schimke.composeai:livery-client" }
 livery-protocol = { module = "ee.schimke.composeai:livery-protocol" }
+livery-uibuilder-capture = { module = "ee.schimke.composeai:livery-uibuilder-capture" }
+# Livery's catalog Gradle plugin (`ee.schimke.composeai.livery.catalog`), on build-logic's classpath
+# at the version livery-bom pins: a plugins {} block can't read a BOM.
+livery-gradle-plugin = { module = "ee.schimke.composeai:livery-gradle-plugin" }
 livery-sessions-core = { module = "ee.schimke.composeai:livery-sessions-core" }
 livery-sessions-server = { module = "ee.schimke.composeai:livery-sessions-server" }
 rc-player-protocol = { module = "ee.schimke.composeai:rc-player-protocol" }
