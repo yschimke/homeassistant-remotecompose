@@ -30,7 +30,11 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.SystemHaClock
+import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.ha.rc.components.HA_ENTITY_ACTION_NAME
+import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.isRelativeTimeState
@@ -59,6 +63,12 @@ internal fun LibraryCard(
   onToggle: ((String) -> Unit)? = null,
   onMoreInfo: ((String) -> Unit)? = null,
   onTemperatureChange: ((Double) -> Unit)? = null,
+  /**
+   * Runs a card action's JSON payload (an [HaAction], as [cardActionCall] reads it) the way the
+   * host runs its other writes: what a design's entity action resolves to ([libraryEntityAction]).
+   * Null runs none.
+   */
+  onAction: ((String) -> Unit)? = null,
   showFallbackNotice: Boolean = true,
   requireExactDesign: Boolean = false,
   designCache: DashboardLoadCache<LibraryDesignKey, ByteArray?>? = null,
@@ -92,11 +102,14 @@ internal fun LibraryCard(
         cardDevice(card, snapshot),
       )
     }
-  fun bindings() =
-    if (exact != null) exactTemplateBindings(card, snapshot) else templateBindings(card, snapshot)
+  // An exact design binds as the phone app plays it: by the recipe its own bytes carry, when they
+  // carry one (a device pack's thermostat: its unit, range and labels), else its converter.
+  fun bindings(template: ByteArray) =
+    if (exact != null) exactTemplateBindings(card, snapshot, template)
+    else templateBindings(card, snapshot)
   var bytes by
     remember(card, designKey, cache) {
-      mutableStateOf(cache.peek(designKey)?.takeIf { canBindWithCmp(it, bindings()) })
+      mutableStateOf(cache.peek(designKey)?.takeIf { canBindWithCmp(it, bindings(it)) })
     }
   var settled by remember(designKey, cache) { mutableStateOf(false) }
   val hasRelativeTime =
@@ -112,11 +125,21 @@ internal fun LibraryCard(
           value++
         }
     }
-  val values = remember(card, snapshot, tick, exact) { bindings() }
+  // The playing design, read once per document: its recipe binds it, and its entity actions resolve
+  // against the card's own slots.
+  val design = remember(card, snapshot) { CardDesignTemplates.designCard(card, snapshot) }
+  val playback = remember(design, bytes) { bytes?.let { CardDesignTemplates.playback(design, it) } }
+  // Computed in the same composition that first shows [bytes], so the player's first frame already
+  // has the current values (docs/architecture/live-card-updates.md).
+  val values =
+    remember(card, snapshot, tick, exact, playback) {
+      if (exact != null && playback != null) playback.namedBindings(snapshot)
+      else bindings(ByteArray(0))
+    }
   LaunchedEffect(designKey, cache) {
     try {
       val loaded = cache.get(designKey)
-      if (loaded != null && canBindWithCmp(loaded, bindings())) bytes = loaded
+      if (loaded != null && canBindWithCmp(loaded, bindings(loaded))) bytes = loaded
     } catch (e: CancellationException) {
       throw e
     } catch (_: Throwable) {
@@ -147,12 +170,21 @@ internal fun LibraryCard(
         // Theme swaps and responsive resizes should not animate text through clipped widths.
         RemoteComposeCard(current, Modifier.fillMaxWidth(), values, animateLayoutChanges = false) {
           event ->
-          if (event is RcPlayerEvent.HostNamedAction && event.name == "ha") {
+          if (event is RcPlayerEvent.HostNamedAction && event.name == HA_ACTION_NAME) {
             val payload = (event.value as? RcHostActionValue.TextValue)?.value
             val toggle = demoToggleEntity(card, payload)
             if (toggle != null) onToggle?.invoke(toggle)
             else demoMoreInfoEntity(card, payload)?.let { onMoreInfo?.invoke(it) }
             demoThermostatTarget(card, snapshot, payload)?.let { onTemperatureChange?.invoke(it) }
+          } else if (
+            event is RcPlayerEvent.HostNamedAction && event.name == HA_ENTITY_ACTION_NAME
+          ) {
+            // A named action on the card's own entity (a garage door's Close). Behind the
+            // document's control lock, which sends an empty payload while locked: that runs none.
+            val payload = (event.value as? RcHostActionValue.TextValue)?.value
+            playback
+              ?.let { libraryEntityAction(it, payload, snapshot) }
+              ?.let { onAction?.invoke(cardActionPayload(it)) }
           }
         }
         // Accessible host controls also work with templates without action regions.
@@ -326,16 +358,43 @@ internal fun selectedDesignKey(
 }
   .getOrNull()
 
-/** The values an exact design binds: its converter's own, as the phone app plays it. */
+/**
+ * The values an exact design [bytes] binds, as the phone app plays it: by the binding recipe the
+ * document carries (a device pack's design, which reads attributes its card type's converter
+ * doesn't push), else its converter's own.
+ */
 internal fun exactTemplateBindings(
   card: CardConfig,
   snapshot: HaSnapshot,
-): Map<String, RcNamedValue> {
-  val design = CardDesignTemplates.designCard(card, snapshot)
-  return CardDesignTemplates.playback(design, ByteArray(0))
-    .bindings(snapshot, SystemHaClock)
-    .toNamedValues()
-}
+  bytes: ByteArray,
+): Map<String, RcNamedValue> = exactTemplatePlayback(card, snapshot, bytes).namedBindings(snapshot)
+
+/** [bytes] played for [card], as the phone app plays them (`CardDesignTemplates.playback`). */
+internal fun exactTemplatePlayback(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  bytes: ByteArray,
+): CardTemplatePlayback =
+  CardDesignTemplates.playback(CardDesignTemplates.designCard(card, snapshot), bytes)
+
+private fun CardTemplatePlayback.namedBindings(snapshot: HaSnapshot): Map<String, RcNamedValue> =
+  bindings(snapshot, SystemHaClock).toNamedValues()
+
+/**
+ * The service call a design's **entity action** ([HA_ENTITY_ACTION_NAME], [payload]) runs, as the
+ * phone app resolves it (`CardTemplatePlayback.resolveEntityAction`): only an action the slot
+ * entity's domain lists, on the card's own entity. Null for anything else, an empty (locked)
+ * payload included.
+ */
+internal fun libraryEntityAction(
+  playback: CardTemplatePlayback,
+  payload: String?,
+  snapshot: HaSnapshot,
+): HaAction.CallService? = playback.resolveEntityAction(payload, snapshot) as? HaAction.CallService
+
+/** [call] as the card action payload the host's dispatch runs ([cardActionCall]). */
+internal fun cardActionPayload(call: HaAction.CallService): String =
+  Json.encodeToString(HaAction.serializer(), call)
 
 private fun CardSnapshotBindings.toNamedValues(): Map<String, RcNamedValue> = buildMap {
   strings.forEach { (k, v) -> put(k, RcNamedValue.Text(v)) }

@@ -225,7 +225,9 @@ tap. The host resolves it with `CardEntityActions` (ha-model), against the slot'
   runs, on that entity alone, with data the host computes; a slot the card doesn't have, another
   domain or another name runs nothing.
 - **Every host.** The app resolves it in `CardTemplatePlayback.resolveEntityAction`
-  (`CachedCardPreview`; a directly captured card against its real entity), and the browser card in
+  (`CachedCardPreview`; a directly captured card against its real entity), the shared desktop and
+  Wasm app through the same call (`LibraryCard`'s `libraryEntityAction`, run by the dashboard's own
+  service dispatch), and the browser card in
   `resolveEntityAction` (`embed/ha-card.js`, which the Home Assistant card shares), a port held to
   the same cases (`CardEntityActionsTest`, `embed/test/entity-actions.test.mjs`). The Home
   Assistant card runs it on the card's own entity, never on its `tap_action`'s `target`, and

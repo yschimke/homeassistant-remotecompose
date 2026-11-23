@@ -603,7 +603,10 @@ fun CardStudioScreen(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
           )
-          val values = remember(card, snapshot) { exactTemplateBindings(card, snapshot) }
+          val values =
+            remember(card, snapshot, shownDraft) {
+              exactTemplateBindings(card, snapshot, shownDraft)
+            }
           RemoteComposeCard(shownDraft, Modifier.fillMaxWidth(), values)
         } else preview()
         if (mode == CardStudioMode.Builder) {

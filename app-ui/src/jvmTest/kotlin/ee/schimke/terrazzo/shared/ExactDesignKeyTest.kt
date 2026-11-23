@@ -97,7 +97,7 @@ class ExactDesignKeyTest {
       val bytes = CardDesignTemplates.capture(host, key).bytes
       assertTrue(canPlayWithCmp(bytes), "${card.type} plays in the web player")
       assertTrue(
-        canBindWithCmp(bytes, exactTemplateBindings(card, snapshot)),
+        canBindWithCmp(bytes, exactTemplateBindings(card, snapshot, bytes)),
         "${card.type}'s design binds every value it declares",
       )
     }

@@ -112,6 +112,9 @@ internal fun AuthenticatedCard(
               dark,
               onToggle,
               onMoreInfo,
+              // A design's entity actions (a garage door's Open, Stop and Close) run through the
+              // same dispatch as the card's other writes; a preview runs none.
+              onAction = if (readOnly) null else onAction,
               designCache = designCache,
               designId = designSelections[cardFingerprint(leaf)],
               requireExactDesign = true,

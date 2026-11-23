@@ -52,7 +52,7 @@ class PublishedInstrumentTemplateTest {
       // Asked for by key, the design binds the converter's own values.
       assertNotNull(exactDesignKey(card, snapshot, "console", dark = true), type)
       assertTrue(
-        canBindWithCmp(bytes, exactTemplateBindings(card, snapshot)),
+        canBindWithCmp(bytes, exactTemplateBindings(card, snapshot, bytes)),
         "$type must bind every declared value from the converter",
       )
     }
@@ -86,7 +86,7 @@ class PublishedInstrumentTemplateTest {
       )
     for (style in listOf("classic", "console")) {
       val bytes = File(root, "scripts/fixtures/demo/tile-$style.rc").readBytes()
-      assertTrue(canBindWithCmp(bytes, exactTemplateBindings(card, snapshot)), "tile-$style")
+      assertTrue(canBindWithCmp(bytes, exactTemplateBindings(card, snapshot, bytes)), "tile-$style")
     }
   }
 }
