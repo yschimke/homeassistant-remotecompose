@@ -1,6 +1,7 @@
 package ee.schimke.ha.cards
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Home
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MeetingRoom
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Tv
@@ -42,6 +44,9 @@ object HaCardIcons {
       "water" to Icons.Filled.WaterDrop,
       "media" to Icons.Filled.Tv,
       "alert" to Icons.Filled.Notifications,
+      // A stepper's glyphs: a thermostat's set point down and up.
+      "minus" to Icons.Filled.Remove,
+      "plus" to Icons.Filled.Add,
     )
 
   /** Every key a design may write, in the order the property editor offers them. */

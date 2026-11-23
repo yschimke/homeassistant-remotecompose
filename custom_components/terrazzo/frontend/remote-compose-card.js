@@ -1,4 +1,4 @@
-import { HaCardElement, serviceCallFor, MESSAGE_CARD_TYPE, MESSAGE_SUBMIT, messageInputs, messageAction } from './ha-card.js?register=false';
+import { HaCardElement, serviceCallFor, hostValuesFromConfig, MESSAGE_CARD_TYPE, MESSAGE_SUBMIT, messageInputs, messageAction } from './ha-card.js?register=false';
 
 /** A published Wear OS watch face as a card (`face`, optional `server` and `size`). */
 export const WATCH_FACE_CARD_TYPE = 'watchface';
@@ -258,6 +258,7 @@ export class RemoteComposeCard extends HaCardElement {
     if (watchFace) this.removeAttribute('require-host-bindings');
     else this.setAttribute('require-host-bindings', '');
     // Set local mode before attributes can trigger an asynchronous start/OAuth.
+    this.hostValues = hostValuesFromConfig(this._hass?.config);
     this.setStates(this._hass?.states ?? {});
     const attrs = {
       card: JSON.stringify(config.card),
@@ -280,6 +281,8 @@ export class RemoteComposeCard extends HaCardElement {
     const accountChanged = this._hass?.user?.id != null && this._hass.user.id !== hass?.user?.id;
     if (accountChanged) { this.inputDrafts.clear(); this.stop(); }
     this._hass = hass;
+    // Home Assistant's own unit system, for a design that shows its unit (a °F thermostat).
+    this.hostValues = hostValuesFromConfig(hass.config);
     this.setStates(hass.states);
     if (!wasAuthenticated && this.player) this.configureInputPlayer(this.player, this.config.card);
     this.setAttribute('theme', hass.themes?.darkMode ? 'dark' : 'light');
@@ -330,8 +333,9 @@ export class RemoteComposeCard extends HaCardElement {
         const call = serviceCallFor(action);
         if (call) {
           const configured = this.config.card.tap_action;
-          // Keep HA's full target (entity arrays, area/device/floor IDs) and service data.
-          const target = configured?.target ?? call.target;
+          // Keep HA's full target (entity arrays, area/device/floor IDs) and service data. An
+          // entity action (a garage door's Close) runs on the card's own entity, never the tap's.
+          const target = action.entityAction ? call.target : configured?.target ?? call.target;
           await this._hass.callService(call.domain, call.service, call.service_data, target);
         }
       }

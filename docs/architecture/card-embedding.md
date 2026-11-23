@@ -168,6 +168,20 @@ never run as is. It only picks which of the card's own actions runs:
    or its first entity's default. A URL or navigation path in a template is never followed. Only
    the card config can supply one.
 
+**Entity actions** are the one exception, and they name no service either. A design's control that
+should do one particular thing to the card's entity (a garage door's Open, Stop and Close, a
+thermostat's ▲ ▼) sends a `HostNamedAction` named `ha.entity_action`, not `ha`, whose value is
+`{"entityId": "cover.s0", "action": "close_cover"}`: a slot and an action's name. The card resolves
+it with `resolveEntityAction`, a port of ha-model's `CardEntityActions` held to the same cases by
+`embed/test/entity-actions.test.mjs`: the name must be one its table lists for the slot entity's
+own domain (a cover's `open_cover`, `close_cover`, `stop_cover`, `toggle`; a climate's `turn_on`,
+`turn_off`, `temperature_up`, `temperature_down`; `turn_on`, `turn_off`, `toggle` for lights,
+switches, fans and input booleans), and the entity must support it (a cover's
+`supported_features`). It runs as that service on the slot's real entity alone, with service data
+the card computes (a thermostat's next set point, one `target_temp_step` on and within
+`min_temp`..`max_temp`); anything else runs nothing. A host older than entity actions ignores the
+name, so such a control does nothing there rather than run the card's tap.
+
 Toggle becomes `homeassistant.toggle`, the same call the app makes, and a call-service becomes
 `call_service`. More-info and navigate become DOM events, because a page has no HA dialog or
 router. A URL opens only for `http(s)` from the card config. Alarm keypad actions need the app's

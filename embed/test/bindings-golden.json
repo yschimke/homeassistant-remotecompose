@@ -3159,6 +3159,569 @@
                     "binary_sensor.s1.numeric_state": "NaN"
                 }
             }
+        },
+        {
+            "name": "climate recipe in a fahrenheit home",
+            "recipe": "climate",
+            "host": {
+                "temperature_unit": "°F"
+            },
+            "card": {
+                "type": "thermostat",
+                "entity": "climate.den"
+            },
+            "states": {
+                "climate.den": {
+                    "state": "heat",
+                    "attributes": {
+                        "friendly_name": "Den",
+                        "current_temperature": 68.5,
+                        "temperature": 70,
+                        "min_temp": 45,
+                        "max_temp": 95,
+                        "target_temp_step": 1,
+                        "hvac_action": "heating"
+                    }
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "climate",
+                "floats": {
+                    "$0.current_temperature": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_temperature",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$0.target_temperature": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "temperature",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$0.min_temp": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "min_temp",
+                                    "slot": 0
+                                }
+                            },
+                            7.0
+                        ]
+                    },
+                    "$0.max_temp": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "max_temp",
+                                    "slot": 0
+                                }
+                            },
+                            35.0
+                        ]
+                    },
+                    "$0.target_temp_step": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "target_temp_step",
+                                    "slot": 0
+                                }
+                            },
+                            0.5
+                        ]
+                    }
+                },
+                "strings": {
+                    "$0.unit": {
+                        "first": [
+                            {
+                                "attr": "temperature_unit",
+                                "slot": 0
+                            },
+                            {
+                                "attr": "unit_of_measurement",
+                                "slot": 0
+                            },
+                            {
+                                "host": "temperature_unit"
+                            },
+                            "°"
+                        ]
+                    },
+                    "$0.attributes.current_temperature_label": {
+                        "first": [
+                            {
+                                "fn": "with_unit",
+                                "args": [
+                                    {
+                                        "number": {
+                                            "attr": "current_temperature",
+                                            "slot": 0
+                                        }
+                                    },
+                                    {
+                                        "ref": "$0.unit"
+                                    }
+                                ]
+                            },
+                            "—"
+                        ]
+                    },
+                    "$0.attributes.temperature_label": {
+                        "first": [
+                            {
+                                "fn": "concat",
+                                "args": [
+                                    "↑ ",
+                                    {
+                                        "fn": "with_unit",
+                                        "args": [
+                                            {
+                                                "number": {
+                                                    "attr": "temperature",
+                                                    "slot": 0
+                                                }
+                                            },
+                                            {
+                                                "ref": "$0.unit"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "—"
+                        ]
+                    },
+                    "$0.attributes.hvac_action_label": {
+                        "first": [
+                            {
+                                "fn": "hvac_label",
+                                "args": [
+                                    {
+                                        "attr": "hvac_action",
+                                        "slot": 0
+                                    },
+                                    {
+                                        "state": 0
+                                    }
+                                ]
+                            },
+                            ""
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "climate.s0.state": "Heat",
+                    "climate.s0.name": "Den",
+                    "climate.s0.unit": "°F",
+                    "climate.s0.attributes.current_temperature_label": "68.5°F",
+                    "climate.s0.attributes.temperature_label": "↑ 70°F",
+                    "climate.s0.attributes.hvac_action_label": "Heating"
+                },
+                "booleans": {
+                    "climate.s0.is_on": true,
+                    "climate.s0.is_available": true
+                },
+                "ints": {
+                    "climate.s0.state_int": -1,
+                    "climate.s0.status": 0,
+                    "climate.s0.last_changed": 0,
+                    "climate.s0.last_changed_offset": 0
+                },
+                "floats": {
+                    "climate.s0.numeric_state": "NaN",
+                    "climate.s0.current_temperature": 68.5,
+                    "climate.s0.target_temperature": 70.0,
+                    "climate.s0.min_temp": 45.0,
+                    "climate.s0.max_temp": 95.0,
+                    "climate.s0.target_temp_step": 1.0
+                }
+            }
+        },
+        {
+            "name": "climate recipe off with its own unit",
+            "recipe": "climate",
+            "host": {
+                "temperature_unit": "°F"
+            },
+            "card": {
+                "type": "thermostat",
+                "entity": "climate.den"
+            },
+            "states": {
+                "climate.den": {
+                    "state": "heat_cool",
+                    "attributes": {
+                        "temperature_unit": "°C",
+                        "current_temperature": "21.25"
+                    }
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "climate",
+                "floats": {
+                    "$0.current_temperature": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_temperature",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$0.target_temperature": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "temperature",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$0.min_temp": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "min_temp",
+                                    "slot": 0
+                                }
+                            },
+                            7.0
+                        ]
+                    },
+                    "$0.max_temp": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "max_temp",
+                                    "slot": 0
+                                }
+                            },
+                            35.0
+                        ]
+                    },
+                    "$0.target_temp_step": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "target_temp_step",
+                                    "slot": 0
+                                }
+                            },
+                            0.5
+                        ]
+                    }
+                },
+                "strings": {
+                    "$0.unit": {
+                        "first": [
+                            {
+                                "attr": "temperature_unit",
+                                "slot": 0
+                            },
+                            {
+                                "attr": "unit_of_measurement",
+                                "slot": 0
+                            },
+                            {
+                                "host": "temperature_unit"
+                            },
+                            "°"
+                        ]
+                    },
+                    "$0.attributes.current_temperature_label": {
+                        "first": [
+                            {
+                                "fn": "with_unit",
+                                "args": [
+                                    {
+                                        "number": {
+                                            "attr": "current_temperature",
+                                            "slot": 0
+                                        }
+                                    },
+                                    {
+                                        "ref": "$0.unit"
+                                    }
+                                ]
+                            },
+                            "—"
+                        ]
+                    },
+                    "$0.attributes.temperature_label": {
+                        "first": [
+                            {
+                                "fn": "concat",
+                                "args": [
+                                    "↑ ",
+                                    {
+                                        "fn": "with_unit",
+                                        "args": [
+                                            {
+                                                "number": {
+                                                    "attr": "temperature",
+                                                    "slot": 0
+                                                }
+                                            },
+                                            {
+                                                "ref": "$0.unit"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "—"
+                        ]
+                    },
+                    "$0.attributes.hvac_action_label": {
+                        "first": [
+                            {
+                                "fn": "hvac_label",
+                                "args": [
+                                    {
+                                        "attr": "hvac_action",
+                                        "slot": 0
+                                    },
+                                    {
+                                        "state": 0
+                                    }
+                                ]
+                            },
+                            ""
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "climate.s0.state": "Heat/Cool",
+                    "climate.s0.name": "climate.den",
+                    "climate.s0.unit": "°C",
+                    "climate.s0.attributes.current_temperature_label": "21.3°C",
+                    "climate.s0.attributes.temperature_label": "—",
+                    "climate.s0.attributes.hvac_action_label": "Heat cool"
+                },
+                "booleans": {
+                    "climate.s0.is_on": true,
+                    "climate.s0.is_available": true
+                },
+                "ints": {
+                    "climate.s0.state_int": -1,
+                    "climate.s0.status": 0,
+                    "climate.s0.last_changed": 0,
+                    "climate.s0.last_changed_offset": 0
+                },
+                "floats": {
+                    "climate.s0.numeric_state": "NaN",
+                    "climate.s0.current_temperature": 21.25,
+                    "climate.s0.target_temperature": -9999.0,
+                    "climate.s0.min_temp": 7.0,
+                    "climate.s0.max_temp": 35.0,
+                    "climate.s0.target_temp_step": 0.5
+                }
+            }
+        },
+        {
+            "name": "climate recipe no host unit",
+            "recipe": "climate",
+            "card": {
+                "type": "thermostat",
+                "entity": "climate.den"
+            },
+            "states": {
+                "climate.den": {
+                    "state": "off",
+                    "attributes": {}
+                }
+            },
+            "recipe_json": {
+                "v": 1,
+                "prototype": "climate",
+                "floats": {
+                    "$0.current_temperature": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "current_temperature",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$0.target_temperature": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "temperature",
+                                    "slot": 0
+                                }
+                            },
+                            -9999.0
+                        ]
+                    },
+                    "$0.min_temp": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "min_temp",
+                                    "slot": 0
+                                }
+                            },
+                            7.0
+                        ]
+                    },
+                    "$0.max_temp": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "max_temp",
+                                    "slot": 0
+                                }
+                            },
+                            35.0
+                        ]
+                    },
+                    "$0.target_temp_step": {
+                        "first": [
+                            {
+                                "number": {
+                                    "attr": "target_temp_step",
+                                    "slot": 0
+                                }
+                            },
+                            0.5
+                        ]
+                    }
+                },
+                "strings": {
+                    "$0.unit": {
+                        "first": [
+                            {
+                                "attr": "temperature_unit",
+                                "slot": 0
+                            },
+                            {
+                                "attr": "unit_of_measurement",
+                                "slot": 0
+                            },
+                            {
+                                "host": "temperature_unit"
+                            },
+                            "°"
+                        ]
+                    },
+                    "$0.attributes.current_temperature_label": {
+                        "first": [
+                            {
+                                "fn": "with_unit",
+                                "args": [
+                                    {
+                                        "number": {
+                                            "attr": "current_temperature",
+                                            "slot": 0
+                                        }
+                                    },
+                                    {
+                                        "ref": "$0.unit"
+                                    }
+                                ]
+                            },
+                            "—"
+                        ]
+                    },
+                    "$0.attributes.temperature_label": {
+                        "first": [
+                            {
+                                "fn": "concat",
+                                "args": [
+                                    "↑ ",
+                                    {
+                                        "fn": "with_unit",
+                                        "args": [
+                                            {
+                                                "number": {
+                                                    "attr": "temperature",
+                                                    "slot": 0
+                                                }
+                                            },
+                                            {
+                                                "ref": "$0.unit"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "—"
+                        ]
+                    },
+                    "$0.attributes.hvac_action_label": {
+                        "first": [
+                            {
+                                "fn": "hvac_label",
+                                "args": [
+                                    {
+                                        "attr": "hvac_action",
+                                        "slot": 0
+                                    },
+                                    {
+                                        "state": 0
+                                    }
+                                ]
+                            },
+                            ""
+                        ]
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "climate.s0.state": "Off",
+                    "climate.s0.name": "climate.den",
+                    "climate.s0.unit": "°C",
+                    "climate.s0.attributes.current_temperature_label": "—",
+                    "climate.s0.attributes.temperature_label": "—",
+                    "climate.s0.attributes.hvac_action_label": "Off"
+                },
+                "booleans": {
+                    "climate.s0.is_on": false,
+                    "climate.s0.is_available": true
+                },
+                "ints": {
+                    "climate.s0.state_int": -1,
+                    "climate.s0.status": 0,
+                    "climate.s0.last_changed": 0,
+                    "climate.s0.last_changed_offset": 0
+                },
+                "floats": {
+                    "climate.s0.numeric_state": "NaN",
+                    "climate.s0.current_temperature": -9999.0,
+                    "climate.s0.target_temperature": -9999.0,
+                    "climate.s0.min_temp": 7.0,
+                    "climate.s0.max_temp": 35.0,
+                    "climate.s0.target_temp_step": 0.5
+                }
+            }
         }
     ]
 }

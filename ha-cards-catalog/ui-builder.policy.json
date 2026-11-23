@@ -356,7 +356,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         },
@@ -477,7 +479,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         },
@@ -562,7 +566,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         },
@@ -594,7 +600,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         },
@@ -626,7 +634,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         }
@@ -822,7 +832,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         },
@@ -854,7 +866,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         },
@@ -886,7 +900,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         }
@@ -970,7 +986,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         },
@@ -1003,6 +1021,22 @@
           "jsonType": "string",
           "required": false,
           "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's inactive grey, #FF8F8F8F."
+        },
+        {
+          "name": "action",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "open_cover",
+            "close_cover",
+            "stop_cover",
+            "toggle",
+            "turn_on",
+            "turn_off",
+            "temperature_up",
+            "temperature_down"
+          ],
+          "notes": "A named action a tap sends on the bound entity instead of its toggle or more-info (`CardEntityActions` in ha-model): a cover's `open_cover`, `close_cover`, `stop_cover` or `toggle`; a climate's `turn_on`, `turn_off`, `temperature_up` or `temperature_down` (one step, within its range); a light's, switch's, fan's or input boolean's `turn_on`, `turn_off` or `toggle`. The host runs it only on the card's own entity, and only when that entity's domain has it and the entity supports it. Unset is the tap."
         }
       ]
     },
@@ -1074,7 +1108,9 @@
             "power",
             "water",
             "media",
-            "alert"
+            "alert",
+            "minus",
+            "plus"
           ],
           "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
         },

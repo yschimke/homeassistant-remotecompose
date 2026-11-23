@@ -162,6 +162,11 @@ data class HaButtonData(
   val tapAction: HaAction = HaAction.None,
   val showIcon: Boolean = true,
   val state: RemoteString? = null,
+  /**
+   * A named action on [entityId] the button sends instead of [tapAction] ([HaEntityAction]): a
+   * garage door's Close button sends `close_cover`. Null for the tap.
+   */
+  val entityAction: String? = null,
 )
 
 /** One row in an Entities card / the entire Entity card. */

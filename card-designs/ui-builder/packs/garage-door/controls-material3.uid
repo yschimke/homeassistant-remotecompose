@@ -313,6 +313,10 @@
         "toggleable": {
           "type": "bool",
           "value": false
+        },
+        "action": {
+          "type": "string",
+          "value": "open_cover"
         }
       },
       "modifiers": [],
@@ -341,6 +345,10 @@
         "toggleable": {
           "type": "bool",
           "value": false
+        },
+        "action": {
+          "type": "string",
+          "value": "stop_cover"
         }
       },
       "modifiers": [],
@@ -369,6 +377,10 @@
         "toggleable": {
           "type": "bool",
           "value": false
+        },
+        "action": {
+          "type": "string",
+          "value": "close_cover"
         }
       },
       "modifiers": [],

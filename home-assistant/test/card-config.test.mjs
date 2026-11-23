@@ -269,3 +269,32 @@ test('an administrator page fetches the index ahead of the picker; no other page
   card.preloadForEditors(root({ is_admin: true }));
   assert.deepEqual(fetched, ['https://ha.coo.ee/designs/v1/suggestions.json']);
 });
+
+test('Home Assistant\'s own unit system reaches a design\'s recipe, so a °F thermostat reads °F', () => {
+  const card = host();
+  card.setConfig({ card: { type: 'tile', entity: 'climate.den' } });
+  assert.deepEqual(card.hostValues, {});
+  card.hass = { states: {}, themes: {}, config: { unit_system: { temperature: '°F' } } };
+  assert.deepEqual(card.hostValues, { temperature_unit: '°F' });
+  card.setConfig({ card: { type: 'tile', entity: 'climate.den' }, card_style: 'braun' });
+  assert.deepEqual(card.hostValues, { temperature_unit: '°F' });
+});
+
+test('an entity action runs on the card\'s own entity, never on the tap action\'s target', async () => {
+  const card = host();
+  card.hasAttribute = (name) => card.attributes.has(name);
+  const calls = [];
+  card.setConfig({
+    card: { type: 'tile', entity: 'cover.my_garage', tap_action: { action: 'toggle', target: { entity_id: 'cover.other' } } },
+  });
+  card.hass = { states: {}, themes: {}, user: { id: 'u' }, callService: async (...args) => calls.push(args) };
+  await card.tap({
+    kind: 'CallService', domain: 'cover', service: 'close_cover', entityId: 'cover.my_garage', serviceData: {}, entityAction: true,
+  });
+  await card.tap({ kind: 'Toggle', entityId: 'cover.my_garage' });
+  assert.deepEqual(calls, [
+    ['cover', 'close_cover', {}, { entity_id: 'cover.my_garage' }],
+    // The card's own tap keeps its configured target.
+    ['homeassistant', 'toggle', {}, { entity_id: 'cover.other' }],
+  ]);
+});

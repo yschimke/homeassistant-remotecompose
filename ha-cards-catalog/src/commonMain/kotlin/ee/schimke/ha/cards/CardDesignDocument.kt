@@ -190,6 +190,7 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
               isOn = node.bool("isOn"),
               activeColor = node.color("activeColor") ?: HaCardColors.Active,
               inactiveColor = node.color("inactiveColor") ?: HaCardColors.Inactive,
+              action = node.string("action"),
             )
           },
         "ha-cards/toggle" to

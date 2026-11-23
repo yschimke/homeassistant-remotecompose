@@ -204,6 +204,7 @@ object CardDesignTemplates {
       slotAction = { snapshot, slot, action ->
         converter?.designAction(card, snapshot, slot, action)
       },
+      slotEntities = CardDesignSlots.slotEntities(card).orEmpty(),
     )
   }
 

@@ -1,9 +1,9 @@
 # Device packs
 
 > Status: **first two packs drafted** (garage door opener, thermostat) as UI Builder documents in
-> `card-designs/ui-builder/packs/`, **previewed** in this repository's build, and their controls
-> **published in the card design library**, where the card picker and the dashboard agent offer
-> them: see [In the design library](#in-the-design-library).
+> `card-designs/ui-builder/packs/`, **previewed** in this repository's build, and all six of their
+> controls designs **published in the card design library**, where the card picker and the
+> dashboard agent offer them: see [In the design library](#in-the-design-library).
 
 A **device pack** is a set of designs for one kind of device, one per *kind* of placement. They are
 not reskins of one layout. Each kind answers a different question: an alert shows only when
@@ -103,7 +103,8 @@ emit, and example datasets:
   - **Changing a value** is a `set` of the input it changes, which the host turns into the service
     call: `set_position`, `set_temperature`, `set_hvac_mode` and the range's two set points.
   - **The rest are `app:ha.*` kinds** the app handles: `open`, `close`, `stop`, `toggle`,
-    `turn_off` and `more_info`.
+    `turn_off`, `temperature_down`, `temperature_up` and `more_info`. A design sends the ones that
+    name a service as [entity actions](#entity-actions).
   - **`help`** is a built-in `open-url`.
 - **Examples** cover the variance: a cover that's closed, open, opening, with no position, stopped
   by an obstruction, left open, or unavailable; a thermostat that's heating, idle, off with no set
@@ -114,11 +115,14 @@ host could push (the required inputs alone), through `ContractBinder` (`livery-c
 every dataset passes.
 
 **Not wired yet:**
-- **Hosts don't push most of the optional inputs yet.** They push `name`, `state`, `is_on`,
+- **Hosts don't push every optional input yet.** They push `name`, `state`, `is_on`,
   `is_available`, `status`, `last_changed`, a cover's `state_int`, `current_position` and
-  `supported_features`, and a climate's two temperatures. The others take their defaults until
-  the card's converter pushes them.
-- **Designs don't emit the actions yet:** see below.
+  `supported_features`, and a climate's two temperatures, `min_temp`, `max_temp`,
+  `target_temp_step`, `unit` and the three `*_label`s (`CardBindingRecipes.CLIMATE`). The others
+  take their defaults until a recipe pushes them.
+- **Designs emit only the actions that need no value from the person:** the entity actions (Open,
+  Stop, Close, a toggle, a thermostat's step). The `set` actions (a dragged position, a chosen
+  mode) and `help` aren't emitted yet: see below.
 
 ## The packs
 
@@ -126,7 +130,7 @@ every dataset passes.
 
 | Design | What it shows |
 | --- | --- |
-| `controls-material3` | Door icon, name and state, a status chip, the door's travel (`current_position`) as a bar, and Open, Stop and Close. |
+| `controls-material3` | Door icon, name and state, a status chip, the door's travel (`current_position`) as a bar, and Open, Stop and Close, each its own cover service (`open_cover`, `stop_cover`, `close_cover`). |
 | `controls-skeuomorphic` | The door itself (`ha-cards/garage-door`): a sectional door in a brick wall that rises with `current_position`, sections sliding up under the lintel, the garage showing beneath and the porch light on while it moves. Then the state and the wall push button. |
 | `controls-overlay` | Dark, `cockpit` style: the state in large type, the name, and a toggle. |
 | `alert` | Left open, stuck moving, or unavailable: what happened, the name, an explanation, **Close now** and **Help**. |
@@ -137,8 +141,8 @@ every dataset passes.
 
 | Design | What it shows |
 | --- | --- |
-| `controls-material3` | Name and mode chip, the thermostat dial (room temperature and set point), and − / set point / +. |
-| `controls-skeuomorphic` | A plain wall thermostat (`ha-cards/wall-thermostat`): a white plate with a grey display of the room temperature, the set point and mode, ▲ ▼ and a status light. |
+| `controls-material3` | Name and mode chip, the thermostat dial (room temperature and set point, on the entity's own range and in its unit), and − / set point / +, which step the set point (`temperature_down`, `temperature_up`). |
+| `controls-skeuomorphic` | A plain wall thermostat (`ha-cards/wall-thermostat`): a white plate with a grey display of the room temperature, the set point and mode, ▲ ▼ (which step the set point) and a status light. |
 | `controls-overlay` | Dark, `cockpit` style: the room reading as a glyph, the mode, the target. |
 | `alert` | Unavailable, not reaching the set point for two hours, or frost risk: what is wrong, the room and target readings, **Turn off** and **Help**. |
 | `toolbar` | The room temperature as a chip. |
@@ -147,8 +151,8 @@ every dataset passes.
 ## In the design library
 
 The card design library (`:card-designs:generateCardDesigns`, served by the design server)
-publishes the garage door pack's wall console and overlay designs (`DevicePackLibrary`); its
-Material 3 design waits for distinct actions, and the thermostat's for a bindable unit (below):
+publishes every pack's controls designs (`DevicePackLibrary`): the garage door's Material 3, wall
+console and overlay designs, and the thermostat's.
 
 - **Their own designs.** Each is a library design of its own, `pack:<designId>`
   (`pack:garage-door-controls-skeuomorphic`), titled as `pack.json` names it. It is captured for
@@ -168,32 +172,69 @@ Material 3 design waits for distinct actions, and the thermostat's for a bindabl
   - **Recipes for attributes:** the slot bindings carry a state, never an attribute, so each
     template carries a binding recipe for the attributes it reads (`DevicePackLibrary.recipe`).
     `CardBindingRecipes.COVER` gives the door's `current_position`; `CLIMATE` gives the room
-    temperature and the set point.
+    temperature and the set point, the range (`min_temp`, `max_temp`) and step, the unit, and the
+    overlay's labels (`current_temperature_label`, `temperature_label`, `hvac_action_label`).
+  - **The thermostat's own unit:** `climate.s0.unit` is the entity's `temperature_unit` (or
+    `unit_of_measurement`), else Home Assistant's own unit system (the recipe's `host` expression:
+    `HaSnapshot.temperatureUnit` in the app, `hass.config.unit_system` or `get_config` in the
+    browser), else °C. The designs bind their unit and dial range to it (`state` properties on
+    `ha-cards/thermostat` and `ha-cards/wall-thermostat`), so a °F thermostat reads °F on its own
+    45–95 range. A host older than the `host` expression shows a bare `°` and `—` labels, never a
+    wrong unit.
   - **Both hosts:** the browser card evaluates a template's recipe, and so does the app's playback
-    (`CardDesignTemplates.playback`, ahead of the card type's converter).
+    (`CardTemplatePlayback`'s bindings, ahead of the card type's converter).
   - **The guard:** `DevicePackLibraryTest` refuses a published design that reads a value no host
-    pushes, so none draws its example's numbers.
+    pushes (checked for a °F thermostat), so none draws its example's numbers, and one whose
+    buttons don't do what they say (below).
+- **Buttons do what they say.** A button either toggles its entity (the wall console's push button,
+  as a garage's own wall button does) or sends an [entity action](#entity-actions) its contract
+  declares: the Material 3 garage door's Open, Stop and Close send `open_cover`, `stop_cover` and
+  `close_cover`, so Close on a closed door closes it (Home Assistant ignores it) rather than toggle
+  it open. The thermostat's − and + (and the wall thermostat's ▼ ▲) send `temperature_down` and
+  `temperature_up`.
 - **Suggested for its class.** A pack for a `device_class` is a class design
   (`DeviceMatch(deviceClass = "garage")`): the suggestion index lists it, so the card picker offers
   the garage door designs on any garage door, after any design made for that device. A pack for a
-  whole domain (the thermostat) has no match: once published, it is chosen by id, not suggested
-  on every climate entity. Only cards `custom:remote-compose-card` wraps (tile, button, entity,
-  gauge) are suggested.
+  whole domain (the thermostat) has no match: it is chosen by id, not suggested on every climate
+  entity. Only cards `custom:remote-compose-card` wraps (tile, button, entity, gauge) are
+  suggested; the thermostat's designs are keyed as the thermostat card, which the app and the
+  `<ha-card>` embed draw and the Home Assistant card's visual editor doesn't offer.
 - **To the dashboard agent.** The agent's `find_designs` tool reads the same index (see
   [dashboard-editing.md](../architecture/dashboard-editing.md)), so asking for "the actual garage
   door" gets a draft card set to it.
 
 Alerts, toolbar items and real-world views are placements other than a dashboard card (and an
 alert shows only while its rule holds), so they stay out of the library until those placements
-exist. So does the garage door's Material 3 design: its Open, Stop and Close buttons can only send the
-card's own tap, the cover's toggle, so Close on a closed door would open it. It waits until a
-design can emit distinct cover actions (`open_cover`, `stop_cover`, `close_cover`; see
-[What isn't wired](#what-isnt-wired)). The wall console's one push button and the overlay's
-toggle are toggles, as a garage's own wall button is. So do the thermostat's designs for now: they bake `°C` and a 7–30 °C dial, and no binding
-pushes a thermostat's own unit or range yet, so a °F thermostat would read wrong. (Its overlay also
-reads formatted labels, `climate.s0.attributes.current_temperature_label`, that no recipe
-produces.) They are captured and bound like the garage door's (`CardBindingRecipes.CLIMATE`), ready
-for when the unit and range are bindable.
+exist.
+
+### Entity actions
+
+A design's control that does one particular thing to the card's entity names it: `ha-cards/button`'s
+`action` property (`close_cover`). The control sends it as its own host action,
+`ha.entity_action` (`HaEntityAction`: the slot, `cover.s0`, and the name), not as the card's `ha`
+tap. The host resolves it with `CardEntityActions` (ha-model), against the slot's real entity:
+
+| Domain | Actions | Service |
+| --- | --- | --- |
+| `cover` | `open_cover`, `close_cover`, `stop_cover`, `toggle` | the same, when `supported_features` has its bit (1, 2, 8), or reports none |
+| `climate` | `turn_on`, `turn_off` | the same |
+| `climate` | `temperature_down`, `temperature_up` | `set_temperature`: the set point one `target_temp_step` (else 0.5, 1 in °F) on, within `min_temp`..`max_temp`; none without a set point |
+| `light`, `switch`, `fan`, `input_boolean` | `turn_on`, `turn_off`, `toggle` | the same |
+
+- **The template names no service.** Only a name the table lists for the slot entity's own domain
+  runs, on that entity alone, with data the host computes; a slot the card doesn't have, another
+  domain or another name runs nothing.
+- **Every host.** The app resolves it in `CardTemplatePlayback.resolveEntityAction`
+  (`CachedCardPreview`; a directly captured card against its real entity), and the browser card in
+  `resolveEntityAction` (`embed/ha-card.js`, which the Home Assistant card shares), a port held to
+  the same cases (`CardEntityActionsTest`, `embed/test/entity-actions.test.mjs`). The Home
+  Assistant card runs it on the card's own entity, never on its `tap_action`'s `target`, and
+  still asks for the `tap_action`'s `confirmation` when it has one.
+- **The control lock** holds it back as it does any write: a locked card sends an empty payload.
+- **Older hosts and other surfaces do nothing.** A host that predates entity actions only listens
+  for `ha`, so such a button does nothing there rather than run the card's tap (a cover's toggle).
+  So does a launcher widget, whose numeric host actions can't carry one, and a watch, which
+  doesn't resolve them yet.
 
 ## What isn't wired
 
@@ -207,17 +248,19 @@ These documents are designs to review and edit, ahead of the code that plays the
   Material 3, and collapsible layouts draw as plain ones. A `host` state variable shows its initial
   value and is a named value the host can push. The server's `native` lane remains the reference;
   see [Publishing](#publishing).
-- **No distinct actions.** A button takes its card's own tap action (`entityId`). The contracts
-  declare Open, Stop and Close, the set point and Help, but emitting them needs action support in
-  UI Builder designs, which
+- **Only entity actions.** A button sends its card's own tap action (`entityId`) or an
+  [entity action](#entity-actions) (`action`). The contracts' `set` actions (a dragged position, a
+  chosen mode or preset, the range's two set points) and Help aren't emitted: a value the person
+  picks needs an action that carries it, which
   [server-owned-card-designs.md](../architecture/server-owned-card-designs.md) leaves out of scope
-  for now.
+  for now. Entity actions aren't resolved on a watch or a launcher widget yet, where those buttons
+  do nothing.
 - **Alerts are not evaluated.** No client reads `showWhen` yet, and `alert.message` and
   `alert.detail` are values the rule would push. A client should hide the alert while no condition
   holds.
 - **The overlay is a dark card**, not a transparent layer over the scene. The skeuomorphic designs
-  draw the device (`ha-cards/garage-door`, `ha-cards/wall-thermostat`, in `HaCardDevices.kt`), but
-  their ▲ ▼ keys are drawn, not yet actions.
+  draw the device (`ha-cards/garage-door`, `ha-cards/wall-thermostat`, in `HaCardDevices.kt`); the
+  wall thermostat's ▲ ▼ keys step its set point.
 - **Real world needs its source.** The picture is the card's entity picture
   (`picture-entity-card-image`). The camera entity and the simulation are in `pack.json`, not yet
   in the card config a host builds.

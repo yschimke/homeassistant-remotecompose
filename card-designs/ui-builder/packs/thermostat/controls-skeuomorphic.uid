@@ -24,6 +24,12 @@
       "valueType": "string",
       "initialValue": "Hallway",
       "persistence": "host"
+    },
+    "climate.s0.unit": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "°C",
+      "persistence": "host"
     }
   },
   "roots": [
@@ -127,8 +133,8 @@
           "value": "Heat"
         },
         "unit": {
-          "type": "string",
-          "value": "°C"
+          "type": "state",
+          "variable": "climate.s0.unit"
         }
       },
       "modifiers": [],

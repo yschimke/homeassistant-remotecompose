@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { cardBindings, cardEntityIds, parseRecipe, formatRangeNumber } from '../ha-card.js';
+import { cardBindings, cardEntityIds, parseRecipe, formatRangeNumber, hostValuesFromConfig, hvacLabel } from '../ha-card.js';
 
 const golden = JSON.parse(readFileSync(new URL('./bindings-golden.json', import.meta.url), 'utf8'));
 // The zone the Kotlin side read the cases' times in (`<slot>.last_changed_offset`).
@@ -14,7 +14,7 @@ for (const c of golden.cases) {
     assert.ok(c.expected, 'the golden file has no expectations: run EmbedBindingsGoldenTest with -Pembed.golden.update=true');
     const recipe = c.recipe === undefined ? null : parseRecipe(c.recipe_json);
     if (c.recipe !== undefined) assert.ok(recipe, 'recipe_json must parse');
-    const actual = cardBindings(c.card, c.states, recipe);
+    const actual = cardBindings(c.card, c.states, recipe, c.host ?? {});
     assert.deepEqual(actual.strings, c.expected.strings);
     assert.deepEqual(actual.booleans, c.expected.booleans);
     assert.deepEqual(actual.ints, c.expected.ints);
@@ -45,4 +45,24 @@ test('range numbers match CardBindingRecipe.formatRangeNumber', () => {
   for (const [value, text] of Object.entries(cases)) assert.equal(formatRangeNumber(Number(value)), text, value);
   assert.equal(formatRangeNumber(Number.NaN), 'NaN');
   assert.equal(formatRangeNumber(-Infinity), '-Infinity');
+});
+
+test('a recipe\'s host values come from Home Assistant\'s config', () => {
+  assert.deepEqual(hostValuesFromConfig({ unit_system: { temperature: '°F' } }), { temperature_unit: '°F' });
+  assert.deepEqual(hostValuesFromConfig({ unit_system: { temperature: ' ' } }), {});
+  assert.deepEqual(hostValuesFromConfig(undefined), {});
+});
+
+test('a host expression or function this host doesn\'t know is null, so a fallback shows', () => {
+  const recipe = parseRecipe({
+    v: 1, prototype: 'p', floats: {},
+    strings: { a: { first: [{ host: 'nope' }, '°'] }, b: { first: [{ fn: 'nope', args: [] }, '—'] }, c: { host: 'temperature_unit' } },
+  });
+  const { strings } = cardBindings({ type: 'tile', entity: 'climate.x' }, {}, recipe);
+  assert.equal(strings.a, '°');
+  assert.equal(strings.b, '—');
+  assert.equal(strings.c, '°C');
+  assert.equal(hvacLabel('idle', 'heat'), 'Idle');
+  assert.equal(hvacLabel(null, 'fan_only'), 'Fan only');
+  assert.equal(hvacLabel(null, ''), null);
 });

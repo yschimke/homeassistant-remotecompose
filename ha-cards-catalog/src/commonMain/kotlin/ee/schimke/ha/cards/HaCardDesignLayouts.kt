@@ -149,7 +149,8 @@ internal object HaCardDesignLayouts {
         },
       "ha-cards/thermostat" to
         { node, modifier ->
-          HaCardThermostat(
+          // A `state` unit and range follow the thermostat's own (`climate.s0.unit`, `.min_temp`).
+          BoundThermostat(
             node.string("name"),
             node.float("current"),
             modifier,
@@ -159,6 +160,9 @@ internal object HaCardDesignLayouts {
             unit = node.string("unit", "°C"),
             mode = node.string("mode", "heat"),
             entityId = node.string("entityId"),
+            unitBinding = node.stateOf("unit"),
+            minBinding = node.stateOf("min"),
+            maxBinding = node.stateOf("max"),
           )
         },
       "ha-cards/thermometer" to
@@ -214,13 +218,14 @@ internal object HaCardDesignLayouts {
         },
       "ha-cards/wall-thermostat" to
         { node, modifier ->
-          HaCardWallThermostat(
+          BoundWallThermostat(
             modifier,
             entityId = node.string("entityId"),
             current = node.float("current", 19.5f),
             target = node.float("target", 21f),
             mode = node.string("mode", "Heat"),
             unit = node.string("unit", "°C"),
+            unitBinding = node.stateOf("unit"),
           )
         },
       "ha-cards/bar-meter" to

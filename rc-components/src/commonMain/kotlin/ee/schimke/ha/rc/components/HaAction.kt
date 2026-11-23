@@ -154,6 +154,50 @@ public const val HA_ACTION_NAME: String = "ha"
 private val json = Json { ignoreUnknownKeys = true }
 
 /**
+ * The host action name a design's **entity action** travels under: a named action on the card's own
+ * entity ([HaEntityAction]), resolved by the host (`CardEntityActions` in `ha-model`). Not
+ * [HA_ACTION_NAME], so a host that predates entity actions ignores it rather than run the card's
+ * tap in its place.
+ */
+public const val HA_ENTITY_ACTION_NAME: String = "ha.entity_action"
+
+/**
+ * A named action ([action], `close_cover`) a design's control sends on [entityId], the card's own
+ * entity as the design names it (its slot, `cover.s0`). The host decides what it runs: only an
+ * action `CardEntityActions` lists for that entity's domain, on that entity alone.
+ */
+@Serializable data class HaEntityAction(val entityId: String, val action: String)
+
+/** [HaEntityAction]'s JSON payload, as [HA_ENTITY_ACTION_NAME] carries it. */
+fun encodeHaEntityAction(action: HaEntityAction): String =
+  json.encodeToString(HaEntityAction.serializer(), action)
+
+/** [encodeHaEntityAction]'s payload back, or null when [value] isn't one. */
+fun decodeHaEntityAction(value: Any?): HaEntityAction? {
+  val text = value as? String ?: return null
+  return runCatching { json.decodeFromString(HaEntityAction.serializer(), text) }
+    .getOrNull()
+    ?.takeIf { it.entityId.isNotBlank() && it.action.isNotBlank() }
+}
+
+/**
+ * [action] as the RemoteCompose action a control sends: the [HA_ENTITY_ACTION_NAME] host action.
+ * Locked behind the card's control lock as a write is ([toRemoteAction]): while locked it sends an
+ * empty payload, which no host runs. A launcher widget's numeric actions can't carry it, so a
+ * widget capture gets none: the control does nothing there rather than something else.
+ */
+@Composable
+@Suppress("RestrictedApi")
+fun HaEntityAction.toRemoteAction(): RemoteAction? {
+  if (LocalWidgetActionRegistry.current != null) return null
+  val payload = encodeHaEntityAction(this).rs
+  val lock = haControlLock()?.takeIf { it.canUnlock }
+  if (lock == null) return hostAction(HA_ENTITY_ACTION_NAME.rs, payload)
+  val host = hostAction(HA_ENTITY_ACTION_NAME.rs, lock.select(payload, "".rs))
+  return lock.touched?.let { combinedAction(host, it) } ?: host
+}
+
+/**
  * Actions discovered while capturing one launcher-widget document, keyed by the numeric host-action
  * id that Android's `RemoteViews.DrawInstructions` player understands.
  *

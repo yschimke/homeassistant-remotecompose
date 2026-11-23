@@ -175,6 +175,14 @@
       "input": "climate.s0.target_temperature",
       "description": "The person changed the set point: the host calls set_temperature."
     },
+    "temperature_down": {
+      "kind": "app:ha.climate.temperature_down",
+      "description": "Lower the set point one step (target_temp_step), within min_temp: the host computes it and calls set_temperature."
+    },
+    "temperature_up": {
+      "kind": "app:ha.climate.temperature_up",
+      "description": "Raise the set point one step, within max_temp: the host computes it and calls set_temperature."
+    },
     "set_temp_low": {
       "kind": "set",
       "input": "climate.s0.target_temp_low",
