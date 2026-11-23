@@ -21,6 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -283,5 +284,84 @@ class SemanticDeviceBindingsTest {
     assertNull(
       standaloneNavigationUri(cardActionPayload(HaAction.Toggle("light.a")), "https://ha.example"),
     )
+  }
+
+  @Test
+  fun semanticActionVisibilityHidesUnmappedAndSuppressedButtons() {
+    val card =
+      CardConfig(
+        "tile",
+        buildJsonObject {
+          put("type", "tile")
+          put("entity", "cover.garage")
+        },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "cover.garage" to
+              EntityState(
+                "cover.garage",
+                "closed",
+                attributes = buildJsonObject { put("supported_features", 1) },
+              ),
+          ),
+        devices =
+          mapOf(
+            "cover.garage" to DeviceInfo(deviceId = "dev_garage"),
+            "button.garage_auto" to DeviceInfo(deviceId = "dev_garage", translationKey = "auto"),
+            "button.garage_suppressed" to
+              DeviceInfo(deviceId = "dev_garage", translationKey = "suppressed"),
+            "button.garage_false" to
+              DeviceInfo(deviceId = "dev_garage", translationKey = "disabled_false"),
+            "button.garage_null" to
+              DeviceInfo(deviceId = "dev_garage", translationKey = "disabled_null"),
+          ),
+      )
+    val bytes =
+      doc(
+        "action_eco_visible" to RcNamedVariable.INT_TYPE,
+        "action_auto_visible" to RcNamedVariable.INT_TYPE,
+        "action_preset_visible" to RcNamedVariable.INT_TYPE,
+        "action_suppressed_visible" to RcNamedVariable.INT_TYPE,
+        "action_disabled_false_visible" to RcNamedVariable.INT_TYPE,
+        "action_disabled_null_visible" to RcNamedVariable.INT_TYPE,
+        "action_missing_visible" to RcNamedVariable.INT_TYPE,
+        "action.open_cover.visible" to RcNamedVariable.INT_TYPE,
+        "action.stop_cover.visible" to RcNamedVariable.INT_TYPE,
+        "action_eco" to RcNamedVariable.STRING_TYPE,
+        "action_missing" to RcNamedVariable.STRING_TYPE,
+      )
+    val actions = buildJsonObject {
+      put("eco", "button.garage_auto")
+      put("preset:fast", "button.garage_auto")
+      put("suppressed", "")
+      put("disabled_false", false)
+      put("disabled_null", JsonNull)
+    }
+
+    val bound =
+      semanticDeviceBindings(
+        card = card,
+        snapshot = snapshot,
+        bytes = bytes,
+        explicitBindings = null,
+        explicitDeviceId = null,
+        existing = emptyMap(),
+        explicitActions = actions,
+      )
+
+    assertEquals(RcNamedValue.Integer(1), bound["action_eco_visible"])
+    assertEquals(RcNamedValue.Integer(1), bound["action_auto_visible"])
+    assertEquals(RcNamedValue.Integer(1), bound["action_preset_visible"])
+    assertEquals(RcNamedValue.Integer(1), bound["action.open_cover.visible"])
+    assertEquals(RcNamedValue.Integer(0), bound["action_suppressed_visible"])
+    assertEquals(RcNamedValue.Integer(0), bound["action_disabled_false_visible"])
+    assertEquals(RcNamedValue.Integer(0), bound["action_disabled_null_visible"])
+    assertEquals(RcNamedValue.Integer(0), bound["action_missing_visible"])
+    assertEquals(RcNamedValue.Integer(0), bound["action.stop_cover.visible"])
+    assertEquals(RcNamedValue.Text("eco"), bound["action_eco"])
+    assertEquals(RcNamedValue.Text(""), bound["action_missing"])
   }
 }

@@ -324,6 +324,15 @@ test('bindings, actions, device_id, and hass.entities are validated and forwarde
   el.hass = { states: {}, entities, themes: {} };
   assert.equal(el.entityRegistry, entities);
 
+  // Explicit unmapping values ("", null, false, "none") are allowed in actions to hide buttons.
+  const disabledActions = { start: 'button.dw_start', cancel: '', rinse: null, boost: false, mute: 'none' };
+  el.setConfig({
+    card: { type: 'tile', entity: 'sensor.dw_state' },
+    design_id: 'pack:bosch-dishwasher',
+    actions: disabledActions,
+  });
+  assert.deepEqual(JSON.parse(el.attributes.get('actions')), disabledActions);
+
   // Invalid values fail before changing existing config.
   const previous = el.config;
   for (const bad of ['', '   ', 42]) {
@@ -332,6 +341,9 @@ test('bindings, actions, device_id, and hass.entities are validated and forwarde
   }
   for (const bad of ['nope', [], { a: '' }, { a: 123 }]) {
     assert.throws(() => el.setConfig({ ...config, bindings: bad }), /bindings/);
+    assert.equal(el.config, previous);
+  }
+  for (const bad of ['nope', [], { a: 123 }, { a: true }]) {
     assert.throws(() => el.setConfig({ ...config, actions: bad }), /actions/);
     assert.equal(el.config, previous);
   }

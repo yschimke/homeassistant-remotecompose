@@ -926,7 +926,12 @@ export function resolveDeviceId(card, { deviceId = null, bindings = null, entiti
  * Auto-discover a sibling entity on [deviceId] via HA's entity registry (`hass.entities`) matching
  * a semantic variable or action name (`<domain>_<suffix>` or `translation_key`).
  */
-export function discoverDeviceEntity(varName, deviceId, entityRegistry, { preferActionable = false } = {}) {
+export function discoverDeviceEntity(
+  varName,
+  deviceId,
+  entityRegistry,
+  { preferActionable = false, onlyActionable = false } = {},
+) {
   if (!varName || !deviceId || !isObject(entityRegistry)) return null;
   const key = String(varName).replace(/^USER:/, '').trim().toLowerCase();
   if (!key) return null;
@@ -946,12 +951,13 @@ export function discoverDeviceEntity(varName, deviceId, entityRegistry, { prefer
   if (siblings.length === 0) return null;
 
   const pick = (candidates, suffix) => {
+    const filtered = onlyActionable ? candidates.filter((c) => ACTIONABLE_DOMAINS.has(c.domain)) : candidates;
     const ordered = preferActionable
       ? [
-          ...candidates.filter((c) => ACTIONABLE_DOMAINS.has(c.domain)),
-          ...candidates.filter((c) => !ACTIONABLE_DOMAINS.has(c.domain)),
+          ...filtered.filter((c) => ACTIONABLE_DOMAINS.has(c.domain)),
+          ...filtered.filter((c) => !ACTIONABLE_DOMAINS.has(c.domain)),
         ]
-      : candidates;
+      : filtered;
     const tail = `_${suffix}`;
     return (
       ordered.find((c) => c.translationKey === suffix)?.entityId ??
@@ -1128,9 +1134,45 @@ export function formatSemanticBinding(spec, states, variableType = 0) {
   return text;
 }
 
+const ACTION_VISIBLE_UNDERSCORE = /^action_(.+)_visible$/;
+const ACTION_VISIBLE_DOTTED = /^action\.(.+)\.visible$/;
+const ACTION_UNDERSCORE = /^action_(.+)$/;
+const ACTION_DOTTED = /^action\.(.+)$/;
+
+/** Parse an action visibility/presence variable key into `{ action, kind }`, or null. */
+export function semanticActionVariable(key) {
+  if (typeof key !== 'string' || !key) return null;
+  let m = ACTION_VISIBLE_UNDERSCORE.exec(key) || ACTION_VISIBLE_DOTTED.exec(key);
+  if (m && m[1]) return { action: m[1], kind: 'visibility' };
+  m = ACTION_UNDERSCORE.exec(key) || ACTION_DOTTED.exec(key);
+  if (m && m[1]) return { action: m[1], kind: 'action' };
+  return null;
+}
+
+/** Whether semantic action [name] resolves to a real action (not `None`), including compound keys. */
+export function isNamedActionMapped(card, name, options = {}) {
+  if (typeof name !== 'string' || !name.trim()) return false;
+  const resolved = resolveNamedAction(card, name, '', options);
+  if (resolved && resolved.kind !== 'None') return true;
+  const actionKey = name.trim();
+  const actionsMap = isObject(options?.actions) ? options.actions : isObject(card?.actions) ? card.actions : null;
+  if (actionsMap) {
+    const entries = slotEntries(card) ?? [];
+    const primary = entries.length > 0 ? entries[0].entityId : null;
+    const prefix = `${actionKey}:`;
+    for (const [key, cfg] of Object.entries(actionsMap)) {
+      if (!key.startsWith(prefix)) continue;
+      const parsed = parseConfiguredAction(cfg, primary, key.slice(prefix.length));
+      if (parsed && parsed.kind !== 'None') return true;
+    }
+  }
+  return false;
+}
+
 /**
- * Multi-entity semantic bindings for [card] and [states]: explicit `bindings:` entries plus
- * HA Device Registry auto-discovery for any unbound `namedVariables` on the same `device_id`.
+ * Multi-entity semantic bindings for [card] and [states]: explicit `bindings:` entries, automatic
+ * semantic action visibility (`action_<name>_visible` / `action_<name>`), and HA Device Registry
+ * auto-discovery for any remaining unbound `namedVariables` on the same `device_id`.
  */
 export function semanticBindings(card, states, options = {}) {
   const strings = {};
@@ -1140,6 +1182,14 @@ export function semanticBindings(card, states, options = {}) {
   const explicit = isObject(options?.bindings) ? options.bindings : isObject(card?.bindings) ? card.bindings : null;
   const namedVariables = options?.namedVariables ?? null;
   const existing = options?.existing ?? null;
+  const hasExisting = (key) =>
+    Boolean(
+      existing &&
+      (Object.hasOwn(existing.strings, key) ||
+        Object.hasOwn(existing.floats, key) ||
+        Object.hasOwn(existing.ints, key) ||
+        Object.hasOwn(existing.booleans, key)),
+    );
   const varTypeOf = (key) => {
     const v = namedVariables?.get?.(`USER:${key}`);
     return v && typeof v.type === 'number' ? v.type : 0;
@@ -1163,6 +1213,29 @@ export function semanticBindings(card, states, options = {}) {
   }
   const entities = options?.entities ?? null;
   const deviceId = resolveDeviceId(card, { deviceId: options?.deviceId, bindings: explicit, entities });
+  if (namedVariables) {
+    const actionOptions = {
+      actions: options?.actions,
+      bindings: explicit,
+      deviceId,
+      entities,
+      states,
+      host: options?.host,
+    };
+    for (const [name, variable] of namedVariables) {
+      if (!variable || variable.type === 2) continue;
+      const key = name.replace(/^USER:/, '');
+      if (!key || boundKeys.has(key) || hasExisting(key)) continue;
+      const actionVar = semanticActionVariable(key);
+      if (!actionVar) continue;
+      boundKeys.add(key);
+      const mapped = isNamedActionMapped(card, actionVar.action, actionOptions);
+      if (variable.type === 4) ints[key] = mapped ? 1 : 0;
+      else if (variable.type === 1) floats[key] = mapped ? 1 : 0;
+      else if (actionVar.kind === 'action') strings[key] = mapped ? actionVar.action : '';
+      else strings[key] = mapped ? '1' : '0';
+    }
+  }
   if (deviceId && namedVariables && entities) {
     for (const [name, variable] of namedVariables) {
       if (!variable || variable.type === 2) continue;
@@ -1180,13 +1253,7 @@ export function semanticBindings(card, states, options = {}) {
       ) {
         continue;
       }
-      if (
-        existing &&
-        (Object.hasOwn(existing.strings, key) ||
-          Object.hasOwn(existing.floats, key) ||
-          Object.hasOwn(existing.ints, key) ||
-          Object.hasOwn(existing.booleans, key))
-      ) {
+      if (hasExisting(key)) {
         continue;
       }
       const discovered = discoverDeviceEntity(key, deviceId, entities);
@@ -1210,9 +1277,11 @@ export function cardBindings(card, states, recipe, host = {}, options = null) {
   const hasSemantic =
     isObject(options?.bindings) ||
     isObject(card?.bindings) ||
-    (options?.entities && options?.namedVariables);
+    isObject(options?.actions) ||
+    isObject(card?.actions) ||
+    Boolean(options?.namedVariables);
   if (!hasSemantic) return bindings;
-  const semantic = semanticBindings(card, states, { ...options, existing: bindings });
+  const semantic = semanticBindings(card, states, { ...options, host, existing: bindings });
   return {
     strings: { ...bindings.strings, ...semantic.strings },
     booleans: { ...bindings.booleans, ...semantic.booleans },
@@ -1607,7 +1676,10 @@ export function resolveNamedAction(card, name, value = '', options = {}) {
     entities: options?.entities,
   });
   if (deviceId && options?.entities) {
-    const matched = discoverDeviceEntity(actionKey, deviceId, options.entities, { preferActionable: true });
+    const matched = discoverDeviceEntity(actionKey, deviceId, options.entities, {
+      preferActionable: true,
+      onlyActionable: true,
+    });
     if (matched) return actionForEntity(matched, actionValue);
   }
 
@@ -2406,6 +2478,7 @@ export class HaCardElement extends BaseElement {
     if (this.hasAttribute('require-host-bindings')) {
       const bindings = cardBindings(card, this.states, this.recipe, this.hostValues, {
         bindings: this.semanticBindingsConfig,
+        actions: this.actionsConfig,
         deviceId: this.deviceId,
         entities: this.entityRegistry,
         namedVariables: context.namedVariables,
@@ -2549,6 +2622,7 @@ export class HaCardElement extends BaseElement {
     if (!context) return;
     const bindings = this.localValues ?? cardBindings(card, this.states, this.recipe, this.hostValues, {
       bindings: this.semanticBindingsConfig,
+      actions: this.actionsConfig,
       deviceId: this.deviceId,
       entities: this.entityRegistry,
       namedVariables: context.namedVariables,

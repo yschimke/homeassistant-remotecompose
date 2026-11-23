@@ -10,6 +10,8 @@ import ee.schimke.composeai.rccreation.compose.action.RemoteAction
 import ee.schimke.composeai.rccreation.compose.action.combinedAction
 import ee.schimke.composeai.rccreation.compose.action.hostAction
 import ee.schimke.composeai.rccreation.compose.layout.RemoteDrawScope
+import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
+import ee.schimke.composeai.rccreation.compose.modifier.visibility
 import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
 import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
 import ee.schimke.composeai.rccreation.compose.state.RemoteString
@@ -502,3 +504,13 @@ internal fun widgetAlarmPinAction(entityId: String, pin: RemoteString): RemoteAc
     registry.metadata(fallbackAction, dynamicPayload),
   )
 }
+
+/**
+ * Collapses a semantic action button (`0 = GONE`) whenever the host reports that [actionName] is
+ * unmapped, via the `USER:action_<actionName>_visible` `RemoteInt` variable (default `1 = VISIBLE`
+ * for standalone previews and older hosts).
+ */
+fun RemoteModifier.semanticActionVisibility(
+  actionName: String,
+  initialVisible: Boolean = true,
+): RemoteModifier = visibility(LiveValues.actionVisibility(actionName, initialVisible))

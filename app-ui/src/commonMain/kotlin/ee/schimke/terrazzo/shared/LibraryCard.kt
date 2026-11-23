@@ -126,7 +126,16 @@ internal fun LibraryCard(
     val base =
       if (usesPlaybackBindings) exactTemplateBindings(card, snapshot, template)
       else templateBindings(card, snapshot)
-    val extra = semanticDeviceBindings(card, snapshot, template, semanticBindings, deviceId, base)
+    val extra =
+      semanticDeviceBindings(
+        card,
+        snapshot,
+        template,
+        semanticBindings,
+        deviceId,
+        base,
+        semanticActions,
+      )
     return if (extra.isEmpty()) base else base + extra
   }
   var bytes by
@@ -162,13 +171,23 @@ internal fun LibraryCard(
       playback,
       bytes,
       semanticBindings,
+      semanticActions,
       deviceId,
     ) {
       val base =
         if (usesPlaybackBindings && playback != null) playback.namedBindings(snapshot)
         else if (usesPlaybackBindings) exactTemplateBindings(card, snapshot, bytes ?: ByteArray(0))
         else templateBindings(card, snapshot)
-      val extra = semanticDeviceBindings(card, snapshot, bytes, semanticBindings, deviceId, base)
+      val extra =
+        semanticDeviceBindings(
+          card,
+          snapshot,
+          bytes,
+          semanticBindings,
+          deviceId,
+          base,
+          semanticActions,
+        )
       if (extra.isEmpty()) base else base + extra
     }
   LaunchedEffect(designKey, cache) {

@@ -70,6 +70,25 @@ object LiveValues {
     return RemoteInt.createNamedRemoteInt(name(entityId, suffix), initial, RemoteState.Domain.User)
   }
 
+  /**
+   * Named variable key (`action_<name>_visible`) a host binds to `1` (`VISIBLE`) or `0` (`GONE`).
+   */
+  fun actionVisibilityKey(actionName: String): String? {
+    val clean = actionName.trim()
+    return if (clean.isEmpty()) null else "action_${clean}_visible"
+  }
+
+  /**
+   * Visibility flag for a semantic action button (`USER:action_<actionName>_visible`, `1 =
+   * VISIBLE`, `0 = GONE`). Defaults to `1` (`VISIBLE`) so standalone previews and older hosts keep
+   * the button shown; hosts override it to `0` (`GONE`) when [actionName] is unmapped.
+   */
+  fun actionVisibility(actionName: String, initialVisible: Boolean = true): RemoteInt {
+    val initial = if (initialVisible) 1 else 0
+    val key = actionVisibilityKey(actionName) ?: return initial.ri
+    return RemoteInt.createNamedRemoteInt(key, initial, RemoteState.Domain.User)
+  }
+
   /** Entity active flag ↔ `<entityId>.is_on`. */
   fun isOn(entityId: String?, initial: Boolean): RemoteBoolean? {
     if (entityId == null) return null

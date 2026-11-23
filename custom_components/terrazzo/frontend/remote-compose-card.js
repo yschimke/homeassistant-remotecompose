@@ -279,8 +279,9 @@ export class RemoteComposeCard extends HaCardElement {
         throw new Error('actions must be an object mapping action names to actions.');
       }
       for (const [key, value] of Object.entries(config.actions)) {
-        if (!key.trim() || !(typeof value === 'string' ? value.trim() : isPlainObject(value))) {
-          throw new Error(`actions.${key} must be an entity id or action object.`);
+        const valid = value === null || value === false || typeof value === 'string' || isPlainObject(value);
+        if (!key.trim() || !valid) {
+          throw new Error(`actions.${key} must be an entity id, action object, or null/false/"" to disable.`);
         }
       }
     }

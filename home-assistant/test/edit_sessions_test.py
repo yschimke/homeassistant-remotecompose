@@ -350,5 +350,27 @@ class DraftNoticeTest(unittest.TestCase):
             sessions.submit(session['id'], bad_device, '', known.__contains__, 'agent', 113)
 
 
+        disabled_actions = {
+            'views': [{'cards': [{
+                'type': 'custom:remote-compose-card',
+                'card': {'type': 'tile', 'entity': 'sensor.soil'},
+                'actions': {'start': '', 'cancel': None, 'boost': False, 'mute': 'none'},
+            }]}]
+        }
+        draft = sessions.submit(session['id'], disabled_actions, 'Hide actions', known.__contains__, 'agent', 114)
+        self.assertEqual(draft['config'], disabled_actions)
+        self.assertEqual(es.referenced_entities(disabled_actions), {'sensor.soil'})
+
+        bad_action = {
+            'views': [{'cards': [{
+                'type': 'custom:remote-compose-card',
+                'card': {'type': 'tile', 'entity': 'sensor.soil'},
+                'actions': {'start': 123},
+            }]}]
+        }
+        with self.assertRaisesRegex(es.SessionError, 'actions.start'):
+            sessions.submit(session['id'], bad_action, '', known.__contains__, 'agent', 115)
+
+
 if __name__ == '__main__':
     unittest.main()

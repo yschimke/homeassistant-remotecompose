@@ -4,6 +4,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcNamedVariable
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.CardEntityActions
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -125,6 +126,7 @@ internal fun discoverDeviceSibling(
   deviceId: String?,
   snapshot: HaSnapshot,
   preferActionable: Boolean = false,
+  onlyActionable: Boolean = false,
 ): String? {
   if (deviceId.isNullOrBlank()) return null
   val key = varName.removePrefix("USER:").trim().lowercase()
@@ -150,11 +152,13 @@ internal fun discoverDeviceSibling(
   if (siblings.isEmpty()) return null
 
   fun pick(candidates: List<Sibling>, suffix: String): String? {
+    val filtered =
+      if (onlyActionable) candidates.filter { it.domain in ACTIONABLE_DOMAINS } else candidates
     val ordered =
       if (preferActionable)
-        candidates.filter { it.domain in ACTIONABLE_DOMAINS } +
-          candidates.filterNot { it.domain in ACTIONABLE_DOMAINS }
-      else candidates
+        filtered.filter { it.domain in ACTIONABLE_DOMAINS } +
+          filtered.filterNot { it.domain in ACTIONABLE_DOMAINS }
+      else filtered
     val tail = "_$suffix"
     return ordered.firstOrNull { it.translationKey == suffix }?.entityId
       ?: ordered.firstOrNull { it.objectId == suffix }?.entityId
@@ -174,6 +178,59 @@ internal fun discoverDeviceSibling(
   return pick(siblings, key)
 }
 
+private val ACTION_VISIBLE_UNDERSCORE = Regex("^action_(.+)_visible$")
+private val ACTION_VISIBLE_DOTTED = Regex("^action\\.(.+)\\.visible$")
+private val ACTION_UNDERSCORE = Regex("^action_(.+)$")
+private val ACTION_DOTTED = Regex("^action\\.(.+)$")
+
+internal data class SemanticActionVariable(val action: String, val isVisibility: Boolean)
+
+internal fun semanticActionVariable(key: String): SemanticActionVariable? {
+  if (key.isEmpty()) return null
+  val vis = ACTION_VISIBLE_UNDERSCORE.matchEntire(key) ?: ACTION_VISIBLE_DOTTED.matchEntire(key)
+  if (vis != null && vis.groupValues[1].isNotEmpty()) {
+    return SemanticActionVariable(vis.groupValues[1], isVisibility = true)
+  }
+  val act = ACTION_UNDERSCORE.matchEntire(key) ?: ACTION_DOTTED.matchEntire(key)
+  if (act != null && act.groupValues[1].isNotEmpty()) {
+    return SemanticActionVariable(act.groupValues[1], isVisibility = false)
+  }
+  return null
+}
+
+internal fun isSemanticActionMapped(
+  card: CardConfig,
+  name: String,
+  snapshot: HaSnapshot,
+  explicitActions: JsonObject?,
+  explicitBindings: JsonObject?,
+  explicitDeviceId: String?,
+): Boolean {
+  val actionKey = name.trim()
+  if (actionKey.isEmpty()) return false
+  val resolved =
+    resolveSemanticAction(
+      card,
+      actionKey,
+      "",
+      snapshot,
+      explicitActions,
+      explicitBindings,
+      explicitDeviceId,
+    )
+  if (resolved != null && resolved.action !is HaAction.None) return true
+  if (explicitActions != null) {
+    val primary = CardDesignSlots.slotEntries(card).orEmpty().firstOrNull()?.entityId
+    val prefix = "$actionKey:"
+    for ((key, cfg) in explicitActions) {
+      if (!key.startsWith(prefix)) continue
+      val parsed = parseConfiguredAction(cfg, primary, key.removePrefix(prefix))
+      if (parsed != null && parsed.action !is HaAction.None) return true
+    }
+  }
+  return false
+}
+
 internal fun semanticDeviceBindings(
   card: CardConfig,
   snapshot: HaSnapshot,
@@ -181,6 +238,7 @@ internal fun semanticDeviceBindings(
   explicitBindings: JsonObject?,
   explicitDeviceId: String?,
   existing: Map<String, RcNamedValue>,
+  explicitActions: JsonObject? = null,
 ): Map<String, RcNamedValue> {
   val declared =
     bytes
@@ -199,6 +257,31 @@ internal fun semanticDeviceBindings(
     val type = declared[key] ?: RcNamedVariable.STRING_TYPE
     if (type == RcNamedVariable.COLOR_TYPE) return@forEach
     out[key] = formatSemanticValue(spec, snapshot.states, type)
+  }
+
+  // Bind semantic action visibility / presence variables (`action_<name>_visible`,
+  // `action.<name>.visible`, `action_<name>`) before Device Registry sibling discovery so unmapped
+  // action buttons collapse (`0` = GONE) and never accidentally match an unrelated sensor.
+  for ((key, type) in declared) {
+    if (type == RcNamedVariable.COLOR_TYPE || key in out || key in existing) continue
+    val actionVar = semanticActionVariable(key) ?: continue
+    val mapped =
+      isSemanticActionMapped(
+        card,
+        actionVar.action,
+        snapshot,
+        explicitActions,
+        explicitBindings,
+        explicitDeviceId,
+      )
+    out[key] =
+      when (type) {
+        RcNamedVariable.INT_TYPE -> RcNamedValue.Integer(if (mapped) 1 else 0)
+        RcNamedVariable.FLOAT_TYPE -> RcNamedValue.FloatValue(if (mapped) 1f else 0f)
+        else ->
+          if (actionVar.isVisibility) RcNamedValue.Text(if (mapped) "1" else "0")
+          else RcNamedValue.Text(if (mapped) actionVar.action else "")
+      }
   }
 
   val deviceId = resolveSemanticDeviceId(card, snapshot, explicitDeviceId, explicitBindings)
@@ -264,8 +347,23 @@ internal fun resolveSemanticAction(
   }
 
   val deviceId = resolveSemanticDeviceId(card, snapshot, explicitDeviceId, explicitBindings)
-  val sibling = discoverDeviceSibling(actionKey, deviceId, snapshot, preferActionable = true)
+  val sibling =
+    discoverDeviceSibling(
+      actionKey,
+      deviceId,
+      snapshot,
+      preferActionable = true,
+      onlyActionable = true,
+    )
   if (sibling != null) return ResolvedSemanticAction(defaultEntityAction(sibling, actionValue))
+
+  if (primary != null) {
+    CardEntityActions.resolve(primary, actionKey, snapshot)?.let { call ->
+      return ResolvedSemanticAction(
+        HaAction.CallService(call.domain, call.service, call.entityId, call.data),
+      )
+    }
+  }
   return null
 }
 
