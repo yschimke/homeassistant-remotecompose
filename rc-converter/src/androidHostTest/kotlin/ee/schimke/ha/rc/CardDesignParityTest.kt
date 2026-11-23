@@ -312,6 +312,40 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  /**
+   * A cover's line is HA's `state` · `current_position`, computed in-document: the template,
+   * captured from a placeholder cover in `off`, reads "Open · 70 %" as the converter does.
+   */
+  @Test
+  fun garageDoorOpen() =
+    assertParity(
+      "cover-garage-open",
+      tile("cover.garage_door"),
+      entity(
+        "cover.garage_door",
+        "open",
+        "friendly_name" to "Garage door",
+        "device_class" to "garage",
+        "current_position" to "70",
+      ),
+      dark = false,
+    )
+
+  @Test
+  fun garageDoorClosedDark() =
+    assertParity(
+      "cover-garage-closed-dark",
+      tile("cover.garage_door"),
+      entity(
+        "cover.garage_door",
+        "closed",
+        "friendly_name" to "Garage door",
+        "device_class" to "garage",
+        "current_position" to "0",
+      ),
+      dark = true,
+    )
+
   @Test
   fun entityRowLight() =
     assertParity(

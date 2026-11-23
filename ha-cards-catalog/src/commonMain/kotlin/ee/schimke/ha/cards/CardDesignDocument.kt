@@ -226,6 +226,10 @@ class CardDesignDocument private constructor(private val design: CardDesign) {
       )
 
     /** The design in [text], a `.uid` document. */
+    /** Every component id a design may place and [parse] draws. */
+    val componentIds: Set<String>
+      get() = CardDesigns.components.keys + components.keys + HaCardDesignLayouts.components.keys
+
     fun parse(text: String): CardDesignDocument =
       CardDesignDocument(
         CardDesign.parse(

@@ -224,9 +224,20 @@ internal object TileContent {
     }
   }
 
+  /**
+   * Whether [content] is a cover's `state` · `current_position` line (HA's cover default), which
+   * the tile draws in-document from `<id>.state` and `<id>.current_position`
+   * ([HaLiveBindings.attributeFloats]) instead of baking it: path 1, so a tile played from a card
+   * design, whose template was captured from a placeholder, shows the live state too.
+   */
+  fun isLivePositionLine(content: List<String>?, entityId: String?): Boolean =
+    content == LIVE_POSITION_LINE && entityId != null && domainOf(entityId) == "cover"
+
+  private val LIVE_POSITION_LINE = listOf("state", "current_position")
+
   /** Whether the tile bakes anything here, so it must re-encode on data changes. */
   fun bakes(card: CardConfig, entityId: String?, entity: EntityState?): Boolean =
-    stateContent(card, entityId) != null ||
+    stateContent(card, entityId)?.takeUnless { isLivePositionLine(it, entityId) } != null ||
       badge(entity) != null ||
       features(card, entity).isNotEmpty()
 

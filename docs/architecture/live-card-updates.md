@@ -183,7 +183,9 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   `state_content` line, a climate `hvac_action` badge or `features:` re-encodes, see below; a
   metered sensor tile's glyph reads `<id>.numeric_state`, decided from `device_class` and unit so
   it is baked even while the sensor is unavailable, and on the design path the template's `tile`
-  binding recipe rests a non-numeric slot at 0),
+  binding recipe rests a non-numeric slot at 0; a cover tile's default line, HA's `state` ·
+  `current_position` ("Open · 70 %"), is computed in-document from `<id>.state` and the
+  `<id>.current_position` float, which a card design gets from the `cover` binding recipe),
   area, entities,
   button (its `show_state` line is `<id>.state`), picture-entity (its `entity_picture` URL loads in place:
   the in-app capture bakes a placeholder per entity (`StablePictures`), the
@@ -199,7 +201,7 @@ under a newer snapshot must never draw the stale bake, frame by frame.
   `ha-cards/thermostat` builder component is path 1 as well, through the climate temperature
   floats; the `thermostat` *converter* still re-encodes (its accent follows `hvac_action`).
 - **Re-encode (path 2):** a tile with baked extras (`TileContent.bakes`: the climate /
-  cover / humidifier / valve default secondary line such as "Heat · 22.8 °C", a configured
+  humidifier / valve default secondary line such as "Heat · 22.8 °C", any other configured
   `state_content`, the `hvac_action` badge, or `features:` whose stepped `set_temperature` payloads,
   selected mode and sliders' resting values are baked ([slider-controls.md](slider-controls.md)); its
   line goes under `<id>.state_label`, never `<id>.state`),

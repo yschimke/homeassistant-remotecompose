@@ -38,7 +38,7 @@ dependencyResolutionManagement {
     // all resolve from Google Maven releases — no androidx.dev snapshot
     // repository, so nothing in the build depends on a post-submit build id
     // that ages out. The three groups still have to stay in lockstep; see the
-    // note on `remote-compose` in `gradle/libs.versions.toml`.
+    // note on `remote-material3` in `gradle/libs.versions.toml`.
     google {
       mavenContent {
         includeGroupAndSubgroups("androidx")
@@ -157,6 +157,7 @@ if (providers.gradleProperty("addonServerOnly").orNull == "true") {
     ":app-ui",
     ":rc-player-ui",
     ":ha-cards-catalog",
+    ":device-pack-catalog",
     ":room-ui",
     ":quest",
     ":glasses",

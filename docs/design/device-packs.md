@@ -238,6 +238,32 @@ tap. The host resolves it with `CardEntityActions` (ha-model), against the slot'
   So does a launcher widget, whose numeric host actions can't carry one, and a watch, which
   doesn't resolve them yet.
 
+## As a Livery catalog
+
+`:device-pack-catalog` builds the packs into a Livery catalog with Livery's Gradle plugin, with no UI
+Builder server (`livery { capture { uiBuilder() } }`, `livery-uibuilder-capture`):
+
+- `devicePackSource` lays the packs out as a catalog source tree in `build/livery/source`:
+  - `catalog.json` and the contracts;
+  - per design, `designs/<designId>/design.json`, holding its contract, title, `<kind>-<variant>`
+    as its variant, and the pack's `audience`;
+  - the `.uid` beside it as `in-app.uid`.
+- `captureLiveryCatalog` draws each document with `HaCardsUiBuilderCatalog`, the `ha-cards`
+  catalog registered for Livery's capture, which renders with `CardDesignDocument` as the previews
+  do. Its `prepare` names each design's example entity (`cover.garage_door`) as the contract's slot
+  (`cover.s0`).
+- `buildLiveryCatalog` builds the catalog with `livery build --inspect`'s checks. Every template
+  must read only what its contract declares, and emit only the actions it declares.
+- `renderLiveryPreviews` draws every design with each of its contract's examples, light and dark,
+  into `build/livery/previews`.
+
+The contracts declare two values every Home Assistant card uses:
+- **`host.ambient`:** the host's always-on flag.
+- **`ha`:** a card's own tap, an encoded `HaAction` the host runs.
+
+The real-world designs are left out: their picture part draws a sample camera entity, not the card's
+own.
+
 ## What isn't wired
 
 These documents are designs to review and edit, ahead of the code that plays them:
@@ -267,8 +293,9 @@ These documents are designs to review and edit, ahead of the code that plays the
   (`picture-entity-card-image`). The camera entity and the simulation are in `pack.json`, not yet
   in the card config a host builds.
 - **Only the controls are selected.** They are in the design library
-  ([above](#in-the-design-library)); the other kinds aren't. Each pack's `audience` is ready for
-  Livery's audience matching when the migration lands.
+  ([above](#in-the-design-library)); the other kinds aren't. Their Livery catalog
+  (`:device-pack-catalog`) carries each pack's `audience`, ready for Livery's audience matching
+  when the migration lands.
 - **One entity per card.** A pack design draws one entity (slot 0). A garage opener's other
   entities (its light, a vent or a half-open button) are its contract's optional inputs, not yet
   filled from the device's other entities: that needs device cards

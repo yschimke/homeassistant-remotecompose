@@ -466,6 +466,45 @@ class AgentGuideTest {
       read.getValue("designIdNote").jsonPrimitive.content,
       "custom:remote-compose-card",
     )
+
+    // A remote-compose card draws in its own card_style, as the app does.
+    fun styledDashboard(style: String?): JsonObject {
+      val styleField = style?.let { ", \"card_style\": \"$it\"" } ?: ""
+      return Json.parseToJsonElement(
+          """
+          {"views": [{"title": "Home", "type": "sections", "sections": [{"type": "grid", "cards": [
+            {"type": "custom:remote-compose-card"$styleField,
+             "card": {"type": "tile", "entity": "light.porch"}}
+          ]}]}]}
+          """,
+        )
+        .jsonObject
+    }
+    val classic = rendered(session, styledDashboard(null))
+    assertFalse(
+      classic.contentEquals(rendered(session, styledDashboard("lcd"))),
+      "lcd draws its own",
+    )
+    assertTrue(
+      classic.contentEquals(rendered(session, styledDashboard("classic"))),
+      "classic default",
+    )
+  }
+
+  private suspend fun ApplicationTestBuilder.rendered(
+    session: String,
+    dashboard: JsonObject,
+  ): ByteArray {
+    val result =
+      mcp(
+        "render_dashboard",
+        buildJsonObject {
+          put("session", session)
+          put("dashboard", dashboard)
+        },
+      )
+    assertFalse(result.isError(), result.toString())
+    return result.images().single()
   }
 
   @Test
