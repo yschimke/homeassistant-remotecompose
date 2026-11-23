@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.103](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.102...v0.1.103) (2026-11-23)
+
+
+### Features
+
+* **ha:** promote hidden or selected dashboards to top-level Terrazzo sidebar panels ([#1756](https://github.com/yschimke/homeassistant-remotecompose/issues/1756)) ([da4d17e](https://github.com/yschimke/homeassistant-remotecompose/commit/da4d17e7c9fdb471eb0859c4b474cfffa5d120f9))
+* hide unmapped semantic action buttons via Remote Compose visibility ([#1759](https://github.com/yschimke/homeassistant-remotecompose/issues/1759)) ([7ecb8f5](https://github.com/yschimke/homeassistant-remotecompose/commit/7ecb8f51b1fca8727c7e9dab03dfaac462ecbd4a))
+
+
+### Bug Fixes
+
+* **app-ui:** apply recipes to direct templates and preserve semantic action targets ([#1752](https://github.com/yschimke/homeassistant-remotecompose/issues/1752)) ([bccac62](https://github.com/yschimke/homeassistant-remotecompose/commit/bccac62730e9279aff4410546438c26c29c9e303))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.154.0 ([#1751](https://github.com/yschimke/homeassistant-remotecompose/issues/1751)) ([82403da](https://github.com/yschimke/homeassistant-remotecompose/commit/82403da6ab0a20552407168454fef2014b3882ea))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.155.0 ([#1755](https://github.com/yschimke/homeassistant-remotecompose/issues/1755)) ([be45cc9](https://github.com/yschimke/homeassistant-remotecompose/commit/be45cc9c437dc245481656235b3a71a1d8391cbe))
+
 ## [0.1.102](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.101...v0.1.102) (2026-11-23)
 
 
