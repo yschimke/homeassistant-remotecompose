@@ -27,8 +27,9 @@ import kotlinx.serialization.json.put
  * Pins the embed's JavaScript port of the slot bindings (`embed/ha-card.js`) to ha-model: every
  * case in `embed/test/bindings-golden.json` must carry exactly the bindings
  * [CardDesignSlots.slotBindings] derives, plus those of the case's binding recipe
- * ([CardBindingRecipe.evaluate]) when it has one. `embed/test/bindings.test.mjs` checks the port
- * against the same file, so the two can only agree through it.
+ * ([CardBindingRecipe.evaluate]) when it has one, with the case's `host` values (Home Assistant's
+ * temperature unit) as the snapshot's. `embed/test/bindings.test.mjs` checks the port against the
+ * same file, so the two can only agree through it.
  *
  * After changing a case, rewrite the expectations with `./gradlew :design-server:test --tests
  * '*EmbedBindingsGoldenTest*' -Pembed.golden.update=true`.
@@ -96,7 +97,13 @@ class EmbedBindingsGoldenTest {
         )
       }
     val config = CardConfig(card["type"]?.jsonPrimitive?.contentOrNull.orEmpty(), card)
-    val snapshot = HaSnapshot(states = states)
+    // What a recipe's `host` expression reads: the embed's `hostValuesFromConfig`.
+    val host = case["host"]?.jsonObject
+    val snapshot =
+      HaSnapshot(
+        states = states,
+        temperatureUnit = host?.get("temperature_unit")?.jsonPrimitive?.contentOrNull,
+      )
     val slots = CardDesignSlots.slotBindings(config, snapshot, zone)
     // As template playback pushes them: the card-level bindings on top of the slot ones.
     val bindings = recipe?.let { slots + it.evaluate(config, snapshot) } ?: slots

@@ -717,13 +717,47 @@ export function rangeText(min, max, unit) {
   return `${formatRangeNumber(min)} – ${formatRangeNumber(max)} ${unit ?? ''}`;
 }
 
+/** `CardBindingRecipe.hvacLabel`: a thermostat's activity as its card's chip names it. */
+const HVAC_LABELS = {
+  heating: 'Heating', cooling: 'Cooling', drying: 'Drying', fan: 'Fan', idle: 'Idle', off: 'Off',
+  preheating: 'Preheating', defrosting: 'Defrosting',
+};
+export function hvacLabel(hvacAction, mode) {
+  if (typeof hvacAction === 'string' && Object.hasOwn(HVAC_LABELS, hvacAction)) return HVAC_LABELS[hvacAction];
+  if (typeof mode !== 'string' || mode.trim() === '') return null;
+  const text = mode.replaceAll('_', ' ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** A recipe value as text, as `CardBindingRecipe.text` writes it. */
+function recipeText(value) {
+  return typeof value === 'number' ? formatRangeNumber(value) : String(value);
+}
+
 /** `CardBindingRecipe.FUNCTIONS`. */
 const RECIPE_FUNCTIONS = {
   range_text: ([min, max, unit]) =>
     typeof min === 'number' && typeof max === 'number' && typeof unit === 'string'
       ? rangeText(min, max, unit)
       : null,
+  with_unit: ([value, unit]) =>
+    typeof value === 'number' && typeof unit === 'string' ? formatRangeNumber(value) + unit : null,
+  concat: (args) => (args.some((a) => a === null || a === undefined) ? null : args.map(recipeText).join('')),
+  hvac_label: ([action, mode]) =>
+    hvacLabel(typeof action === 'string' ? action : null, typeof mode === 'string' ? mode : null),
 };
+
+/** `CardBindingRecipe.HOST_TEMPERATURE_UNIT`: what a `host` expression may name. */
+export const HOST_TEMPERATURE_UNIT = 'temperature_unit';
+
+/**
+ * The host values a recipe's `host` expression reads, from Home Assistant's `config`
+ * (`hass.config`, or `get_config`): its unit system's temperature unit.
+ */
+export function hostValuesFromConfig(config) {
+  const unit = content(config?.unit_system?.temperature);
+  return unit !== null && unit.trim() !== '' ? { [HOST_TEMPERATURE_UNIT]: unit } : {};
+}
 
 /** `CardBindingRecipe.parse`: the recipe in [json] (text or object), or null. */
 export function parseRecipe(json) {
@@ -743,8 +777,11 @@ export function parseRecipe(json) {
   };
 }
 
-/** `CardBindingRecipe.evaluate`: the bindings [recipe] gives for [card] and [states]. */
-export function recipeBindings(recipe, card, states) {
+/**
+ * `CardBindingRecipe.evaluate`: the bindings [recipe] gives for [card] and [states]. [host] holds
+ * the values a `host` expression reads (`hostValuesFromConfig`; `HaSnapshot.temperatureUnit`).
+ */
+export function recipeBindings(recipe, card, states, host = {}) {
   const slots = (slotEntries(card) ?? []).map((e) => e.entityId);
   const values = new Map();
   const floats = {};
@@ -804,6 +841,11 @@ export function recipeBindings(recipe, card, states) {
       return null;
     }
     if ('ref' in expr) return values.get(content(expr.ref)) ?? null;
+    if ('host' in expr) {
+      if (content(expr.host) !== HOST_TEMPERATURE_UNIT) return null;
+      const unit = content(host?.[HOST_TEMPERATURE_UNIT]);
+      return unit !== null && unit.trim() !== '' ? unit : '°C';
+    }
     if ('fn' in expr) {
       const fn = Object.hasOwn(RECIPE_FUNCTIONS, content(expr.fn) ?? '') ? RECIPE_FUNCTIONS[content(expr.fn)] : null;
       const args = Array.isArray(expr.args) ? expr.args.map(evaluate) : [];
@@ -830,10 +872,10 @@ export function recipeBindings(recipe, card, states) {
 }
 
 /** Slot bindings with [recipe]'s card-level ones on top (`slotBindings + designBindings`). */
-export function cardBindings(card, states, recipe) {
+export function cardBindings(card, states, recipe, host = {}) {
   const bindings = slotBindings(card, states);
   if (!recipe) return bindings;
-  const extra = recipeBindings(recipe, card, states);
+  const extra = recipeBindings(recipe, card, states, host);
   return {
     ...bindings,
     strings: { ...bindings.strings, ...extra.strings },
@@ -987,6 +1029,121 @@ export function serviceCallFor(action) {
     return message;
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Entity actions: a port of ha-model's `CardEntityActions`, the named actions a design's control
+// sends on the card's own entity (a garage door's Close), resolved here against the real entity.
+// ---------------------------------------------------------------------------------------------
+
+/** `CardEntityActions.NAME`: the host action an entity action travels under (not `ha`). */
+export const ENTITY_ACTION_NAME = 'ha.entity_action';
+
+function attrNumber(entity, name) {
+  const text = content(entity && isObject(entity.attributes) ? entity.attributes[name] : null);
+  if (text === null) return null;
+  const value = toDoubleOrNull(text);
+  return value !== null && Number.isFinite(value) ? value : null;
+}
+
+/** The entity reports [feature] in `supported_features`, or reports none. */
+function supports(entity, feature) {
+  const features = attrNumber(entity, 'supported_features');
+  return features === null || (Math.trunc(features) & feature) !== 0;
+}
+
+/** `temperatureUnitFor`: the entity's own unit, else Home Assistant's, else °C. */
+function temperatureUnitFor(entity, host) {
+  const attributes = entity && isObject(entity.attributes) ? entity.attributes : {};
+  for (const key of ['temperature_unit', 'unit_of_measurement']) {
+    const value = attributes[key];
+    if (typeof value === 'string' && value.trim() !== '') return value;
+  }
+  const unit = content(host?.[HOST_TEMPERATURE_UNIT]);
+  return unit !== null && unit.trim() !== '' ? unit : '°C';
+}
+
+/** `CardEntityActions.setPoint`: in range, to hundredths. */
+function setPoint(value, min, max) {
+  const clamped = Math.min(Math.max(value, min), Math.max(min, max));
+  return Math.round(clamped * 100) / 100;
+}
+
+const entityService = (service, feature = 0) => (entityId, entity) =>
+  feature !== 0 && !supports(entity, feature) ? null : { domain: domainOf(entityId), service, entityId, data: {} };
+
+const stepTemperature = (direction) => (entityId, entity, host) => {
+  const target = attrNumber(entity, 'temperature');
+  if (target === null) return null;
+  const step = attrNumber(entity, 'target_temp_step') ?? (temperatureUnitFor(entity, host) === '°F' ? 1 : 0.5);
+  const min = attrNumber(entity, 'min_temp') ?? 7;
+  const max = attrNumber(entity, 'max_temp') ?? 35;
+  return {
+    domain: 'climate', service: 'set_temperature', entityId,
+    data: { temperature: setPoint(target + direction * step, min, max) },
+  };
+};
+
+const ENTITY_ON_OFF = { turn_on: entityService('turn_on'), turn_off: entityService('turn_off'), toggle: entityService('toggle') };
+
+/** `CardEntityActions.RULES`: the actions a design may name, by the slot entity's domain. */
+const ENTITY_ACTIONS = {
+  cover: {
+    open_cover: entityService('open_cover', 1),
+    close_cover: entityService('close_cover', 2),
+    stop_cover: entityService('stop_cover', 8),
+    toggle: entityService('toggle'),
+  },
+  climate: {
+    turn_on: entityService('turn_on'),
+    turn_off: entityService('turn_off'),
+    temperature_up: stepTemperature(1),
+    temperature_down: stepTemperature(-1),
+  },
+  light: ENTITY_ON_OFF,
+  switch: ENTITY_ON_OFF,
+  fan: ENTITY_ON_OFF,
+  input_boolean: ENTITY_ON_OFF,
+};
+
+/** `CardEntityActions.ACTIONS`: each domain's action names. */
+export function entityActionNames() {
+  return Object.fromEntries(Object.entries(ENTITY_ACTIONS).map(([domain, rules]) => [domain, Object.keys(rules)]));
+}
+
+/** `CardEntityActions.resolve`: the call [action] makes on the real [entityId], or null. */
+export function entityActionCall(entityId, action, states, host = {}) {
+  const rules = ENTITY_ACTIONS[domainOf(entityId)];
+  const rule = rules && Object.hasOwn(rules, action) ? rules[action] : null;
+  if (!rule) return null;
+  return rule(entityId, states[entityId] ?? null, host);
+}
+
+/**
+ * `CardTemplatePlayback.resolveEntityAction`: the action an entity action ([value], its
+ * `{entityId, action}` payload) runs on [card]: the named action on the real entity of the slot it
+ * names, or `{ kind: 'None' }`. The template picks only the name and the slot.
+ */
+export function resolveEntityAction(card, value, states = {}, host = {}) {
+  const none = { kind: 'None' };
+  let payload;
+  try {
+    payload = typeof value === 'string' ? JSON.parse(value) : null;
+  } catch {
+    return none;
+  }
+  if (!isObject(payload) || typeof payload.entityId !== 'string' || typeof payload.action !== 'string') return none;
+  const slotMatch = SLOT_ENTITY.exec(payload.entityId);
+  if (!slotMatch) return none;
+  const index = Number(slotMatch[1]);
+  const entry = (slotEntries(card) ?? [])[index];
+  if (!entry || slotId(domainOf(entry.entityId), index) !== payload.entityId) return none;
+  const call = entityActionCall(entry.entityId, payload.action, states, host);
+  if (!call) return none;
+  return {
+    kind: 'CallService', domain: call.domain, service: call.service, entityId: call.entityId,
+    serviceData: call.data, entityAction: true,
+  };
 }
 
 /** Versioned form schema. Editing remains a player custom component, not a host-only control. */
@@ -1528,6 +1685,8 @@ export class HaCardElement extends BaseElement {
     this.unsubscribe = null;
     this.localStates = null;
     this.localValues = null;
+    // What a recipe's `host` expression reads (`hostValuesFromConfig`): Home Assistant's own unit.
+    this.hostValues = {};
     const root = this.attachShadow({ mode: 'open' });
     root.innerHTML = `
       <style>
@@ -1719,7 +1878,7 @@ export class HaCardElement extends BaseElement {
     patchStringOverrides(player.getRemoteContext());
     this.recipe = templateRecipe(player.getRemoteContext());
     if (this.hasAttribute('require-host-bindings')) {
-      const bindings = cardBindings(card, this.states, this.recipe);
+      const bindings = cardBindings(card, this.states, this.recipe, this.hostValues);
       for (const [name, variable] of player.getRemoteContext().namedVariables) {
         const key = name.replace(/^USER:/, '');
         // Colors are template/theme constants. Every data declaration must have a host value;
@@ -1742,6 +1901,7 @@ export class HaCardElement extends BaseElement {
     doc.addActionCallback({
       onAction: (name, value) => {
         if (name === HA_ACTION_NAME) this.tap(resolveTap(card, value));
+        else if (name === ENTITY_ACTION_NAME) this.tap(resolveEntityAction(card, value, this.states, this.hostValues));
       },
     });
     this.render();
@@ -1804,6 +1964,15 @@ export class HaCardElement extends BaseElement {
       if (!current()) return unsubscribe();
       this.unsubscribe = unsubscribe;
       this.setStatus('live');
+      // Home Assistant's unit system, for a design that shows its unit (a °F thermostat).
+      session.config ??= session.connection.send({ type: 'get_config' }).catch(() => {
+        session.config = null;
+        return null;
+      });
+      const config = await session.config;
+      if (!current() || !config) return;
+      this.hostValues = hostValuesFromConfig(config);
+      this.render();
     } catch (e) {
       if (!current()) return;
       if (e instanceof AuthError) return this.start();
@@ -1836,7 +2005,7 @@ export class HaCardElement extends BaseElement {
     }
     const context = player.getRemoteContext();
     if (!context) return;
-    const bindings = this.localValues ?? cardBindings(card, this.states, this.recipe);
+    const bindings = this.localValues ?? cardBindings(card, this.states, this.recipe, this.hostValues);
     const push = (name, value, set) => {
       const key = `USER:${name}`;
       if (Object.is(this.pushed.get(key), value)) return false;

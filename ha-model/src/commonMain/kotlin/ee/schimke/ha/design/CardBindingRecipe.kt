@@ -43,7 +43,15 @@ import kotlinx.serialization.json.put
  * - `{"number": e}`: `e` parsed as a number, null if it isn't one;
  * - `{"first": [e, …]}`: the first non-null;
  * - `{"ref": "<binding>"}`: an already evaluated binding;
+ * - `{"host": "<name>"}`: a value the host knows beyond the card and its states, one of [HOST]:
+ *   `temperature_unit`, Home Assistant's own temperature unit (its unit system's, `°C` until the
+ *   host has read it);
  * - `{"fn": "<name>", "args": [e, …]}`: one of the named functions in [FUNCTIONS].
+ *
+ * **Compatible additions.** An expression or function a host doesn't know evaluates to null there,
+ * so a recipe that uses a newer one follows it with a `first` fallback for an older host: a neutral
+ * value (`—`, `°`), never another reading. Changing what an existing expression or function gives
+ * is a new [VERSION], which an older host refuses.
  *
  * [prototype] names the card type the recipe was written for, for diagnostics and for a host that
  * prefers a built-in implementation of it. It never changes what [evaluate] does.
@@ -130,6 +138,12 @@ class CardBindingRecipe(
       expr["ref"]?.let {
         return values[it.content()]
       }
+      expr["host"]?.let { name ->
+        return when (name.content()) {
+          HOST_TEMPERATURE_UNIT -> snapshot.temperatureUnit?.takeIf { it.isNotBlank() } ?: "°C"
+          else -> null
+        }
+      }
       expr["fn"]?.let { fn ->
         val args = (expr["args"] as? JsonArray)?.map { eval(it) }.orEmpty()
         return FUNCTIONS[fn.content()]?.invoke(args)
@@ -162,6 +176,12 @@ class CardBindingRecipe(
     /** The named string a template carries its recipe in, as JSON. */
     const val BINDING: String = "meta.binding_recipe"
 
+    /** `{"host": "temperature_unit"}`: Home Assistant's own temperature unit. */
+    const val HOST_TEMPERATURE_UNIT: String = "temperature_unit"
+
+    /** The values a `host` expression may name. */
+    val HOST: Set<String> = setOf(HOST_TEMPERATURE_UNIT)
+
     /** The recipe in [json], or null when it isn't one this version understands. */
     fun parse(json: JsonObject): CardBindingRecipe? {
       if ((json["v"] as? JsonPrimitive)?.intOrNull != VERSION) return null
@@ -191,12 +211,16 @@ class CardBindingRecipe(
 
     fun ref(binding: String): JsonElement = buildJsonObject { put("ref", binding) }
 
+    fun host(name: String): JsonElement = buildJsonObject { put("host", name) }
+
     fun fn(name: String, vararg args: JsonElement): JsonElement = buildJsonObject {
       put("fn", name)
       put("args", buildJsonArray { args.forEach { add(it) } })
     }
 
     fun literal(value: Number): JsonElement = JsonPrimitive(value)
+
+    fun literal(value: String): JsonElement = JsonPrimitive(value)
 
     /**
      * The named functions a recipe may call. A host must implement each exactly as here; a new one
@@ -212,7 +236,45 @@ class CardBindingRecipe(
             val unit = args.getOrNull(2) as? String
             if (min == null || max == null || unit == null) null else rangeText(min, max, unit)
           },
+        // A reading with its unit, null without a number: "19.5°C" (formatRangeNumber, no space).
+        "with_unit" to
+          { args ->
+            val value = args.getOrNull(0) as? Double
+            val unit = args.getOrNull(1) as? String
+            if (value == null || unit == null) null else formatRangeNumber(value) + unit
+          },
+        // Every argument as text, joined; null when any is null.
+        "concat" to
+          { args ->
+            if (args.any { it == null }) null else args.joinToString("") { text(it!!) }
+          },
+        // What a thermostat is doing, for display: its hvac_action, else its mode (its state).
+        "hvac_label" to
+          { args ->
+            hvacLabel(args.getOrNull(0) as? String, args.getOrNull(1) as? String)
+          },
       )
+
+    /**
+     * A thermostat's activity as the thermostat card's chip names it: its `hvac_action` (`heating`
+     * reads `Heating`), else its mode (`heat_cool` reads `Heat cool`); null with neither.
+     */
+    fun hvacLabel(hvacAction: String?, mode: String?): String? =
+      when (hvacAction) {
+        "heating" -> "Heating"
+        "cooling" -> "Cooling"
+        "drying" -> "Drying"
+        "fan" -> "Fan"
+        "idle" -> "Idle"
+        "off" -> "Off"
+        "preheating" -> "Preheating"
+        "defrosting" -> "Defrosting"
+        else ->
+          mode
+            ?.takeIf { it.isNotBlank() }
+            ?.replace('_', ' ')
+            ?.replaceFirstChar { it.uppercaseChar() }
+      }
 
     /** A gauge's range line: "`min` – `max` `unit`", each bound as [formatRangeNumber]. */
     fun rangeText(min: Double, max: Double, unit: String?): String =
@@ -312,25 +374,71 @@ object CardBindingRecipes {
   val COVER: CardBindingRecipe = cover(1)
 
   /**
-   * `climate`: a thermostat's room temperature and set point, `<slot>.current_temperature` and
-   * `<slot>.target_temperature` (Home Assistant's `temperature` attribute), as
-   * `HaLiveBindings.attributeFloats` pushes them on the direct path: [HaLiveBindings.ABSENT] when
-   * the thermostat reports none (off, or holding a range). What a device pack's thermostat designs
-   * read.
+   * `climate`: what a thermostat design reads of its entity, all in the entity's own unit, as
+   * `HaLiveBindings.attributeFloats` pushes them on the direct path:
+   * - `<slot>.current_temperature` and `<slot>.target_temperature` (Home Assistant's `temperature`
+   *   attribute), [HaLiveBindings.ABSENT] when the thermostat reports none (off, or holding a
+   *   range);
+   * - `<slot>.min_temp`, `<slot>.max_temp` and `<slot>.target_temp_step`, the set point's range and
+   *   step, Home Assistant's defaults (7, 35, 0.5) when it reports none;
+   * - `<slot>.unit`, the unit those are in: the entity's own, else Home Assistant's (`°F` on an
+   *   imperial system). A host older than the `host` expression shows a bare `°` rather than a
+   *   wrong unit;
+   * - `<slot>.attributes.current_temperature_label` (`19.5°C`) and `temperature_label` (`↑ 21°C`),
+   *   `—` without one, and `hvac_action_label` (`Heating`, else the mode): for a design that shows
+   *   them as text. An older host shows `—` and nothing.
+   *
+   * What a device pack's thermostat designs read.
    */
   val CLIMATE: CardBindingRecipe =
     with(CardBindingRecipe) {
+      fun attribute(name: String, absent: Number) = first(number(attr(name, 0)), literal(absent))
       CardBindingRecipe(
         prototype = "climate",
         floats =
           linkedMapOf(
-            "\$0.current_temperature" to
-              first(number(attr("current_temperature", 0)), literal(HaLiveBindings.ABSENT)),
-            "\$0.target_temperature" to
-              first(number(attr("temperature", 0)), literal(HaLiveBindings.ABSENT)),
+            "\$0.current_temperature" to attribute("current_temperature", HaLiveBindings.ABSENT),
+            "\$0.target_temperature" to attribute("temperature", HaLiveBindings.ABSENT),
+            "\$0.min_temp" to attribute("min_temp", CLIMATE_MIN_TEMP),
+            "\$0.max_temp" to attribute("max_temp", CLIMATE_MAX_TEMP),
+            "\$0.target_temp_step" to attribute("target_temp_step", CLIMATE_TEMP_STEP),
+          ),
+        strings =
+          linkedMapOf(
+            "\$0.unit" to
+              first(
+                attr("temperature_unit", 0),
+                attr("unit_of_measurement", 0),
+                host(HOST_TEMPERATURE_UNIT),
+                literal("°"),
+              ),
+            "\$0.attributes.current_temperature_label" to
+              first(
+                fn("with_unit", number(attr("current_temperature", 0)), ref("\$0.unit")),
+                literal(NO_READING),
+              ),
+            "\$0.attributes.temperature_label" to
+              first(
+                fn(
+                  "concat",
+                  literal("↑ "),
+                  fn("with_unit", number(attr("temperature", 0)), ref("\$0.unit")),
+                ),
+                literal(NO_READING),
+              ),
+            "\$0.attributes.hvac_action_label" to
+              first(fn("hvac_label", attr("hvac_action", 0), state(0)), literal("")),
           ),
       )
     }
+
+  /** Home Assistant's climate defaults, for a thermostat that reports no range or step. */
+  const val CLIMATE_MIN_TEMP: Double = 7.0
+  const val CLIMATE_MAX_TEMP: Double = 35.0
+  const val CLIMATE_TEMP_STEP: Double = 0.5
+
+  /** A label for a reading the entity doesn't report. */
+  const val NO_READING: String = "—"
 
   private val byPrototype = listOf(GAUGE, TILE, COVER, CLIMATE).associateBy { it.prototype }
 

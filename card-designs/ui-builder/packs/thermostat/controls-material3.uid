@@ -30,6 +30,30 @@
       "valueType": "string",
       "initialValue": "Heat",
       "persistence": "host"
+    },
+    "climate.s0.unit": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "°C",
+      "persistence": "host"
+    },
+    "climate.s0.min_temp": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 7.0,
+      "persistence": "host"
+    },
+    "climate.s0.max_temp": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 35.0,
+      "persistence": "host"
+    },
+    "climate.s0.attributes.temperature_label": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "↑ 21°C",
+      "persistence": "host"
     }
   },
   "roots": [
@@ -175,16 +199,16 @@
           "value": 21.0
         },
         "min": {
-          "type": "float",
-          "value": 7.0
+          "type": "state",
+          "variable": "climate.s0.min_temp"
         },
         "max": {
-          "type": "float",
-          "value": 30.0
+          "type": "state",
+          "variable": "climate.s0.max_temp"
         },
         "unit": {
-          "type": "string",
-          "value": "°C"
+          "type": "state",
+          "variable": "climate.s0.unit"
         },
         "mode": {
           "type": "string",
@@ -213,6 +237,10 @@
         "verticalAlignment": {
           "type": "enum",
           "value": "center"
+        },
+        "horizontalArrangement": {
+          "type": "enum",
+          "value": "spaceEvenly"
         }
       },
       "modifiers": [
@@ -222,93 +250,51 @@
       ],
       "slots": {
         "children": [
-          "remote-button-5",
-          "remote-button-8",
-          "thermometer-6"
+          "lower-5",
+          "set-point-6",
+          "raise-7"
         ]
       }
     },
-    "remote-button-5": {
-      "id": "remote-button-5",
-      "componentId": "ha-cards/remote-button",
-      "properties": {},
-      "modifiers": [],
-      "slots": {
-        "content": [
-          "remote-text-4"
-        ]
-      }
-    },
-    "remote-text-4": {
-      "id": "remote-text-4",
-      "componentId": "ha-cards/remote-text",
-      "properties": {
-        "text": {
-          "type": "string",
-          "value": "−"
-        },
-        "fontSize": {
-          "type": "float",
-          "value": 20.0
-        },
-        "maxLines": {
-          "type": "int",
-          "value": 1
-        }
-      },
-      "modifiers": [],
-      "slots": {}
-    },
-    "thermometer-6": {
-      "id": "thermometer-6",
-      "componentId": "ha-cards/thermometer",
+    "lower-5": {
+      "id": "lower-5",
+      "componentId": "ha-cards/button",
       "properties": {
         "name": {
           "type": "string",
-          "value": "Set to"
+          "value": "Lower"
         },
-        "value": {
-          "type": "float",
-          "value": 21.0
-        },
-        "unit": {
+        "icon": {
           "type": "string",
-          "value": "°C"
+          "value": "minus"
         },
         "entityId": {
           "type": "string",
           "value": "climate.hallway"
         },
-        "attribute": {
-          "type": "string",
-          "value": "target_temperature"
+        "showName": {
+          "type": "bool",
+          "value": false
         },
-        "presentation": {
+        "toggleable": {
+          "type": "bool",
+          "value": false
+        },
+        "action": {
           "type": "string",
-          "value": "chip"
+          "value": "temperature_down"
         }
       },
       "modifiers": [],
       "slots": {}
     },
-    "remote-button-8": {
-      "id": "remote-button-8",
-      "componentId": "ha-cards/remote-button",
-      "properties": {},
-      "modifiers": [],
-      "slots": {
-        "content": [
-          "remote-text-7"
-        ]
-      }
-    },
-    "remote-text-7": {
-      "id": "remote-text-7",
+    "set-point-6": {
+      "id": "set-point-6",
       "componentId": "ha-cards/remote-text",
       "properties": {
         "text": {
-          "type": "string",
-          "value": "+"
+          "type": "state",
+          "variable": "climate.s0.attributes.temperature_label"
         },
         "fontSize": {
           "type": "float",
@@ -317,6 +303,42 @@
         "maxLines": {
           "type": "int",
           "value": 1
+        },
+        "fontWeight": {
+          "type": "string",
+          "value": "medium"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "raise-7": {
+      "id": "raise-7",
+      "componentId": "ha-cards/button",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Raise"
+        },
+        "icon": {
+          "type": "string",
+          "value": "plus"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "climate.hallway"
+        },
+        "showName": {
+          "type": "bool",
+          "value": false
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": false
+        },
+        "action": {
+          "type": "string",
+          "value": "temperature_up"
         }
       },
       "modifiers": [],

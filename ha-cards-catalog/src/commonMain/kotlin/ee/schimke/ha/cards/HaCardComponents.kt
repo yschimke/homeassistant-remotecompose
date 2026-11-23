@@ -22,6 +22,8 @@ import ee.schimke.composeai.rccreation.compose.shapes.RemoteCircleShape
 import ee.schimke.composeai.rccreation.compose.state.RemoteBoolean
 import ee.schimke.composeai.rccreation.compose.state.RemoteColor
 import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteState
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
 import ee.schimke.composeai.rccreation.compose.state.rc
 import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.composeai.rccreation.compose.state.rf
@@ -302,8 +304,8 @@ fun HaCardGauge(
  * and marker fractions and both labels are computed from them in-document, and the chip binds
  * `<entityId>.state`. A temperature the entity stops reporting (a thermostat switched off drops its
  * set point) shows as a dash, with no marker. The accent stays the designed [mode]'s. A tap opens
- * more-info; there are no steppers, since a set-temperature action carries an absolute temperature
- * a design can't compute.
+ * more-info; there are no steppers on the dial (a design steps the set point with buttons that send
+ * `temperature_up` / `temperature_down`, `HaCardButton`'s `action`).
  */
 @Composable
 @RemoteComposable
@@ -317,10 +319,37 @@ fun HaCardThermostat(
   unit: String = "°C",
   mode: String = "heat",
   entityId: String = "",
+) = BoundThermostat(name, current, modifier, target, min, max, unit, mode, entityId)
+
+/**
+ * [HaCardThermostat] with its [unit] and range ([min], [max]) bound to named values a host pushes
+ * when [unitBinding], [minBinding] or [maxBinding] names one (a design's `state` property,
+ * `climate.s0.unit`): a thermostat in °F reads its own unit, on its own range. Each seeds from its
+ * literal.
+ */
+@Composable
+@RemoteComposable
+internal fun BoundThermostat(
+  name: String,
+  current: Float,
+  modifier: RemoteModifier = RemoteModifier,
+  target: Float = -1f,
+  min: Float = 7f,
+  max: Float = 35f,
+  unit: String = "°C",
+  mode: String = "heat",
+  entityId: String = "",
+  unitBinding: String? = null,
+  minBinding: String? = null,
+  maxBinding: String? = null,
 ) {
   val entity = entityId.entityOrNull()
   val hasTarget = target >= 0f
   val span = (max - min).coerceAtLeast(0.0001f)
+  val unitLive = boundString(unitBinding, unit)
+  val minLive = boundFloat(minBinding, min)
+  // The span, never below 0.0001: -min(-(max − min), -0.0001).
+  val spanLive = -((-(boundFloat(maxBinding, max) - minLive)).min((-0.0001f).rf))
   val currentLive = LiveValues.namedFloat(entity, HaLiveBindings.CURRENT_TEMPERATURE, current)
   val targetLive =
     if (hasTarget) LiveValues.namedFloat(entity, HaLiveBindings.TARGET_TEMPERATURE, target)
@@ -347,12 +376,14 @@ fun HaCardThermostat(
       tapAction = tapAction(entity, toggleable = false),
       live =
         HaArcDialLive(
-          valueFraction = currentPresent.select(unitFraction(currentLive, min, span), 0f.rf),
-          targetFraction = targetLive?.let { unitFraction(it, min, span) },
-          centerLabel = currentPresent.select(currentLive.toDecimalRemoteString(1) + unit, "—".rs),
+          valueFraction =
+            currentPresent.select(unitFraction(currentLive, minLive, spanLive), 0f.rf),
+          targetFraction = targetLive?.let { unitFraction(it, minLive, spanLive) },
+          centerLabel =
+            currentPresent.select(currentLive.toDecimalRemoteString(1) + unitLive, "—".rs),
           supportingLabel =
             targetLive?.let {
-              targetPresent!!.select("↑ ".rs + it.toDecimalRemoteString(1) + unit, "".rs)
+              targetPresent!!.select("↑ ".rs + it.toDecimalRemoteString(1) + unitLive, "".rs)
             },
           modeLabel = LiveValues.state(entity, modeLabel),
           targetVisible = targetPresent,
@@ -366,10 +397,23 @@ fun HaCardThermostat(
 private const val PresentAbove = -1000f
 
 /** ([value] − [min]) ÷ [span], clamped to 0..1, in-document. */
-private fun unitFraction(value: RemoteFloat, min: Float, span: Float): RemoteFloat {
-  val f = (value - min.rf) / span.rf
+private fun unitFraction(value: RemoteFloat, min: RemoteFloat, span: RemoteFloat): RemoteFloat {
+  val f = (value - min) / span
   return -((-f.min(1f.rf)).min(0f.rf))
 }
+
+/**
+ * The text a design binds by name ([binding], a `state` property's variable), seeded with
+ * [initial]; [initial] as a literal without one.
+ */
+internal fun boundString(binding: String?, initial: String): RemoteString =
+  binding?.let { RemoteString.createNamedRemoteString(it, initial, RemoteState.Domain.User) }
+    ?: initial.rs
+
+/** [boundString] for a number. */
+internal fun boundFloat(binding: String?, initial: Float): RemoteFloat =
+  binding?.let { RemoteFloat.createNamedRemoteFloat(it, initial, RemoteState.Domain.User) }
+    ?: initial.rf
 
 /**
  * HA `glance` card: an optional title over up to three icon cells. Blank-named cells are left out.
@@ -428,6 +472,10 @@ fun HaCardHeading(
 /**
  * HA `button` card: a large icon with the name under it. Toggleable, the accent follows the
  * entity's live on/off state and a tap toggles it.
+ *
+ * With an [action] and an entity, a tap sends that named action on the entity instead
+ * (`close_cover`; `CardEntityActions` lists them by domain): a garage door's Open, Stop and Close
+ * buttons, each doing what it says rather than the card's toggle.
  */
 @Composable
 @RemoteComposable
@@ -441,6 +489,7 @@ fun HaCardButton(
   isOn: Boolean = false,
   activeColor: RemoteColor = HaCardColors.Active,
   inactiveColor: RemoteColor = HaCardColors.Inactive,
+  action: String = "",
 ) {
   val entity = entityId.entityOrNull()
   val data =
@@ -451,6 +500,7 @@ fun HaCardButton(
       accent = accent(toggleable, isOn, activeColor, inactiveColor),
       showName = showName,
       tapAction = tapAction(entity, toggleable),
+      entityAction = action.trim().ifEmpty { null },
     )
   if (toggleable) RemoteHaToggleButton(data, modifier) else RemoteHaButton(data, modifier)
 }

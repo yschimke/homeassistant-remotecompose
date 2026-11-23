@@ -1,7 +1,10 @@
 package ee.schimke.ha.rc
 
+import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.CardEntityActions
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.decodeHaEntityAction
 
 /**
  * Plays a card design template in place of a local capture. [bytes] is a values-free document from
@@ -29,7 +32,26 @@ class CardTemplatePlayback(
     { _, _, _ ->
       null
     },
+  /** The real entity of each slot, in slot order ([CardDesignSlots.slotEntities]). */
+  val slotEntities: List<String> = emptyList(),
 ) {
+  /**
+   * The service call an **entity action** the template sent ([CardEntityActions.NAME], payload
+   * [value]) runs: the named action on the real entity of the slot it names, as
+   * [CardEntityActions.resolve] gives it for [snapshot]. [HaAction.None] for a payload that isn't
+   * one, a slot the card doesn't have or of another domain, or an action that entity's domain
+   * doesn't list. The template picks only the action's name and the slot; never a service or data.
+   */
+  fun resolveEntityAction(value: Any?, snapshot: HaSnapshot? = null): HaAction {
+    val action = decodeHaEntityAction(value) ?: return HaAction.None
+    val slot = slotIndexOf(action.entityId) ?: return HaAction.None
+    val real = slotEntities.getOrNull(slot) ?: return HaAction.None
+    if (CardDesignSlots.slotId(CardDesignSlots.domainOf(real), slot) != action.entityId) {
+      return HaAction.None
+    }
+    return entityActionCall(real, action.action, snapshot)
+  }
+
   /** The card-local action for a tap whose template-encoded action is [templateAction]. */
   fun resolveTap(templateAction: HaAction?, snapshot: HaSnapshot? = null): HaAction {
     if (templateAction == null) return tapAction
@@ -63,3 +85,12 @@ class CardTemplatePlayback(
       HaAction.None -> null
     }
 }
+
+/**
+ * [action] on the real entity [entityId] as the call [CardEntityActions.resolve] gives, or
+ * [HaAction.None] when it gives none.
+ */
+fun entityActionCall(entityId: String, action: String, snapshot: HaSnapshot?): HaAction =
+  CardEntityActions.resolve(entityId, action, snapshot)?.let {
+    HaAction.CallService(it.domain, it.service, it.entityId, it.data)
+  } ?: HaAction.None

@@ -4,6 +4,7 @@ package ee.schimke.ha.cards
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import ee.schimke.composeai.rccreation.compose.action.RemoteAction
 import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
 import ee.schimke.composeai.rccreation.compose.layout.RemoteArrangement
 import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
@@ -38,10 +39,13 @@ import ee.schimke.composeai.rccreation.compose.state.rs
 import ee.schimke.composeai.rccreation.compose.state.rsp
 import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
 import ee.schimke.ha.model.HaLiveBindings
+import ee.schimke.ha.rc.components.HaEntityAction
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.animateRemoteFloat
+import ee.schimke.ha.rc.components.haClickable
 import ee.schimke.ha.rc.components.haMotion
 import ee.schimke.ha.rc.components.toDecimalRemoteString
+import ee.schimke.ha.rc.components.toRemoteAction
 
 // ---------------------------------------------------------------------------------------------
 // Device drawings for the device packs' skeuomorphic designs (docs/design/device-packs.md): the
@@ -195,8 +199,10 @@ fun HaCardGarageDoor(
  *
  * Bound to [entityId] (a climate entity) it reads `<entityId>.current_temperature` and
  * `<entityId>.target_temperature`, a dash for one the thermostat stops reporting, and the mode from
- * `<entityId>.state`; the status light is on while the thermostat is on (`<entityId>.is_on`).
- * [current], [target] and [mode] seed the first frame and draw a design canvas with no entity.
+ * `<entityId>.state`; the status light is on while the thermostat is on (`<entityId>.is_on`). Its ▼
+ * and ▲ keys step the set point (the `temperature_down` and `temperature_up` entity actions, which
+ * the host resolves within the thermostat's own range and step). [current], [target] and [mode]
+ * seed the first frame and draw a design canvas with no entity.
  */
 @Composable
 @RemoteComposable
@@ -207,14 +213,31 @@ fun HaCardWallThermostat(
   target: Float = 21f,
   mode: String = "Heat",
   unit: String = "°C",
+) = BoundWallThermostat(modifier, entityId, current, target, mode, unit)
+
+/**
+ * [HaCardWallThermostat] with its [unit] bound to a named value when [unitBinding] names one (a
+ * design's `state` property, `climate.s0.unit`), so a °F thermostat reads °F.
+ */
+@Composable
+@RemoteComposable
+internal fun BoundWallThermostat(
+  modifier: RemoteModifier = RemoteModifier,
+  entityId: String = "",
+  current: Float = 19.5f,
+  target: Float = 21f,
+  mode: String = "Heat",
+  unit: String = "°C",
+  unitBinding: String? = null,
 ) {
   val entity = entityId.ifBlank { null }
+  val unitLive = boundString(unitBinding, unit)
   val room = LiveValues.namedFloat(entity, HaLiveBindings.CURRENT_TEMPERATURE, current)
   val setPoint = LiveValues.namedFloat(entity, HaLiveBindings.TARGET_TEMPERATURE, target)
   fun label(value: RemoteFloat, prefix: String) =
     value
       .isGreaterThan(-1000f.rf)
-      .select(prefix.rs + value.toDecimalRemoteString(1) + unit.rs, "—".rs)
+      .select(prefix.rs + value.toDecimalRemoteString(1) + unitLive, "—".rs)
   val on = LiveValues.isOn(entity, true) ?: RemoteBoolean(true)
 
   RemoteBox(
@@ -268,13 +291,13 @@ fun HaCardWallThermostat(
         verticalAlignment = RemoteAlignment.CenterVertically,
         horizontalArrangement = RemoteArrangement.spacedBy(14.rdp),
       ) {
-        StepKey("▼")
+        StepKey("▼", entity?.let { HaEntityAction(it, "temperature_down").toRemoteAction() })
         RemoteBox(
           RemoteModifier.size(8.rdp)
             .clip(RemoteCircleShape)
             .background(on.select(StatusOn, StatusOff)),
         )
-        StepKey("▲")
+        StepKey("▲", entity?.let { HaEntityAction(it, "temperature_up").toRemoteAction() })
       }
     }
   }
@@ -282,10 +305,12 @@ fun HaCardWallThermostat(
 
 @Composable
 @RemoteComposable
-private fun StepKey(glyph: String) {
+private fun StepKey(glyph: String, action: RemoteAction? = null) {
+  val base = action?.let { RemoteModifier.haClickable(it, glyph.rs) } ?: RemoteModifier
   RemoteBox(
     modifier =
-      RemoteModifier.size(32.rdp)
+      base
+        .size(32.rdp)
         .clip(RemoteCircleShape)
         .background(Key)
         .border(1.rdp, PlateEdge, RemoteCircleShape),

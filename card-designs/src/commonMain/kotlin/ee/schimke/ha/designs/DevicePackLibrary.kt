@@ -39,21 +39,18 @@ import kotlinx.serialization.json.put
  */
 object DevicePackLibrary {
   /**
-   * The pack designs the library publishes: each pack's controls whose every value a host can push
-   * ([recipe]). The thermostat overlay reads its readings as formatted text
-   * (`climate.s0.attributes.current_temperature_label`), which no recipe can produce yet, so it
-   * stays out rather than draw its example's numbers.
+   * The pack designs the library publishes: each pack's controls, every value of which a host
+   * pushes ([recipe]: a thermostat's unit, range and formatted labels too) and every button of
+   * which sends what it says (a toggle, or a named entity action such as `close_cover`).
    */
   val published: List<DevicePacks.PackDesign>
-    get() =
-      DevicePacks.designs.filter {
-        it.kind == CONTROLS && it.designId !in NOT_BINDABLE && it.domain !in UNIT_BOUND
-      }
+    get() = DevicePacks.designs.filter { it.kind == CONTROLS }
 
   /**
    * The values [design] reads beyond the slot bindings, as the recipe its template carries: a
-   * cover's position, a thermostat's two temperatures. Every host evaluates it, so the design
-   * follows the entity's attributes live rather than drawing the example's.
+   * cover's position; a thermostat's two temperatures, its range, its unit and their labels. Every
+   * host evaluates it, so the design follows the entity's attributes live rather than drawing the
+   * example's.
    */
   fun recipe(design: DevicePacks.PackDesign): CardBindingRecipe =
     when (design.domain) {
@@ -164,23 +161,10 @@ object DevicePackLibrary {
 
   private const val PREFIX = "pack:"
   private const val CONTROLS = "controls"
-  private val NOT_BINDABLE =
-    setOf(
-      "thermostat-controls-overlay",
-      // Its Open, Stop and Close buttons can only send the card's own tap, a cover's toggle: Close
-      // on a closed door would open it. Published once a design can emit distinct cover actions.
-      "garage-door-controls-material3",
-    )
 
   /** The shape properties a pack design depends on: its entity's domain and class. */
   private val KEPT = setOf("domain", "device_class")
 
-  /**
-   * Domains whose readings carry a unit the designs bake (a thermostat's `°C`, its dial's 7–30
-   * range): no binding pushes the entity's own unit or range yet, so a °F thermostat would read
-   * wrong. Published once the unit and range are bindable.
-   */
-  private val UNIT_BOUND = setOf("climate")
   private val CARD_TYPES = mapOf("climate" to "thermostat")
   private val EXAMPLE_STATE = mapOf("cover" to "closed", "climate" to "heat")
 }

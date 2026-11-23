@@ -3,6 +3,7 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.runtime.Composable
+import ee.schimke.composeai.rccreation.compose.action.RemoteAction
 import ee.schimke.composeai.rccreation.compose.layout.RemoteAlignment
 import ee.schimke.composeai.rccreation.compose.layout.RemoteBox
 import ee.schimke.composeai.rccreation.compose.layout.RemoteColumn
@@ -15,9 +16,11 @@ import ee.schimke.composeai.rccreation.compose.modifier.padding
 import ee.schimke.composeai.rccreation.compose.modifier.size
 import ee.schimke.composeai.rccreation.compose.state.RemoteColor
 import ee.schimke.composeai.rccreation.compose.state.RemoteFloat
+import ee.schimke.composeai.rccreation.compose.state.RemoteString
 import ee.schimke.composeai.rccreation.compose.state.lerp
 import ee.schimke.composeai.rccreation.compose.state.rdp
 import ee.schimke.composeai.rccreation.compose.state.rf
+import ee.schimke.composeai.rccreation.compose.state.rs
 import ee.schimke.composeai.rccreation.compose.text.RemoteFontWeight
 import ee.schimke.composeai.rccreation.compose.text.RemoteTextOverflow
 import ee.schimke.rc.m3.RcPress
@@ -114,8 +117,7 @@ fun RemoteHaButtonRow(data: HaButtonData, modifier: RemoteModifier = RemoteModif
   val look = entityLook(data.entityId, data.accent)
   val accent = if (data.accent.toggleable) toggleAccent(data, look) else look.accent
   val press = expressivePress(data)
-  val clickable =
-    data.tapAction.toRemoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
+  val clickable = data.remoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
       modifier
@@ -135,7 +137,7 @@ fun RemoteHaButtonRow(data: HaButtonData, modifier: RemoteModifier = RemoteModif
             .padding(start = (if (data.showIcon) 10 else 0).rdp, end = 8.rdp),
       ) {
         RemoteText(
-          text = entityName(data.entityId, data.name),
+          text = data.label(),
           color = look.dim(theme.primaryText),
           fontSize = HaType.Body,
           fontWeight = RemoteFontWeight.Medium,
@@ -179,8 +181,7 @@ fun RemoteHaButtonIcon(
   val look = entityLook(data.entityId, data.accent)
   val accent = look.accent
   val press = expressivePress(data)
-  val clickable =
-    data.tapAction.toRemoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
+  val clickable = data.remoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
       modifier
@@ -197,7 +198,7 @@ fun RemoteHaButtonIcon(
         ButtonIconChip(data, look, accent, CompactChipDp, CompactIconDp, press.fraction)
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp)) {
           RemoteText(
-            text = entityName(data.entityId, data.name),
+            text = data.label(),
             color = look.dim(theme.primaryText),
             fontSize = HaType.Label,
             fontWeight = RemoteFontWeight.Medium,
@@ -237,8 +238,7 @@ private fun ButtonBody(
 ) {
   val theme = haTheme()
   val press = expressivePress(data)
-  val clickable =
-    data.tapAction.toRemoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
+  val clickable = data.remoteAction()?.let { press.modifier.haClickable(it) } ?: RemoteModifier
   val chipDp =
     when {
       dense -> RowChipDp
@@ -297,7 +297,7 @@ private fun ButtonBody(
           modifier = RemoteModifier.padding(top = (if (data.showIcon) namePadDp else 0).rdp),
         ) {
           RemoteText(
-            text = entityName(data.entityId, data.name),
+            text = data.label(),
             color = look.dim(theme.primaryText),
             fontSize = nameSize,
             fontWeight = RemoteFontWeight.Medium,
@@ -359,8 +359,7 @@ private fun ButtonIcon(
     look = look,
     tint = if (console) look.dim(haTheme().primaryText) else accent,
     // Decorative when the name is drawn under it; the icon alone carries it otherwise.
-    contentDescription =
-      if (data.showName && !iconOnly) null else entityName(data.entityId, data.name),
+    contentDescription = if (data.showName && !iconOnly) null else data.label(),
     modifier =
       RemoteModifier.then(
           if (console) RemoteModifier.padding(end = (chipDp * 0.28f).rdp) else RemoteModifier,
@@ -384,3 +383,21 @@ private const val CompactChipDp = 44
 private const val CompactIconDp = 26
 private const val RowChipDp = 36
 private const val RowIconDp = 22
+
+/**
+ * What a tap on the button sends: its [HaButtonData.entityAction] when it has one, else its tap.
+ */
+@Composable
+private fun HaButtonData.remoteAction(): RemoteAction? {
+  val named = entityAction?.takeIf { it.isNotBlank() }
+  if (named != null && entityId != null) return HaEntityAction(entityId, named).toRemoteAction()
+  return tapAction.toRemoteAction()
+}
+
+/**
+ * The button's label: its entity's name (`<entityId>.name` in a template), except for a button that
+ * sends an entity action, which is labelled by what it does (`Close`), never by the door it closes.
+ */
+@Composable
+private fun HaButtonData.label(): RemoteString =
+  if (entityAction.isNullOrBlank()) entityName(entityId, name) else name.rs

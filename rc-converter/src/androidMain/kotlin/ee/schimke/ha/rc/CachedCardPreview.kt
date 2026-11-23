@@ -38,7 +38,9 @@ import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.ha.rc.components.HA_ENTITY_ACTION_NAME
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.decodeHaEntityAction
 import ee.schimke.rc.m3.LocalRcReduceMotion
 import ee.schimke.rc.m3.RcAmbientValue
 import kotlinx.coroutines.CancellationException
@@ -372,6 +374,17 @@ fun CachedCardPreview(
       } else {
         decodeHaAction(value)?.let(dispatcher::dispatch)
       }
+    } else if (name == HA_ENTITY_ACTION_NAME) {
+      // A named action on the card's own entity (a garage door's Close): the template names only
+      // the action and its slot; the host resolves the call.
+      val current = latestTemplate.value
+      val action =
+        if (current != null) current.resolveEntityAction(value, latestSnapshot.value)
+        else
+          decodeHaEntityAction(value)?.let {
+            entityActionCall(it.entityId, it.action, latestSnapshot.value)
+          } ?: HaAction.None
+      if (action != HaAction.None) dispatcher.dispatch(action)
     }
   }
   // The AndroidX View player, primed so `modifier` can be wrap-content on the height axis (#153)

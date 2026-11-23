@@ -368,8 +368,13 @@ draws it. A host reads it once when the template loads and evaluates it on every
 
 - **Expressions** are a closed set: literals, `config` (a dotted path into the card config),
   `state` / `attr` (slot `i`'s raw state or an attribute), `number`, `first` (first non-null),
-  `ref` (an earlier binding) and `fn` (a named function: `range_text`). A binding whose expression
-  is null is left out; `$<i>.` names slot `i`. A new function or expression form is a new `v`, and
+  `ref` (an earlier binding), `host` (a value the host knows: `temperature_unit`, Home Assistant's
+  own, from `HaSnapshot.temperatureUnit` in the app and `hass.config` / `get_config` in the
+  browser) and `fn` (a named function: `range_text`, `with_unit`, `concat`, `hvac_label`). A
+  binding whose expression is null is left out; `$<i>.` names slot `i`.
+- **Compatible additions.** A host evaluates an expression or function it doesn't know to null, so
+  a recipe that uses a newer one follows it with a `first` fallback an older host shows: neutral
+  (`—`, a bare `°`), never another reading. Changing what an existing form gives is a new `v`, and
   a host ignores a recipe whose `v` it doesn't know.
 - **`prototype`** names the card type the recipe was written for. It never changes the result; a
   host may use it for diagnostics or a built-in implementation.
