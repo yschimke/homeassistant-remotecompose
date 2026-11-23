@@ -1356,7 +1356,9 @@ private fun LiveDashboard(
     scope.launch {
       try {
         if (connection.hostedAction?.invoke(payload) != true) {
-          dispatchCardAction(connection.client, payload)
+          val navUri = standaloneNavigationUri(payload, connection.config.baseUrl)
+          if (navUri != null) uriHandler.openUri(navUri)
+          else dispatchCardAction(connection.client, payload)
         }
       } catch (e: CancellationException) {
         throw e
@@ -1793,5 +1795,5 @@ internal fun NativeCard(
 
 internal suspend fun dispatchCardAction(client: HaClient, payload: String) {
   val call = cardActionCall(payload) ?: return
-  client.callService(call.domain, call.service, call.entityId, call.serviceData)
+  client.callService(call.domain, call.service, call.entityId, call.serviceData, call.target)
 }

@@ -217,4 +217,34 @@ class LibraryCardDevicePackTest {
       onAllNodesWithText("Design unavailable", substring = true).fetchSemanticsNodes().isEmpty(),
     )
   }
+
+  @Test
+  fun aDirectTemplateUrlThermostatDesignDrawsUsingItsRecipe() = runComposeUiTest {
+    val design = design("thermostat-controls-material3")
+    val bytes = bytesOf(design)
+    setContent {
+      val scope = rememberCoroutineScope()
+      val cache = remember { DashboardLoadCache<LibraryDesignKey, ByteArray?>(scope) { bytes } }
+      MaterialTheme {
+        LibraryCard(
+          thermostat,
+          fahrenheit,
+          "classic",
+          false,
+          designCache = cache,
+          templateUrl = "https://ha.example/local/thermostat.rc",
+          onSource = {},
+        ) {
+          Text("fallback")
+        }
+      }
+    }
+    waitUntil(timeoutMillis = 10_000) {
+      onAllNodesWithText("fallback").fetchSemanticsNodes().isEmpty() &&
+        onAllNodesWithText("°F", substring = true).fetchSemanticsNodes().isNotEmpty()
+    }
+    assertTrue(
+      onAllNodesWithText("Design unavailable", substring = true).fetchSemanticsNodes().isEmpty(),
+    )
+  }
 }

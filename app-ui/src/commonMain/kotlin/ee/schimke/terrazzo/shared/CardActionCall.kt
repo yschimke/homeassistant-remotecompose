@@ -8,6 +8,7 @@ internal data class CardActionCall(
   val service: String,
   val entityId: String?,
   val serviceData: JsonObject = JsonObject(emptyMap()),
+  val target: JsonObject? = null,
 )
 
 /**
@@ -33,8 +34,32 @@ internal fun cardActionCall(payload: String): CardActionCall? {
         service = requireNotNull(obj["service"]?.jsonPrimitive?.content),
         entityId = obj["entityId"]?.jsonPrimitive?.contentOrNull,
         serviceData = obj["serviceData"] as? JsonObject ?: JsonObject(emptyMap()),
+        target = (obj["target"] as? JsonObject)?.takeIf { it.isNotEmpty() },
       )
     "None" -> null
     else -> error("This action is not supported on this platform yet.")
+  }
+}
+
+/**
+ * Resolves a standalone desktop/Wasm URI to open for `Navigate` or `Url` `HaAction` payloads (when
+ * no parent Home Assistant host handled them), or `null` for other action kinds.
+ */
+internal fun standaloneNavigationUri(payload: String, homeBaseUrl: String): String? {
+  val obj = runCatching { Json.parseToJsonElement(payload).jsonObject }.getOrNull() ?: return null
+  return when (obj["type"]?.jsonPrimitive?.content?.substringAfterLast('.')) {
+    "Url" -> {
+      val url = obj["url"]?.jsonPrimitive?.contentOrNull?.trim() ?: return null
+      url.takeIf {
+        it.startsWith("https://", ignoreCase = true) || it.startsWith("http://", ignoreCase = true)
+      }
+    }
+    "Navigate" -> {
+      val path = obj["path"]?.jsonPrimitive?.contentOrNull?.trim() ?: return null
+      if (!path.startsWith("/") || path.startsWith("//")) return null
+      val base = homeBaseUrl.trim().trimEnd('/').takeIf { it.isNotEmpty() } ?: return null
+      base + path
+    }
+    else -> null
   }
 }
