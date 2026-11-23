@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.102](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.101...v0.1.102) (2026-11-23)
+
+
+### Features
+
+* **agent:** guide administrators to set up the dashboard agent ([#1745](https://github.com/yschimke/homeassistant-remotecompose/issues/1745)) ([6fa72ec](https://github.com/yschimke/homeassistant-remotecompose/commit/6fa72ec5f7ab59351ad2232eca79ac82e18d81cb))
+* support multi-entity semantic device bindings, actions, and same-origin templates ([#1748](https://github.com/yschimke/homeassistant-remotecompose/issues/1748)) ([c97059e](https://github.com/yschimke/homeassistant-remotecompose/commit/c97059e640ba6fac0ced527601e86bf66c6f64c4))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.153.0 ([#1750](https://github.com/yschimke/homeassistant-remotecompose/issues/1750)) ([e05d3db](https://github.com/yschimke/homeassistant-remotecompose/commit/e05d3db460c6d3cce708ec01aa6553948c01134c))
+* **deps:** update dependency ee.schimke.composeai:rc-players-bom to v3.12.1 ([#1629](https://github.com/yschimke/homeassistant-remotecompose/issues/1629)) ([3f7fb79](https://github.com/yschimke/homeassistant-remotecompose/commit/3f7fb7976546c38c6e0f22dd9d5ec3db89d2c884))
+
 ## [0.1.101](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.100...v0.1.101) (2026-11-23)
 
 
