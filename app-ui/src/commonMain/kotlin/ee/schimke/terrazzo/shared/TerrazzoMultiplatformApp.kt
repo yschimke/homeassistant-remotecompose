@@ -573,6 +573,7 @@ private fun DashboardShell(
   // With a dashboard agent answering, Edit opens a chat with it; the manual editor stays in the
   // menu, and the design server relay is off (the agent answers every session).
   var dashboardAgent by remember(connection) { mutableStateOf(DashboardAgent.Off) }
+  val uriHandler = LocalUriHandler.current
   var privateDesignServer by remember(connection) { mutableStateOf(false) }
   var dashboardRefreshGeneration by remember(connection) { mutableIntStateOf(0) }
   LaunchedEffect(connection) {
@@ -809,6 +810,11 @@ private fun DashboardShell(
                           if (dashboardAgent.enabled) ({ newDashboard = true }) else null,
                         agentFirst = dashboardAgent.enabled,
                         onCustomize = if (customizing) null else ({ customizing = true }),
+                        onSetUpAgent =
+                          dashboardAgent.setupUrl(connection.config.baseUrl)?.let { url ->
+                            { uriHandler.openUri(url) }
+                          },
+                        setUpAgentLabel = dashboardAgent.setupLabel ?: "Set up a chat agent",
                       )
                       headerActions()
                     },
@@ -1118,6 +1124,9 @@ internal fun DashboardMoreMenu(
   askAgentLabel: String = "Ask your agent",
   onNewDashboard: (() -> Unit)? = null,
   agentFirst: Boolean = false,
+  /** An administrator's way to set the dashboard agent up, while it isn't. */
+  onSetUpAgent: (() -> Unit)? = null,
+  setUpAgentLabel: String = "Set up a chat agent",
 ) {
   var expanded by remember { mutableStateOf(false) }
   Box {
@@ -1158,6 +1167,14 @@ internal fun DashboardMoreMenu(
           onClick = {
             expanded = false
             onNewDashboard()
+          },
+        )
+      if (onSetUpAgent != null)
+        DropdownMenuItem(
+          text = { Text(setUpAgentLabel) },
+          onClick = {
+            expanded = false
+            onSetUpAgent()
           },
         )
       if (onCustomize != null)

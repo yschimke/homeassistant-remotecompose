@@ -17,7 +17,9 @@ from homeassistant.components import conversation, websocket_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import intent
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import agent_turn, edit_sessions, edits, llm_api
@@ -26,27 +28,121 @@ from .const import CONF_AGENT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def agent_id(hass):
-    """The chosen agent's id while the entry is loaded and the agent exists, else None."""
+def agent_id(hass, setting_up=None):
+    """The chosen agent's id while the entry is loaded and the agent exists, else None. [setting_up]
+    is an entry in `async_setup_entry`, read before Home Assistant marks it loaded."""
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.state is ConfigEntryState.LOADED:
+        if entry.state is ConfigEntryState.LOADED or entry is setting_up:
             chosen = entry.options.get(CONF_AGENT) or None
             if chosen and conversation.async_get_agent_info(hass, chosen) is not None:
                 return chosen
     return None
 
 
-def info(hass):
-    """What a client may know: whether an agent answers edit sessions, which one, its name."""
+# Repairs that walk an administrator through setting the agent up.
+ISSUE_MOVED = "agent_moved"  # The built-in agent was on before 0.1.101 and no agent is chosen yet.
+ISSUE_NO_TOOLS = "agent_no_tools"  # The chosen agent doesn't have the dashboard tools turned on.
+TERRAZZO_URL = "/config/integrations/integration/" + DOMAIN
+MY_URL = "https://my.home-assistant.io/redirect/integration/?domain="
+
+
+def _agent_entry(hass, chosen):
+    """The chosen agent's (config entry, its options or its subentry's data, whether that is an AI
+    integration's conversation agent), or None for an agent without a config entry."""
+    entity = er.async_get(hass).async_get(chosen)
+    if entity is None or not entity.config_entry_id:
+        return None
+    entry = hass.config_entries.async_get_entry(entity.config_entry_id)
+    if entry is None:
+        return None
+    subentry = (getattr(entry, "subentries", None) or {}).get(getattr(entity, "config_subentry_id", None))
+    if subentry is not None:
+        return entry, subentry.data, subentry.subentry_type == "conversation"
+    return entry, entry.options, False
+
+
+def tools_state(hass, chosen):
+    """Whether [chosen] can reach the dashboard tools: True, False, or None when Terrazzo can't tell
+    (an agent that keeps its APIs elsewhere, or none at all), which it then leaves to the agent."""
+    found = _agent_entry(hass, chosen)
+    if found is None:
+        return None
+    _, options, definite = found
+    return agent_turn.tools_on(options.get("llm_hass_api"), definite)
+
+
+def _agent_name(hass, chosen):
+    found = conversation.async_get_agent_info(hass, chosen)
+    state = hass.states.get(chosen)
+    friendly = state.attributes.get("friendly_name") if state is not None else None
+    return friendly or (found.name if found is not None else None)
+
+
+def info(hass, user=None):
+    """What a client may know: whether an agent answers edit sessions, which one, its name, and, for
+    an administrator, what setting it up still needs (`setup`: "agent" while none is chosen, "tools"
+    while the chosen one can't reach the dashboard tools, else None) and where they do that
+    (`setup_path`, a path on this Home Assistant). Anyone else gets None for both: they can't change
+    it, and the chat itself tells them when the tools are off."""
+    admin = user is not None and user.is_admin
     chosen = agent_id(hass)
     found = conversation.async_get_agent_info(hass, chosen) if chosen else None
     if found is None:
-        return {"enabled": False, "agent_id": None, "name": None}
+        setup = ("agent", TERRAZZO_URL) if admin else (None, None)
+        return {"enabled": False, "agent_id": None, "name": None, "setup": setup[0], "setup_path": setup[1]}
     # An agent entity named after its device (most AI integrations) reports its entity id as its
     # name; its state's friendly name is what Home Assistant shows.
-    state = hass.states.get(found.id)
-    friendly = state.attributes.get("friendly_name") if state is not None else None
-    return {"enabled": True, "agent_id": found.id, "name": friendly or found.name}
+    answer = {"enabled": True, "agent_id": found.id, "name": _agent_name(hass, found.id), "setup": None, "setup_path": None}
+    if admin and tools_state(hass, found.id) is False:
+        entry, _, _ = _agent_entry(hass, found.id)
+        answer.update(setup="tools", setup_path="/config/integrations/integration/" + entry.domain)
+    return answer
+
+
+@callback
+def async_check(hass, setting_up=None):
+    """Raises or clears the setup repairs for how things stand now. Run when the entry loads (with
+    [setting_up], the entry not yet marked loaded), when a client asks for the agent, and before each
+    turn, so turning the tools on clears the repair the next time anything looks."""
+    chosen = agent_id(hass, setting_up)
+    if chosen is not None:
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_MOVED)
+    found = _agent_entry(hass, chosen) if chosen is not None else None
+    if found is None or tools_state(hass, chosen) is not False:
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_NO_TOOLS)
+        return
+    entry = found[0]
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_NO_TOOLS,
+        is_fixable=False,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_NO_TOOLS,
+        translation_placeholders={"agent": _agent_name(hass, chosen) or chosen, "integration": entry.title},
+        learn_more_url=MY_URL + entry.domain,
+    )
+
+
+@callback
+def async_moved(hass, provider):
+    """From the 1.2 migration: the built-in agent that was on is gone, so a repair says what replaces
+    it. It stays until an agent is chosen (`async_check`)."""
+    placeholders = agent_turn.moved_placeholders(provider)
+    if placeholders is None:
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_MOVED,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_MOVED,
+        translation_placeholders=placeholders,
+        learn_more_url=MY_URL + DOMAIN,
+    )
 
 
 class Turn:
@@ -136,6 +232,13 @@ class DashboardAgent:
     async def _turn(self, chosen, user, session):
         hass = self.hass
         session_id = session["id"]
+        async_check(hass)
+        if tools_state(hass, chosen) is False:
+            # Without the tools a turn could only fail: say how to turn them on instead.
+            reply = agent_turn.no_tools_reply(_agent_name(hass, chosen))
+            self._failed(session_id, reply)
+            self._post(user, session_id, reply)
+            return
         turn = Turn(hass, user, session_id)
         turn._status("Thinking")
         token = llm_api.TURN.set(turn)
@@ -182,8 +285,9 @@ class DashboardAgent:
 @callback
 def ws_info(hass, connection, msg):
     """Whether a conversation agent answers edit sessions, and its name: clients then open a chat
-    with it as the way to edit a dashboard."""
-    connection.send_result(msg["id"], info(hass))
+    with it as the way to edit a dashboard, or what setting one up still needs."""
+    async_check(hass)
+    connection.send_result(msg["id"], info(hass, connection.user))
 
 
 @callback

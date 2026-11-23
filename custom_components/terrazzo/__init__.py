@@ -97,7 +97,11 @@ async def async_migrate_entry(hass, entry):
     if entry.version > 1:
         return False  # A newer Terrazzo's entry: don't guess at it.
     if entry.minor_version < 2:
-        options = {k: v for k, v in entry.options.items() if k not in LEGACY_AGENT_OPTIONS}
+        old = entry.options
+        # Was it on? Off while the provider was "off", or a hosted service had no key.
+        if old.get("agent_api_key") or (old.get("agent_provider") == "openai_compatible" and old.get("agent_base_url")):
+            dashboard_agent.async_moved(hass, old.get("agent_provider"))
+        options = {k: v for k, v in old.items() if k not in LEGACY_AGENT_OPTIONS}
         hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
     return True
 
@@ -169,6 +173,9 @@ async def async_setup_entry(hass, entry):
     # Before the update listener: recording the resource in the entry must not reload it.
     await _async_add_card_resource(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+    # The agent's setup repairs, for the options as they now stand (dashboard_agent.py).
+    # The entry isn't marked loaded until this returns, so it is named.
+    dashboard_agent.async_check(hass, entry)
     return True
 
 
@@ -179,7 +186,10 @@ async def async_unload_entry(hass, entry):
 
 
 async def async_remove_entry(hass, entry):
-    """Delete the card resource if Terrazzo added it and it is still there."""
+    """Delete the card resource if Terrazzo added it and it is still there, and the agent's setup
+    repairs, which are about this entry."""
+    for issue in (dashboard_agent.ISSUE_MOVED, dashboard_agent.ISSUE_NO_TOOLS):
+        ir.async_delete_issue(hass, DOMAIN, issue)
     if (resource_id := entry.data.get(DATA_CARD_RESOURCE)) and (
         resources := await _async_storage_resources(hass)
     ):

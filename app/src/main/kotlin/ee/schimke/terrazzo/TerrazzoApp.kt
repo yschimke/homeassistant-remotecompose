@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -747,6 +748,7 @@ private fun DashboardsRoot(
 
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
+  val uriHandler = LocalUriHandler.current
   // The conversation agent answering the integration's edit sessions: while one does, Edit opens a
   // chat with it, and the editor stays as Edit by hand.
   val dashboardAgent by
@@ -928,6 +930,15 @@ private fun DashboardsRoot(
                 if (dashboardAgent.enabled && phoneAgentEdits != null) ({ editorOpen = true })
                 else null,
               onOpenRoom = onOpenRoom,
+              // An administrator's way to set the agent up while it isn't: Home Assistant's
+              // settings for it, in the browser.
+              onSetUpAgent =
+                if (session is DemoHaSession) null
+                else
+                  dashboardAgent.setupUrl(session.baseUrl)?.let { url ->
+                    { uriHandler.openUri(url) }
+                  },
+              setUpAgentLabel = dashboardAgent.setupLabel ?: "Set up a chat agent",
             )
           },
         )

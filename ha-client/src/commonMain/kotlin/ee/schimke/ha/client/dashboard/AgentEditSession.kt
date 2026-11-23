@@ -201,7 +201,28 @@ data class DashboardAgent(
   val enabled: Boolean = false,
   @SerialName("agent_id") val agentId: String? = null,
   val name: String? = null,
+  /**
+   * What setting the agent up still needs, told to an administrator only: "agent" while none is
+   * chosen, "tools" while the chosen one doesn't have "Terrazzo dashboards" on; else null.
+   */
+  val setup: String? = null,
+  /** Where on Home Assistant an administrator does [setup], a path such as `/config/…`. */
+  @SerialName("setup_path") val setupPath: String? = null,
 ) {
+  /** The menu entry that opens [setupPath], or null while there's nothing to set up. */
+  val setupLabel: String?
+    get() =
+      when {
+        setupPath == null -> null
+        setup == "agent" -> "Set up a chat agent"
+        setup == "tools" -> "Finish setting up $displayName"
+        else -> null
+      }
+
+  /** [setupPath] on the Home Assistant at [baseUrl], or null. */
+  fun setupUrl(baseUrl: String): String? =
+    setupPath?.takeIf { it.startsWith("/") }?.let { baseUrl.trimEnd('/') + it }
+
   /** How the conversation names it: its name, else "Agent". */
   val shortName: String
     get() = name?.takeIf { it.isNotBlank() } ?: "Agent"
