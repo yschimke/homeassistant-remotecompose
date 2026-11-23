@@ -6,6 +6,17 @@
   or open a PR does not by itself authorize merging. Honor required checks,
   reviews, and branch protections.
 
+- **Monitor open PRs for CI failures, merge conflicts, and PR comments.**
+  After opening or updating a PR, monitor it until checks and automated reviews
+  complete: inspect CI check statuses, mergeability (`mergeable` /
+  `mergeable_state`), conversation comments, inline review comments, and review
+  states (including automated reviewers such as Codex). Fix CI failures,
+  resolve merge conflicts against `origin/main`, and address valid review
+  findings. Re-check PR state immediately before committing or pushing any
+  follow-up — if the PR has already merged, carry remaining follow-ups on a
+  fresh `agent/...` branch from `origin/main` instead of stacking commits onto
+  the merged branch.
+
 - **Cards must update on live data, through named slots.** Every card converter takes one of
   two update paths — host-reproducible named bindings (the default, design principle 10), or a
   `dataSignature` document re-encode, which is for structure only and justified per field in
