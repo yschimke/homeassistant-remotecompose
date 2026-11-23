@@ -451,7 +451,17 @@ open a chat with it when you edit a dashboard: **Chat with your agent** leads th
 - **Turn it on.** In the AI integration, open its conversation agent's options and turn on
   **Terrazzo dashboards** among the APIs it may control (beside **Assist**, or instead of it). Then
   open Terrazzo, choose **Configure**, and pick that agent as **Dashboard agent**. Empty turns it
-  off. An agent without Terrazzo dashboards on has no dashboard tools: it answers, but can't draft.
+  off. Pick a model that supports tool calling.
+- **Help setting it up.** While no agent is chosen, an administrator's dashboard menu offers **Set
+  up a chat agent**, which opens Terrazzo's settings. If the chosen agent doesn't have Terrazzo
+  dashboards on, Terrazzo raises a repair (Settings → Repairs) linking to that agent's integration,
+  the menu offers **Finish setting up** the agent, and the chat says what to tick instead of asking
+  the model; both clear once it is on. Others see neither: they can't change it.
+- **Upgrading from 0.1.100 or earlier.** Terrazzo used to call Google Gemini, OpenRouter or an
+  OpenAI-compatible service itself, with its own key and model. Those settings, the key included,
+  are removed on upgrade and the chat is off until an agent is chosen; a repair says so and names
+  the integration that replaces the service you used (OpenRouter's own, Google Generative AI, or
+  Ollama).
 - **No key in Terrazzo.** The provider and its key stay in that AI integration. The apps learn only
   that an agent answers and its name (`terrazzo/agent/info`).
 - **Every session.** The agent answers every edit session: a new session gets a first turn (a first

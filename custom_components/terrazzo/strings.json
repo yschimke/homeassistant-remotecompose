@@ -58,6 +58,14 @@
           "pending_change": "Another HTTP settings change is waiting to be confirmed. Confirm or discard it first."
         }
       }
+    },
+    "agent_moved": {
+      "title": "Choose a conversation agent for Terrazzo's dashboard chat",
+      "description": "Terrazzo no longer calls {service} itself. Its dashboard chat is now answered by one of Home Assistant's own conversation agents, which keeps the key and the model, so the chat is off until you choose one. The saved key was removed from Terrazzo.\n\n1. Add the {integration} integration under Settings → Devices & services, with your key, if you don't have it yet.\n2. Add a conversation agent there (or open an existing agent's settings), pick a model that supports tool calling, and tick **Terrazzo dashboards** under its AI tools.\n3. Open Terrazzo's settings (the link below) and choose that agent as the **Dashboard agent**.\n\nThis repair goes away once an agent is chosen."
+    },
+    "agent_no_tools": {
+      "title": "Turn on Terrazzo dashboards for {agent}",
+      "description": "Terrazzo's dashboard chat uses {agent}, but that agent doesn't have **Terrazzo dashboards** turned on, so it can't read or draft dashboards and the chat can only say so.\n\nOpen {integration} (the link below), open the agent's settings (the cog beside it), tick **Terrazzo dashboards** under its AI tools, and submit. Or choose another agent in Terrazzo's settings.\n\nThis repair goes away the next time Terrazzo checks after the change: when the panel or an app opens, or the chat's next turn."
     }
   }
 }

@@ -46,6 +46,12 @@ fun TopBarOverflowMenu(
    * stays one tap away.
    */
   onEditByHand: (() -> Unit)? = null,
+  /**
+   * An administrator's way to set the dashboard agent up, while it isn't
+   * (`DashboardAgent.setupLabel`): opens Home Assistant's settings for it.
+   */
+  onSetUpAgent: (() -> Unit)? = null,
+  setUpAgentLabel: String = "Set up a chat agent",
 ) {
   var expanded by remember { mutableStateOf(false) }
   IconButton(onClick = { expanded = true }) {
@@ -60,6 +66,7 @@ fun TopBarOverflowMenu(
     onEditDashboard?.let { MenuEntry(editDashboardLabel, close, it) }
     onEditByHand?.let { MenuEntry("Edit by hand", close, it) }
     onNewDashboard?.let { MenuEntry("New dashboard", close, it) }
+    onSetUpAgent?.let { MenuEntry(setUpAgentLabel, close, it) }
     // One place for cards outside the app: the phone's home screen, the watch's widgets and the
     // cards the watch app shows.
     MenuEntry("Manage widgets", close, onOpenWidgets)

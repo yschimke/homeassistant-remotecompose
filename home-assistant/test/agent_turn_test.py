@@ -141,6 +141,48 @@ class SessionRulesTest(unittest.TestCase):
         sessions.submit(new['id'], BASELINE, 'First', lambda e: True, 'u', 3)
 
 
+class SetupTest(unittest.TestCase):
+    """What Terrazzo tells a person while the agent isn't set up (agent_turn.py's setup helpers)."""
+
+    def test_tools_on_reads_the_agents_api_list(self):
+        self.assertTrue(turn.tools_on(['assist', 'terrazzo_dashboards'], True))
+        self.assertTrue(turn.tools_on('terrazzo_dashboards', False))
+        self.assertFalse(turn.tools_on(['assist'], False))
+        self.assertFalse(turn.tools_on([], True))
+        # Absent means none only for an AI integration's conversation agent.
+        self.assertFalse(turn.tools_on(None, True))
+        self.assertIsNone(turn.tools_on(None, False))
+        self.assertIsNone(turn.tools_on({'odd': 1}, True))
+
+    def test_the_api_id_is_the_registered_one(self):
+        source = (ROOT / 'llm_tools.py').read_text()
+        self.assertIn(f'API_ID = "{turn.API_ID}"', source)
+        self.assertIn(f'API_NAME = "{turn.API_NAME}"', source)
+
+    def test_a_built_in_agent_that_was_on_names_its_replacement(self):
+        self.assertEqual({'service': 'OpenRouter', 'integration': 'OpenRouter'}, turn.moved_placeholders('openrouter'))
+        self.assertEqual('Google Generative AI', turn.moved_placeholders('gemini')['integration'])
+        self.assertIsNotNone(turn.moved_placeholders('openai_compatible'))
+        self.assertIsNone(turn.moved_placeholders('off'))
+        self.assertIsNone(turn.moved_placeholders(None))
+
+    def test_the_no_tools_reply_says_what_to_tick(self):
+        reply = turn.no_tools_reply('Garden agent')
+        self.assertIn('Garden agent', reply)
+        self.assertIn('"Terrazzo dashboards"', reply)
+        self.assertIn('This agent', turn.no_tools_reply(None))
+
+    def test_every_setup_repair_has_words(self):
+        import json
+        for file in ('strings.json', 'translations/en.json'):
+            issues = json.loads((ROOT / file).read_text())['issues']
+            for key in ('agent_moved', 'agent_no_tools'):
+                self.assertIn('title', issues[key], f'{file} {key}')
+                self.assertIn('description', issues[key], f'{file} {key}')
+            self.assertIn('{service}', issues['agent_moved']['description'])
+            self.assertIn('{integration}', issues['agent_no_tools']['description'])
+
+
 
 if __name__ == '__main__':
     unittest.main()

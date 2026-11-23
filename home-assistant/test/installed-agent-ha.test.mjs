@@ -190,6 +190,23 @@ async function addOllamaAgent(headers, port) {
   return entryId;
 }
 
+/** A second agent in the same Ollama entry, without Terrazzo's API: its id. */
+async function addPlainAgent(headers, entryId) {
+  const call = api(headers);
+  const options = await call('/api/config/config_entries/subentries/flow', {handler:[entryId, 'conversation']});
+  const agent = await call(`/api/config/config_entries/subentries/flow/${options.flow_id}`, {name:'Plain agent', model:MODEL});
+  assert.equal(agent.type, 'create_entry', JSON.stringify(agent));
+  for (let i = 0; ; i++) {
+    const ws = await connect(headers.Authorization.slice('Bearer '.length));
+    const {agents} = await ws.call({type:'conversation/agent/list'});
+    ws.close();
+    const id = agents.find((a) => a.name === 'Plain agent' || a.id.endsWith('plain_agent'))?.id;
+    if (id) return id;
+    assert.ok(i < 40, 'the plain agent appears');
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+}
+
 test("Home Assistant's own conversation agent builds a new dashboard; applying creates it", {timeout:300_000}, async () => {
   const ollama = await fakeOllama();
   const tokens = await signIn('panel', 'fixture-only-password', 'Test panel user');
@@ -207,7 +224,9 @@ test("Home Assistant's own conversation agent builds a new dashboard; applying c
     // No agent chosen: none answers.
     await setOptions(headers);
     let ws = await connect(tokens.access_token);
-    assert.deepEqual(await ws.call({type:'terrazzo/agent/info'}), {enabled:false, agent_id:null, name:null});
+    // Nothing answers, and the apps can point an administrator at Terrazzo's settings.
+    assert.deepEqual(await ws.call({type:'terrazzo/agent/info'}),
+      {enabled:false, agent_id:null, name:null, setup:'agent', setup_path:'/config/integrations/integration/terrazzo'});
     ws.close();
 
     ollamaEntry = await addOllamaAgent(headers, ollama.port);
@@ -225,7 +244,7 @@ test("Home Assistant's own conversation agent builds a new dashboard; applying c
       ws = await connect(tokens.access_token);
       const info = await ws.call({type:'terrazzo/agent/info'});
       if (info.enabled) {
-        assert.deepEqual(info, {enabled:true, agent_id:agentId, name:'Garden agent'});
+        assert.deepEqual(info, {enabled:true, agent_id:agentId, name:'Garden agent', setup:null, setup_path:null});
         break;
       }
       ws.close();
@@ -287,6 +306,49 @@ test("Home Assistant's own conversation agent builds a new dashboard; applying c
     const undone = await ws.call({type:'terrazzo/edit/undo', session_id:session.session_id});
     assert.ok(!undone.error, JSON.stringify(undone.error));
     assert.ok(!(await ws.call({type:'lovelace/dashboards/list'})).some((d) => d.url_path === 'garden-test'));
+
+    // An agent without "Terrazzo dashboards": a repair says how to turn it on, the apps learn where,
+    // and the chat says so instead of asking the model.
+    const plainId = await addPlainAgent(headers, ollamaEntry);
+    ws.close();
+    await setOptions(headers, plainId);
+    let plainInfo;
+    for (let i = 0; ; i++) {
+      ws = await connect(tokens.access_token);
+      plainInfo = await ws.call({type:'terrazzo/agent/info'});
+      if (plainInfo.agent_id === plainId) break;
+      ws.close();
+      assert.ok(i < 40, 'the reloaded entry chooses the plain agent');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    assert.deepEqual(plainInfo, {enabled:true, agent_id:plainId, name:'Plain agent', setup:'tools',
+      setup_path:'/config/integrations/integration/ollama'});
+    const {issues} = await ws.call({type:'repairs/list_issues'});
+    const noTools = issues.find((issue) => issue.domain === 'terrazzo' && issue.issue_id === 'agent_no_tools');
+    assert.ok(noTools, JSON.stringify(issues));
+    assert.equal(noTools.translation_placeholders.agent, 'Plain agent');
+    assert.match(noTools.learn_more_url, /domain=ollama$/);
+    const chatsBefore = ollama.chats.length;
+    const plain = await ws.call({type:'terrazzo/edit/start', request:'A plain dashboard',
+      scope:{kind:'new_dashboard', title:'Plain test'}});
+    assert.ok(!plain.error, JSON.stringify(plain.error));
+    const refused = await ws.until({type:'terrazzo/edit/subscribe', session_id:plain.session.session_id},
+      (event) => event.session.messages.length > 0);
+    assert.match(refused.session.messages.at(-1).text, /doesn't have "Terrazzo dashboards" turned on/);
+    assert.equal(ollama.chats.length, chatsBefore, 'the model is not asked');
+    await ws.call({type:'terrazzo/edit/discard', session_id:plain.session.session_id});
+
+    // Choosing the agent with the tools clears the repair.
+    await setOptions(headers, agentId);
+    for (let i = 0; ; i++) {
+      ws.close();
+      ws = await connect(tokens.access_token);
+      if ((await ws.call({type:'terrazzo/agent/info'})).agent_id === agentId) break;
+      assert.ok(i < 40, 'the reloaded entry chooses the garden agent again');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    const after = await ws.call({type:'repairs/list_issues'});
+    assert.ok(!after.issues.some((issue) => issue.issue_id === 'agent_no_tools'), JSON.stringify(after.issues));
     ws.close();
   } finally {
     await setOptions(headers);

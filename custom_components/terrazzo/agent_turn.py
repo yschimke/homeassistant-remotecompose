@@ -171,3 +171,53 @@ def _step_arguments(name, arguments):
             shown.append(value)
     return " · ".join(shown)
 
+
+
+# Setting the agent up: what Terrazzo tells a person when no agent answers, or the chosen one can't
+# reach the dashboard tools. `dashboard_agent.py` reads Home Assistant; these only decide and word.
+
+API_ID = "terrazzo_dashboards"  # llm_tools.API_ID, without importing the MCP tools here.
+API_NAME = "Terrazzo dashboards"
+
+# Before 0.1.101 Terrazzo called an AI service itself (`agent_provider`). Each one's Home
+# Assistant integration, which now holds the key and the model instead.
+MOVED_SERVICES = {
+    "gemini": ("Google Gemini", "Google Generative AI"),
+    "openrouter": ("OpenRouter", "OpenRouter"),
+    "openai_compatible": ("your OpenAI-compatible service", "Ollama, or that service's own"),
+}
+
+
+def moved_placeholders(provider):
+    """The repair's words for a built-in agent that was on: the service it called and the
+    integration that takes its place. None when it was off or unknown."""
+    if not isinstance(provider, str) or provider not in MOVED_SERVICES:
+        return None
+    service, integration = MOVED_SERVICES[provider]
+    return {"service": service, "integration": integration}
+
+
+def tools_on(apis, definite):
+    """Whether an agent's options turn the dashboard tools on: True or False, or None when Terrazzo
+    can't tell. [apis] is its `llm_hass_api` (a list of API ids, one id, or absent). Absent means none
+    only for a [definite] place, an AI integration's conversation agent; elsewhere an agent may not
+    keep its APIs there at all."""
+    if apis is None:
+        return False if definite else None
+    if isinstance(apis, str):
+        apis = [apis]
+    if not isinstance(apis, (list, tuple)):
+        return None
+    return API_ID in apis
+
+
+def no_tools_reply(agent_name):
+    """The chat's answer while the chosen agent can't reach the dashboard tools, instead of a turn
+    that could only fail."""
+    name = agent_name or "This agent"
+    return (
+        f"I can't edit dashboards yet: {name} doesn't have \"{API_NAME}\" turned on. An administrator "
+        f"can turn it on in Settings → Devices & services: open {name}'s integration, open the "
+        f"agent's settings (the cog beside it), tick \"{API_NAME}\" under its AI tools and submit. "
+        "Then send your request again."
+    )
