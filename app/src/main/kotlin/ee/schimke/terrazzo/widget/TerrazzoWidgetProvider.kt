@@ -555,6 +555,8 @@ open class TerrazzoWidgetProvider() : AppWidgetProvider() {
         AppWidgetManager.ACTION_APPWIDGET_UPDATE,
         AppWidgetManager.ACTION_APPWIDGET_OPTIONS_CHANGED,
         AppWidgetManager.ACTION_APPWIDGET_DELETED,
+        AppWidgetManager.ACTION_APPWIDGET_DISABLED,
+        AppWidgetManager.ACTION_APPWIDGET_RESTORED,
       )
 
     // ColorTheme (wire op 196) is not understood by Android 16's platform
