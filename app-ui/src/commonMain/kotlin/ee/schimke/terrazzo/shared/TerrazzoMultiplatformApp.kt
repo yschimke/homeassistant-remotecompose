@@ -720,29 +720,16 @@ private fun DashboardShell(
         backStack = stack,
         onBack = { if (stack.size > 1) stack.removeLastOrNull() },
         transitionSpec = {
-          androidx.compose.animation.slideInHorizontally(motionScheme.defaultSpatialSpec()) {
-            it / 6
-          } + androidx.compose.animation.fadeIn(motionScheme.defaultEffectsSpec()) togetherWith
-            androidx.compose.animation.slideOutHorizontally(motionScheme.defaultSpatialSpec()) {
-              -it / 12
-            } + androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
+          androidx.compose.animation.fadeIn(motionScheme.fastEffectsSpec()) togetherWith
+            androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
         },
         popTransitionSpec = {
-          androidx.compose.animation.slideInHorizontally(motionScheme.defaultSpatialSpec()) {
-            -it / 12
-          } + androidx.compose.animation.fadeIn(motionScheme.defaultEffectsSpec()) togetherWith
-            androidx.compose.animation.slideOutHorizontally(motionScheme.defaultSpatialSpec()) {
-              it / 6
-            } + androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
+          androidx.compose.animation.fadeIn(motionScheme.fastEffectsSpec()) togetherWith
+            androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
         },
         predictivePopTransitionSpec = {
-          androidx.compose.animation.slideInHorizontally(motionScheme.defaultSpatialSpec()) {
-            -it / 12
-          } + androidx.compose.animation.fadeIn(motionScheme.defaultEffectsSpec()) togetherWith
-            androidx.compose.animation.scaleOut(
-              motionScheme.defaultSpatialSpec(),
-              targetScale = 0.92f,
-            ) + androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
+          androidx.compose.animation.fadeIn(motionScheme.fastEffectsSpec()) togetherWith
+            androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
         },
         entryProvider =
           entryProvider {

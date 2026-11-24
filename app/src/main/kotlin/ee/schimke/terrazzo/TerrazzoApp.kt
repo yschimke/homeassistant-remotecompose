@@ -346,7 +346,21 @@ private fun AuthenticatedShell(
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
 
-  val backStack = remember { androidx.compose.runtime.mutableStateListOf(AppScreen.Dashboards) }
+  val backStack =
+    rememberSaveable(
+      saver =
+        androidx.compose.runtime.saveable.listSaver(
+          save = { list -> list.map { it.name } },
+          restore = { names ->
+            androidx.compose.runtime.mutableStateListOf<AppScreen>().apply {
+              addAll(names.mapNotNull { runCatching { AppScreen.valueOf(it) }.getOrNull() })
+              if (isEmpty()) add(AppScreen.Dashboards)
+            }
+          },
+        ),
+    ) {
+      androidx.compose.runtime.mutableStateListOf(AppScreen.Dashboards)
+    }
   val navigateTo: (AppScreen) -> Unit = { target ->
     if (backStack.lastOrNull() != target) backStack.add(target)
   }
