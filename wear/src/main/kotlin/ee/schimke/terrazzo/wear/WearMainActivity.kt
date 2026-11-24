@@ -315,7 +315,7 @@ private fun WearApp(
                 // Section was unpinned mid-flight; bounce back so the
                 // user lands somewhere meaningful instead of an empty
                 // detail screen.
-                screen = WearScreen.TopLevel
+                if (currentScreen == screen) screen = WearScreen.TopLevel
               } else {
                 WearSectionScreen(
                   section = resolved,
@@ -340,7 +340,9 @@ private fun WearApp(
               if (page < 0) {
                 // The card left its deck mid-flight (unpinned, or its config changed): back to the
                 // list it was opened from.
-                screen = if (cardDeck != null) WearScreen.Section else WearScreen.TopLevel
+                if (currentScreen == screen) {
+                  screen = if (cardDeck != null) WearScreen.Section else WearScreen.TopLevel
+                }
               } else {
                 WearCardScreen(
                   cards = deck,
@@ -362,7 +364,7 @@ private fun WearApp(
                   fullScreenCardKey(it) == openedCard
                 }
               if (card == null) {
-                screen = WearScreen.Card
+                if (currentScreen == screen) screen = WearScreen.Card
               } else {
                 WearCardDetailsScreen(
                   summary = card,
@@ -404,7 +406,7 @@ private fun WearApp(
                 )
               } else {
                 // Dashboard removed mid-flight; bounce back.
-                screen = WearScreen.Dashboards
+                if (currentScreen == screen) screen = WearScreen.Dashboards
               }
             }
             WearScreen.Settings ->
