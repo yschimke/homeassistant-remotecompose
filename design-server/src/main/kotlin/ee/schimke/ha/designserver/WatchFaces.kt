@@ -339,7 +339,7 @@ class WatchFaces(
 
     /** The client [httpFetcher] needs: redirects are answers, never followed. */
     fun httpClient(): HttpClient =
-      HttpClient(io.ktor.client.engine.cio.CIO) { followRedirects = false }
+      HttpClient(io.ktor.client.engine.okhttp.OkHttp) { followRedirects = false }
 
     private val SWEEP = Regex("""<Sweep\b[^>]*?(/>|>.*?</Sweep\s*>)""", RegexOption.DOT_MATCHES_ALL)
 

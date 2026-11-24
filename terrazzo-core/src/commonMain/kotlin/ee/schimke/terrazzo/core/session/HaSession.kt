@@ -347,14 +347,28 @@ class LiveHaSession(
     scope.launch {
       client.state.collectLatest { state ->
         if (state != HaClient.ConnectionState.Ready) return@collectLatest
-        runCatching { _notifications.value = client.fetchPersistentNotifications() }
-        runCatching { client.subscribeEvents("persistent_notifications_updated") }
-          .getOrNull()
-          ?.collect {
-            // The event payload is empty — HA only signals
-            // "something changed". Refetch to learn what.
-            runCatching { _notifications.value = client.fetchPersistentNotifications() }
+        try {
+          _notifications.value = client.fetchPersistentNotifications()
+        } catch (ce: CancellationException) {
+          throw ce
+        } catch (_: Throwable) {}
+        val events =
+          try {
+            client.subscribeEvents("persistent_notifications_updated")
+          } catch (ce: CancellationException) {
+            throw ce
+          } catch (_: Throwable) {
+            null
           }
+        events?.collect {
+          // The event payload is empty — HA only signals
+          // "something changed". Refetch to learn what.
+          try {
+            _notifications.value = client.fetchPersistentNotifications()
+          } catch (ce: CancellationException) {
+            throw ce
+          } catch (_: Throwable) {}
+        }
       }
     }
 

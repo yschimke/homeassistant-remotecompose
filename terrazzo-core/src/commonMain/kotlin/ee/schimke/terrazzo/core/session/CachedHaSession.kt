@@ -58,7 +58,11 @@ class CachedHaSession(
     get() = delegate.needsReauth
 
   override suspend fun connect() {
-    runCatching { delegate.connect() }
+    try {
+      delegate.connect()
+    } catch (ce: kotlinx.coroutines.CancellationException) {
+      throw ce
+    } catch (_: Throwable) {}
     // Even if connect() failed, mark this as the most-recent instance
     // so cold-start auto-resume can find it. We have either a cached
     // payload or we'll get one when the network returns.
@@ -67,9 +71,13 @@ class CachedHaSession(
 
   override suspend fun listDashboards(): List<DashboardSummary> {
     val cached = cache.dashboards(baseUrl)
-    return runCatching { delegate.listDashboards() }
-      .onSuccess { fresh -> cache.putDashboards(baseUrl, fresh) }
-      .getOrElse { ex -> cached ?: throw ex }
+    return try {
+      delegate.listDashboards().also { fresh -> cache.putDashboards(baseUrl, fresh) }
+    } catch (ce: kotlinx.coroutines.CancellationException) {
+      throw ce
+    } catch (ex: Throwable) {
+      cached ?: throw ex
+    }
   }
 
   override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> {
@@ -77,34 +85,38 @@ class CachedHaSession(
       cache.dashboard(baseUrl, urlPath)?.let { d ->
         d to (cache.snapshot(baseUrl, urlPath) ?: HaSnapshot())
       }
-    return runCatching {
-      delegate.loadDashboard(urlPath).let { (d, fresh) -> d to fresh.keeping(cached?.second) }
+    return try {
+      delegate
+        .loadDashboard(urlPath)
+        .let { (d, fresh) -> d to fresh.keeping(cached?.second) }
+        .also { (dashboard, snapshot) ->
+          val key = urlPath.orEmpty()
+          liveFetchedAtMs.update { it + (key to nowMs()) }
+          servedFromCache.update { it - key }
+          cache.putDashboard(baseUrl, urlPath, dashboard)
+          cache.putSnapshot(baseUrl, urlPath, snapshot)
+        }
+    } catch (ce: kotlinx.coroutines.CancellationException) {
+      throw ce
+    } catch (ex: Throwable) {
+      (cached ?: throw ex).also { servedFromCache.update { it + urlPath.orEmpty() } }
     }
-      .onSuccess { (dashboard, snapshot) ->
-        val key = urlPath.orEmpty()
-        liveFetchedAtMs.update { it + (key to nowMs()) }
-        servedFromCache.update { it - key }
-        cache.putDashboard(baseUrl, urlPath, dashboard)
-        cache.putSnapshot(baseUrl, urlPath, snapshot)
-      }
-      .getOrElse { ex ->
-        (cached ?: throw ex).also { servedFromCache.update { it + urlPath.orEmpty() } }
-      }
   }
 
   /**
    * The states alone, as the default dashboard's snapshot is cached (the same states): live, else
    * the cached copy, which [snapshotFetchedAtMs] with a null url path then dates.
    */
-  override suspend fun loadSnapshot(): HaSnapshot = runCatching {
-    delegate.loadSnapshot().keeping(cache.snapshot(baseUrl, null))
-  }
-    .onSuccess { snapshot ->
-      liveFetchedAtMs.update { it + ("" to nowMs()) }
-      servedFromCache.update { it - "" }
-      cache.putSnapshot(baseUrl, null, snapshot)
-    }
-    .getOrElse { ex ->
+  override suspend fun loadSnapshot(): HaSnapshot =
+    try {
+      delegate.loadSnapshot().keeping(cache.snapshot(baseUrl, null)).also { snapshot ->
+        liveFetchedAtMs.update { it + ("" to nowMs()) }
+        servedFromCache.update { it - "" }
+        cache.putSnapshot(baseUrl, null, snapshot)
+      }
+    } catch (ce: kotlinx.coroutines.CancellationException) {
+      throw ce
+    } catch (ex: Throwable) {
       (cache.snapshot(baseUrl, null) ?: throw ex).also { servedFromCache.update { it + "" } }
     }
 
@@ -154,11 +166,16 @@ class CachedHaSession(
   override suspend fun fetchHistory(
     entityIds: List<String>,
     hours: Int,
-  ): Map<String, List<ee.schimke.ha.model.HistoryPoint>> = runCatching {
-    delegate.fetchHistory(entityIds, hours)
-  }
-    .onSuccess { if (it.isNotEmpty()) cache.putHistory(baseUrl, entityIds, hours, it) }
-    .getOrElse { ex -> cache.history(baseUrl, entityIds, hours) ?: throw ex }
+  ): Map<String, List<ee.schimke.ha.model.HistoryPoint>> =
+    try {
+      delegate.fetchHistory(entityIds, hours).also {
+        if (it.isNotEmpty()) cache.putHistory(baseUrl, entityIds, hours, it)
+      }
+    } catch (ce: kotlinx.coroutines.CancellationException) {
+      throw ce
+    } catch (ex: Throwable) {
+      cache.history(baseUrl, entityIds, hours) ?: throw ex
+    }
 
   override suspend fun fetchDashboardConfig(urlPath: String?): JsonObject? =
     delegate.fetchDashboardConfig(urlPath)

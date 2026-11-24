@@ -3,6 +3,7 @@ package ee.schimke.ha.client
 import ee.schimke.ha.client.tls.ForbiddenCertificatesHostnameVerifier
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
+import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 
 /**
@@ -16,7 +17,10 @@ import okhttp3.OkHttpClient
  */
 object SharedOkHttpClient {
   val client: OkHttpClient by lazy {
-    OkHttpClient.Builder().hostnameVerifier(ForbiddenCertificatesHostnameVerifier()).build()
+    OkHttpClient.Builder()
+      .hostnameVerifier(ForbiddenCertificatesHostnameVerifier())
+      .pingInterval(30, TimeUnit.SECONDS)
+      .build()
   }
 
   /**

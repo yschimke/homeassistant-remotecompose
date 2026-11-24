@@ -74,7 +74,7 @@ fun main(args: Array<String>) {
       "from ${holder.dir.absolutePath} on http://$host:$port - app URL: <host>$API_BASE",
   )
   // Redirects are answers here (UI Builder's share route, GitHub's), never something to follow.
-  val http = HttpClient(io.ktor.client.engine.cio.CIO) { followRedirects = false }
+  val http = HttpClient(io.ktor.client.engine.okhttp.OkHttp) { followRedirects = false }
   val userDesignsDir =
     System.getenv("USER_DESIGNS_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
       ?: System.getenv("UI_BUILDER_STATE_DIR")
@@ -131,7 +131,7 @@ fun main(args: Array<String>) {
     if (System.getenv("GOOGLE_FONTS") == "off") null
     else
       GoogleFonts(
-        HttpClient(io.ktor.client.engine.cio.CIO),
+        HttpClient(io.ktor.client.engine.okhttp.OkHttp),
         System.getenv("GOOGLE_FONTS_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
           ?: System.getenv("UI_BUILDER_STATE_DIR")
             ?.takeIf { it.isNotBlank() }
