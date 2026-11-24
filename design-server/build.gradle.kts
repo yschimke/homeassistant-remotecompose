@@ -134,7 +134,7 @@ dependencies {
 
   // Creates designs on UI Builder (`UiBuilderClient`).
   implementation(libs.ktor.client.core)
-  implementation(libs.ktor.client.cio)
+  implementation(libs.ktor.client.okhttp)
   // Subsets a face to the characters a client asks for (GlyphRanges, format=font).
   implementation(libs.fontbox)
 

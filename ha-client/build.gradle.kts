@@ -56,7 +56,10 @@ kotlin {
       // `ForbiddenCertificatesHostnameVerifier` uses OkHttp's SPKI hashing.
       implementation(libs.okhttp)
     }
-    jvmMain.dependencies { implementation(libs.ktor.client.cio) }
+    jvmMain.dependencies {
+      implementation(libs.ktor.client.okhttp)
+      implementation(libs.okhttp)
+    }
     jvmTest.dependencies {
       implementation(libs.ktor.server.test.host)
       implementation(libs.ktor.server.websockets)

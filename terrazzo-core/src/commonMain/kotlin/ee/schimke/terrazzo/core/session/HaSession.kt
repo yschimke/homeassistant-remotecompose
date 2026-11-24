@@ -32,6 +32,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -347,14 +349,27 @@ class LiveHaSession(
     scope.launch {
       client.state.collectLatest { state ->
         if (state != HaClient.ConnectionState.Ready) return@collectLatest
-        runCatching { _notifications.value = client.fetchPersistentNotifications() }
-        runCatching { client.subscribeEvents("persistent_notifications_updated") }
-          .getOrNull()
-          ?.collect {
-            // The event payload is empty — HA only signals
-            // "something changed". Refetch to learn what.
-            runCatching { _notifications.value = client.fetchPersistentNotifications() }
+        try {
+          _notifications.value = client.fetchPersistentNotifications()
+        } catch (_: Throwable) {
+          currentCoroutineContext().ensureActive()
+        }
+        val events =
+          try {
+            client.subscribeEvents("persistent_notifications_updated")
+          } catch (_: Throwable) {
+            currentCoroutineContext().ensureActive()
+            null
           }
+        events?.collect {
+          // The event payload is empty — HA only signals
+          // "something changed". Refetch to learn what.
+          try {
+            _notifications.value = client.fetchPersistentNotifications()
+          } catch (_: Throwable) {
+            currentCoroutineContext().ensureActive()
+          }
+        }
       }
     }
 
