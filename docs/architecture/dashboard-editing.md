@@ -66,9 +66,26 @@ How it works (`dashboard_agent.py`, `agent_turn.py`):
 - **The turn.** One `conversation.async_converse` call to the chosen agent, as the person who
   started the session (their user in the call's context). Its text is what the person said since
   the last turn (the request, on a first turn), and its extra system prompt (`agent_turn.py`)
-  names the session to answer, its scope, how to reply, and a recap of the exchange so far. Each
-  turn is a new conversation: Home Assistant forgets one after a few idle minutes, and a session
-  lasts days, so the recap is the agent's memory. The agent's own instructions and the **Terrazzo
+  names the session to answer, its scope, how to reply, the household's standing notes, and a
+  recap of the exchange so far. A turn within four minutes of the last one carries on its
+  conversation (`assistant.conversation_id`, `edit_sessions.warm_conversation`): Home Assistant
+  keeps an idle one for five, the history is already there, so the recap is left out and the
+  prompt stays the same, which lets the provider reuse its prompt cache. Later turns start a new
+  conversation, and a session lasts days, so the recap is then the agent's memory.
+- **House notes.** `agent_memory.py` keeps one note for the home and one per dashboard in
+  `.storage/terrazzo.agent_memory` (`terrazzo/agent/memory` reads them; administrators change one
+  with `terrazzo/agent/memory/set`, `home: true` or a `url_path`, empty text to clear). Every turn
+  on that dashboard gets them as standing preferences (a pack variant, explicit `bindings` and
+  `actions` for helper dashboards, card widths). People write them; the agent can't.
+- **Live progress and cancel.** While a turn runs the session carries `active_turn`: `phase`
+  (`reading`, `searching_designs`, `drafting`, `retrying`), `status`, `step`, `started_at`,
+  `cancellable` and `target_cards` (`{view, section, card, entity}`, `card` null for a whole
+  section): the session's section, the cards the notes it answers are about (a note's target
+  entity), and the cards showing any entity a tool is called on (`edit_sessions.card_positions`,
+  counting wrapped and bound entities). Clients overlay those cards while it runs. It clears when
+  the turn ends, and on a restart. `terrazzo/edit/cancel` stops the running turn: the task is
+  cancelled, `active_turn` clears, the agent's status reads "Cancelled", and the notes it was
+  answering count as answered, so only a new note starts another turn. The agent's own instructions and the **Terrazzo
   dashboards** API (`llm_api.py`, `llm_tools.py`) do the rest: it reads the session with
   `get_edit_session`, looks entities up, and drafts with `submit_draft`; a refused draft goes back
   to it with the reason. Its reply is posted as the agent's message.
