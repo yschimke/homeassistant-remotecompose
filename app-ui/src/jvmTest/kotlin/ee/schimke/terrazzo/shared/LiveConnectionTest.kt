@@ -45,6 +45,29 @@ class LiveConnectionTest {
   }
 
   @Test
+  fun theScreenBeingLeftIsGoneFromSemanticsWhileItFadesOut() = runComposeUiTest {
+    FakeHomeAssistant(installed).use { ha ->
+      setContent {
+        TerrazzoMultiplatformApp(
+          hostedConfig = HaConfig(ha.baseUrl, ""),
+          hostedAccessToken = { "t" },
+        )
+      }
+      waitUntil(timeoutMillis = 10_000) {
+        onAllNodes(hasText("Live living room")).fetchSemanticsNodes().isNotEmpty()
+      }
+      // Stop the clock part way through the fade: both screens are composed, but only the one
+      // arriving may be read, or a screen reader (and a UI test) meets two of every control.
+      mainClock.autoAdvance = false
+      onNodeWithContentDescription("Settings").performClick()
+      mainClock.advanceTimeByFrame()
+      mainClock.advanceTimeByFrame()
+      assertEquals(0, onAllNodes(hasText("Live living room")).fetchSemanticsNodes().size)
+      mainClock.autoAdvance = true
+    }
+  }
+
+  @Test
   fun settingsOffersToInstallAMissingIntegration() = runComposeUiTest {
     // Core answers manifest/get for an integration that isn't there with not_found.
     FakeHomeAssistant(emptyMap(), errors = mapOf("manifest/get" to "not_found")).use { ha ->

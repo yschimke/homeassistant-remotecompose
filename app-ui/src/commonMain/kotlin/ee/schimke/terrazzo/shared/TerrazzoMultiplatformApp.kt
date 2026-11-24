@@ -731,191 +731,197 @@ private fun DashboardShell(
         entryProvider =
           entryProvider {
             entry<DashboardsDestination> {
-              Scaffold(
-                topBar = {
-                  TopAppBar(
-                    title = { Text("Dashboards") },
-                    navigationIcon = {
-                      onOpenHostMenu?.let { openMenu ->
-                        IconButton(onClick = openMenu) {
-                          Icon(Icons.Filled.Menu, contentDescription = "Open menu")
+              HiddenWhileLeaving {
+                Scaffold(
+                  topBar = {
+                    TopAppBar(
+                      title = { Text("Dashboards") },
+                      navigationIcon = {
+                        onOpenHostMenu?.let { openMenu ->
+                          IconButton(onClick = openMenu) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Open menu")
+                          }
                         }
-                      }
-                    },
-                    actions = headerActions,
-                  )
-                },
-              ) { padding ->
-                Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
-                  DashboardPickerScreen(
-                    list,
-                    onDashboardPicked = { target ->
-                      if (onNavigateDashboard?.invoke(target) != true)
-                        stack.add(DashboardDestination(target))
-                    },
-                    header =
-                      if (dashboardAgent.enabled)
-                        ({
-                          NewDashboardSessions(
-                            connection.client.agentEdits,
-                            dashboardAgent,
-                            onOpen = { stack.add(AgentEditDestination(it.urlPath, it.id)) },
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                          )
-                        })
-                      else null,
-                  )
+                      },
+                      actions = headerActions,
+                    )
+                  },
+                ) { padding ->
+                  Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
+                    DashboardPickerScreen(
+                      list,
+                      onDashboardPicked = { target ->
+                        if (onNavigateDashboard?.invoke(target) != true)
+                          stack.add(DashboardDestination(target))
+                      },
+                      header =
+                        if (dashboardAgent.enabled)
+                          ({
+                            NewDashboardSessions(
+                              connection.client.agentEdits,
+                              dashboardAgent,
+                              onOpen = { stack.add(AgentEditDestination(it.urlPath, it.id)) },
+                              modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                            )
+                          })
+                        else null,
+                    )
+                  }
                 }
               }
             }
             entry<SettingsDestination> {
-              Scaffold(
-                topBar = {
-                  TopAppBar(
-                    title = { Text("Settings") },
-                    navigationIcon = {
-                      if (stack.size > 1)
-                        IconButton(onClick = { stack.removeLastOrNull() }) {
-                          Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                  )
-                },
-              ) { padding ->
-                Column(
-                  Modifier.padding(padding)
-                    .consumeWindowInsets(padding)
-                    .padding(24.dp)
-                    .verticalScroll(rememberScrollState()),
-                  verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                  Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
-                  TerrazzoIntegrationStatus(integration)
-                  CardStyleSetting(cardStyle, onCardStyle)
-                  Text(
-                    signInStorageLabel
-                      ?: if (signInRemembered)
-                        "This browser remembers your Home Assistant sign-in until you sign out."
-                      else "Access tokens are kept only for this session.",
-                  )
-                  OutlinedTextField(
-                    designServer,
-                    { designServer = it },
-                    label = { Text("Card design server") },
-                    singleLine = true,
-                  )
-                  settingsStorageLabel?.let { Text(it) }
-                  @Suppress("DEPRECATION") val settingsClipboard = LocalClipboardManager.current
-                  AgentConnection(
-                    designServer,
-                    onCopy = { settingsClipboard.setText(AnnotatedString(it)) },
-                  )
-                  CardUsageSetting(designServer)
-                  ReportFeedbackButton()
-                  Button(onClick = onSignOut) { Text("Sign out") }
+              HiddenWhileLeaving {
+                Scaffold(
+                  topBar = {
+                    TopAppBar(
+                      title = { Text("Settings") },
+                      navigationIcon = {
+                        if (stack.size > 1)
+                          IconButton(onClick = { stack.removeLastOrNull() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                          }
+                      },
+                    )
+                  },
+                ) { padding ->
+                  Column(
+                    Modifier.padding(padding)
+                      .consumeWindowInsets(padding)
+                      .padding(24.dp)
+                      .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                  ) {
+                    Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
+                    TerrazzoIntegrationStatus(integration)
+                    CardStyleSetting(cardStyle, onCardStyle)
+                    Text(
+                      signInStorageLabel
+                        ?: if (signInRemembered)
+                          "This browser remembers your Home Assistant sign-in until you sign out."
+                        else "Access tokens are kept only for this session.",
+                    )
+                    OutlinedTextField(
+                      designServer,
+                      { designServer = it },
+                      label = { Text("Card design server") },
+                      singleLine = true,
+                    )
+                    settingsStorageLabel?.let { Text(it) }
+                    @Suppress("DEPRECATION") val settingsClipboard = LocalClipboardManager.current
+                    AgentConnection(
+                      designServer,
+                      onCopy = { settingsClipboard.setText(AnnotatedString(it)) },
+                    )
+                    CardUsageSetting(designServer)
+                    ReportFeedbackButton()
+                    Button(onClick = onSignOut) { Text("Sign out") }
+                  }
                 }
               }
             }
             entry<DashboardDestination> { route ->
-              var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
-              var newDashboard by remember { mutableStateOf(false) }
-              if (newDashboard)
-                NewDashboardChooser(
-                  connection.client.agentEdits,
-                  dashboardAgent,
-                  onDismiss = { newDashboard = false },
-                  onOpen = {
-                    newDashboard = false
-                    stack.add(AgentEditDestination(it.urlPath, it.id))
-                  },
-                )
-              Scaffold(
-                topBar = {
-                  TopAppBar(
-                    navigationIcon = {
-                      onOpenHostMenu?.let { openMenu ->
-                        IconButton(onClick = openMenu) {
-                          Icon(Icons.Filled.Menu, contentDescription = "Open menu")
+              HiddenWhileLeaving {
+                var customizing by rememberSaveable(route.path) { mutableStateOf(false) }
+                var newDashboard by remember { mutableStateOf(false) }
+                if (newDashboard)
+                  NewDashboardChooser(
+                    connection.client.agentEdits,
+                    dashboardAgent,
+                    onDismiss = { newDashboard = false },
+                    onOpen = {
+                      newDashboard = false
+                      stack.add(AgentEditDestination(it.urlPath, it.id))
+                    },
+                  )
+                Scaffold(
+                  topBar = {
+                    TopAppBar(
+                      navigationIcon = {
+                        onOpenHostMenu?.let { openMenu ->
+                          IconButton(onClick = openMenu) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Open menu")
+                          }
                         }
-                      }
-                    },
-                    title = {
-                      DashboardSwitcher(
-                        (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
-                        route.path,
-                        onSwitch = { target ->
-                          if (onNavigateDashboard?.invoke(target) != true)
-                            select(DashboardDestination(target))
-                        },
-                      )
-                    },
-                    actions = {
-                      // Icons only, so a phone-width header keeps room for the dashboard
-                      // switcher.
-                      // Leaving customize mode stays one tap away.
-                      if (customizing)
-                        TextButton(onClick = { customizing = false }) { Text("Done customizing") }
-                      DashboardMoreMenu(
-                        // Editing by hand stays here beside the chat with the dashboard agent,
-                        // which Edit opens while one answers.
-                        onEdit = { stack.add(DashboardEditDestination(route.path)) },
-                        // The Home Assistant integration's own agent (its MCP user) answers this.
-                        onAskAgent =
-                          if (editSessions) ({ stack.add(AgentEditDestination(route.path)) })
-                          else null,
-                        askAgentLabel =
-                          if (dashboardAgent.enabled) CHAT_WITH_AGENT else "Ask your agent",
-                        onNewDashboard =
-                          if (dashboardAgent.enabled) ({ newDashboard = true }) else null,
-                        agentFirst = dashboardAgent.enabled,
-                        onCustomize = if (customizing) null else ({ customizing = true }),
-                        onSetUpAgent =
-                          dashboardAgent.setupUrl(connection.config.baseUrl)?.let { url ->
-                            { uriHandler.openUri(url) }
+                      },
+                      title = {
+                        DashboardSwitcher(
+                          (list as? DashboardListState.Ready)?.dashboards.orEmpty(),
+                          route.path,
+                          onSwitch = { target ->
+                            if (onNavigateDashboard?.invoke(target) != true)
+                              select(DashboardDestination(target))
                           },
-                        setUpAgentLabel = dashboardAgent.setupLabel ?: "Set up a chat agent",
-                      )
-                      headerActions()
-                    },
-                  )
-                },
-              ) { padding ->
-                val dashboardModifier =
-                  Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
-                val showDashboard: @Composable (Modifier) -> Unit = { shown ->
-                  LiveDashboard(
-                    connection,
-                    route.path,
-                    snapshot,
-                    connectionError,
-                    shown,
-                    designServer,
-                    cardStyle,
-                    dark,
-                    customizing,
-                    dashboardRefreshGeneration,
-                    privateDesignServer,
-                    initialViewPath =
-                      if (route.path == initialDashboardPath) initialViewPath else null,
-                    onViewPathChanged =
-                      if (route.path == initialDashboardPath) onViewPathChanged else null,
-                  )
+                        )
+                      },
+                      actions = {
+                        // Icons only, so a phone-width header keeps room for the dashboard
+                        // switcher.
+                        // Leaving customize mode stays one tap away.
+                        if (customizing)
+                          TextButton(onClick = { customizing = false }) { Text("Done customizing") }
+                        DashboardMoreMenu(
+                          // Editing by hand stays here beside the chat with the dashboard agent,
+                          // which Edit opens while one answers.
+                          onEdit = { stack.add(DashboardEditDestination(route.path)) },
+                          // The Home Assistant integration's own agent (its MCP user) answers this.
+                          onAskAgent =
+                            if (editSessions) ({ stack.add(AgentEditDestination(route.path)) })
+                            else null,
+                          askAgentLabel =
+                            if (dashboardAgent.enabled) CHAT_WITH_AGENT else "Ask your agent",
+                          onNewDashboard =
+                            if (dashboardAgent.enabled) ({ newDashboard = true }) else null,
+                          agentFirst = dashboardAgent.enabled,
+                          onCustomize = if (customizing) null else ({ customizing = true }),
+                          onSetUpAgent =
+                            dashboardAgent.setupUrl(connection.config.baseUrl)?.let { url ->
+                              { uriHandler.openUri(url) }
+                            },
+                          setUpAgentLabel = dashboardAgent.setupLabel ?: "Set up a chat agent",
+                        )
+                        headerActions()
+                      },
+                    )
+                  },
+                ) { padding ->
+                  val dashboardModifier =
+                    Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
+                  val showDashboard: @Composable (Modifier) -> Unit = { shown ->
+                    LiveDashboard(
+                      connection,
+                      route.path,
+                      snapshot,
+                      connectionError,
+                      shown,
+                      designServer,
+                      cardStyle,
+                      dark,
+                      customizing,
+                      dashboardRefreshGeneration,
+                      privateDesignServer,
+                      initialViewPath =
+                        if (route.path == initialDashboardPath) initialViewPath else null,
+                      onViewPathChanged =
+                        if (route.path == initialDashboardPath) onViewPathChanged else null,
+                    )
+                  }
+                  if (editSessions && !customizing)
+                    DashboardDraftEntry(
+                      connection,
+                      route.path,
+                      snapshot,
+                      designServer,
+                      cardStyle,
+                      dark,
+                      cloudDashboardEdits.takeUnless { dashboardAgent.enabled },
+                      dashboardModifier,
+                      onOpenSession = { id -> stack.add(AgentEditDestination(route.path, id)) },
+                      onApplied = { dashboardRefreshGeneration++ },
+                      current = showDashboard,
+                    )
+                  else showDashboard(dashboardModifier)
                 }
-                if (editSessions && !customizing)
-                  DashboardDraftEntry(
-                    connection,
-                    route.path,
-                    snapshot,
-                    designServer,
-                    cardStyle,
-                    dark,
-                    cloudDashboardEdits.takeUnless { dashboardAgent.enabled },
-                    dashboardModifier,
-                    onOpenSession = { id -> stack.add(AgentEditDestination(route.path, id)) },
-                    onApplied = { dashboardRefreshGeneration++ },
-                    current = showDashboard,
-                  )
-                else showDashboard(dashboardModifier)
               }
             }
             entry<DashboardEditDestination> { route ->
