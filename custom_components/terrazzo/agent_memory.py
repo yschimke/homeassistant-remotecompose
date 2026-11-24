@@ -8,6 +8,8 @@ should be) holds for every later edit session, without the agent keeping anythin
 from the person it works for); `terrazzo/agent/memory/set` changes one (administrators, who also
 choose the agent).
 """
+import asyncio
+
 import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
@@ -33,14 +35,23 @@ class AgentMemory:
 
 
 async def async_memory(hass):
-    """This home's notes, loaded once."""
+    """This home's notes, loaded once: callers that arrive while the first load runs wait for it
+    and get the same instance, so no note saved meanwhile is lost to a second one."""
     state = hass.data.setdefault(DOMAIN, {})
-    memory = state.get(_KEY)
-    if memory is None:
-        store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        memory = AgentMemory(store, await store.async_load() or {"home": "", "dashboards": {}})
-        state[_KEY] = memory
-    return memory
+    loading = state.get(_KEY)
+    if loading is None:
+        loading = state[_KEY] = hass.async_create_task(_async_load(hass), "terrazzo_agent_memory_load")
+    try:
+        return await asyncio.shield(loading)
+    except Exception:
+        if state.get(_KEY) is loading:
+            del state[_KEY]  # The next call tries the load again.
+        raise
+
+
+async def _async_load(hass):
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    return AgentMemory(store, await store.async_load() or {"home": "", "dashboards": {}})
 
 
 async def async_notes(hass, url_path):
