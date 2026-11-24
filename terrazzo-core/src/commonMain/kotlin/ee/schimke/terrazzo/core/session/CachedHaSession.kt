@@ -10,6 +10,8 @@ import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.time.Clock
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -60,9 +62,9 @@ class CachedHaSession(
   override suspend fun connect() {
     try {
       delegate.connect()
-    } catch (ce: kotlinx.coroutines.CancellationException) {
-      throw ce
-    } catch (_: Throwable) {}
+    } catch (_: Throwable) {
+      currentCoroutineContext().ensureActive()
+    }
     // Even if connect() failed, mark this as the most-recent instance
     // so cold-start auto-resume can find it. We have either a cached
     // payload or we'll get one when the network returns.
@@ -73,9 +75,8 @@ class CachedHaSession(
     val cached = cache.dashboards(baseUrl)
     return try {
       delegate.listDashboards().also { fresh -> cache.putDashboards(baseUrl, fresh) }
-    } catch (ce: kotlinx.coroutines.CancellationException) {
-      throw ce
     } catch (ex: Throwable) {
+      currentCoroutineContext().ensureActive()
       cached ?: throw ex
     }
   }
@@ -96,9 +97,8 @@ class CachedHaSession(
           cache.putDashboard(baseUrl, urlPath, dashboard)
           cache.putSnapshot(baseUrl, urlPath, snapshot)
         }
-    } catch (ce: kotlinx.coroutines.CancellationException) {
-      throw ce
     } catch (ex: Throwable) {
+      currentCoroutineContext().ensureActive()
       (cached ?: throw ex).also { servedFromCache.update { it + urlPath.orEmpty() } }
     }
   }
@@ -114,9 +114,8 @@ class CachedHaSession(
         servedFromCache.update { it - "" }
         cache.putSnapshot(baseUrl, null, snapshot)
       }
-    } catch (ce: kotlinx.coroutines.CancellationException) {
-      throw ce
     } catch (ex: Throwable) {
+      currentCoroutineContext().ensureActive()
       (cache.snapshot(baseUrl, null) ?: throw ex).also { servedFromCache.update { it + "" } }
     }
 
@@ -171,9 +170,8 @@ class CachedHaSession(
       delegate.fetchHistory(entityIds, hours).also {
         if (it.isNotEmpty()) cache.putHistory(baseUrl, entityIds, hours, it)
       }
-    } catch (ce: kotlinx.coroutines.CancellationException) {
-      throw ce
     } catch (ex: Throwable) {
+      currentCoroutineContext().ensureActive()
       cache.history(baseUrl, entityIds, hours) ?: throw ex
     }
 

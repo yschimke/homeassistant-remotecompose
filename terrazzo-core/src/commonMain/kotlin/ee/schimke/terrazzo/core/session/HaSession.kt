@@ -32,6 +32,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -349,15 +351,14 @@ class LiveHaSession(
         if (state != HaClient.ConnectionState.Ready) return@collectLatest
         try {
           _notifications.value = client.fetchPersistentNotifications()
-        } catch (ce: CancellationException) {
-          throw ce
-        } catch (_: Throwable) {}
+        } catch (_: Throwable) {
+          currentCoroutineContext().ensureActive()
+        }
         val events =
           try {
             client.subscribeEvents("persistent_notifications_updated")
-          } catch (ce: CancellationException) {
-            throw ce
           } catch (_: Throwable) {
+            currentCoroutineContext().ensureActive()
             null
           }
         events?.collect {
@@ -365,9 +366,9 @@ class LiveHaSession(
           // "something changed". Refetch to learn what.
           try {
             _notifications.value = client.fetchPersistentNotifications()
-          } catch (ce: CancellationException) {
-            throw ce
-          } catch (_: Throwable) {}
+          } catch (_: Throwable) {
+            currentCoroutineContext().ensureActive()
+          }
         }
       }
     }
