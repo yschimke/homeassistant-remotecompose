@@ -348,6 +348,41 @@ class AgentGuideTest {
       .jsonObject
 
   @Test
+  fun aDraftIsDrawnWithSampleStatesWithoutASession() = testApplication {
+    val guide = AgentGuide(LibraryHolder(libraryDir()))
+    application { routing { dashboardRenderRoutes(guide) } }
+    val response =
+      client.post(DASHBOARD_RENDER_PATH) {
+        setBody(buildJsonObject { put("dashboard", sections) }.toString())
+      }
+    assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+    val body = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    assertEquals("sample", body.getValue("data").jsonPrimitive.content)
+    val images = body.getValue("images").jsonArray.map { it.jsonObject }
+    assertTrue(images.isNotEmpty())
+    images.forEachIndexed { i, image ->
+      assertEquals("image/png", image.getValue("mimeType").jsonPrimitive.content)
+      check(Base64.getDecoder().decode(image.getValue("png").jsonPrimitive.content), "route-$i")
+    }
+    assertTrue(images.first().getValue("caption").jsonPrimitive.content.startsWith("Sample data"))
+    // Malformed, or nothing drawable: refused with the reason, never an empty picture.
+    assertEquals(
+      HttpStatusCode.BadRequest,
+      client.post(DASHBOARD_RENDER_PATH) { setBody("""{"dashboard": 3}""") }.status,
+    )
+    assertEquals(
+      HttpStatusCode.BadRequest,
+      client.post(DASHBOARD_RENDER_PATH) { setBody("nope") }.status,
+    )
+    val nothing =
+      client.post(DASHBOARD_RENDER_PATH) {
+        setBody("""{"dashboard":{"views":[{"cards":[{"type":"custom:nope"}]}]}}""")
+      }
+    assertEquals(HttpStatusCode.UnprocessableEntity, nothing.status)
+    assertContains(nothing.bodyAsText(), "custom:nope")
+  }
+
+  @Test
   fun aDashboardAgentLearnsTheCardTypesAndSeesItsDraftWithSampleStates() = testApplication {
     val guide = AgentGuide(LibraryHolder(libraryDir()))
     val relay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions(), guide = guide)

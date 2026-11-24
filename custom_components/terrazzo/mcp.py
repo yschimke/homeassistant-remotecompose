@@ -332,8 +332,10 @@ EDIT_TOOLS += [
         "name": "get_draft_render",
         "title": "See the draft as the person does",
         "description": (
-            "Shows your newest draft exactly as the person's app draws it (a PNG, with their own "
-            "cards and live states), once they have opened it. Use it after submit_draft."
+            "Shows your newest draft: exactly as the person's app draws it (their cards and live "
+            "states) once they have opened it, and until then drawn by the design server with "
+            "made-up sample states (drawn_by says which). Use it after submit_draft to check the "
+            "layout: sizes, clipping, empty cards."
         ),
         "inputSchema": {
             "type": "object",
@@ -703,6 +705,54 @@ def dashboard_revision(config):
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
 
 
+DRAWN_BY_APP = "app"
+DRAWN_BY_SAMPLE = "sample"
+
+
+def sample_render(body):
+    """The design server's `render-dashboard` answer as a home's draft render: its PNGs, captions
+    and the cards it couldn't draw."""
+    images = [i for i in (body or {}).get("images") or [] if isinstance(i, dict)]
+    pngs, captions = [], []
+    for image in images:
+        try:
+            pngs.append(base64.b64decode(image.get("png") or "", validate=True))
+        except (ValueError, TypeError):
+            continue
+        captions.append(image.get("caption") or "")
+    undrawable = [
+        {"path": u.get("path"), "reason": u.get("reason")}
+        for u in (body or {}).get("undrawable") or []
+        if isinstance(u, dict)
+    ]
+    return {"drawn_by": DRAWN_BY_SAMPLE, "pngs": [p for p in pngs if p], "captions": captions,
+            "undrawable": undrawable}
+
+
+def draft_render_result(render):
+    """`get_draft_render`'s answer from the home's [render] (`HassHome.draft_render`)."""
+    if render is None:
+        return {"status": "none", "next": "There's no draft yet: submit_draft first."}
+    result = {"draft_id": render["draft_id"], "drawn_by": render.get("drawn_by")}
+    if render.get("drawn_by") == DRAWN_BY_APP:
+        result["note"] = "As the person's app draws it, with their cards and live states."
+    elif render.get("drawn_by") == DRAWN_BY_SAMPLE:
+        result["note"] = (
+            "Nobody has opened this draft yet, so the design server drew it with made-up sample "
+            "states, never this home's: check the layout, not the values."
+        )
+        if render.get("captions"):
+            result["captions"] = render["captions"]
+        if render.get("undrawable"):
+            result["undrawable"] = render["undrawable"]
+    if not render.get("pngs"):
+        result["status"] = "none"
+        result["next"] = render.get("reason") or "It couldn't be drawn; the person's app draws it once they open it."
+        return result
+    result[IMAGE] = render["pngs"] if len(render["pngs"]) > 1 else render["pngs"][0]
+    return result
+
+
 async def _start(home, arguments):
     """Opens the edit session [arguments] ask for: a new dashboard (new_dashboard_title) or one."""
     title = _optional_text(arguments, "new_dashboard_title").strip()
@@ -786,11 +836,7 @@ async def call_tool(home, name, arguments):
             raise ToolError("since must be the cursor from the last call, or 0")
         return await home.await_feedback(_session_id(arguments), since)
     if name == "get_draft_render":
-        render = home.draft_render(_session_id(arguments))
-        if render is None:
-            return {"status": "none", "next": "The person's app hasn't drawn a draft yet."}
-        draft_id, png = render
-        return {"draft_id": draft_id, IMAGE: png}
+        return draft_render_result(await home.draft_render(_session_id(arguments)))
     if name == "send_message":
         text = _optional_text(arguments, "text")
         if not text.strip():
@@ -895,15 +941,17 @@ async def handle(message, home, server_version):
         except ToolError as failure:
             return _result(message_id, {"content": [{"type": "text", "text": str(failure)}], "isError": True})
         if IMAGE in structured:
-            # An image is MCP image content; the rest stays structured.
-            png = structured.pop(IMAGE)
+            # An image (or a few) is MCP image content; the rest stays structured.
+            pngs = structured.pop(IMAGE)
+            pngs = pngs if isinstance(pngs, list) else [pngs]
             return _result(
                 message_id,
                 {
                     "content": [
-                        {"type": "image", "data": base64.b64encode(png).decode("ascii"), "mimeType": "image/png"},
-                        {"type": "text", "text": json.dumps(structured, ensure_ascii=False, default=str)},
-                    ],
+                        {"type": "image", "data": base64.b64encode(png).decode("ascii"), "mimeType": "image/png"}
+                        for png in pngs
+                    ]
+                    + [{"type": "text", "text": json.dumps(structured, ensure_ascii=False, default=str)}],
                     "structuredContent": structured,
                 },
             )

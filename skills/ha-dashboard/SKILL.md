@@ -82,7 +82,8 @@ session in the phone app or the panel.
    have, and says which.
 4. The person watches the session in harc or the Terrazzo panel and sees each draft at once.
    Use `set_status` while you work and `send_message` to ask them something;
-   `get_draft_render` shows the draft exactly as their app draws it. Then call
+   `get_draft_render` shows the draft exactly as their app draws it, or, before they open it,
+   drawn with made-up sample states (`drawn_by` says which: check layout, not values). Then call
    `await_feedback` with `since` = the last `cursor` (0 at first): it waits up to 25 s and
    returns their notes, which may name a card in `target`. Act on them, submit again, and keep
    listening until `status` is `applied` or `discarded`. A session expires a day after its last
