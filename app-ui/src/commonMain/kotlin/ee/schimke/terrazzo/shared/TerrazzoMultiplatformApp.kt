@@ -670,11 +670,13 @@ private fun DashboardShell(
         else null,
     )
   }
+  val currentOnViewPathChanged by rememberUpdatedState(onViewPathChanged)
   DisposableEffect(registerReturnHome) {
     registerReturnHome?.invoke {
       // A wall panel returns home after a while unused, but never out of an edit.
       if (stack.lastOrNull() !is DashboardEditDestination) {
         select(home)
+        currentOnViewPathChanged?.invoke("")
         homeVisit++
       }
     }
