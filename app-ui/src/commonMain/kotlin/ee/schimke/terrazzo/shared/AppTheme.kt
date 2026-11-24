@@ -203,10 +203,12 @@ internal fun AppChromeTheme(
         outlineVariant = outline,
       )
     }
+  // Desktop and browser hosts use the critically-damped standard motion scheme so pointer-driven
+  // menus and popups settle immediately without spring overshoot.
   androidx.compose.material3.MaterialExpressiveTheme(
     colorScheme = scheme,
     typography = cardStyleTypography(style, MaterialTheme.typography),
-    motionScheme = androidx.compose.material3.MotionScheme.expressive(),
+    motionScheme = androidx.compose.material3.MotionScheme.standard(),
   ) {
     CompositionLocalProvider(LocalClassicCardScheme provides classicCards, content = content)
   }
