@@ -121,8 +121,8 @@ class _DashboardTool(llm.Tool):
         turn = TURN.get()
         arguments = dict(tool_input.tool_args or {})
         if turn is not None and turn.user_id == user.id:
-            turn.calling(self.name)
             arguments = llm_tools.for_turn(self.name, arguments, turn.session_id)
+            turn.calling(self.name, arguments)
         result = await llm_tools.call(DashboardHome(hass, user, base_url(hass)), self.name, arguments)
         if turn is not None and turn.user_id == user.id:
             turn.called(self.name, arguments, result)

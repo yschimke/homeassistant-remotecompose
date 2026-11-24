@@ -23,7 +23,7 @@ from homeassistant.helpers import intent
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import agent_turn, edit_sessions, edits, llm_api
+from . import agent_memory, agent_turn, edit_sessions, edits, llm_api
 from .const import CONF_AGENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -163,9 +163,19 @@ class Turn:
         except edit_sessions.SessionError:
             pass
 
-    def calling(self, tool):
+    def calling(self, tool, arguments=None):
         if tool in agent_turn.STATUS:
             self._status(agent_turn.STATUS[tool])
+        entity_id = (arguments or {}).get("entity_id")
+        self.progress(tool=tool, status=agent_turn.STATUS.get(tool), entity_id=entity_id)
+
+    def progress(self, **change):
+        """The running turn's `active_turn` (edit_sessions.turn_progress), as the app overlays it."""
+        store = edits.edits_of(self.hass)
+        try:
+            store.changed(store.sessions.turn_progress(self.session_id, edits._now(), **change))
+        except edit_sessions.SessionError:
+            pass
 
     def called(self, tool, arguments, result):
         if tool == "submit_draft" and isinstance(result, dict) and "error" not in result:
@@ -187,6 +197,21 @@ class DashboardAgent:
     def __init__(self, hass):
         self.hass = hass
         self.running = {}
+        # Sessions whose running turn the person cancelled: its task ends without a reply.
+        self.cancelled = set()
+
+    def cancel(self, user, session_id):
+        """Stops [session_id]'s running turn (`terrazzo/edit/cancel`): the overlay goes at once,
+        and the notes it was answering count as answered, so it doesn't start again on them."""
+        store = edits.edits_of(self.hass)
+        edits._visible_session(self.hass, user, session_id)
+        session = store.sessions.cancel_turn(session_id, user.id, edits._now())
+        running = self.running.get(session_id)
+        if running is not None and not running.done():
+            self.cancelled.add(session_id)
+            running.cancel()
+        store.changed(session)
+        return session
 
     @callback
     def changed(self, session_id):
@@ -225,8 +250,17 @@ class DashboardAgent:
                 # The turn's text and recap are read before the notes are marked taken.
                 session = copy.deepcopy(session)
                 store.changed(store.sessions.assistant_started(session_id, edits._now()))
-                await self._turn(chosen, user, session)
+                about = edit_sessions.note_entities(session)
+                store.changed(store.sessions.turn_started(session_id, edits._now(), about))
+                try:
+                    await self._turn(chosen, user, session)
+                finally:
+                    self._ended(session_id)
+        except asyncio.CancelledError:
+            if session_id not in self.cancelled:
+                raise  # Home Assistant is stopping, not the person.
         finally:
+            self.cancelled.discard(session_id)
             # No await between the last check above and this: a note can't slip in unanswered.
             self.running.pop(session_id, None)
 
@@ -243,17 +277,23 @@ class DashboardAgent:
         turn = Turn(hass, user, session_id)
         turn._status("Thinking")
         retries = iter(agent_turn.RETRY_DELAYS)
+        # Carry on the last turn's conversation while Home Assistant keeps it (the provider can
+        # reuse its prompt cache); after that, a new one, with the recap as its memory.
+        warm = edit_sessions.warm_conversation(session, edits._now())
+        house_notes = await agent_memory.async_notes(hass, session.get("url_path"))
         while True:
             token = llm_api.TURN.set(turn)
             try:
                 result = await conversation.async_converse(
                     hass,
                     agent_turn.turn_text(session),
-                    None,  # A new conversation each turn: the recap is its memory (agent_turn.py).
+                    warm,
                     Context(user_id=user.id),
                     language=hass.config.language,
                     agent_id=chosen,
-                    extra_system_prompt=agent_turn.extra_system_prompt(session, hass.config.location_name),
+                    extra_system_prompt=agent_turn.extra_system_prompt(
+                        session, hass.config.location_name, warm=warm is not None, house_notes=house_notes
+                    ),
                 )
             except (HomeAssistantError, ValueError) as failure:
                 if await self._retry(turn, chosen, failure, retries):
@@ -264,6 +304,7 @@ class DashboardAgent:
                 return
             finally:
                 llm_api.TURN.reset(token)
+            self._remember(session_id, result)
             response = result.response
             speech = ((response.speech or {}).get("plain") or {}).get("speech") or ""
             if response.response_type == intent.IntentResponseType.ERROR and await self._retry(
@@ -286,8 +327,25 @@ class DashboardAgent:
             return False
         _LOGGER.info("Terrazzo's dashboard agent %s is busy (%s); trying again in %s s", chosen, failure, delay)
         turn._status("The assistant is busy; trying again")
+        turn.progress(phase=edit_sessions.RETRYING, status="Provider busy, retrying")
         await asyncio.sleep(delay)
         return True
+
+    def _remember(self, session_id, result):
+        store = edits.edits_of(self.hass)
+        try:
+            store.sessions.remember_conversation(
+                session_id, getattr(result, "conversation_id", None), edits._now()
+            )
+        except edit_sessions.SessionError:
+            pass
+
+    def _ended(self, session_id):
+        store = edits.edits_of(self.hass)
+        try:
+            store.changed(store.sessions.turn_ended(session_id, edits._now()))
+        except edit_sessions.SessionError:
+            pass
 
     def _post(self, user, session_id, reply):
         try:
@@ -314,11 +372,30 @@ def ws_info(hass, connection, msg):
     connection.send_result(msg["id"], info(hass, connection.user))
 
 
+@websocket_api.websocket_command(
+    {vol.Required("type"): "terrazzo/edit/cancel", vol.Required("session_id"): str}
+)
+@callback
+def ws_cancel(hass, connection, msg):
+    """Stops the agent's running turn on a session: the person's Cancel on the overlay."""
+    runner = hass.data.get(DOMAIN, {}).get("dashboard_agent")
+    try:
+        if runner is None:
+            raise edit_sessions.SessionError("No agent answers edit sessions here")
+        session = runner.cancel(connection.user, msg["session_id"])
+    except edit_sessions.SessionError as failure:
+        edits._send_failure(connection, msg, failure)
+        return
+    connection.send_result(msg["id"], edits._session_reply(hass, session, user=connection.user))
+
+
 @callback
 def async_register(hass):
     """Answer edit sessions as they change; registered once, like the edit session commands."""
     runner = DashboardAgent(hass)
     websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_cancel)
+    agent_memory.async_register(hass)
     async_dispatcher_connect(hass, edits.SIGNAL_SESSION, runner.changed)
     return runner
 

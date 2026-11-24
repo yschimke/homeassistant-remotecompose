@@ -7,9 +7,11 @@ Free of Home Assistant imports, like `mcp.py` and `edit_sessions.py`, so it is t
 The agent is one of Home Assistant's own (OpenAI, Gemini, Anthropic, Ollama, …), reached with
 `conversation.async_converse`. It knows the dashboard tools from the "Terrazzo dashboards" LLM API
 (`llm_tools.API_PROMPT`); what this adds, as the turn's extra system prompt, is which session it is
-answering, what the session may change, and the exchange so far. Each turn is a new conversation:
-Home Assistant forgets one after a few idle minutes, and an edit session lasts days, so the recap
-here is the agent's memory, not Home Assistant's.
+answering, what the session may change, the household's standing notes (`agent_memory.py`) and
+the exchange so far. A turn soon after the last one carries on its conversation, which already
+holds that exchange (`edit_sessions.warm_conversation`); otherwise it is a new one: Home Assistant
+forgets a conversation after a few idle minutes, and an edit session lasts days, so the recap here
+is then the agent's memory, not Home Assistant's.
 """
 import re
 
@@ -93,9 +95,56 @@ def _answered(session):
     return (session.get("assistant") or {}).get("handled")
 
 
-def extra_system_prompt(session, home_name):
+MAX_HOUSE_NOTES_CHARS = 2000
+
+# The household's notes (`agent_memory.py`): one for the home, one per dashboard.
+MAX_NOTE_CHARS = 2000
+MAX_DASHBOARDS = 100
+
+
+def clean_note(text):
+    """[text] as a stored note: trimmed, at most `MAX_NOTE_CHARS`, empty for none."""
+    if text is None:
+        return ""
+    if not isinstance(text, str):
+        raise ValueError("A note is text")
+    return text.strip()[:MAX_NOTE_CHARS]
+
+
+def notes_for(data, url_path):
+    """The notes a turn on dashboard [url_path] gets: the home's, then that dashboard's."""
+    home = (data or {}).get("home") or ""
+    dashboard = ((data or {}).get("dashboards") or {}).get(url_path or "") or ""
+    parts = []
+    if home:
+        parts.append(home)
+    if dashboard:
+        parts.append(f"For this dashboard: {dashboard}")
+    return "\n".join(parts)
+
+
+def with_note(data, url_path, text, home=False):
+    """[data] with one note set ([home] for the whole home's, else [url_path]'s); empty clears it."""
+    data = {"home": (data or {}).get("home") or "", "dashboards": dict((data or {}).get("dashboards") or {})}
+    note = clean_note(text)
+    if home:
+        data["home"] = note
+    elif note:
+        if (url_path or "") not in data["dashboards"] and len(data["dashboards"]) >= MAX_DASHBOARDS:
+            raise ValueError(f"At most {MAX_DASHBOARDS} dashboards can have notes")
+        data["dashboards"][url_path or ""] = note
+    else:
+        data["dashboards"].pop(url_path or "", None)
+    return data
+
+
+
+def extra_system_prompt(session, home_name, warm=False, house_notes=None):
     """What the agent knows about this turn beyond its own instructions and the dashboard tools:
-    the session, its scope, how to reply, and the exchange before the notes it answers now."""
+    the session, its scope, how to reply, the household's standing notes, and the exchange before
+    the notes it answers now. [warm] when the turn carries on the last turn's conversation, which
+    already holds that exchange: the recap is left out, so the prompt stays the same between turns
+    and the provider can reuse its cache."""
     handled = _answered(session)
     earlier = [
         f"{who}: {text}"
@@ -117,7 +166,15 @@ def extra_system_prompt(session, home_name):
         "Reply briefly in plain text (no Markdown headings or code blocks): say what you changed, "
         "or ask one short question when the request is unclear. Don't paste configs.",
     ]
-    if recap:
+    notes = (house_notes or "").strip()
+    if notes:
+        if len(notes) > MAX_HOUSE_NOTES_CHARS:
+            notes = notes[:MAX_HOUSE_NOTES_CHARS - 1] + "…"
+        parts.append(
+            "The household's standing notes for dashboard edits (their preferences; follow them "
+            "unless this request says otherwise):\n" + notes
+        )
+    if recap and not warm:
         parts.append("The conversation so far:\n" + recap)
     return "\n\n".join(parts)
 

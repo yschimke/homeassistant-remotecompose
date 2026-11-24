@@ -10,6 +10,7 @@ dashboards; the tests drive this with plain data.
 """
 import copy
 import json
+import re
 import secrets
 import unicodedata
 
@@ -303,6 +304,98 @@ def check_in_scope(scope, baseline, config):
         )
 
 
+# What the person's app shows the running turn doing, by the tool it calls (`active_turn`).
+READING = "reading"
+SEARCHING_DESIGNS = "searching_designs"
+DRAFTING = "drafting"
+RETRYING = "retrying"
+TOOL_PHASES = {
+    "find_designs": SEARCHING_DESIGNS,
+    "get_card_guide": SEARCHING_DESIGNS,
+    "submit_draft": DRAFTING,
+}
+MAX_TARGET_CARDS = 20
+# Home Assistant keeps an idle conversation for five minutes: a turn within this of the last one
+# carries on in it (and the provider's prompt cache), later ones start afresh from the recap.
+WARM_CONVERSATION_SECONDS = 4 * 60
+
+
+def latest_config(session):
+    """The dashboard as the person would see it now: the newest draft, else where it started."""
+    return session["drafts"][-1]["config"] if session.get("drafts") else session.get("baseline")
+
+
+def _shows(card, entity_id):
+    if not isinstance(card, dict):
+        return False
+    if card.get("entity") == entity_id:
+        return True
+    entities = card.get("entities")
+    if isinstance(entities, list) and any(
+        row == entity_id or (isinstance(row, dict) and row.get("entity") == entity_id) for row in entities
+    ):
+        return True
+    bindings = card.get("bindings")
+    if isinstance(bindings, dict) and any(
+        target == entity_id or (isinstance(target, dict) and target.get("entity") == entity_id)
+        for target in bindings.values()
+    ):
+        return True
+    return _shows(card.get("card"), entity_id)
+
+
+def card_positions(config, entity_id):
+    """Where [config] shows [entity_id]: `{view, section, card, entity}` for a sections view's
+    cards (section None for a view's own cards), counting a wrapped or bound entity too."""
+    found = []
+    views = config.get("views") if isinstance(config, dict) else None
+    for v, view in enumerate(views if isinstance(views, list) else []):
+        if not isinstance(view, dict):
+            continue
+        groups = [(None, view.get("cards"))]
+        sections = view.get("sections")
+        if isinstance(sections, list):
+            groups += [(s, sec.get("cards")) for s, sec in enumerate(sections) if isinstance(sec, dict)]
+        for s, cards in groups:
+            for c, card in enumerate(cards if isinstance(cards, list) else []):
+                if _shows(card, entity_id):
+                    found.append({"view": v, "section": s, "card": c, "entity": entity_id})
+    return found
+
+
+_ENTITY_ID = re.compile(r"[a-z0-9_]+\.[a-z0-9_]+")
+
+
+def note_entities(session):
+    """The entities the notes the agent hasn't answered yet are about (a note's target, when it
+    is an entity id), in order."""
+    handled = (session.get("assistant") or {}).get("handled")
+    found = []
+    for note in session.get("notes") or []:
+        target = note.get("target")
+        if (handled is None or note.get("seq", 0) > handled) and isinstance(target, str) \
+                and _ENTITY_ID.fullmatch(target) and target not in found:
+            found.append(target)
+    return found
+
+
+def scope_targets(session):
+    """The section a session is about, as a target with no card: the whole section is overlaid."""
+    scope = session.get("scope") or {}
+    if scope.get("kind") != SECTION:
+        return []
+    return [{"view": scope["view"], "section": scope["section"], "card": None, "entity": None}]
+
+
+def warm_conversation(session, now):
+    """The conversation the last turn ran in, while Home Assistant still keeps it, else None."""
+    assistant = session.get("assistant") or {}
+    conversation_id, at = assistant.get("conversation_id"), assistant.get("conversation_at")
+    if not isinstance(conversation_id, str) or not isinstance(at, (int, float)):
+        return None
+    return conversation_id if now - at < WARM_CONVERSATION_SECONDS else None
+
+
 def _text(value, what, required=False):
     if value is None and not required:
         return ""
@@ -316,6 +409,9 @@ class EditSessions:
 
     def __init__(self, data=None):
         self._sessions = {session["id"]: session for session in (data or [])}
+        for session in self._sessions.values():
+            # A turn that was running when Home Assistant stopped isn't running any more.
+            session["active_turn"] = None
 
     def to_data(self):
         return list(self._sessions.values())
@@ -559,6 +655,78 @@ class EditSessions:
         session["assistant"] = {**(session.get("assistant") or {}), "handled": newest, "error": None}
         return session
 
+    def turn_started(self, session_id, now, entity_ids=()):
+        """The dashboard agent's turn begins: what the person's app overlays on the cards it is
+        about (`active_turn`): the session's section, and the cards showing [entity_ids] (those
+        the notes it answers are about, `note_entities`), until its tools name more."""
+        session = self.get(session_id, now)
+        targets = scope_targets(session)
+        for entity_id in entity_ids:
+            for card in card_positions(latest_config(session), entity_id):
+                if card not in targets and len(targets) < MAX_TARGET_CARDS:
+                    targets.append(card)
+        session["active_turn"] = {
+            "phase": READING,
+            "status": "Thinking",
+            "step": 0,
+            "target_cards": targets,
+            "started_at": now,
+            "cancellable": True,
+        }
+        return session
+
+    def turn_progress(self, session_id, now, tool=None, status=None, phase=None, entity_id=None):
+        """The running turn calls [tool] (or says [status], or enters [phase]); a tool about
+        [entity_id] adds the cards on the dashboard that show it to `target_cards`."""
+        session = self.get(session_id, now)
+        turn = session.get("active_turn")
+        if not turn:
+            return session
+        if tool is not None:
+            turn["step"] += 1
+            turn["phase"] = TOOL_PHASES.get(tool, turn["phase"])
+        if phase is not None:
+            turn["phase"] = phase
+        if status is not None:
+            turn["status"] = _text(status, "The status")[:MAX_STATUS]
+        if isinstance(entity_id, str) and entity_id:
+            known = turn["target_cards"]
+            for card in card_positions(latest_config(session), entity_id):
+                if card not in known and len(known) < MAX_TARGET_CARDS:
+                    known.append(card)
+        return session
+
+    def turn_ended(self, session_id, now):
+        session = self.get(session_id, now)
+        session["active_turn"] = None
+        return session
+
+    def cancel_turn(self, session_id, user_id, now):
+        """The person stops the running turn: no overlay, and the notes it was answering count
+        as answered, so it doesn't start again on them. `dashboard_agent.py` stops the task."""
+        session = self._open(session_id, now)
+        if not session.get("active_turn"):
+            raise SessionError("The agent isn't working on this session")
+        session["active_turn"] = None
+        newest = max((n.get("seq", 0) for n in session["notes"]), default=0)
+        session["assistant"] = {**(session.get("assistant") or {}), "handled": newest, "error": None}
+        session["agent"] = {**(session.get("agent") or {}), "status": "Cancelled", "seen_at": now, "by": user_id}
+        self._touch(session, now)
+        return session
+
+    def remember_conversation(self, session_id, conversation_id, now):
+        """The conversation the last turn ran in, so the next one can carry on in it while Home
+        Assistant still has it (`warm_conversation`)."""
+        session = self.get(session_id, now)
+        assistant = dict(session.get("assistant") or {})
+        if isinstance(conversation_id, str) and conversation_id:
+            assistant.update(conversation_id=conversation_id, conversation_at=now)
+        else:
+            assistant.pop("conversation_id", None)
+            assistant.pop("conversation_at", None)
+        session["assistant"] = assistant
+        return session
+
     def assistant_failed(self, session_id, error, now):
         session = self.get(session_id, now)
         session["assistant"] = {**(session.get("assistant") or {}), "error": _text(error, "The error")[:300]}
@@ -624,6 +792,7 @@ def summary(session, with_configs=False):
         "applied": session["applied"],
         "scope": session.get("scope"),
         "assistant_error": (session.get("assistant") or {}).get("error"),
+        "active_turn": copy.deepcopy(session.get("active_turn")),
         "drafts": [
             {key: draft[key] for key in ("id", "summary", "by", "at")}
             | ({"relay_id": draft["relay_id"]} if draft.get("relay_id") else {})

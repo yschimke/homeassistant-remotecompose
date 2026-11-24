@@ -201,5 +201,135 @@ class SetupTest(unittest.TestCase):
 
 
 
+DASHBOARD = {'views': [
+    {'cards': [{'type': 'tile', 'entity': 'light.sink'}]},
+    {'type': 'sections', 'sections': [
+        {'type': 'grid', 'cards': [
+            {'type': 'heading', 'heading': 'Kitchen'},
+            {'type': 'custom:remote-compose-card', 'card': {'type': 'tile', 'entity': 'sensor.dw'},
+             'design_id': 'pack:dw'},
+            {'type': 'custom:remote-compose-card', 'card': {'type': 'tile', 'entity': 'switch.other'},
+             'bindings': {'door': {'entity': 'binary_sensor.dw_door'}}},
+            {'type': 'entities', 'entities': ['light.sink', {'entity': 'light.hob'}]},
+        ]},
+    ]},
+]}
+
+
+class ActiveTurnTest(unittest.TestCase):
+    def test_cards_showing_an_entity_are_found_wrapped_bound_or_listed(self):
+        self.assertEqual(es.card_positions(DASHBOARD, 'light.sink'), [
+            {'view': 0, 'section': None, 'card': 0, 'entity': 'light.sink'},
+            {'view': 1, 'section': 0, 'card': 3, 'entity': 'light.sink'},
+        ])
+        self.assertEqual([c['card'] for c in es.card_positions(DASHBOARD, 'sensor.dw')], [1])
+        self.assertEqual([c['card'] for c in es.card_positions(DASHBOARD, 'binary_sensor.dw_door')], [2])
+        self.assertEqual([c['card'] for c in es.card_positions(DASHBOARD, 'light.hob')], [3])
+        self.assertEqual(es.card_positions(DASHBOARD, 'light.nope'), [])
+        self.assertEqual(es.card_positions({'views': 'x'}, 'light.sink'), [])
+
+    def test_a_turn_tracks_its_phase_steps_and_the_cards_it_is_about(self):
+        sessions = es.EditSessions()
+        session = sessions.create('k', 'Kitchen', DASHBOARD, 'u', 1,
+                                  {'kind': 'section', 'view': 1, 'section': 0, 'label': 'Kitchen'})
+        sessions.note(session['id'], 'Make it the real thing', 'u', 2, target='sensor.dw')
+        sessions.note(session['id'], 'And this', 'u', 3, target='Wall light (tile)')
+        self.assertEqual(es.note_entities(session), ['sensor.dw'])
+        sessions.turn_started(session['id'], 4, es.note_entities(session))
+        turn_state = es.summary(session)['active_turn']
+        self.assertEqual(turn_state['phase'], 'reading')
+        self.assertTrue(turn_state['cancellable'])
+        self.assertEqual(turn_state['started_at'], 4)
+        self.assertEqual(turn_state['target_cards'], [
+            {'view': 1, 'section': 0, 'card': None, 'entity': None},
+            {'view': 1, 'section': 0, 'card': 1, 'entity': 'sensor.dw'},
+        ])
+        sessions.turn_progress(session['id'], 5, tool='find_designs', status='Looking for card designs',
+                               entity_id='light.hob')
+        sessions.turn_progress(session['id'], 6, tool='find_designs', entity_id='light.hob')
+        turn_state = session['active_turn']
+        self.assertEqual((turn_state['phase'], turn_state['step'], turn_state['status']),
+                         ('searching_designs', 2, 'Looking for card designs'))
+        self.assertEqual(turn_state['target_cards'][-1], {'view': 1, 'section': 0, 'card': 3, 'entity': 'light.hob'})
+        self.assertEqual(len(turn_state['target_cards']), 3)  # Not added twice.
+        sessions.turn_progress(session['id'], 7, phase='retrying', status='Provider busy, retrying')
+        self.assertEqual(session['active_turn']['phase'], 'retrying')
+        sessions.turn_progress(session['id'], 8, tool='submit_draft')
+        self.assertEqual(session['active_turn']['phase'], 'drafting')
+        sessions.turn_ended(session['id'], 9)
+        self.assertIsNone(es.summary(session)['active_turn'])
+        sessions.turn_progress(session['id'], 10, tool='find_designs')  # No turn: nothing to track.
+        self.assertIsNone(session['active_turn'])
+
+    def test_cancelling_ends_the_turn_and_counts_its_notes_as_answered(self):
+        sessions = es.EditSessions()
+        session = sessions.create('k', 'Kitchen', DASHBOARD, 'u', 1)
+        with self.assertRaisesRegex(es.SessionError, "isn't working"):
+            sessions.cancel_turn(session['id'], 'u', 2)
+        sessions.note(session['id'], 'Bigger', 'u', 2)
+        sessions.assistant_started(session['id'], 3)
+        sessions.turn_started(session['id'], 3)
+        sessions.cancel_turn(session['id'], 'u', 4)
+        self.assertIsNone(session['active_turn'])
+        self.assertEqual(session['agent']['status'], 'Cancelled')
+        self.assertFalse(es.EditSessions.assistant_pending(session))
+        sessions.note(session['id'], 'Try again', 'u', 5)
+        self.assertTrue(es.EditSessions.assistant_pending(session))
+
+    def test_a_turn_running_when_home_assistant_stopped_is_gone_after_a_restart(self):
+        sessions = es.EditSessions()
+        session = sessions.create('k', 'Kitchen', DASHBOARD, 'u', 1)
+        sessions.turn_started(session['id'], 2)
+        reloaded = es.EditSessions(sessions.to_data())
+        self.assertIsNone(reloaded.get(session['id'], 3)['active_turn'])
+
+    def test_a_warm_conversation_is_reused_and_a_cold_one_is_not(self):
+        sessions = es.EditSessions()
+        session = sessions.create('k', 'Kitchen', DASHBOARD, 'u', 1)
+        self.assertIsNone(es.warm_conversation(session, 2))
+        sessions.remember_conversation(session['id'], 'conv1', 100)
+        self.assertEqual(es.warm_conversation(session, 100 + es.WARM_CONVERSATION_SECONDS - 1), 'conv1')
+        self.assertIsNone(es.warm_conversation(session, 100 + es.WARM_CONVERSATION_SECONDS))
+        # Under Home Assistant's own five-minute idle limit, with margin.
+        self.assertLess(es.WARM_CONVERSATION_SECONDS, 5 * 60)
+        sessions.remember_conversation(session['id'], None, 200)
+        self.assertIsNone(es.warm_conversation(session, 201))
+
+
+class HouseNotesTest(unittest.TestCase):
+    def test_a_warm_turn_leaves_the_recap_out_and_every_turn_gets_the_house_notes(self):
+        sessions = es.EditSessions()
+        session = sessions.create('home', 'Kitchen', BASELINE, 'u', 1)
+        sessions.assistant_started(session['id'], 2)
+        sessions.agent_message(session['id'], 'Which light?', 'u', 3)
+        sessions.note(session['id'], 'The sink one', 'u', 4)
+        cold = turn.extra_system_prompt(session, 'Test home', house_notes='Prefer Front Fascia packs.')
+        self.assertIn('You: Which light?', cold)
+        self.assertIn('Prefer Front Fascia packs.', cold)
+        warm = turn.extra_system_prompt(session, 'Test home', warm=True, house_notes='Prefer Front Fascia packs.')
+        self.assertNotIn('Which light?', warm)
+        self.assertIn('Prefer Front Fascia packs.', warm)
+        self.assertNotIn('standing notes', turn.extra_system_prompt(session, 'Test home', house_notes='  '))
+        long = turn.extra_system_prompt(session, 'Test home', house_notes='x' * 5000)
+        self.assertNotIn('x' * (turn.MAX_HOUSE_NOTES_CHARS + 1), long)
+
+    def test_notes_are_set_per_home_and_dashboard_and_combined_for_a_turn(self):
+        data = turn.with_note(None, None, '  Helper dashboards need bindings and actions. ', home=True)
+        data = turn.with_note(data, 'kitchen', 'Cards 6 columns wide.')
+        self.assertEqual(turn.notes_for(data, 'kitchen'),
+                         'Helper dashboards need bindings and actions.\nFor this dashboard: Cards 6 columns wide.')
+        self.assertEqual(turn.notes_for(data, None), 'Helper dashboards need bindings and actions.')
+        data = turn.with_note(data, 'kitchen', '')
+        self.assertEqual(data['dashboards'], {})
+        self.assertEqual(turn.notes_for({}, 'kitchen'), '')
+        self.assertEqual(len(turn.with_note(None, 'k', 'y' * 5000)['dashboards']['k']), turn.MAX_NOTE_CHARS)
+        with self.assertRaises(ValueError):
+            turn.with_note(None, 'k', 42)
+        full = {'home': '', 'dashboards': {str(i): 'n' for i in range(turn.MAX_DASHBOARDS)}}
+        with self.assertRaises(ValueError):
+            turn.with_note(full, 'one-more', 'n')
+        turn.with_note(full, '0', 'changed')  # An existing one can still change.
+
+
 if __name__ == '__main__':
     unittest.main()
