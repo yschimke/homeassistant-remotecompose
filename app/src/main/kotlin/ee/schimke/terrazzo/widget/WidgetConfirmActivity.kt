@@ -9,8 +9,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.HighRiskActions
@@ -62,9 +62,13 @@ class WidgetConfirmActivity : ComponentActivity() {
       val prompt = widgetConfirmPrompt(action, snapshot)
       setContent {
         val themeChoice by
-          graph.preferencesStore.themeChoice.collectAsState(initial = ThemeChoice.Default)
+          graph.preferencesStore.themeChoice.collectAsStateWithLifecycle(
+            initialValue = ThemeChoice.Default,
+          )
         val darkPref by
-          graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
+          graph.preferencesStore.darkMode.collectAsStateWithLifecycle(
+            initialValue = DarkModePref.Follow,
+          )
         TerrazzoTheme(themeChoice, darkPref) {
           AlertDialog(
             onDismissRequest = ::finish,

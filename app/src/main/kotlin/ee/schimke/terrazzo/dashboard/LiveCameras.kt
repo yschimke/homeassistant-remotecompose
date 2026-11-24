@@ -2,13 +2,13 @@ package ee.schimke.terrazzo.dashboard
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
@@ -126,7 +126,7 @@ fun cameraEntities(card: CardConfig): Set<String> =
  */
 @Composable
 internal fun rememberLiveCameraFrames(snapshot: HaSnapshot, cameras: Set<String>): HaSnapshot {
-  val live by LiveCameras.live.collectAsState()
+  val live by LiveCameras.live.collectAsStateWithLifecycle()
   if (cameras.isEmpty() && live.isEmpty()) return snapshot
   // Each tick's wall-clock time, 0 before the first: a frame URL is never one an earlier visit to
   // the dashboard used, which the shared memory cache would answer with that visit's picture.

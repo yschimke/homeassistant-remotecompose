@@ -339,7 +339,6 @@ dependencies {
   ksp(libs.androidx.appfunctions.compiler)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.navigation3.ui)
-  implementation(libs.androidx.material3.adaptive.navigation.suite)
   implementation(libs.appauth)
   implementation(libs.coil)
   implementation(libs.coil.network.okhttp)

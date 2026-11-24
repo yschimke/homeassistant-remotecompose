@@ -22,7 +22,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +34,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.LocalTerrazzoGraph
@@ -95,7 +95,7 @@ fun WidgetInstallSheet(
   var installError by remember { mutableStateOf<String?>(null) }
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-  val installed by store.installed.collectAsState(initial = emptyList())
+  val installed by store.installed.collectAsStateWithLifecycle(initialValue = emptyList())
   val installedCount = installed.size
   var requestedIds by remember { mutableStateOf<Set<Int>?>(null) }
   LaunchedEffect(installed) {

@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
@@ -99,9 +99,13 @@ class WidgetConfigureActivity : ComponentActivity() {
       val size = WidgetSizing.forWidgetCapture(manager, widgetId)
       setContent {
         val themeChoice by
-          graph.preferencesStore.themeChoice.collectAsState(initial = ThemeChoice.Default)
+          graph.preferencesStore.themeChoice.collectAsStateWithLifecycle(
+            initialValue = ThemeChoice.Default,
+          )
         val darkPref by
-          graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
+          graph.preferencesStore.darkMode.collectAsStateWithLifecycle(
+            initialValue = DarkModePref.Follow,
+          )
         TerrazzoTheme(themeChoice, darkPref) {
           // Previews an edit in the widget's own style: a card's style override is keyed by its
           // whole config, so a renamed card would otherwise lose it until saved.

@@ -25,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -38,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import ee.schimke.ha.client.design.DesignOption
@@ -86,11 +86,11 @@ fun CardStyleSheet(
 ) {
   val context = LocalContext.current
   val store = remember(context) { CardDesignOverrideStore.of(context) }
-  val overrides by store.overrides.collectAsState()
+  val overrides by store.overrides.collectAsStateWithLifecycle()
   val scope = rememberCoroutineScope()
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  val installed by SkinStore.of(context).installed.collectAsState()
-  val installedStyles by CardStyleStore.of(context).installed.collectAsState()
+  val installed by SkinStore.of(context).installed.collectAsStateWithLifecycle()
+  val installedStyles by CardStyleStore.of(context).installed.collectAsStateWithLifecycle()
   // No WorkManager in a preview (Robolectric doesn't initialise it): nothing is installing.
   val inPreview = LocalInspectionMode.current
   val installs by
@@ -98,7 +98,7 @@ fun CardStyleSheet(
         if (inPreview) flowOf(emptyList())
         else WorkManager.getInstance(context).getWorkInfosByTagFlow(SkinInstallWorker.TAG)
       }
-      .collectAsState(initial = emptyList())
+      .collectAsStateWithLifecycle(initialValue = emptyList())
   val dashboardStyle = LocalCardStyle.current
   val cardStyle = overrides.forCard(card)?.cardStyle?.let(HaUberTheme::byId) ?: dashboardStyle
   val designs =
@@ -171,7 +171,7 @@ fun CardStyleSheet(
 @Composable
 fun rememberStudioDesignKey(card: CardConfig, snapshot: HaSnapshot): DesignKey? {
   val context = LocalContext.current
-  val overrides by CardDesignOverrideStore.of(context).overrides.collectAsState()
+  val overrides by CardDesignOverrideStore.of(context).overrides.collectAsStateWithLifecycle()
   val cardStyle =
     overrides.forCard(card)?.cardStyle?.let(HaUberTheme::byId) ?: LocalCardStyle.current
   val style = LocalThemeStyle.current
@@ -195,7 +195,8 @@ private fun rememberCardDesignOptions(
   dark: Boolean,
 ): List<DesignOption> {
   val context = LocalContext.current
-  val serverUrl = CardDesignPreload.designs.collectAsState().value?.loadedFor?.serverUrl
+  val serverUrl =
+    CardDesignPreload.designs.collectAsStateWithLifecycle().value?.loadedFor?.serverUrl
   val options by
     produceState(emptyList<DesignOption>(), card, snapshot, cardStyle, style, dark, serverUrl) {
       if (serverUrl.isNullOrBlank()) return@produceState

@@ -3,10 +3,10 @@ package ee.schimke.terrazzo.dashboard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
@@ -82,7 +82,9 @@ fun rememberSelectedDashboardListState(
 ): State<DashboardListState> {
   val rawState = rememberDashboardListState(session, refresh)
   val selectionState =
-    LocalTerrazzoGraph.current.preferencesStore.selectedDashboardUrls.collectAsState(initial = null)
+    LocalTerrazzoGraph.current.preferencesStore.selectedDashboardUrls.collectAsStateWithLifecycle(
+      initialValue = null,
+    )
   return remember(rawState, selectionState) {
     derivedStateOf { applyDashboardSelection(rawState.value, selectionState.value) }
   }

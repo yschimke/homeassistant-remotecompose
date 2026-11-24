@@ -11,7 +11,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -25,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.design.cardFingerprint
@@ -346,12 +346,32 @@ private fun AuthenticatedShell(
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
 
-  var screen by rememberSaveable { mutableStateOf(AppScreen.Dashboards) }
+  val backStack =
+    rememberSaveable(
+      saver =
+        androidx.compose.runtime.saveable.listSaver(
+          save = { list -> list.map { it.name } },
+          restore = { names ->
+            androidx.compose.runtime.mutableStateListOf<AppScreen>().apply {
+              addAll(names.mapNotNull { runCatching { AppScreen.valueOf(it) }.getOrNull() })
+              if (isEmpty()) add(AppScreen.Dashboards)
+            }
+          },
+        ),
+    ) {
+      androidx.compose.runtime.mutableStateListOf(AppScreen.Dashboards)
+    }
+  val navigateTo: (AppScreen) -> Unit = { target ->
+    if (backStack.lastOrNull() != target) backStack.add(target)
+  }
+  val navigateBack: () -> Unit = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
 
   // A widget's more-info or navigate tap opens on the dashboard, whichever screen was showing.
-  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  val widgetOpen by WidgetOpenRequests.requests.collectAsStateWithLifecycle()
   LaunchedEffect(widgetOpen) {
-    if (widgetOpen != null && screen != AppScreen.ChooseDashboards) screen = AppScreen.Dashboards
+    if (widgetOpen != null && backStack.lastOrNull() != AppScreen.ChooseDashboards) {
+      while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+    }
   }
 
   // Snapshot of the persisted selection at the moment the user
@@ -364,17 +384,6 @@ private fun AuthenticatedShell(
   var selectionInitial by remember { mutableStateOf<Set<String>?>(null) }
   var selectionInitialResolved by remember { mutableStateOf(false) }
 
-  // Screens opened from Settings (dashboard management, logs, sync diagnostics) return to it;
-  // everything else returns to the dashboard.
-  val navigateBack: () -> Unit = {
-    screen =
-      when (screen) {
-        AppScreen.SyncDiagnostics,
-        AppScreen.Logs,
-        AppScreen.ChooseDashboards -> AppScreen.Settings
-        else -> AppScreen.Dashboards
-      }
-  }
   // Demo mode has a curated dashboard set: nothing to choose.
   val manageDashboards: (() -> Unit)? =
     if (session is DemoHaSession) null
@@ -385,55 +394,55 @@ private fun AuthenticatedShell(
           selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
           selectionInitialResolved = true
         }
-        screen = AppScreen.ChooseDashboards
+        navigateTo(AppScreen.ChooseDashboards)
       }
     }
-  BackHandler(enabled = screen != AppScreen.Dashboards, onBack = navigateBack)
 
-  TerrazzoNavigation(screen, onBack = navigateBack) { destination ->
+  TerrazzoNavigation(backStack, onBack = navigateBack) { destination ->
     when (destination) {
       AppScreen.Dashboards ->
         DashboardsRoot(
           session = session,
           initialDashboard = initialDashboard,
-          onOpenSettings = { screen = AppScreen.Settings },
-          onOpenWidgets = { screen = AppScreen.Widgets },
-          onOpenRoom = { screen = AppScreen.Room },
+          onOpenSettings = { navigateTo(AppScreen.Settings) },
+          onOpenWidgets = { navigateTo(AppScreen.Widgets) },
+          onOpenRoom = { navigateTo(AppScreen.Room) },
           onSignOut = onSignOut,
         )
       AppScreen.Settings -> {
-        val wearReady by graph.wearSyncManager.wearableAvailable.collectAsState()
+        val wearReady by graph.wearSyncManager.wearableAvailable.collectAsStateWithLifecycle()
         SettingsScreen(
           session = session,
-          onBack = { screen = AppScreen.Dashboards },
+          onBack = navigateBack,
           onManageDashboards = manageDashboards,
-          onOpenLogs = { screen = AppScreen.Logs },
+          onOpenLogs = { navigateTo(AppScreen.Logs) },
           onOpenSyncDiagnostics =
             if (wearReady) {
-              { screen = AppScreen.SyncDiagnostics }
+              { navigateTo(AppScreen.SyncDiagnostics) }
             } else null,
         )
       }
-      AppScreen.Widgets -> WidgetsScreen(onBack = { screen = AppScreen.Dashboards })
+      AppScreen.Widgets -> WidgetsScreen(onBack = navigateBack)
       AppScreen.SyncDiagnostics -> {
-        val streaming by graph.wearSyncManager.streamActive.collectAsState()
+        val streaming by graph.wearSyncManager.streamActive.collectAsStateWithLifecycle()
         ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
           statsStore = app.syncStats,
           streamActive = streaming,
-          onBack = { screen = AppScreen.Settings },
+          onBack = navigateBack,
         )
       }
-      AppScreen.Logs ->
-        ee.schimke.terrazzo.logs.LogsScreen(onBack = { screen = AppScreen.Settings })
+      AppScreen.Logs -> ee.schimke.terrazzo.logs.LogsScreen(onBack = navigateBack)
       AppScreen.Room -> {
         // The same lock the dashboard's top bar and Settings set: locked shows, doesn't send.
         val permanentWrite by
-          graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
-        val sessionWrite by graph.sessionWriteMode.writeMode.collectAsState()
+          graph.preferencesStore.permanentWriteMode.collectAsStateWithLifecycle(
+            initialValue = false,
+          )
+        val sessionWrite by graph.sessionWriteMode.writeMode.collectAsStateWithLifecycle()
         ee.schimke.terrazzo.room.RoomScreen(
           session = session,
           readOnly = !(sessionWrite ?: permanentWrite),
-          onBack = { screen = AppScreen.Dashboards },
+          onBack = navigateBack,
         )
       }
       AppScreen.ChooseDashboards -> {
@@ -449,7 +458,7 @@ private fun AuthenticatedShell(
             state = DashboardListState.Loading,
             initialSelection = null,
             onConfirm = {},
-            onBack = { screen = AppScreen.Settings },
+            onBack = navigateBack,
             title = "Manage dashboards",
           )
         } else {
@@ -458,9 +467,9 @@ private fun AuthenticatedShell(
             initialSelection = selectionInitial,
             onConfirm = { urls ->
               scope.launch { graph.preferencesStore.setSelectedDashboardUrls(urls) }
-              screen = AppScreen.Settings
+              navigateBack()
             },
-            onBack = { screen = AppScreen.Settings },
+            onBack = navigateBack,
             title = "Manage dashboards",
           )
         }
@@ -501,8 +510,9 @@ private fun DashboardsRoot(
   //   - `sessionWriteMode` is a process-scoped override the chip writes
   //     to. Null means "no override yet" — fall back to the permanent
   //     setting, which on a fresh cold start is the read-only default.
-  val permanentWrite by graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
-  val sessionWrite by graph.sessionWriteMode.writeMode.collectAsState()
+  val permanentWrite by
+    graph.preferencesStore.permanentWriteMode.collectAsStateWithLifecycle(initialValue = false)
+  val sessionWrite by graph.sessionWriteMode.writeMode.collectAsStateWithLifecycle()
   val writeMode = sessionWrite ?: permanentWrite
   val readOnly = !writeMode
   var installPending by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
@@ -524,13 +534,17 @@ private fun DashboardsRoot(
   var agentSessions by remember { mutableStateOf<AgentSessionsTarget?>(null) }
   var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
-    graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
+    graph.preferencesStore.designServerUrl.collectAsStateWithLifecycle(
+      initialValue = "https://ha.coo.ee/designs/v1",
+    )
   // "Ask your agent" and "Plan a card" are offered only while an AI agent is connected (Settings →
   // Designers), on the server Card Studio talks to.
   val agentServer = studioServer.ifBlank { "https://ha.coo.ee" }
   val agentConnected = rememberAgentConnected(agentServer)
-  val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
-  val privateDesignServer by graph.preferencesStore.privateDesignServer.collectAsState(initial = "")
+  val designToken by
+    graph.preferencesStore.designToken.collectAsStateWithLifecycle(initialValue = "")
+  val privateDesignServer by
+    graph.preferencesStore.privateDesignServer.collectAsStateWithLifecycle(initialValue = "")
   // This Home Assistant's own design server, when the one it found is this session's.
   val homeDesignServer =
     remember(session, privateDesignServer) {
@@ -545,7 +559,9 @@ private fun DashboardsRoot(
         }
     }
   val studioDefaults by
-    graph.preferencesStore.cardStudioDefaults.collectAsState(initial = null as String?)
+    graph.preferencesStore.cardStudioDefaults.collectAsStateWithLifecycle(
+      initialValue = null as String?,
+    )
   val designSignIn = rememberDesignSignIn()
   val openedValue = opened
 
@@ -560,7 +576,7 @@ private fun DashboardsRoot(
   // A widget's tap opens on a dashboard ([DashboardViewScreen] opens it): back out of the card
   // screens over it. A widget made from a dashboard's card opens that dashboard, where the card is;
   // one this instance doesn't show (another instance's, or no longer listed) opens where it is.
-  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  val widgetOpen by WidgetOpenRequests.requests.collectAsStateWithLifecycle()
   LaunchedEffect(widgetOpen, dashboards) {
     val target = widgetOpen ?: return@LaunchedEffect
     historyTarget = null
@@ -588,7 +604,7 @@ private fun DashboardsRoot(
   val installOnWatch = wearInstallPrompts(snackbars)
   val lifecycleOwner = LocalLifecycleOwner.current
   val activity = LocalActivity.current
-  val notifications by session.notifications.collectAsState()
+  val notifications by session.notifications.collectAsStateWithLifecycle()
 
   // Snackbar pop on arrival: remember the ids we've already announced, per instance and across
   // launches ([SeenNotifications]), so a refetch or the next cold start doesn't re-fire them. The
@@ -1009,7 +1025,8 @@ private fun DashboardsRoot(
     // Read as the sheet opens, so an agent connected since the dashboard opened counts.
     val agentForCard = rememberAgentConnected(agentServer)
     // Settings → Designers can offer the studio with no agent too.
-    val studioEntry by graph.preferencesStore.cardStudioEntry.collectAsState(initial = false)
+    val studioEntry by
+      graph.preferencesStore.cardStudioEntry.collectAsStateWithLifecycle(initialValue = false)
     CardActionsSheet(
       baseUrl = session.baseUrl,
       dashboardUrlPath = dashboardUrlPath,

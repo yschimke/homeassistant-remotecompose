@@ -14,13 +14,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
@@ -36,8 +36,8 @@ import kotlinx.coroutines.launch
 internal fun rememberPinRows(): PinRows {
   val pinStore = LocalTerrazzoGraph.current.pinStore
   val scope = rememberCoroutineScope()
-  val cards by pinStore.cards.collectAsState(initial = emptyList())
-  val sections by pinStore.sections.collectAsState(initial = emptyList())
+  val cards by pinStore.cards.collectAsStateWithLifecycle(initialValue = emptyList())
+  val sections by pinStore.sections.collectAsStateWithLifecycle(initialValue = emptyList())
   val items: List<PinRowItem> =
     remember(cards, sections) {
       buildList {

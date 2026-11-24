@@ -1,7 +1,8 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package ee.schimke.terrazzo.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -86,7 +87,12 @@ fun TerrazzoTheme(
     LocalIsDarkTheme provides dark,
     LocalCardStyle provides cardStyle,
   ) {
-    MaterialTheme(colorScheme = colors, typography = typography, content = content)
+    androidx.compose.material3.MaterialExpressiveTheme(
+      colorScheme = colors,
+      typography = typography,
+      motionScheme = androidx.compose.material3.MotionScheme.expressive(),
+      content = content,
+    )
   }
 }
 

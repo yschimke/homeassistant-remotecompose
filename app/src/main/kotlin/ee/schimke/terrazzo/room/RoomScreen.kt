@@ -12,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -24,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -64,9 +64,9 @@ import kotlinx.coroutines.launch
 fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
   val prefs = LocalTerrazzoGraph.current.preferencesStore
   val scope = rememberCoroutineScope()
-  val picked by prefs.roomPicked.collectAsState(initial = null)
-  val tracker by prefs.roomTracker.collectAsState(initial = null)
-  val pinsEncoded by prefs.roomPins.collectAsState(initial = null)
+  val picked by prefs.roomPicked.collectAsStateWithLifecycle(initialValue = null)
+  val tracker by prefs.roomTracker.collectAsStateWithLifecycle(initialValue = null)
+  val pinsEncoded by prefs.roomPins.collectAsStateWithLifecycle(initialValue = null)
   val allPins = remember(pinsEncoded) { decodeRoomPins(pinsEncoded) }
   val pins = remember(allPins, session.baseUrl) { allPins.filter { it.baseUrl == session.baseUrl } }
   // The pinned control the user stands nearest, while the spatial room finds pins' places.
@@ -74,7 +74,7 @@ fun RoomScreen(session: HaSession, readOnly: Boolean, onBack: () -> Unit) {
 
   val loaded = rememberRoomData(session)
   val polled = rememberPolledSnapshot(session)
-  val liveState by session.liveStates.collectAsState()
+  val liveState by session.liveStates.collectAsStateWithLifecycle()
   val live = liveState
   // The loaded snapshot (polled, for a session that asks to be: demo mode) keeps the instance's
   // metadata, the temperature unit among it; live states replace its states as they arrive.

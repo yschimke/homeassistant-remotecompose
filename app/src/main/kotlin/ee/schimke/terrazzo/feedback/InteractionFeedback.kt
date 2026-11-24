@@ -10,11 +10,11 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.ui.LocalCardStyle
@@ -112,8 +112,8 @@ fun rememberInteractionFeedback(): InteractionFeedback {
   val context = LocalContext.current
   val view = LocalView.current
   val prefs = LocalTerrazzoGraph.current.preferencesStore
-  val haptics = prefs.haptics.collectAsState(initial = true)
-  val sounds = prefs.interfaceSounds.collectAsState(initial = false)
+  val haptics = prefs.haptics.collectAsStateWithLifecycle(initialValue = true)
+  val sounds = prefs.interfaceSounds.collectAsStateWithLifecycle(initialValue = false)
   val voice = rememberUpdatedState(LocalCardStyle.current.soundVoice())
   val feedback =
     remember(context, view) {

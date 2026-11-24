@@ -4,13 +4,13 @@ import android.content.Context
 import android.os.Trace
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.ha.client.design.DesignsById
 import ee.schimke.ha.client.design.UsageSource
 import ee.schimke.ha.client.design.privateDesignServerUrl
@@ -243,7 +243,7 @@ internal const val DESIGN_PRELOAD_WAIT_MS = 1_500L
  */
 @Composable
 fun rememberPreloadedCardDesigns(): CardDesigns? {
-  val preloaded by CardDesignPreload.designs.collectAsState()
+  val preloaded by CardDesignPreload.designs.collectAsStateWithLifecycle()
   if (LocalInspectionMode.current) return preloaded ?: CardDesigns()
   var waitedOut by remember { mutableStateOf(false) }
   LaunchedEffect(Unit) {

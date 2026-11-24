@@ -4,12 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.ha.client.dashboard.AgentEdits
 import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardAgent
@@ -38,8 +38,8 @@ internal fun rememberPhoneAgentEdits(
   dashboardAgent: Boolean = false,
 ): PhoneAgentEdits? {
   val designServer by
-    LocalTerrazzoGraph.current.preferencesStore.designServerUrl.collectAsState(
-      initial = "https://ha.coo.ee",
+    LocalTerrazzoGraph.current.preferencesStore.designServerUrl.collectAsStateWithLifecycle(
+      initialValue = "https://ha.coo.ee",
     )
   val relayServer = designServer.ifBlank { "https://ha.coo.ee" }
   val cloudEdits: CloudDashboardAgentEdits? =
