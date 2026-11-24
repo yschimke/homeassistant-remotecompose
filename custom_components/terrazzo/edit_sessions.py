@@ -43,6 +43,15 @@ class Conflict(SessionError):
 
 
 REMOTE_COMPOSE_CARD = "custom:remote-compose-card"
+# Shown in refusals so an agent can fix a draft in one more try, not several.
+REMOTE_COMPOSE_EXAMPLE = (
+    '{"type": "custom:remote-compose-card", "card": {"type": "tile", "entity": "<entity id>"}, '
+    '"design_id": "<id from find_designs>"}'
+)
+DRAFT_EXAMPLE = (
+    '{"views": [{"title": "Home", "path": "home", "type": "sections", "sections": '
+    '[{"type": "grid", "cards": [{"type": "tile", "entity": "<entity id>"}]}]}]}'
+)
 
 
 def referenced_entities(config):
@@ -83,6 +92,23 @@ def _validate_remote_compose_cards(config):
     def visit(node):
         if isinstance(node, dict):
             if node.get("type") == REMOTE_COMPOSE_CARD:
+                card = node.get("card")
+                if not isinstance(card, dict) or not isinstance(card.get("type"), str) or not card["type"].strip():
+                    raise SessionError(
+                        "custom:remote-compose-card wraps a Home Assistant card: give it "
+                        f"{REMOTE_COMPOSE_EXAMPLE}"
+                    )
+                if "entities" in node:
+                    raise SessionError(
+                        "custom:remote-compose-card has no entities: put the main entity in its card, "
+                        "and map a design's contract inputs with bindings (and buttons with actions)"
+                    )
+                given = [key for key in ("design_id", "design", "template_url") if node.get(key) is not None]
+                if len(given) > 1:
+                    raise SessionError("custom:remote-compose-card takes one of design_id, design or template_url")
+                design_id = node.get("design_id")
+                if design_id is not None and (not isinstance(design_id, str) or not design_id.strip()):
+                    raise SessionError("custom:remote-compose-card design_id must be a design id from find_designs")
                 device_id = node.get("device_id")
                 if device_id is not None and (not isinstance(device_id, str) or not device_id.strip()):
                     raise SessionError("custom:remote-compose-card device_id must be a non-empty string")
@@ -123,7 +149,7 @@ def validate_draft(config, entity_exists):
         raise SessionError("A draft is a dashboard config: a JSON object with a views list")
     views = config.get("views")
     if not isinstance(views, list) or not all(isinstance(view, dict) for view in views):
-        raise SessionError("A draft needs a views list of objects")
+        raise SessionError(f"A draft needs a views list of objects, e.g. {DRAFT_EXAMPLE}")
     if len(json.dumps(config, default=str)) > MAX_DRAFT_BYTES:
         raise SessionError(f"A draft may be at most {MAX_DRAFT_BYTES // 1024} KB")
     _validate_remote_compose_cards(config)

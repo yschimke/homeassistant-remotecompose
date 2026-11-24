@@ -66,7 +66,13 @@ class FakeHome:
 
     async def start_edit_session(self, url_path, request):
         self.started = (url_path, request)
-        return {'session_id': 's1', 'url_path': url_path, 'request': request, 'status': 'open'}
+        return {'session_id': 's1', 'url_path': url_path, 'request': request, 'status': 'open',
+                'dashboard': {'views': []}}
+
+    async def start_new_dashboard(self, title, request):
+        self.started_new = (title, request)
+        return {'session_id': 's2', 'url_path': 'new', 'request': request, 'status': 'open',
+                'dashboard': {'views': []}}
 
     async def edit_session(self, session_id):
         if session_id != 's1':
@@ -197,6 +203,27 @@ class McpProtocolTest(unittest.TestCase):
         self.assertEqual(home.submitted, ('s1', config, 'Garden'))
         self.assertTrue(call(home, 'submit_draft', {'session_id': 's1', 'config': '{"views": []}'})['isError'])
 
+    def test_submit_draft_without_a_session_opens_one_and_drafts_in_one_call(self):
+        home = FakeHome()
+        config = {'views': [{'cards': []}]}
+        result = call(home, 'submit_draft', {'config': config, 'url_path': 'garden', 'summary': 'Soil'})
+        self.assertEqual(result['structuredContent']['session_id'], 's1')
+        self.assertEqual(result['structuredContent']['draft_id'], 'd1')
+        self.assertEqual(home.started, ('garden', 'Soil'))  # The summary stands in for a request.
+        self.assertEqual(home.submitted, ('s1', config, 'Soil'))
+        new = call(home, 'submit_draft', {'config': config, 'new_dashboard_title': 'Garden', 'request': 'A garden'})
+        self.assertEqual(new['structuredContent']['session_id'], 's2')
+        self.assertEqual(home.started_new, ('Garden', 'A garden'))
+
+        async def refuse(session_id, config, summary):
+            raise mcp.ToolError('The draft names entities this home doesn\'t have: light.nope')
+        home.submit_draft = refuse
+        failed = call(home, 'submit_draft', {'config': config})
+        self.assertTrue(failed['isError'])
+        self.assertIn('s1', failed['content'][0]['text'])  # Retry in the session it opened.
+        schema = next(t for t in mcp.TOOLS if t['name'] == 'submit_draft')['inputSchema']
+        self.assertEqual(schema['required'], ['config'])
+
     def test_find_designs_lists_device_designs_then_class_designs_as_ready_cards(self):
         result = call(FakeHome(), 'find_designs', {'entity_id': 'cover.garage_door'})['structuredContent']
         self.assertEqual([d['design_id'] for d in result['designs']], ['user:ratgdo', 'pack:garage-door-controls-skeuomorphic'])
@@ -267,6 +294,52 @@ class McpProtocolTest(unittest.TestCase):
             ['sensor_operation_state', 'sensor_remaining_program_time', 'binary_sensor_door'],
         )
         self.assertEqual(found[0]['actions'], ['start', 'eco_50', 'auto'])
+
+    def test_find_designs_waives_the_integration_when_the_brand_and_model_match(self):
+        index = {'designs': [{
+            'designId': 'pack:bosch-dishwasher', 'cardType': 'tile', 'title': 'Bosch dishwasher',
+            'device': {'integration': 'home_connect', 'manufacturer': 'Bosch', 'model': 'Serie 4*'},
+        }, {
+            'designId': 'pack:bosch-native', 'cardType': 'tile',
+            'device': {'integration': 'mqtt', 'manufacturer': 'Bosch', 'model': 'Serie 4*'},
+        }]}
+        entity = {'entity_id': 'switch.dishwasher', 'state': 'off', 'attributes': {}}
+        bridged = {'integration': 'mqtt', 'manufacturer': 'Bosch', 'model': 'Serie 4 Dishwasher'}
+        found = mcp.find_designs(index, entity, bridged)
+        # Both fit; the one naming the device's own integration ranks first.
+        self.assertEqual([d['design_id'] for d in found], ['pack:bosch-native', 'pack:bosch-dishwasher'])
+        # Without a model the integration still decides.
+        self.assertFalse(mcp.design_matches({'integration': 'home_connect', 'manufacturer': 'Bosch'}, bridged))
+
+    def test_find_designs_searches_by_words_for_entities_without_a_device(self):
+        home = FakeHome()
+        home.entities.append(entity('input_boolean.dishwasher_running', 'Dishwasher running'))
+        home.index['designs'].append({
+            'designId': 'pack:bosch-dishwasher-fascia', 'cardType': 'tile', 'domain': 'sensor',
+            'title': 'Bosch Dishwasher · Front Fascia', 'inputs': ['sensor_operation_state'],
+            'device': {'integration': 'home_connect', 'manufacturer': 'Bosch'},
+        })
+        alone = call(home, 'find_designs', {'entity_id': 'input_boolean.dishwasher_running'})['structuredContent']
+        self.assertEqual(alone['designs'], [])
+        self.assertIn('query', alone['next'])
+        # A helper finds a design for another domain by words: its card's entity is left to fill.
+        both = call(home, 'find_designs', {'entity_id': 'input_boolean.dishwasher_running', 'query': 'dishwasher'})
+        helper = both['structuredContent']['designs']
+        self.assertEqual([d['design_id'] for d in helper], ['pack:bosch-dishwasher-fascia'])
+        self.assertEqual(helper[0]['config']['card'], {'type': 'tile'})
+        self.assertIn('bindings', both['structuredContent']['next'])
+        found = call(home, 'find_designs', {'query': 'bosch DISHWASHER'})['structuredContent']
+        self.assertEqual([d['design_id'] for d in found['designs']], ['pack:bosch-dishwasher-fascia'])
+        design = found['designs'][0]
+        self.assertEqual(design['domain'], 'sensor')
+        self.assertEqual(design['inputs'], ['sensor_operation_state'])
+        self.assertEqual(design['config']['card'], {'type': 'tile'})
+        # With an entity, query results are bound to it after the device's own designs.
+        garage = call(home, 'find_designs', {'entity_id': 'cover.garage_door', 'query': 'wall console'})
+        self.assertEqual([d['design_id'] for d in garage['structuredContent']['designs']],
+                         ['user:ratgdo', 'pack:garage-door-controls-skeuomorphic'])
+        self.assertTrue(call(home, 'find_designs', {})['isError'])
+        self.assertTrue(call(home, 'find_designs', {'query': '  '})['isError'])
 
     def test_edit_tools_never_claim_to_save(self):
         # An agent submits drafts; only a person applies them.

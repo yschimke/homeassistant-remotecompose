@@ -147,7 +147,10 @@ def _visible_session(hass, user, session_id):
     return edits, session
 
 
-async def async_start(hass, user, url_path, request, scope=None):
+async def async_start(hass, user, url_path, request, scope=None, answered=False):
+    """Opens an edit session. [answered] when an agent opens it with a tool (MCP or a conversation
+    turn): that agent answers it, so the dashboard agent doesn't start a competing first turn on
+    it (`EditSessions.assistant_pending`); a note the person leaves later still gets one."""
     edits = edits_of(hass)
     if isinstance(scope, dict) and scope.get("kind") == edit_sessions.NEW_DASHBOARD:
         clean = edit_sessions.new_dashboard_scope(scope.get("title"), scope.get("icon"))
@@ -161,6 +164,8 @@ async def async_start(hass, user, url_path, request, scope=None):
     else:
         baseline = await current_config(dashboard_for(hass, user, url_path), url_path)
         session = edits.sessions.create(url_path or None, request, baseline, user.id, _now(), scope)
+    if answered:
+        session["assistant"] = {"handled": 0, "error": None}
     edits.changed(session)
     return session
 

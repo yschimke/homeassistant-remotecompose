@@ -102,6 +102,15 @@ class SessionRulesTest(unittest.TestCase):
         sessions.discard(session['id'], 'u', 7)
         self.assertFalse(pending(session))  # A discarded session owes nothing.
 
+    def test_a_session_an_agent_opened_with_a_tool_gets_no_competing_first_turn(self):
+        # edits.async_start(answered=True) marks it so as it is created.
+        sessions = es.EditSessions()
+        session = sessions.create('p', 'Hi', BASELINE, 'u', 1)
+        session['assistant'] = {'handled': 0, 'error': None}
+        self.assertFalse(es.EditSessions.assistant_pending(session))
+        sessions.note(session['id'], 'Bigger, please', 'u', 2)
+        self.assertTrue(es.EditSessions.assistant_pending(session))
+
     def test_a_session_an_outside_agent_already_answered_gets_no_greeting(self):
         sessions = es.EditSessions()
         session = sessions.create('p', 'Hi', BASELINE, 'u', 1)
@@ -171,6 +180,14 @@ class SetupTest(unittest.TestCase):
         self.assertIn('Garden agent', reply)
         self.assertIn('"Terrazzo dashboards"', reply)
         self.assertIn('This agent', turn.no_tools_reply(None))
+
+    def test_a_busy_provider_is_retried_but_an_unavailable_entity_is_not(self):
+        for text in ('503 UNAVAILABLE. The model is overloaded.', 'Error talking to API: 429',
+                     'RESOURCE_EXHAUSTED', 'Rate limit reached', 'Service Unavailable'):
+            self.assertTrue(turn.transient(text), text)
+        for text in ('light.kitchen is unavailable', 'Invalid API key', '', None, 'id 15030'):
+            self.assertFalse(turn.transient(text), text)
+        self.assertTrue(turn.RETRY_DELAYS and all(d > 0 for d in turn.RETRY_DELAYS))
 
     def test_every_setup_repair_has_words(self):
         import json

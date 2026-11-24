@@ -361,6 +361,17 @@ class DraftNoticeTest(unittest.TestCase):
         self.assertEqual(draft['config'], disabled_actions)
         self.assertEqual(es.referenced_entities(disabled_actions), {'sensor.soil'})
 
+        for wrapper, refusal in (
+            ({'design_id': 'pack:x'}, 'wraps a Home Assistant card'),
+            ({'card': {'entity': 'sensor.soil'}}, 'wraps a Home Assistant card'),
+            ({'card': {'type': 'tile', 'entity': 'sensor.soil'}, 'entities': {'door': 'sensor.soil'}}, 'bindings'),
+            ({'card': {'type': 'tile', 'entity': 'sensor.soil'}, 'design_id': 'a', 'template_url': '/t.rc'}, 'one of'),
+            ({'card': {'type': 'tile', 'entity': 'sensor.soil'}, 'design_id': ' '}, 'find_designs'),
+        ):
+            bad = {'views': [{'cards': [{'type': 'custom:remote-compose-card', **wrapper}]}]}
+            with self.assertRaisesRegex(es.SessionError, refusal):
+                sessions.submit(session['id'], bad, '', known.__contains__, 'agent', 115)
+
         bad_action = {
             'views': [{'cards': [{
                 'type': 'custom:remote-compose-card',

@@ -11,9 +11,29 @@ answering, what the session may change, and the exchange so far. Each turn is a 
 Home Assistant forgets one after a few idle minutes, and an edit session lasts days, so the recap
 here is the agent's memory, not Home Assistant's.
 """
+import re
+
 # A recap past this is cut from the oldest end: the newest exchange matters most.
 MAX_RECAP_CHARS = 12_000
 MAX_REPLY_CHARS = 2000
+
+# Seconds to wait before each retry of a turn the provider refused for want of capacity.
+RETRY_DELAYS = (2, 5, 12)
+# A provider's words for a passing lack of capacity: HTTP 503 / 429 and gRPC UNAVAILABLE /
+# RESOURCE_EXHAUSTED (Gemini), overloaded (Anthropic), rate limits (OpenAI). Not a bare
+# "unavailable": an entity can be unavailable too.
+_TRANSIENT = re.compile(
+    r"\b(503|429)\b|service unavailable|resource[_ ]exhausted|overloaded"
+    r"|rate.?limit|too many requests|try again later",
+    re.IGNORECASE,
+)
+
+
+def transient(text):
+    """Whether a provider's failure [text] reads as a passing lack of capacity: worth the same turn
+    again after a pause."""
+    return bool(_TRANSIENT.search(str(text or "")))
+
 
 # What the chat's status line says while the agent calls a tool.
 STATUS = {

@@ -216,13 +216,30 @@ Assistant's storage:
      refuse YAML dashboards.
    - The MCP server adds `list_edit_sessions`, `start_edit_session`, `get_edit_session` (the request, the dashboard as
      it is now, the latest draft and the notes), `get_card_guide` and `submit_draft`. No tool
-     saves.
+     saves. `start_edit_session` returns the dashboard it starts from (`dashboard`), and
+     `submit_draft` without a `session_id` opens the session itself (`url_path` or
+     `new_dashboard_title`, and `request`) and returns its `session_id`, so an edit takes two
+     calls, not four. A session an agent opens with a tool is marked answered as it is created
+     (`edits.async_start(answered=True)`), so the dashboard agent doesn't run a competing first
+     turn on it; a note the person leaves later still gets one. In the dashboard agent's own
+     turn, a `submit_draft` naming no session or dashboard goes to that turn's session
+     (`llm_tools.for_turn`).
    - `find_designs` (MCP server and the built-in assistant): harc's card designs made for an
      entity's device or kind, best fit first, each with the card config that draws it (a
      `custom:remote-compose-card` wrapping a Home Assistant card, with its `design_id`). The
      integration matches the entity's registry facts and `device_class` against the public
      library's suggestion index (`ha.coo.ee/designs/v1/suggestions.json`, cached ten minutes) as
-     the card picker does; the request carries nothing about the home. The card guide's
+     the card picker does; the request carries nothing about the home. A design that names a
+     manufacturer and model as well as an integration still fits a device bridged another way
+     (MQTT, Matter, Zigbee2MQTT, a simulator), ranked below one naming the device's own
+     integration. `query` (with or without `entity_id`) also searches the designs' titles, ids
+     and device fields by word, for helper entities with no device: those configs leave the
+     card's entity out when the design is for another domain, to bind through `bindings`.
+     `submit_draft` refuses a `custom:remote-compose-card` without a `card` to wrap, with an
+     `entities` key (bindings map a design's inputs), or with more than one of `design_id`,
+     `design` and `template_url`; its refusals carry a minimal example. A turn the provider
+     refuses for want of capacity (503 / 429 / `RESOURCE_EXHAUSTED`) is run again after 2, 5 and
+     12 s, unless it already drafted (`agent_turn.transient`). The card guide's
      `remote_compose` rules tell the agent to call it when a person wants a device drawn as the
      real thing, and never to invent a `design_id`.
    - Tests: `home-assistant/test/edit_sessions_test.py` and `mcp_test.py` with plain data and a
