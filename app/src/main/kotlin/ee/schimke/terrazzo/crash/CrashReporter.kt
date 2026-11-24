@@ -1,7 +1,10 @@
 package ee.schimke.terrazzo.crash
 
 import android.content.Context
-import ee.schimke.terrazzo.BuildConfig
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import ee.schimke.terrazzo.core.di.AppScope
 
 /**
  * Thin seam over an external crash-reporting backend so the rest of the app never imports Firebase
@@ -10,9 +13,10 @@ import ee.schimke.terrazzo.BuildConfig
  *
  * Which backend exists is a build-time decision, `-Pharc.crashReporter=<auto|firebase|sentry|none>`
  * (see `app/build.gradle.kts`): only the selected implementation and its dependencies are compiled
- * in, and its name lands in [BuildConfig.CRASH_REPORTER]. The default `auto` picks Firebase when a
- * Crashlytics key (`google-services.json`) is present and otherwise [NoopCrashReporter]. A Sentry
- * backend is tracked in https://github.com/yschimke/homeassistant-remotecompose/issues/1001.
+ * in, and Metro binds the compiled backend into [AppScope] via `@ContributesBinding` (`replaces`
+ * [NoopCrashReporter]). The default `auto` picks Firebase when a Crashlytics key
+ * (`google-services.json`) is present and otherwise [NoopCrashReporter]. A Sentry backend is
+ * tracked in https://github.com/yschimke/homeassistant-remotecompose/issues/1001.
  */
 interface CrashReporter {
   /**
@@ -34,34 +38,13 @@ interface CrashReporter {
    * digits and underscores, at most 40 characters.
    */
   fun logEvent(name: String, params: Map<String, Any>) = Unit
-
-  companion object {
-    /**
-     * The reporter for the backend this app was built with ([BuildConfig.CRASH_REPORTER]), or a
-     * no-op when none was selected.
-     *
-     * Each backend lives in its own source set, compiled in only when selected, so it's resolved
-     * reflectively here to keep `src/main` free of any compile-time SDK dependency. A backend
-     * missing from the classpath falls back to the no-op rather than failing app start.
-     */
-    fun create(): CrashReporter = create(BuildConfig.CRASH_REPORTER)
-
-    internal fun create(backend: String): CrashReporter {
-      val className = backendClasses[backend] ?: return NoopCrashReporter
-      return runCatching {
-          Class.forName(className).getDeclaredConstructor().newInstance() as CrashReporter
-        }
-        .getOrDefault(NoopCrashReporter)
-    }
-
-    /** Backend name (the `harc.crashReporter` value) to its implementation class. */
-    private val backendClasses =
-      mapOf("firebase" to "ee.schimke.terrazzo.crash.FirebaseCrashReporter")
-  }
 }
 
 /** Used when no backend is selected; the LogStore sink stands alone. */
-internal object NoopCrashReporter : CrashReporter {
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
+@Inject
+class NoopCrashReporter : CrashReporter {
   override fun install(context: Context) = Unit
 
   override fun recordCrash(throwable: Throwable) = Unit

@@ -26,7 +26,9 @@ class SkinInstallWorker(context: Context, params: WorkerParameters) :
     val installed =
       installAndSelect(
         install = { Skins.install(applicationContext, choice, designId) == Skins.Installed.Yes },
-        select = { CardDesignOverrideStore.of(applicationContext).setDesign(cardKey, designId) },
+        select = {
+          applicationContext.terrazzoGraph().cardDesignOverrideStore.setDesign(cardKey, designId)
+        },
         refresh = { WidgetRefreshScheduler(applicationContext).refreshAllNow() },
       )
     return if (installed) Result.success() else Result.failure()

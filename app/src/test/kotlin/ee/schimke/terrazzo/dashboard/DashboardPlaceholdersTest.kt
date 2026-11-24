@@ -76,16 +76,27 @@ class DashboardPlaceholdersTest {
       }
     compose.setContent {
       var planning by remember { mutableStateOf(false) }
-      MaterialTheme {
-        Surface(Modifier.fillMaxSize()) {
-          Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
-            DashboardPlaceholders(
-              session,
-              "garden",
-              planning = planning,
-              onPlanningDone = { planning = false },
-            )
-            SectionHeading(title = "Garden", onLongClick = { planning = true })
+      val context = androidx.compose.ui.platform.LocalContext.current.applicationContext
+      val graph =
+        remember(context) {
+          dev.zacsweers.metro
+            .createGraphFactory<ee.schimke.terrazzo.previews.PreviewAppGraph.Factory>()
+            .create(context)
+        }
+      androidx.compose.runtime.CompositionLocalProvider(
+        ee.schimke.terrazzo.LocalTerrazzoGraph provides graph,
+      ) {
+        MaterialTheme {
+          Surface(Modifier.fillMaxSize()) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
+              DashboardPlaceholders(
+                session,
+                "garden",
+                planning = planning,
+                onPlanningDone = { planning = false },
+              )
+              SectionHeading(title = "Garden", onLongClick = { planning = true })
+            }
           }
         }
       }

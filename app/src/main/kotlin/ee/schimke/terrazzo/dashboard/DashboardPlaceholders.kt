@@ -44,7 +44,7 @@ internal fun DashboardPlaceholders(
   onPlanningDone: () -> Unit,
 ) {
   val context = LocalContext.current
-  val store = remember(context) { PlaceholderCardStore.of(context) }
+  val store = ee.schimke.terrazzo.LocalTerrazzoGraph.current.placeholderCardStore
   val scope = rememberCoroutineScope()
   var cards by
     remember(session.baseUrl, urlPath) { mutableStateOf<List<PlaceholderCard>>(emptyList()) }

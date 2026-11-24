@@ -1,6 +1,5 @@
 package ee.schimke.terrazzo.core.di
 
-import android.content.Context
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import ee.schimke.terrazzo.core.auth.HaAuthService
@@ -51,10 +50,6 @@ interface TerrazzoGraph {
   val remoteUrlStore: RemoteUrlStore
   val logStore: LogStore
   val sessionWriteMode: SessionWriteMode
-
-  fun interface Factory {
-    fun create(context: Context): TerrazzoGraph
-  }
 }
 
 /**

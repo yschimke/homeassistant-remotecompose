@@ -1,7 +1,10 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.design.DesignEntry
+import ee.schimke.terrazzo.core.di.AppScope
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +25,13 @@ import kotlinx.serialization.json.Json
  * weren't. The library's skins ([DesignEntry.libraryDesignId]) come with every sync, so they are
  * always installed. Writes replace the file atomically.
  */
+@SingleIn(AppScope::class)
 class SkinStore internal constructor(private val file: File) {
+  @Inject
+  constructor(
+    context: Context,
+  ) : this(File(context.applicationContext.filesDir, "terrazzo/designs/skins.json"))
+
   private val _installed = MutableStateFlow(read())
 
   /** One update and its write at a time, so the file always ends up with the newest set. */
@@ -74,16 +83,5 @@ class SkinStore internal constructor(private val file: File) {
 
   companion object {
     private val json = Json { ignoreUnknownKeys = true }
-
-    @Volatile private var instance: SkinStore? = null
-
-    /** The app's one store. */
-    fun of(context: Context): SkinStore =
-      instance
-        ?: synchronized(this) {
-          instance
-            ?: SkinStore(File(context.applicationContext.filesDir, "terrazzo/designs/skins.json"))
-              .also { instance = it }
-        }
   }
 }

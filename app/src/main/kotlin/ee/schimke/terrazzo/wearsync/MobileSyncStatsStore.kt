@@ -3,6 +3,9 @@ package ee.schimke.terrazzo.wearsync
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.wearsync.proto.SyncStats
 import ee.schimke.terrazzo.wearsync.proto.protoBufSerializer
 import kotlinx.coroutines.flow.Flow
@@ -12,9 +15,10 @@ import kotlinx.coroutines.flow.first
  * Phone-only Proto DataStore for [SyncStats]. The diagnostics screen reads from this and the
  * [MobileWearSyncManager] writes to it on every data-layer event so users can sanity-check sync
  * chatter. Bounded ring (`recentSendMs`) gives a rolling-window send frequency without persisting
- * unbounded history. Held by [TerrazzoApplication] (not the Metro graph — keeps the wear-sync
- * feature contained to this module).
+ * unbounded history.
  */
+@SingleIn(AppScope::class)
+@Inject
 class MobileSyncStatsStore(private val context: Context) {
 
   val flow: Flow<SyncStats>

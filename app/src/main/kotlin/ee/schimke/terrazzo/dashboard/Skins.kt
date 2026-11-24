@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.dashboard
 import android.content.Context
 import ee.schimke.ha.client.design.RefreshResult
 import ee.schimke.ha.design.DesignEntry
+import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -53,7 +54,7 @@ object Skins {
         }
       }
     if (!complete) return Installed.Failed
-    SkinStore.of(context).add(designId)
+    context.terrazzoGraph().skinStore.add(designId)
     CardDesignSync.stored()
     return Installed.Yes
   }
@@ -65,7 +66,7 @@ object Skins {
    */
   suspend fun uninstall(context: Context, designId: String) {
     if (isLibrary(designId)) return
-    SkinStore.of(context).remove(designId)
+    context.terrazzoGraph().skinStore.remove(designId)
     CardDesignSync.stored()
   }
 }

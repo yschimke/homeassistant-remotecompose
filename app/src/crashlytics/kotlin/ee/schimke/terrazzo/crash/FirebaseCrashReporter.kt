@@ -5,20 +5,26 @@ import android.os.Bundle
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import ee.schimke.terrazzo.core.di.AppScope
 
 /**
  * Firebase Crashlytics-backed [CrashReporter]. Compiled into the app only when it's the selected
  * backend (`harc.crashReporter=firebase`, or `auto` with `google-services.json` present) — see the
  * selector in `app/build.gradle.kts`.
  *
- * Instantiated reflectively by [CrashReporter.create], so it must keep a no-arg constructor and
- * stay `internal` to this source set.
+ * Replaces [NoopCrashReporter] in [AppScope] at compile time via Metro `@ContributesBinding`.
  *
  * [install] initialises Firebase, which registers Crashlytics' own uncaught-exception handler —
  * that's what reports *fatal* crashes. [recordCrash] is only for the non-fatal / handled exceptions
  * the app forwards explicitly.
  */
-internal class FirebaseCrashReporter : CrashReporter {
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class, replaces = [NoopCrashReporter::class])
+@Inject
+class FirebaseCrashReporter : CrashReporter {
   private val crashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
   @Volatile private var analytics: FirebaseAnalytics? = null
 

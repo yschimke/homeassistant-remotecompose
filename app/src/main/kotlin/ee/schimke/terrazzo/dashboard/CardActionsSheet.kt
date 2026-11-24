@@ -104,9 +104,7 @@ fun CardActionsSheet(
     graph.widgetStore.installed.collectAsStateWithLifecycle(initialValue = emptyList())
   // Drop rows for widgets removed from the launcher before the count can disable "Add".
   LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
-  val overrides by
-    remember(context) { CardDesignOverrideStore.of(context).overrides }
-      .collectAsStateWithLifecycle()
+  val overrides by graph.cardDesignOverrideStore.overrides.collectAsStateWithLifecycle()
   val entityIds = remember(card) { card.historyEntityIds() }
   val cameras = remember(card) { cameraEntities(card) }
   val liveCameras by LiveCameras.live.collectAsStateWithLifecycle()

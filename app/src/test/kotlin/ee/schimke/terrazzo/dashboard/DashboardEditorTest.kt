@@ -64,20 +64,31 @@ class DashboardEditorTest {
       DashboardEditSession(original) { expected, replacement -> writes += expected to replacement }
     compose.setContent {
       val scope = rememberCoroutineScope()
-      MaterialTheme {
-        Surface(Modifier.fillMaxSize()) {
-          DashboardEditor(
-            session = session,
-            edits = edits,
-            title = "Climate",
-            snapshot = session.dashboardNow("climate").second,
-            snackbars = SnackbarHostState(),
-            onBack = {},
-            onSaved = {},
-            launch = { block -> scope.launch { block() } },
-            integration = IntegrationStatus.Installed,
-            onAskAgent = onAskAgent,
-          )
+      val context = androidx.compose.ui.platform.LocalContext.current.applicationContext
+      val graph =
+        androidx.compose.runtime.remember(context) {
+          dev.zacsweers.metro
+            .createGraphFactory<ee.schimke.terrazzo.previews.PreviewAppGraph.Factory>()
+            .create(context)
+        }
+      androidx.compose.runtime.CompositionLocalProvider(
+        ee.schimke.terrazzo.LocalTerrazzoGraph provides graph,
+      ) {
+        MaterialTheme {
+          Surface(Modifier.fillMaxSize()) {
+            DashboardEditor(
+              session = session,
+              edits = edits,
+              title = "Climate",
+              snapshot = session.dashboardNow("climate").second,
+              snackbars = SnackbarHostState(),
+              onBack = {},
+              onSaved = {},
+              launch = { block -> scope.launch { block() } },
+              integration = IntegrationStatus.Installed,
+              onAskAgent = onAskAgent,
+            )
+          }
         }
       }
     }

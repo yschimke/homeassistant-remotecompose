@@ -85,12 +85,13 @@ fun CardStyleSheet(
   onDismiss: () -> Unit,
 ) {
   val context = LocalContext.current
-  val store = remember(context) { CardDesignOverrideStore.of(context) }
+  val graph = ee.schimke.terrazzo.LocalTerrazzoGraph.current
+  val store = graph.cardDesignOverrideStore
   val overrides by store.overrides.collectAsStateWithLifecycle()
   val scope = rememberCoroutineScope()
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-  val installed by SkinStore.of(context).installed.collectAsStateWithLifecycle()
-  val installedStyles by CardStyleStore.of(context).installed.collectAsStateWithLifecycle()
+  val installed by graph.skinStore.installed.collectAsStateWithLifecycle()
+  val installedStyles by graph.cardStyleStore.installed.collectAsStateWithLifecycle()
   // No WorkManager in a preview (Robolectric doesn't initialise it): nothing is installing.
   val inPreview = LocalInspectionMode.current
   val installs by
@@ -170,8 +171,9 @@ fun CardStyleSheet(
  */
 @Composable
 fun rememberStudioDesignKey(card: CardConfig, snapshot: HaSnapshot): DesignKey? {
-  val context = LocalContext.current
-  val overrides by CardDesignOverrideStore.of(context).overrides.collectAsStateWithLifecycle()
+  val overrides by
+    ee.schimke.terrazzo.LocalTerrazzoGraph.current.cardDesignOverrideStore.overrides
+      .collectAsStateWithLifecycle()
   val cardStyle =
     overrides.forCard(card)?.cardStyle?.let(HaUberTheme::byId) ?: LocalCardStyle.current
   val style = LocalThemeStyle.current

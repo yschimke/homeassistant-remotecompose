@@ -24,7 +24,6 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.DESIGN_PRELOAD_WAIT_MS
-import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.shared.LocalDeveloperMode
 import ee.schimke.terrazzo.shared.promptForPlayStoreUpgrade
 import ee.schimke.terrazzo.ui.AndroidImeHost
@@ -119,12 +118,7 @@ class MainActivity : ComponentActivity() {
       },
     )
 
-    // The runtime graph is always an [AppGraph] (constructed via
-    // Metro in TerrazzoApplication). Surface its image stack so
-    // dashboard / widget code reuses the singleton ImageLoader +
-    // DiskCache instead of building per-screen instances pointing
-    // at the same cache directory.
-    val imageStack = (graph as AppGraph).haImageStack
+    val imageStack = graph.haImageStack
 
     holdFirstDrawForCardDesigns()
 

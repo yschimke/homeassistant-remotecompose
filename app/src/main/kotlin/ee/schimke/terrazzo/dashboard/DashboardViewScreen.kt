@@ -660,8 +660,7 @@ private fun DashboardList(
     // The cards compose from here on: the launch is fully drawn (`timeToFullDisplayMs`).
     ReportDrawn()
     val cardDesignOverrides by
-      remember(context) { CardDesignOverrideStore.of(context).overrides }
-        .collectAsStateWithLifecycle()
+      LocalTerrazzoGraph.current.cardDesignOverrideStore.overrides.collectAsStateWithLifecycle()
     // Every card's template resolved in the background, top to bottom, so a card scrolling on
     // screen for the first time finds it ready rather than capturing, folding and decoding it on
     // that frame. Snapshot changes don't restart it: they move values, which arrive as bindings.
@@ -1671,10 +1670,8 @@ internal fun StudioCardPreview(session: HaSession, card: CardConfig, snapshot: H
  */
 @Composable
 internal fun DashboardCardPreview(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
-  val context = androidx.compose.ui.platform.LocalContext.current
   val overrides by
-    remember(context) { CardDesignOverrideStore.of(context).overrides }
-      .collectAsStateWithLifecycle()
+    LocalTerrazzoGraph.current.cardDesignOverrideStore.overrides.collectAsStateWithLifecycle()
   val designs = rememberPreloadedCardDesigns() ?: CardDesigns()
   CompositionLocalProvider(
     LocalCardDesigns provides designs,
@@ -1799,9 +1796,10 @@ private fun CardSlot(
       }
     }
   // A card with no template draws through its converter, or not at all: count which, once per card.
+  val cardUsage = LocalTerrazzoGraph.current.cardUsage
   LaunchedEffect(designCard, template == null, cardStyle) {
     if (template == null) {
-      CardUsage.record(
+      cardUsage.record(
         designCard,
         cardType = designCard.type,
         variant = ee.schimke.ha.design.DesignKey.DEFAULT_VARIANT,
