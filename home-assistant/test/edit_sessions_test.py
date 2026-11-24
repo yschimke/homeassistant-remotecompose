@@ -372,6 +372,25 @@ class DraftNoticeTest(unittest.TestCase):
             with self.assertRaisesRegex(es.SessionError, refusal):
                 sessions.submit(session['id'], bad, '', known.__contains__, 'agent', 115)
 
+        # A binding object names its entity as `entity`; entity_id (the common slip) binds nothing.
+        for binding, refusal in (
+            ({'entity_id': 'sensor.not_in_home'}, r'uses entity_id: write \{"entity": "sensor.not_in_home"\}'),
+            ({'attribute': 'temperature'}, 'bindings.status needs an entity'),
+            ({'entity': ' '}, 'bindings.status needs an entity'),
+            ({'entity': 7}, 'bindings.status needs an entity'),
+        ):
+            bad = {'views': [{'cards': [{'type': 'custom:remote-compose-card',
+                                         'card': {'type': 'tile', 'entity': 'sensor.soil'},
+                                         'bindings': {'status': binding}}]}]}
+            with self.assertRaisesRegex(es.SessionError, refusal):
+                sessions.submit(session['id'], bad, '', known.__contains__, 'agent', 115)
+        # The object form still goes through the unknown-entity check.
+        unknown_object = {'views': [{'cards': [{'type': 'custom:remote-compose-card',
+                                                'card': {'type': 'tile', 'entity': 'sensor.soil'},
+                                                'bindings': {'status': {'entity': 'sensor.gone', 'suffix': '%'}}}]}]}
+        with self.assertRaisesRegex(es.SessionError, 'sensor.gone'):
+            sessions.submit(session['id'], unknown_object, '', known.__contains__, 'agent', 115)
+
         bad_action = {
             'views': [{'cards': [{
                 'type': 'custom:remote-compose-card',

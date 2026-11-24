@@ -86,6 +86,23 @@ def referenced_entities(config):
     return found
 
 
+def _check_binding_object(key, value):
+    """A `bindings` object names its entity as `entity` (the card reads nothing else), with the
+    optional formatting keys beside it. The common slip, `entity_id`, would bind nothing and skip
+    the check that the entity exists, so it is refused with the fix."""
+    entity = value.get("entity")
+    if "entity_id" in value and entity is None:
+        raise SessionError(
+            f"custom:remote-compose-card bindings.{key} uses entity_id: write "
+            f'{{"entity": "{value["entity_id"]}"}} or just "{value["entity_id"]}"'
+        )
+    if not isinstance(entity, str) or not entity.strip():
+        raise SessionError(
+            f"custom:remote-compose-card bindings.{key} needs an entity: an entity id string, or "
+            '{"entity": "<entity id>", ...} with attribute, format, prefix, suffix and the like'
+        )
+
+
 def _validate_remote_compose_cards(config):
     """Validate optional `bindings`, `actions`, and `device_id` fields on
     `custom:remote-compose-card` entries in [config]."""
@@ -135,6 +152,8 @@ def _validate_remote_compose_cards(config):
                             raise SessionError(
                                 f"custom:remote-compose-card {field}.{key} must be an entity id or object"
                             )
+                        if field == "bindings" and isinstance(value, dict):
+                            _check_binding_object(key, value)
             for value in node.values():
                 visit(value)
         elif isinstance(node, list):

@@ -255,6 +255,13 @@ Assistant's storage:
      integration. `query` (with or without `entity_id`) also searches the designs' titles, ids
      and device fields by word, for helper entities with no device: those configs leave the
      card's entity out when the design is for another domain, to bind through `bindings`.
+     A pack's styles (its titles' "Device · Variant") are listed one device at a time, each
+     device's best before any device's second style, each result naming its `variant` and the
+     device's `other_variants`; `variant` narrows a search to one style, and `more` counts what
+     the five-result limit left out. Each suggestion's contract `inputs` and `actions` come from
+     the design server, which reads them off the template's named values
+     (`DeviceSuggestions.contract`). A `bindings` object must name its entity as `entity`: an
+     `entity_id` one is refused with the fix, since it would bind nothing.
      `submit_draft` refuses a `custom:remote-compose-card` without a `card` to wrap, with an
      `entities` key (bindings map a design's inputs), or with more than one of `design_id`,
      `design` and `template_url`; its refusals carry a minimal example. A turn the provider

@@ -106,9 +106,12 @@ private constructor(
       .toSet()
 
   /** What a template binds and how big it is: decoded once per blob. */
-  fun decode(design: LibraryDesign): DecodedTemplate =
-    decoded.getOrPut(design.entry.sha256) {
-      val bytes = blob(design.entry.sha256) ?: return@getOrPut DecodedTemplate.Missing
+  fun decode(design: LibraryDesign): DecodedTemplate = decode(design.entry)
+
+  /** [entry]'s template, decoded once per blob ([decode]). */
+  fun decode(entry: DesignEntry): DecodedTemplate =
+    decoded.getOrPut(entry.sha256) {
+      val bytes = blob(entry.sha256) ?: return@getOrPut DecodedTemplate.Missing
       runCatching {
         val document = RcDocumentCodec.decode(bytes, RcWireLimits())
         DecodedTemplate(

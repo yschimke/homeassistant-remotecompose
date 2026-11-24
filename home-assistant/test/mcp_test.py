@@ -353,6 +353,32 @@ class McpProtocolTest(unittest.TestCase):
         self.assertTrue(call(home, 'find_designs', {})['isError'])
         self.assertTrue(call(home, 'find_designs', {'query': '  '})['isError'])
 
+    def test_a_broad_search_shows_each_device_before_a_second_style_and_variant_narrows_it(self):
+        home = FakeHome()
+        styles = ('Default', 'Front Fascia', 'Glasses', 'XR Repair', 'XREAL AR')
+        home.index['designs'] = [
+            {'designId': f'pack:{device}-{style.lower().replace(" ", "-")}', 'cardType': 'tile',
+             'title': f'{name} · {style}', 'device': {'manufacturer': name.split()[0]}}
+            for device, name in (('kettle', 'Fellow Kettle'), ('lamp', 'Ikea Lamp'), ('dw', 'Bosch Dishwasher'))
+            for style in styles
+        ]
+        broad = call(home, 'find_designs', {'query': 'pack'})['structuredContent']
+        # One of each device first, then their second styles: not five kettle variants.
+        self.assertEqual([d['design_id'] for d in broad['designs'][:3]],
+                         ['pack:kettle-default', 'pack:lamp-default', 'pack:dw-default'])
+        self.assertEqual(broad['more'], 10)
+        self.assertIn('variant', broad['next'])
+        first = broad['designs'][0]
+        self.assertEqual(first['variant'], 'Default')
+        self.assertEqual(first['other_variants'], ['Front Fascia', 'Glasses', 'XR Repair', 'XREAL AR'])
+        fascia = call(home, 'find_designs', {'query': 'pack', 'variant': 'fascia'})['structuredContent']
+        self.assertEqual([d['design_id'] for d in fascia['designs']],
+                         ['pack:kettle-front-fascia', 'pack:lamp-front-fascia', 'pack:dw-front-fascia'])
+        self.assertEqual(fascia['more'], 0)
+        self.assertEqual(fascia['variant'], 'fascia')
+        # An untitled design is its own device, in the default style.
+        self.assertEqual(mcp.design_group({'designId': 'user:Wall'}), ('user:wall', None))
+
     def test_edit_tools_never_claim_to_save(self):
         # An agent submits drafts; only a person applies them.
         names = {tool['name'] for tool in mcp.TOOLS}

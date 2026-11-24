@@ -203,7 +203,9 @@ EDIT_TOOLS = [
             "contract `inputs` (and optional `actions`) so you can bind helper/virtual entities with "
             "`bindings:` (and `actions:` / `device_id:`). Give entity_id, query, or both: query "
             "searches designs by words in their title, id and device (e.g. dishwasher, bosch), for "
-            "helper or bridged entities whose device isn't the one a design names. An empty list "
+            "helper or bridged entities whose device isn't the one a design names. Results list "
+            "different devices before a second style of one; each says its variant and the "
+            "device's other variants, and variant narrows a search to one style. An empty list "
             "means Home Assistant's own cards are the right choice."
         ),
         "inputSchema": {
@@ -216,6 +218,11 @@ EDIT_TOOLS = [
                 "query": {
                     "type": "string",
                     "description": "Words to search designs for, e.g. dishwasher or bosch.",
+                },
+                "variant": {
+                    "type": "string",
+                    "description": "Only designs in this style, e.g. fascia, default or glasses: "
+                    "the variants a result lists.",
                 },
             },
             "additionalProperties": False,
@@ -506,7 +513,38 @@ def design_text_matches(design, query):
     return all(word in text for word in words)
 
 
-def find_designs(index, entity=None, device=None, limit=DESIGN_LIMIT, query=None):
+def design_group(design):
+    """The device a design draws, and its style: a pack titled "Bosch Dishwasher · Front Fascia"
+    is the Bosch Dishwasher, in the Front Fascia variant. An untitled design is its own group."""
+    title = design.get("title")
+    if isinstance(title, str) and " · " in title:
+        device, variant = title.rsplit(" · ", 1)
+        return device.strip().casefold(), variant.strip()
+    return design["designId"].casefold(), None
+
+
+def _variant_matches(design, wanted):
+    words = (wanted or "").casefold().split()
+    if not words:
+        return True
+    text = f"{design_group(design)[1] or 'default'} {design['designId']}".casefold()
+    return all(word in text for word in words)
+
+
+def _by_device_first(designs):
+    """[designs] (best fit first) with each device's best design before any device's second:
+    a broad search shows every matching device instead of one device's five variants."""
+    groups = {}
+    for design in designs:
+        groups.setdefault(design_group(design)[0], []).append(design)
+    out, round_ = [], 0
+    while len(out) < len(designs):
+        out += [group[round_] for group in groups.values() if round_ < len(group)]
+        round_ += 1
+    return out
+
+
+def find_designs(index, entity=None, device=None, limit=DESIGN_LIMIT, query=None, variant=None):
     """The designs in the library's suggestion [index] made for [entity]'s [device] or kind, best
     fit first (what the card picker suggests, remote-compose-card.js), then those whose words match
     [query]; each with its card config and any contract `inputs` / `actions` the pack declares.
@@ -532,8 +570,14 @@ def find_designs(index, entity=None, device=None, limit=DESIGN_LIMIT, query=None
             by_words.setdefault(key, design)
     ranked = sorted(by_device.values(), key=lambda d: -design_rank(d.get("device"), facts))
     ranked += [d for key, d in by_words.items() if key not in by_device]
+    variants = {}
+    for d in ranked:
+        group, style = design_group(d)
+        if style and style not in variants.setdefault(group, []):
+            variants[group].append(style)
+    ranked = _by_device_first([d for d in ranked if _variant_matches(d, variant)])
     out = []
-    for d in ranked[:limit]:
+    for d in ranked if limit is None else ranked[:limit]:
         card = {"type": d["cardType"]}
         fits = entity_id is not None and d.get("domain") in (None, domain)
         if fits:
@@ -547,6 +591,12 @@ def find_designs(index, entity=None, device=None, limit=DESIGN_LIMIT, query=None
         }
         if not fits and isinstance(d.get("domain"), str):
             item["domain"] = d["domain"]
+        group, style = design_group(d)
+        if style:
+            item["variant"] = style
+            others = [v for v in variants.get(group, []) if v != style]
+            if others:
+                item["other_variants"] = others
         inputs = _string_list(d, "inputs", "contractInputs", "contract_inputs")
         if inputs:
             item["inputs"] = inputs
@@ -695,7 +745,9 @@ async def call_tool(home, name, arguments):
         if index is None:
             raise ToolError("The card design library can't be reached right now; use Home Assistant's own cards")
         device = home.device_info(entity["entity_id"]) if entity else None
-        designs = find_designs(index, entity, device, query=query)
+        variant = _optional_text(arguments, "variant").strip()
+        found = find_designs(index, entity, device, limit=None, query=query, variant=variant)
+        designs = found[:DESIGN_LIMIT]
         if designs and all("entity" in d["config"]["card"] for d in designs):
             next_step = "Use a design's config as a card in the draft."
         elif designs:
@@ -710,10 +762,17 @@ async def call_tool(home, name, arguments):
             )
         else:
             next_step = "No design matches: use Home Assistant's own cards. Don't invent a design_id."
+        if len(found) > len(designs):
+            next_step += (
+                f" {len(found) - len(designs)} more match: narrow query to one device, or pass "
+                "variant (a style the results list) to see that style for every device."
+            )
         return {
             "entity_id": entity["entity_id"] if entity else None,
             "query": query or None,
+            "variant": variant or None,
             "designs": designs,
+            "more": len(found) - len(designs),
             "next": next_step,
         }
     if name == "await_request":
