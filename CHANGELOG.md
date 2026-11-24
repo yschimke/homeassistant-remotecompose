@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.105](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.104...v0.1.105) (2026-11-24)
+
+
+### Features
+
+* adopt Wear Expressive motion and migrate sign-in and widget inputs to TextFieldState ([#1778](https://github.com/yschimke/homeassistant-remotecompose/issues/1778)) ([f4d83fa](https://github.com/yschimke/homeassistant-remotecompose/commit/f4d83fa6b3b64d99019040bf12210cb0d0ebdd3a))
+* dashboard agent reuses warm conversations, reads house notes, reports progress and can be cancelled ([#1789](https://github.com/yschimke/homeassistant-remotecompose/issues/1789)) ([8c992e2](https://github.com/yschimke/homeassistant-remotecompose/commit/8c992e247d0a83ba7f9c333e1a4705739d6d004a))
+* modernize Navigation 3 back stack, Material 3 Expressive host theme, and lifecycle collection ([#1767](https://github.com/yschimke/homeassistant-remotecompose/issues/1767)) ([7b596ba](https://github.com/yschimke/homeassistant-remotecompose/commit/7b596ba302696b21685b457c60000d11404ea787))
+
+
+### Bug Fixes
+
+* dashboard agent finds designs by word, drafts in fewer calls, retries busy providers ([#1775](https://github.com/yschimke/homeassistant-remotecompose/issues/1775)) ([a0caaf5](https://github.com/yschimke/homeassistant-remotecompose/commit/a0caaf556e2150cd92f8ac7f7445064b7c66a41f))
+* **deps:** update compose-ai-tools ([#1782](https://github.com/yschimke/homeassistant-remotecompose/issues/1782)) ([ce35d4f](https://github.com/yschimke/homeassistant-remotecompose/commit/ce35d4f0b9d12882633dba5367e702e9844eded0))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-contracts-bom to v3.47.0 ([#1780](https://github.com/yschimke/homeassistant-remotecompose/issues/1780)) ([9d57b5a](https://github.com/yschimke/homeassistant-remotecompose/commit/9d57b5a342325f53a1e36d28c67277e3711e5b65))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-daemon-bom to v3.29.1 ([#1779](https://github.com/yschimke/homeassistant-remotecompose/issues/1779)) ([c59fb7e](https://github.com/yschimke/homeassistant-remotecompose/commit/c59fb7eb959f5c7d53497f6f742befcd339bfb57))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.157.0 ([#1768](https://github.com/yschimke/homeassistant-remotecompose/issues/1768)) ([180fe6f](https://github.com/yschimke/homeassistant-remotecompose/commit/180fe6f989592de7651c6255e795ab6b626d9300))
+* dispatch widget DISABLED and RESTORED broadcasts off the main thread ([#1791](https://github.com/yschimke/homeassistant-remotecompose/issues/1791)) ([e8d9ce2](https://github.com/yschimke/homeassistant-remotecompose/commit/e8d9ce2d6b1a086f6b3530f83ac3031d25cf81f9))
+* **ha-cards-catalog:** declare card-surface as a builtin so the published templates validate ([#1787](https://github.com/yschimke/homeassistant-remotecompose/issues/1787)) ([c44cff6](https://github.com/yschimke/homeassistant-remotecompose/commit/c44cff6115b761169dbfd8eba00f4669e3cdab65))
+* hide the screen being navigated away from while it fades out ([#1786](https://github.com/yschimke/homeassistant-remotecompose/issues/1786)) ([119df7a](https://github.com/yschimke/homeassistant-remotecompose/commit/119df7a4731c0ec3097dc31ed8e2db6ff8b5d6b1))
+* leave a template's named colors out of a pack's contract inputs ([#1797](https://github.com/yschimke/homeassistant-remotecompose/issues/1797)) ([1a236db](https://github.com/yschimke/homeassistant-remotecompose/commit/1a236db3bcc02d2c9be19f3b11f061111f277f39))
+* preserve cancellation, use OkHttp on JVM, add WS keepalive, bound FCM wakes ([#1776](https://github.com/yschimke/homeassistant-remotecompose/issues/1776)) ([3d2599e](https://github.com/yschimke/homeassistant-remotecompose/commit/3d2599e9825fd8acf53af26ee625026ffaaeaee8))
+* refuse a one-call draft built from a stale dashboard read ([#1781](https://github.com/yschimke/homeassistant-remotecompose/issues/1781)) ([345796c](https://github.com/yschimke/homeassistant-remotecompose/commit/345796cd28d9b62a252af66037cd80747c6a92eb))
+* refuse entity_id bindings, group find_designs by device, and publish pack contracts ([#1796](https://github.com/yschimke/homeassistant-remotecompose/issues/1796)) ([68ba2da](https://github.com/yschimke/homeassistant-remotecompose/commit/68ba2dac6a6250455e12dfc619c981a016e1dfa0))
+
 ## [0.1.104](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.103...v0.1.104) (2026-11-24)
 
 
