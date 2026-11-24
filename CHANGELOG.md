@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.104](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.103...v0.1.104) (2026-11-24)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.156.0 ([#1764](https://github.com/yschimke/homeassistant-remotecompose/issues/1764)) ([fd1746f](https://github.com/yschimke/homeassistant-remotecompose/commit/fd1746ff2d43d9f181a618eb0d0ddeb64c14370c))
+* re-render actions attribute changes and sync panel view route ([#1761](https://github.com/yschimke/homeassistant-remotecompose/issues/1761)) ([e785746](https://github.com/yschimke/homeassistant-remotecompose/commit/e785746f8c528f470d25e7487f2449f375d69e74))
+
 ## [0.1.103](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.102...v0.1.103) (2026-11-23)
 
 
