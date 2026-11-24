@@ -1,16 +1,21 @@
 package ee.schimke.terrazzo.shared
 
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 
 /** Android-only destinations remain host-provided slots in the common navigation layer. */
@@ -53,6 +58,24 @@ fun TerrazzoNavigation(
         scaleOut(motionScheme.defaultSpatialSpec(), targetScale = 0.92f) +
           fadeOut(motionScheme.fastEffectsSpec())
     },
-    entryProvider = entryProvider { entry<AppScreen> { content(it) } },
+    entryProvider = entryProvider { entry<AppScreen> { HiddenWhileLeaving { content(it) } } },
   )
+}
+
+/**
+ * A [NavDisplay] entry, hidden from accessibility (and UI tests) while its transition takes it off
+ * screen. The outgoing and incoming entries are composed together for the length of the fade, so
+ * without this a screen reader, or a test looking for "Switch dashboard", meets both screens'
+ * copies of every control at once.
+ */
+@Composable
+fun HiddenWhileLeaving(content: @Composable () -> Unit) {
+  val leaving =
+    LocalNavAnimatedContentScope.current.transition.targetState != EnterExitState.Visible
+  Box(
+    modifier = if (leaving) Modifier.clearAndSetSemantics {} else Modifier,
+    propagateMinConstraints = true,
+  ) {
+    content()
+  }
 }
