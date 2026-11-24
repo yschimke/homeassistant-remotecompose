@@ -10,18 +10,21 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import ee.schimke.terrazzo.core.prefs.CardStylePref
-import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.flow.first
 
 /** Installs independently of Settings, selecting the style only once all its assets are ready. */
-class CardStyleInstallWorker(context: Context, params: WorkerParameters) :
-  CoroutineWorker(context, params) {
+class CardStyleInstallWorker
+@dev.zacsweers.metro.AssistedInject
+constructor(
+  @dev.zacsweers.metro.Assisted context: Context,
+  @dev.zacsweers.metro.Assisted params: WorkerParameters,
+  private val prefs: ee.schimke.terrazzo.core.prefs.PreferencesStore,
+) : CoroutineWorker(context, params) {
   override suspend fun doWork(): Result {
     val style =
       CardStylePref.entries.firstOrNull { it.id == inputData.getString(STYLE) }
         ?: return Result.failure()
-    val prefs = applicationContext.terrazzoGraph().preferencesStore
     val choice = CardDesignSync.choice(applicationContext, prefs).first()
     val installed =
       installAndSelect(
@@ -32,6 +35,16 @@ class CardStyleInstallWorker(context: Context, params: WorkerParameters) :
         refresh = { WidgetRefreshScheduler(applicationContext).refreshAllNow() },
       )
     return if (installed) Result.success() else Result.failure()
+  }
+
+  @dev.zacsweers.metro.AssistedFactory
+  @dev.zacsweers.metro.ContributesIntoMap(
+    ee.schimke.terrazzo.core.di.AppScope::class,
+    dev.zacsweers.metro.binding<ee.schimke.terrazzo.di.AssistedWorkerFactory>(),
+  )
+  @ee.schimke.terrazzo.di.WorkerKey(CardStyleInstallWorker::class)
+  fun interface Factory : ee.schimke.terrazzo.di.AssistedWorkerFactory {
+    override fun create(context: Context, params: WorkerParameters): CardStyleInstallWorker
   }
 
   companion object {

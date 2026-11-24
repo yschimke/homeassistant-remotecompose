@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
@@ -10,20 +11,26 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.android.ActivityKey
+import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
+import ee.schimke.terrazzo.core.cache.OfflineCache
+import ee.schimke.terrazzo.core.di.AppScope
+import ee.schimke.terrazzo.core.di.HaSessionFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.prefs.DarkModePref
+import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemeChoice
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.DESIGN_PRELOAD_WAIT_MS
+import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.shared.LocalDeveloperMode
 import ee.schimke.terrazzo.shared.promptForPlayStoreUpgrade
 import ee.schimke.terrazzo.ui.AndroidImeHost
@@ -32,15 +39,27 @@ import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.updateSystemBars
 import ee.schimke.terrazzo.widget.WidgetOpenRequests
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
-import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
 
-class MainActivity : ComponentActivity() {
+@ContributesIntoMap(AppScope::class, binding<Activity>())
+@ActivityKey(MainActivity::class)
+@Inject
+class MainActivity(
+  private val viewModelFactory: MetroViewModelFactory,
+  private val preferencesStore: PreferencesStore,
+  private val offlineCache: OfflineCache,
+  private val sessionFactory: HaSessionFactory,
+  private val widgetStore: WidgetStore,
+  private val haImageStack: HaImageStack,
+) : ComponentActivity() {
+  override val defaultViewModelProviderFactory: ViewModelProvider.Factory
+    get() = viewModelFactory
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     promptForPlayStoreUpgrade()
     if (BuildConfig.TEST_HOOKS) StartupHangWatchdog.arm()
-    val graph = (application as TerrazzoApplication).graph
+    val graph = terrazzoGraph()
 
     // Debug-only test hatch: when the launching Intent carries
     // `terrazzo.test.demo_mode=true` we flip the persisted
@@ -61,11 +80,11 @@ class MainActivity : ComponentActivity() {
     if (BuildConfig.TEST_HOOKS && intent?.getBooleanExtra(EXTRA_TEST_DEMO_MODE, false) == true) {
       val expandSections = intent.getBooleanExtra(EXTRA_TEST_EXPAND_SECTIONS, false)
       runBlocking {
-        graph.preferencesStore.setDemoMode(true)
-        graph.preferencesStore.clearLastViewedDashboard()
-        graph.preferencesStore.setCollapsedMode(!expandSections)
+        preferencesStore.setDemoMode(true)
+        preferencesStore.clearLastViewedDashboard()
+        preferencesStore.setCollapsedMode(!expandSections)
       }
-      graph.offlineCache.clearLastInstance()
+      offlineCache.clearLastInstance()
     }
 
     // Read the auto-launch dashboard pref synchronously so the
@@ -73,7 +92,7 @@ class MainActivity : ComponentActivity() {
     // (no picker flash). DataStore reads from a tiny preferences
     // file; the runBlocking cost is < 5 ms in practice — same
     // pattern as the test hatch above.
-    val initialDashboard = runBlocking { graph.preferencesStore.lastViewedDashboardNow() }
+    val initialDashboard = runBlocking { preferencesStore.lastViewedDashboardNow() }
     // A launcher widget's more-info or navigate tap (a warm start arrives in onNewIntent). Only on
     // a
     // fresh start: a recreated activity keeps its launch intent, already opened.
@@ -87,19 +106,7 @@ class MainActivity : ComponentActivity() {
     // snapshots — no spinner, no network roundtrip — then [resumeSession]
     // upgrades it to a live session once the access token is minted.
     val widgetScheduler = WidgetRefreshScheduler(applicationContext)
-    val sessionHolder =
-      ViewModelProvider.create(
-          this,
-          viewModelFactory {
-            initializer {
-              SessionHolder(
-                closeScope =
-                  ProcessLifecycleOwner.get().lifecycleScope +
-                    graph.logStore.coroutineExceptionHandler,
-              )
-            }
-          },
-        )[SessionHolder::class]
+    val sessionHolder = ViewModelProvider.create(this, viewModelFactory)[SessionHolder::class]
     // Demo mode needs no network, so its session is ready for the first composition too; seeding
     // null there painted the sign-in screen until the resume below swapped the demo session in.
     // Debug builds only: a session from an injected token, with no browser sign-in (see
@@ -109,36 +116,33 @@ class MainActivity : ComponentActivity() {
     sessionHolder.start(
       initial = {
         injected
-          ?: if (runBlocking { graph.preferencesStore.demoModeNow() })
-            graph.sessionFactory.createDemo()
-          else graph.offlineCache.lastInstance()?.let(graph.sessionFactory::createCachedOnly)
+          ?: if (runBlocking { preferencesStore.demoModeNow() }) sessionFactory.createDemo()
+          else offlineCache.lastInstance()?.let(sessionFactory::createCachedOnly)
       },
       resume = { initial ->
         if (injected == null) resumeSession(graph, widgetScheduler, sessionHolder, initial)
       },
     )
 
-    val imageStack = graph.haImageStack
-
     holdFirstDrawForCardDesigns()
 
     setContent {
       CompositionLocalProvider(
         LocalTerrazzoGraph provides graph,
-        LocalHaImageStack provides imageStack,
+        LocalHaImageStack provides haImageStack,
       ) {
         val themeChoice by
-          graph.preferencesStore.themeChoice.collectAsStateWithLifecycle(
+          preferencesStore.themeChoice.collectAsStateWithLifecycle(
             initialValue = ThemeChoice.Default,
           )
         val darkPref by
-          graph.preferencesStore.darkMode.collectAsStateWithLifecycle(
+          preferencesStore.darkMode.collectAsStateWithLifecycle(
             initialValue = DarkModePref.Follow,
           )
         // Developer mode (Settings → tap the version seven times) shows shared screens' power-user
         // parts, such as a card's settings as JSON.
         val developerMode by
-          graph.preferencesStore.developerMode.collectAsStateWithLifecycle(initialValue = false)
+          preferencesStore.developerMode.collectAsStateWithLifecycle(initialValue = false)
         TerrazzoTheme(themeChoice, darkPref) {
           val darkTheme = LocalIsDarkTheme.current
           SideEffect { updateSystemBars(darkTheme) }
@@ -163,7 +167,7 @@ class MainActivity : ComponentActivity() {
    * dashboard is: a tiny preferences file, and the dashboard opens on the card in its first frame.
    */
   private fun widgetEntry(widgetId: Int): WidgetStore.Entry? = runBlocking {
-    (application as TerrazzoApplication).graph.widgetStore.get(widgetId)
+    widgetStore.get(widgetId)
   }
 
   /**

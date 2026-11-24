@@ -332,6 +332,8 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.lifecycle.viewmodel)
+  implementation(libs.metrox.android)
+  implementation(libs.metrox.viewmodel)
   implementation(libs.androidx.work.runtime)
   // AppFunctions (`assistant/`): the service a permitted on-device agent calls. The compiler
   // generates the concrete service and its function XML asset.

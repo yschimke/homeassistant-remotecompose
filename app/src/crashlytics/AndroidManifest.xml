@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Merged only into builds with Firebase (see app/build.gradle.kts). -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application>
         <!-- Home Assistant notifications relayed through FCM while the app holds no websocket. -->
         <service
             android:name="ee.schimke.terrazzo.notify.TerrazzoMessagingService"
-            android:exported="false">
+            android:exported="false"
+            tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

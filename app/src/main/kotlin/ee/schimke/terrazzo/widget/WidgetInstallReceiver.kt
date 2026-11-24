@@ -17,7 +17,18 @@ import kotlinx.serialization.json.JsonObject
  * `EXTRA_APPWIDGET_ID`; we persist the mapping from that id → HA card config into [WidgetStore],
  * then nudge the provider to publish the first frame.
  */
-class WidgetInstallReceiver : BroadcastReceiver() {
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<BroadcastReceiver>(),
+)
+@dev.zacsweers.metrox.android.BroadcastReceiverKey
+class WidgetInstallReceiver() : BroadcastReceiver() {
+  private var injectedStore: WidgetStore? = null
+
+  @dev.zacsweers.metro.Inject
+  constructor(store: WidgetStore) : this() {
+    this.injectedStore = store
+  }
 
   override fun onReceive(context: Context, intent: Intent) {
     if (intent.action != ACTION_PIN_CONFIRMED) return
@@ -33,8 +44,7 @@ class WidgetInstallReceiver : BroadcastReceiver() {
     val cardType = intent.getStringExtra(EXTRA_CARD_TYPE) ?: return
     val cardJson = intent.getStringExtra(EXTRA_CARD_JSON) ?: return
     val card = CardConfig(type = cardType, raw = json.parseToJsonElement(cardJson) as JsonObject)
-
-    val store = context.terrazzoGraph().widgetStore
+    val store = injectedStore ?: context.terrazzoGraph().widgetStore
     runBlocking {
       // Reconcile against the launcher first so rows left behind by
       // widgets the user already removed don't count toward the cap

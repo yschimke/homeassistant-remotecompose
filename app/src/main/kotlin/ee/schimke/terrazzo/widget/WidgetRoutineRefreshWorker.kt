@@ -25,11 +25,18 @@ import kotlinx.coroutines.flow.first
  *
  * Scheduled while there is a widget to refresh ([sync]); it cancels itself once there is none.
  */
-class WidgetRoutineRefreshWorker(context: Context, params: WorkerParameters) :
-  CoroutineWorker(context, params) {
+class WidgetRoutineRefreshWorker
+@dev.zacsweers.metro.AssistedInject
+constructor(
+  @dev.zacsweers.metro.Assisted context: Context,
+  @dev.zacsweers.metro.Assisted params: WorkerParameters,
+  private val widgetStore: ee.schimke.terrazzo.core.widget.WidgetStore,
+  private val wearSyncManager: ee.schimke.terrazzo.core.wearsync.WearSyncManager,
+  private val mobileAppStore: ee.schimke.terrazzo.core.mobileapp.MobileAppStore,
+) : CoroutineWorker(context, params) {
 
   override suspend fun doWork(): Result {
-    val servers = servers(applicationContext)
+    val servers = servers(widgetStore, wearSyncManager, mobileAppStore)
     if (servers.isEmpty()) {
       cancel(applicationContext)
       return Result.success()
@@ -59,6 +66,16 @@ class WidgetRoutineRefreshWorker(context: Context, params: WorkerParameters) :
     return Result.success()
   }
 
+  @dev.zacsweers.metro.AssistedFactory
+  @dev.zacsweers.metro.ContributesIntoMap(
+    ee.schimke.terrazzo.core.di.AppScope::class,
+    dev.zacsweers.metro.binding<ee.schimke.terrazzo.di.AssistedWorkerFactory>(),
+  )
+  @ee.schimke.terrazzo.di.WorkerKey(WidgetRoutineRefreshWorker::class)
+  fun interface Factory : ee.schimke.terrazzo.di.AssistedWorkerFactory {
+    override fun create(context: Context, params: WorkerParameters): WidgetRoutineRefreshWorker
+  }
+
   companion object {
     private const val TAG = "WidgetRoutineRefresh"
     private const val WORK_NAME = "terrazzo.widgetRefresh.routine"
@@ -73,11 +90,18 @@ class WidgetRoutineRefreshWorker(context: Context, params: WorkerParameters) :
      */
     private suspend fun servers(context: Context): Set<String> {
       val graph = context.terrazzoGraph()
+      return servers(graph.widgetStore, graph.wearSyncManager, graph.mobileAppStore)
+    }
+
+    private suspend fun servers(
+      widgetStore: ee.schimke.terrazzo.core.widget.WidgetStore,
+      wearSyncManager: ee.schimke.terrazzo.core.wearsync.WearSyncManager,
+      mobileAppStore: ee.schimke.terrazzo.core.mobileapp.MobileAppStore,
+    ): Set<String> {
       val launcher =
-        graph.widgetStore.installed.first().map { it.baseUrl }.filterNot(DemoData::isDemo).toSet()
+        widgetStore.installed.first().map { it.baseUrl }.filterNot(DemoData::isDemo).toSet()
       val watch =
-        if (graph.wearSyncManager.hasPlacedWidgets()) graph.mobileAppStore.instances()
-        else emptyList()
+        if (wearSyncManager.hasPlacedWidgets()) mobileAppStore.instances() else emptyList()
       return launcher + watch
     }
 

@@ -33,15 +33,20 @@ import kotlinx.coroutines.runBlocking
  * while an entity is still moving, WorkManager retries up to [MAX_ATTEMPTS] times so the widget
  * doesn't stay stuck on `closing`.
  */
-class WidgetStateWorker(context: Context, params: WorkerParameters) :
-  CoroutineWorker(context, params) {
+class WidgetStateWorker
+@dev.zacsweers.metro.AssistedInject
+constructor(
+  @dev.zacsweers.metro.Assisted context: Context,
+  @dev.zacsweers.metro.Assisted params: WorkerParameters,
+  private val mobileAppStore: ee.schimke.terrazzo.core.mobileapp.MobileAppStore,
+  private val tokenVault: ee.schimke.terrazzo.core.auth.TokenVault,
+) : CoroutineWorker(context, params) {
 
   override suspend fun doWork(): Result {
-    val graph = applicationContext.terrazzoGraph()
     val webhookFromInput = inputData.getString(KEY_WEBHOOK_ID)
     val baseUrl =
       inputData.getString(KEY_BASE_URL)
-        ?: webhookFromInput?.let { graph.mobileAppStore.instanceForWebhook(it) }
+        ?: webhookFromInput?.let { mobileAppStore.instanceForWebhook(it) }
         ?: return Result.success()
     if (DemoData.isDemo(baseUrl)) return Result.success()
     val live = WidgetActionRunner.connectedAppSession(baseUrl)
@@ -52,10 +57,10 @@ class WidgetStateWorker(context: Context, params: WorkerParameters) :
       }
       return Result.success()
     }
-    if (WidgetActionRunner.newSessionFactory == null && graph.tokenVault.get(baseUrl) == null) {
+    if (WidgetActionRunner.newSessionFactory == null && tokenVault.get(baseUrl) == null) {
       return Result.success()
     }
-    val webhookId = webhookFromInput ?: graph.mobileAppStore.get(baseUrl)?.webhookId
+    val webhookId = webhookFromInput ?: mobileAppStore.get(baseUrl)?.webhookId
     val started = clock()
     var receivedSnapshot = false
     val outcome = runCatching {
@@ -101,6 +106,16 @@ class WidgetStateWorker(context: Context, params: WorkerParameters) :
       gaveUpAt[baseUrl] = clock()
       Result.success()
     }
+
+  @dev.zacsweers.metro.AssistedFactory
+  @dev.zacsweers.metro.ContributesIntoMap(
+    ee.schimke.terrazzo.core.di.AppScope::class,
+    dev.zacsweers.metro.binding<ee.schimke.terrazzo.di.AssistedWorkerFactory>(),
+  )
+  @ee.schimke.terrazzo.di.WorkerKey(WidgetStateWorker::class)
+  fun interface Factory : ee.schimke.terrazzo.di.AssistedWorkerFactory {
+    override fun create(context: Context, params: WorkerParameters): WidgetStateWorker
+  }
 
   companion object {
     private const val TAG = "WidgetStateWorker"

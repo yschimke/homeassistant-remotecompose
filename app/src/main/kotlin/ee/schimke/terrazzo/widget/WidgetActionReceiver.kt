@@ -23,7 +23,19 @@ import kotlinx.coroutines.launch
  * activity `PendingIntent`s, see `TerrazzoWidgetProvider`). Every action is also recorded for the
  * debug log.
  */
-class WidgetActionReceiver : BroadcastReceiver() {
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<BroadcastReceiver>(),
+)
+@dev.zacsweers.metrox.android.BroadcastReceiverKey
+class WidgetActionReceiver() : BroadcastReceiver() {
+  private var injectedLogStore: ee.schimke.terrazzo.core.logs.LogStore? = null
+
+  @dev.zacsweers.metro.Inject
+  constructor(logStore: ee.schimke.terrazzo.core.logs.LogStore) : this() {
+    this.injectedLogStore = logStore
+  }
+
   override fun onReceive(context: Context, intent: Intent) {
     if (intent.action != ACTION_WIDGET_ACTION) return
 
@@ -72,7 +84,8 @@ class WidgetActionReceiver : BroadcastReceiver() {
     }
 
     Log.i(TAG, "Decoded widget actionType=${action.javaClass.simpleName}")
-    recordAction(context, action)
+    val logStore = injectedLogStore ?: context.terrazzoGraph().logStore
+    recordAction(logStore, action)
     if (!WidgetActionRunner.runs(action)) return
     if (
       !trustedWidgetAction(action, fallbackPayload, intent.getStringExtra(EXTRA_RESOLVED_ACTION))
@@ -94,13 +107,10 @@ class WidgetActionReceiver : BroadcastReceiver() {
             !WidgetActionRunner.runsWithoutAsking(context.applicationContext, widgetId, call)
         ) {
           Log.w(TAG, "Refusing a high-risk control on widget $widgetId while controls are locked")
-          context
-            .terrazzoGraph()
-            .logStore
-            .recordLocalAction(
-              "Widget control refused: unlock controls in the app",
-              actionEntityId(call),
-            )
+          logStore.recordLocalAction(
+            "Widget control refused: unlock controls in the app",
+            actionEntityId(call),
+          )
           return@launch
         }
         WidgetActionRunner.run(context.applicationContext, widgetId, call)
@@ -110,7 +120,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
     }
   }
 
-  private fun recordAction(context: Context, action: HaAction) {
+  private fun recordAction(logStore: ee.schimke.terrazzo.core.logs.LogStore, action: HaAction) {
     val (summary, entityId) =
       when (action) {
         is HaAction.Toggle -> "Widget toggle" to action.entityId
@@ -126,7 +136,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
           "Widget set ${action.domain}.${action.service} ${action.field}" to action.entityId
         HaAction.None -> return
       }
-    context.terrazzoGraph().logStore.recordLocalAction(summary, entityId)
+    logStore.recordLocalAction(summary, entityId)
   }
 
   companion object {

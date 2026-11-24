@@ -31,6 +31,12 @@ import kotlinx.serialization.json.put
  *
  * An action with a `uri` never reaches here: it is an activity `PendingIntent` that opens it.
  */
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<BroadcastReceiver>(),
+)
+@dev.zacsweers.metrox.android.BroadcastReceiverKey(HaNotificationActionReceiver::class)
+@dev.zacsweers.metro.Inject
 class HaNotificationActionReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     when (intent.action) {

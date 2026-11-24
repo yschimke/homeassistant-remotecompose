@@ -26,6 +26,12 @@ import kotlinx.serialization.protobuf.ProtoBuf
  *   (`mobile_app_notification_action`, which also dismisses it on both), run on the phone's login.
  *   The offline demo flips its own entity and fires nothing.
  */
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<android.app.Service>(),
+)
+@dev.zacsweers.metrox.android.ServiceKey(PhoneWearNotificationService::class)
+@dev.zacsweers.metro.Inject
 @OptIn(ExperimentalSerializationApi::class)
 class PhoneWearNotificationService : WearableListenerService() {
   override fun onDataChanged(events: DataEventBuffer) {

@@ -49,12 +49,29 @@
 
     <application
         android:name=".TerrazzoApplication"
+        android:appComponentFactory="dev.zacsweers.metrox.android.MetroAppComponentFactory"
+        tools:replace="android:appComponentFactory"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Terrazzo"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.Terrazzo">
+
+        <!--
+          WorkManager is initialized on demand via TerrazzoApplication.workManagerConfiguration so
+          all CoroutineWorkers are created by MetroWorkerFactory.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
         <!--
           androidx.xr.arcore pulls in com.google.ar:core, which merges
@@ -78,7 +95,8 @@
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            tools:ignore="Instantiatable" />
 
         <!--
           The launcher entry, one alias per icon: LauncherIcons enables the one matching the
@@ -303,7 +321,8 @@
             android:excludeFromRecents="true"
             android:noHistory="true"
             android:taskAffinity=""
-            android:theme="@style/Theme.Terrazzo.Translucent" />
+            android:theme="@style/Theme.Terrazzo.Translucent"
+            tools:ignore="Instantiatable" />
 
         <!--
           Edits a placed launcher widget (WidgetConfigureActivity): the provider metadata's
@@ -314,7 +333,8 @@
             android:name=".widget.WidgetConfigureActivity"
             android:exported="true"
             android:excludeFromRecents="true"
-            android:taskAffinity="">
+            android:taskAffinity=""
+            tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
@@ -347,7 +367,8 @@
         <receiver
             android:name=".widget.TerrazzoWidgetProvider"
             android:enabled="@bool/supports_native_widgets"
-            android:exported="true">
+            android:exported="true"
+            tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -359,7 +380,8 @@
         <!-- Fires after requestPinAppWidget is confirmed by the user. -->
         <receiver
             android:name=".widget.WidgetInstallReceiver"
-            android:exported="false">
+            android:exported="false"
+            tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="ee.schimke.terrazzo.WIDGET_PIN_CONFIRMED" />
             </intent-filter>
@@ -368,12 +390,14 @@
         <!-- Explicit PendingIntent endpoint for RemoteCompose launcher-widget host actions. -->
         <receiver
             android:name=".widget.WidgetActionReceiver"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="Instantiatable" />
 
         <!-- Home Assistant notification buttons, card taps and "Open on watch" (notify/). -->
         <receiver
             android:name=".notify.HaNotificationActionReceiver"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="Instantiatable" />
 
         <!--
           The watch's copy of a Home Assistant notification (the Wear app posts its own): its
@@ -382,7 +406,8 @@
         -->
         <service
             android:name=".notify.PhoneWearNotificationService"
-            android:exported="true">
+            android:exported="true"
+            tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />
                 <data android:scheme="wear" android:host="*" android:pathPrefix="/wear/notification/" />

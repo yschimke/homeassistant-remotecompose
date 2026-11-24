@@ -37,11 +37,21 @@ interface TerrazzoGraphProvider {
   val graph: AppGraph
 }
 
-class TerrazzoApplication : Application(), TerrazzoGraphProvider {
+class TerrazzoApplication :
+  Application(),
+  TerrazzoGraphProvider,
+  dev.zacsweers.metrox.android.MetroApplication,
+  androidx.work.Configuration.Provider {
 
   override val graph: AppGraph by lazy {
     createGraphFactory<ee.schimke.terrazzo.di.RealAppGraph.Factory>().create(applicationContext)
   }
+
+  override val appComponentProviders: dev.zacsweers.metrox.android.MetroAppComponentProviders
+    get() = graph
+
+  override val workManagerConfiguration: androidx.work.Configuration
+    get() = androidx.work.Configuration.Builder().setWorkerFactory(graph.workerFactory).build()
 
   override fun onCreate() {
     super.onCreate()

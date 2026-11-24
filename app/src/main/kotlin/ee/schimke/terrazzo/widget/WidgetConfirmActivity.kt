@@ -39,7 +39,18 @@ import kotlinx.serialization.json.contentOrNull
  * launcher can't replace: the action is the one the app put on the widget, as [trustedWidgetAction]
  * requires of the receiver's.
  */
-class WidgetConfirmActivity : ComponentActivity() {
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<android.app.Activity>(),
+)
+@dev.zacsweers.metrox.android.ActivityKey(WidgetConfirmActivity::class)
+@dev.zacsweers.metro.Inject
+class WidgetConfirmActivity(
+  private val sessionWriteMode: ee.schimke.terrazzo.core.session.SessionWriteMode,
+  private val preferencesStore: ee.schimke.terrazzo.core.prefs.PreferencesStore,
+  private val widgetStore: ee.schimke.terrazzo.core.widget.WidgetStore,
+  private val offlineCache: ee.schimke.terrazzo.core.cache.OfflineCache,
+) : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val widgetId = intent.getIntExtra(EXTRA_WIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
@@ -48,25 +59,24 @@ class WidgetConfirmActivity : ComponentActivity() {
       finish()
       return
     }
-    val graph = terrazzoGraph()
     lifecycleScope.launch {
       val writeMode =
-        graph.sessionWriteMode.writeMode.value ?: graph.preferencesStore.permanentWriteMode.first()
+        sessionWriteMode.writeMode.value ?: preferencesStore.permanentWriteMode.first()
       if (writeMode) {
         run(applicationContext, widgetId, action, confirmed = false)
         finish()
         return@launch
       }
-      val entry = graph.widgetStore.get(widgetId)
-      val snapshot = entry?.let { graph.offlineCache.latestSnapshot(it.baseUrl) }
+      val entry = widgetStore.get(widgetId)
+      val snapshot = entry?.let { offlineCache.latestSnapshot(it.baseUrl) }
       val prompt = widgetConfirmPrompt(action, snapshot)
       setContent {
         val themeChoice by
-          graph.preferencesStore.themeChoice.collectAsStateWithLifecycle(
+          preferencesStore.themeChoice.collectAsStateWithLifecycle(
             initialValue = ThemeChoice.Default,
           )
         val darkPref by
-          graph.preferencesStore.darkMode.collectAsStateWithLifecycle(
+          preferencesStore.darkMode.collectAsStateWithLifecycle(
             initialValue = DarkModePref.Follow,
           )
         TerrazzoTheme(themeChoice, darkPref) {
