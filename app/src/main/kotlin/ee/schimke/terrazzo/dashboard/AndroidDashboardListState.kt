@@ -11,7 +11,8 @@ import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
-import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 /**
  * Cached dashboards-list state shared between dashboard management and the top-bar
@@ -52,9 +53,8 @@ fun rememberDashboardListState(session: HaSession, refresh: Int = 0): State<Dash
       session.connect()
       val list = session.listDashboards()
       state.value = DashboardListState.Ready(list.ifNotEmptyOrHomeFallback())
-    } catch (ce: CancellationException) {
-      throw ce
     } catch (it: Throwable) {
+      currentCoroutineContext().ensureActive()
       // Only flip to Error if we have nothing to show. A cached
       // list is more useful than a blank error screen.
       if (state.value !is DashboardListState.Ready) {
