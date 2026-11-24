@@ -83,6 +83,30 @@ class DeviceSuggestionsTest {
   }
 
   @Test
+  fun aTemplatesNamedColorsAreNoInputsAndAnUnreadableOneHasNoContract() {
+    val template =
+      DecodedTemplate(
+        bindings =
+          listOf(
+            Binding("sensor_operation_state", "text"),
+            Binding("accent", "color"),
+            Binding("action_start", "int"),
+          ),
+        operations = 1,
+        sizeByOperation = emptyMap(),
+        violations = emptyList(),
+        error = null,
+      )
+    val names = DeviceSuggestions.namedValues(template)!!
+    assertEquals(listOf("sensor_operation_state", "action_start"), names)
+    assertEquals(
+      listOf("sensor_operation_state") to listOf("start"),
+      DeviceSuggestions.contract(names),
+    )
+    assertNull(DeviceSuggestions.namedValues(DecodedTemplate.Missing))
+  }
+
+  @Test
   fun suggestionsCarryTheContractOnlyWhenTheTemplateDeclaresOne() {
     val library = library()
     val withContract =
@@ -102,7 +126,7 @@ class DeviceSuggestionsTest {
     // The real library template, decoded as the route does: still one printer suggestion.
     val decoded =
       DeviceSuggestions.index(library.manifest.serial, library.manifest.designs) { entry ->
-        library.decode(entry).takeIf { it.error == null }?.bindings?.map { it.name }
+        DeviceSuggestions.namedValues(library.decode(entry))
       }
     assertEquals(listOf("user:printer"), decoded.designs.map { it.designId })
   }
