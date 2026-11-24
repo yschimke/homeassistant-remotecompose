@@ -185,6 +185,30 @@
       "properties": [],
       "modifierCapabilities": []
     },
+    "ha-cards/card-surface": {
+      "role": "container",
+      "shelfRole": "Container",
+      "displayName": "Card surface",
+      "group": "Containment",
+      "canvas": "layout/scaffold",
+      "traits": [
+        "RemoteAuthorable"
+      ],
+      "slots": {
+        "content": {
+          "acceptedRoles": [
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ]
+        }
+      },
+      "implementation": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardSurface",
+      "properties": [],
+      "modifierCapabilities": []
+    },
     "remote-m3/widget-container-small": {
       "role": "screen-root",
       "displayName": "Wear widget · Small (216×76dp)",
@@ -1127,17 +1151,6 @@
           "notes": "The icon's size in dp; 24 when unset."
         }
       ]
-    },
-    "ha-cards/card-surface": {
-      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardSurface",
-      "displayName": "Card surface",
-      "group": "Containment",
-      "canvas": "layout/box",
-      "canvasMapping": {
-        "slots": {
-          "children": "content"
-        }
-      }
     },
     "ha-cards/remote-text": {
       "record": "ha-cards-catalog/androidx.wear.compose.remote.material3.RemoteTextKt.RemoteText",
