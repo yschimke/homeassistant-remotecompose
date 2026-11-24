@@ -158,7 +158,7 @@ internal fun Route.libraryProtocolRoutes(
     call.respondText(
       DeviceSuggestions.encode(
         DeviceSuggestions.index(library.manifest.serial, library.manifest.designs) { entry ->
-          library.decode(entry).takeIf { it.error == null }?.bindings?.map { it.name }
+          DeviceSuggestions.namedValues(library.decode(entry))
         },
       ),
       ContentType.Application.Json,

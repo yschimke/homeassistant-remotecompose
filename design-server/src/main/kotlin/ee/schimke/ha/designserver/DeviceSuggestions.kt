@@ -112,6 +112,13 @@ object DeviceSuggestions {
     return inputs.toList() to actions.toList()
   }
 
+  /**
+   * The names [template] binds that a card's `bindings:` can fill, for [contract]: not its named
+   * colors, which the app never binds from an entity; null for a template that can't be read.
+   */
+  fun namedValues(template: DecodedTemplate): List<String>? =
+    template.takeIf { it.error == null }?.bindings?.filter { it.type != "color" }?.map { it.name }
+
   private val ACTION = Regex("""^action[_.](.+?)(?:[_.]visible)?$""")
   private val SLOT = Regex("""^[a-z0-9_]+\.s\d+\.""")
   private val HOST_PUSHED = listOf("host.", "meta.", "HA:")
