@@ -36,7 +36,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -367,9 +366,11 @@ internal fun ConnectionScreen(
   cancelSignIn: (() -> Unit)? = null,
   connect: (String, String) -> Unit,
 ) {
-  var url by rememberSaveable { mutableStateOf("") }
+  val urlState = androidx.compose.foundation.text.input.rememberTextFieldState()
   // Credentials intentionally never enter saved state or browser localStorage.
-  var token by remember { mutableStateOf("") }
+  val tokenState = remember { androidx.compose.foundation.text.input.TextFieldState() }
+  val url = urlState.text.toString()
+  val token = tokenState.text.toString()
   var advanced by rememberSaveable { mutableStateOf(false) }
   Scaffold(topBar = { TopAppBar(title = { Text("Terrazzo") }) }) { padding ->
     Column(
@@ -383,11 +384,10 @@ internal fun ConnectionScreen(
     ) {
       Text("Connect to Home Assistant", style = MaterialTheme.typography.headlineMedium)
       OutlinedTextField(
-        url,
-        { url = it },
+        state = urlState,
         label = { Text("Home Assistant URL") },
         placeholder = { Text("https://home.example.com") },
-        singleLine = true,
+        lineLimits = androidx.compose.foundation.text.input.TextFieldLineLimits.SingleLine,
         enabled = !busy,
         modifier = Modifier.fillMaxWidth(),
       )
@@ -408,12 +408,9 @@ internal fun ConnectionScreen(
       }
       error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
       if (signIn == null || advanced) {
-        OutlinedTextField(
-          token,
-          { token = it },
+        androidx.compose.material3.OutlinedSecureTextField(
+          state = tokenState,
           label = { Text("Long-lived access token") },
-          visualTransformation = PasswordVisualTransformation(),
-          singleLine = true,
           enabled = !busy,
           modifier = Modifier.fillMaxWidth(),
         )

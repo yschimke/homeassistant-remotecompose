@@ -204,16 +204,19 @@ internal fun WidgetConfigureScreen(
       }
       val savedName = remember(entry) { entry.card.raw.string("name").orEmpty() }
       // Kept across rotation: the activity reloads the saved entry, not the draft.
-      var name by rememberSaveable(entry) { mutableStateOf(savedName) }
+      val nameState =
+        androidx.compose.runtime.key(entry) {
+          androidx.compose.foundation.text.input.rememberTextFieldState(initialText = savedName)
+        }
+      val name = nameState.text.toString()
       val edited = remember(entry, name) { entry.card.withLabel(name) }
       WidgetPreparationPreview(entry.baseUrl, edited, snapshot, fixedSize = size) {}
       OutlinedTextField(
-        value = name,
-        onValueChange = { name = it },
+        state = nameState,
         label = { Text("Label (optional)") },
         placeholder = { Text("The entity's own name") },
         supportingText = { Text("Only this widget. Your dashboard stays as it is.") },
-        singleLine = true,
+        lineLimits = androidx.compose.foundation.text.input.TextFieldLineLimits.SingleLine,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         modifier = Modifier.fillMaxWidth(),
       )

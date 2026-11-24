@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -70,7 +69,9 @@ fun WidgetInstallSheet(
   val parts = remember(card, sectionCards) { widgetParts(card, sectionCards, snapshot) }
   var chosen by remember(card) { mutableStateOf(card) }
   val originalName = remember(chosen) { chosen.raw["name"]?.jsonPrimitive?.content ?: "" }
-  var name by remember(chosen) { mutableStateOf(originalName) }
+  val nameState =
+    remember(chosen) { androidx.compose.foundation.text.input.TextFieldState(originalName) }
+  val name = nameState.text.toString()
   val editedCard =
     remember(chosen, name) {
       if (name.isBlank() || name == (chosen.raw["name"]?.jsonPrimitive?.content ?: "")) chosen
@@ -93,6 +94,7 @@ fun WidgetInstallSheet(
     }
   }
   var installError by remember { mutableStateOf<String?>(null) }
+  LaunchedEffect(name) { installError = null }
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
   val installed by store.installed.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -144,23 +146,16 @@ fun WidgetInstallSheet(
         WidgetPreparationPreview(baseUrl, editedCard, liveSnapshot) { renderedPreview = it }
 
         OutlinedTextField(
-          value = name,
-          onValueChange = {
-            name = it
-            installError = null
-          },
+          state = nameState,
           label = { Text("Label (optional)") },
           placeholder = { Text(originalName.ifBlank { "Keep the card's own name" }) },
           supportingText = { Text("Only this widget. Your dashboard stays as it is.") },
-          singleLine = true,
+          lineLimits = androidx.compose.foundation.text.input.TextFieldLineLimits.SingleLine,
           keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-          keyboardActions =
-            KeyboardActions(
-              onDone = {
-                focusManager.clearFocus()
-                keyboard?.hide()
-              },
-            ),
+          onKeyboardAction = {
+            focusManager.clearFocus()
+            keyboard?.hide()
+          },
           modifier = Modifier.fillMaxWidth(),
         )
         installError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
