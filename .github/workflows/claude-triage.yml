@@ -44,7 +44,7 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --description "Deferred review feedback filed by weekly triage" \
             --color BFD4F2 --force
-      - uses: anthropics/claude-code-action@b5e37652b7d48df841bfddfd6520610e19bf3136 # v1.0.287
+      - uses: anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b # v1.0.289
         with:
           # Bills the Claude subscription's included usage.
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
