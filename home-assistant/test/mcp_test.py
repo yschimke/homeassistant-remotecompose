@@ -206,7 +206,19 @@ class McpProtocolTest(unittest.TestCase):
     def test_submit_draft_without_a_session_opens_one_and_drafts_in_one_call(self):
         home = FakeHome()
         config = {'views': [{'cards': []}]}
-        result = call(home, 'submit_draft', {'config': config, 'url_path': 'garden', 'summary': 'Soil'})
+        read = call(home, 'get_dashboard', {'url_path': 'garden'})['structuredContent']
+        self.assertEqual(read['revision'], mcp.dashboard_revision(read['config']))
+        # An existing dashboard needs the read the draft changed; a changed one is refused.
+        self.assertTrue(call(home, 'submit_draft', {'config': config, 'url_path': 'garden'})['isError'])
+        # The fake's session starts from {'views': []}, not what get_dashboard read: edited since.
+        stale = call(home, 'submit_draft', {'config': config, 'url_path': 'garden', 'revision': read['revision']})
+        self.assertTrue(stale['isError'])
+        self.assertIn('changed since get_dashboard', stale['content'][0]['text'])
+        self.assertIn('s1', stale['content'][0]['text'])
+        home.submitted = None
+        revision = mcp.dashboard_revision({'views': []})
+        result = call(home, 'submit_draft', {'config': config, 'url_path': 'garden', 'summary': 'Soil',
+                                             'revision': revision})
         self.assertEqual(result['structuredContent']['session_id'], 's1')
         self.assertEqual(result['structuredContent']['draft_id'], 'd1')
         self.assertEqual(home.started, ('garden', 'Soil'))  # The summary stands in for a request.
@@ -218,7 +230,7 @@ class McpProtocolTest(unittest.TestCase):
         async def refuse(session_id, config, summary):
             raise mcp.ToolError('The draft names entities this home doesn\'t have: light.nope')
         home.submit_draft = refuse
-        failed = call(home, 'submit_draft', {'config': config})
+        failed = call(home, 'submit_draft', {'config': config, 'revision': revision})
         self.assertTrue(failed['isError'])
         self.assertIn('s1', failed['content'][0]['text'])  # Retry in the session it opened.
         schema = next(t for t in mcp.TOOLS if t['name'] == 'submit_draft')['inputSchema']
