@@ -42,9 +42,15 @@ object DeviceSuggestions {
   @Serializable data class Index(val serial: Long, val designs: List<Suggestion>)
 
   /**
-   * [entries] as the index: live phone-card entries made for a device and chosen by a stable id.
+   * [entries] as the index: live phone-card entries made for a device and chosen by a stable id,
+   * each with the contract its template declares ([contract], from [namedValues]: the names an
+   * entry's template binds, or null when it can't be read).
    */
-  fun index(serial: Long, entries: List<DesignEntry>): Index =
+  fun index(
+    serial: Long,
+    entries: List<DesignEntry>,
+    namedValues: (DesignEntry) -> List<String>? = { null },
+  ): Index =
     Index(
       serial = serial,
       designs =
@@ -58,7 +64,18 @@ object DeviceSuggestions {
               DesignProperties.parse(entry.key.shape)["domain"]
             }
               .getOrNull()
-            device?.let { Suggestion(id, entry.key.cardType, it, entry.title, domain) }
+            device?.let {
+              val (inputs, actions) = contract(namedValues(entry).orEmpty())
+              Suggestion(
+                id,
+                entry.key.cardType,
+                it,
+                entry.title,
+                domain,
+                inputs = inputs.ifEmpty { null },
+                actions = actions.ifEmpty { null },
+              )
+            }
           }
           .distinct()
           .sortedWith(
@@ -69,6 +86,35 @@ object DeviceSuggestions {
           )
           .toList(),
     )
+
+  /**
+   * A template's contract from the names it binds ([names], `USER:` already taken off), as the
+   * app's semantic bindings read them (`SemanticDeviceBindings.kt`): its **actions** are the
+   * buttons named by `action_<name>` / `action.<name>` and their `_visible` / `.visible` switches;
+   * its **inputs** every other name a card's `bindings:` may fill, leaving out what the host pushes
+   * itself (a slot's `<domain>.s<n>.…`, `host.`, `meta.`, `HA:`, `card.title`).
+   */
+  fun contract(names: List<String>): Pair<List<String>, List<String>> {
+    val actions = sortedSetOf<String>()
+    val inputs = sortedSetOf<String>()
+    for (raw in names) {
+      val name = raw.removePrefix("USER:").trim()
+      if (name.isEmpty()) continue
+      val action = ACTION.matchEntire(name)?.groupValues?.get(1)
+      when {
+        action != null -> actions += action
+        HOST_PUSHED.any { name.startsWith(it) } ||
+          name == "card.title" ||
+          SLOT.containsMatchIn(name) -> Unit
+        else -> inputs += name
+      }
+    }
+    return inputs.toList() to actions.toList()
+  }
+
+  private val ACTION = Regex("""^action[_.](.+?)(?:[_.]visible)?$""")
+  private val SLOT = Regex("""^[a-z0-9_]+\.s\d+\.""")
+  private val HOST_PUSHED = listOf("host.", "meta.", "HA:")
 
   fun encode(index: Index): String = json.encodeToString(Index.serializer(), index)
 

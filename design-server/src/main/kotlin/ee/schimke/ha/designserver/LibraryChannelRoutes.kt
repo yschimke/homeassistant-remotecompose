@@ -157,7 +157,9 @@ internal fun Route.libraryProtocolRoutes(
     call.response.header(HttpHeaders.CacheControl, "public, max-age=300")
     call.respondText(
       DeviceSuggestions.encode(
-        DeviceSuggestions.index(library.manifest.serial, library.manifest.designs),
+        DeviceSuggestions.index(library.manifest.serial, library.manifest.designs) { entry ->
+          library.decode(entry).takeIf { it.error == null }?.bindings?.map { it.name }
+        },
       ),
       ContentType.Application.Json,
     )

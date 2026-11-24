@@ -60,6 +60,54 @@ class DeviceSuggestionsTest {
   }
 
   @Test
+  fun aPacksContractIsTheInputsAndActionsItsTemplateBinds() {
+    val (inputs, actions) =
+      DeviceSuggestions.contract(
+        listOf(
+          "USER:sensor_operation_state",
+          "binary_sensor_door",
+          "light.s0.state",
+          "host.dark",
+          "meta.title",
+          "HA:time",
+          "card.title",
+          "action_start",
+          "action_start_visible",
+          "action.eco_50.visible",
+          "action_auto",
+          "",
+        ),
+      )
+    assertEquals(listOf("binary_sensor_door", "sensor_operation_state"), inputs)
+    assertEquals(listOf("auto", "eco_50", "start"), actions)
+  }
+
+  @Test
+  fun suggestionsCarryTheContractOnlyWhenTheTemplateDeclaresOne() {
+    val library = library()
+    val withContract =
+      DeviceSuggestions.index(library.manifest.serial, library.manifest.designs) {
+        listOf("sensor_remaining", "action_start", "light.s0.state")
+      }
+    val printer = withContract.designs.single()
+    assertEquals(listOf("sensor_remaining"), printer.inputs)
+    assertEquals(listOf("start"), printer.actions)
+    // A template that binds only its slot has no contract to list, and none is encoded.
+    val plain =
+      DeviceSuggestions.index(library.manifest.serial, library.manifest.designs) {
+        listOf("light.s0.state")
+      }
+    assertNull(plain.designs.single().inputs)
+    assertEquals(false, DeviceSuggestions.encode(plain).contains("inputs"))
+    // The real library template, decoded as the route does: still one printer suggestion.
+    val decoded =
+      DeviceSuggestions.index(library.manifest.serial, library.manifest.designs) { entry ->
+        library.decode(entry).takeIf { it.error == null }?.bindings?.map { it.name }
+      }
+    assertEquals(listOf("user:printer"), decoded.designs.map { it.designId })
+  }
+
+  @Test
   fun onlyDesignsMadeForADeviceAreSuggestedOncePerDesignAndCardType() {
     val library = library()
     val index = DeviceSuggestions.index(library.manifest.serial, library.manifest.designs)

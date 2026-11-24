@@ -312,6 +312,13 @@ class HouseNotesTest(unittest.TestCase):
         self.assertNotIn('standing notes', turn.extra_system_prompt(session, 'Test home', house_notes='  '))
         long = turn.extra_system_prompt(session, 'Test home', house_notes='x' * 5000)
         self.assertNotIn('x' * (turn.MAX_HOUSE_NOTES_CHARS + 1), long)
+        # Each note at its own limit: both reach the turn, the dashboard's in full.
+        data = turn.with_note(None, None, 'h' * 9000, home=True)
+        data = turn.with_note(data, 'kitchen', 'd' * 9000)
+        both = turn.extra_system_prompt(session, 'Test home', house_notes=turn.notes_for(data, 'kitchen'))
+        self.assertIn('h' * turn.MAX_NOTE_CHARS, both)
+        self.assertIn('For this dashboard: ' + 'd' * turn.MAX_NOTE_CHARS, both)
+        self.assertNotIn('…', both)
 
     def test_notes_are_set_per_home_and_dashboard_and_combined_for_a_turn(self):
         data = turn.with_note(None, None, '  Helper dashboards need bindings and actions. ', home=True)

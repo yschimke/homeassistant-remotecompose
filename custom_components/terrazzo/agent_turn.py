@@ -95,11 +95,13 @@ def _answered(session):
     return (session.get("assistant") or {}).get("handled")
 
 
-MAX_HOUSE_NOTES_CHARS = 2000
 
 # The household's notes (`agent_memory.py`): one for the home, one per dashboard.
 MAX_NOTE_CHARS = 2000
 MAX_DASHBOARDS = 100
+_DASHBOARD_NOTE = "For this dashboard: "
+# Room for both notes at their own limits: storage caps each, so neither is cut from a turn.
+MAX_HOUSE_NOTES_CHARS = 2 * MAX_NOTE_CHARS + len(_DASHBOARD_NOTE) + 1
 
 
 def clean_note(text):
@@ -119,7 +121,7 @@ def notes_for(data, url_path):
     if home:
         parts.append(home)
     if dashboard:
-        parts.append(f"For this dashboard: {dashboard}")
+        parts.append(_DASHBOARD_NOTE + dashboard)
     return "\n".join(parts)
 
 
