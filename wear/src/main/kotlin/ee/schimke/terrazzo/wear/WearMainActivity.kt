@@ -264,6 +264,7 @@ private fun WearApp(
   MaterialTheme(
     colorScheme = rememberWearColorScheme(selectedPalette),
     typography = wearTypographyFor(selectedPalette),
+    motionScheme = androidx.wear.compose.material3.MotionScheme.expressive(),
   ) {
     CompositionLocalProvider(
       ee.schimke.terrazzo.wear.ui.LocalWearDesignRevision provides designRevision,
@@ -276,114 +277,27 @@ private fun WearApp(
       LocalHostAmbient provides readAmbient,
     ) {
       AppScaffold(timeText = { TimeText() }) {
-        when (screen) {
-          WearScreen.TopLevel ->
-            WearTopLevelScreen(
-              settings = settings,
-              pinned = pinned,
-              sections = sections,
-              values = values,
-              onOpenSection = { section ->
-                openedSectionKey = section.sectionKey
-                screen = WearScreen.Section
-              },
-              onBrowseDashboards = { screen = WearScreen.Dashboards },
-              onOpenSettings = { screen = WearScreen.Settings },
-              onOpenCard = { sectionKey, card -> openCard(sectionKey, card) },
-              onOpenOnPhone = openOnPhone,
-              onOpenWidgets = openWidgets,
-              onNavigate = ::openDashboard,
-              onInputSend =
-                if (
-                  settings.inputEditingEnabled &&
-                    !settings.demoMode &&
-                    settings.baseUrl.isNotEmpty()
-                )
-                  repo::sendInputs
-                else null,
-              modifier = Modifier.fillMaxSize(),
-            )
-          WearScreen.Section -> {
-            val key = openedSectionKey
-            val resolved = sections.sections.firstOrNull { it.sectionKey == key }
-            if (resolved == null && key != null) {
-              // Section was unpinned mid-flight; bounce back so the
-              // user lands somewhere meaningful instead of an empty
-              // detail screen.
-              screen = WearScreen.TopLevel
-            } else {
-              WearSectionScreen(
-                section = resolved,
-                onInputSend =
-                  if (
-                    settings.inputEditingEnabled &&
-                      !settings.demoMode &&
-                      settings.baseUrl.isNotEmpty()
-                  )
-                    repo::sendInputs
-                  else null,
+        androidx.compose.animation.AnimatedContent(
+          targetState = screen,
+          label = "wearScreen",
+        ) { currentScreen ->
+          when (currentScreen) {
+            WearScreen.TopLevel ->
+              WearTopLevelScreen(
+                settings = settings,
+                pinned = pinned,
+                sections = sections,
                 values = values,
-                modifier = Modifier.fillMaxSize(),
-                onOpenCard = { card -> openCard(resolved?.sectionKey, card) },
-                onNavigate = ::openDashboard,
-              )
-            }
-          }
-          WearScreen.Card -> {
-            val deck = fullScreenDeck(cardDeck, pinned, sections)
-            val page = deck.indexOfFirst { fullScreenCardKey(it) == openedCard }
-            if (page < 0) {
-              // The card left its deck mid-flight (unpinned, or its config changed): back to the
-              // list it was opened from.
-              screen = if (cardDeck != null) WearScreen.Section else WearScreen.TopLevel
-            } else {
-              WearCardScreen(
-                cards = deck,
-                initialPage = page,
-                values = values,
-                modifier = Modifier.fillMaxSize(),
-                onOpenDetails = { card ->
-                  // Back from the details returns to this card's page.
-                  openedCard = fullScreenCardKey(card)
-                  screen = WearScreen.CardDetails
+                onOpenSection = { section ->
+                  openedSectionKey = section.sectionKey
+                  screen = WearScreen.Section
                 },
+                onBrowseDashboards = { screen = WearScreen.Dashboards },
+                onOpenSettings = { screen = WearScreen.Settings },
+                onOpenCard = { sectionKey, card -> openCard(sectionKey, card) },
+                onOpenOnPhone = openOnPhone,
+                onOpenWidgets = openWidgets,
                 onNavigate = ::openDashboard,
-              )
-            }
-          }
-          WearScreen.CardDetails -> {
-            val card =
-              fullScreenDeck(cardDeck, pinned, sections).firstOrNull {
-                fullScreenCardKey(it) == openedCard
-              }
-            if (card == null) {
-              screen = WearScreen.Card
-            } else {
-              WearCardDetailsScreen(
-                summary = card,
-                values = values,
-                loadHistory = repo::history,
-                loadStates = repo::liveStates,
-                modifier = Modifier.fillMaxSize(),
-              )
-            }
-          }
-          WearScreen.Dashboards ->
-            WearDashboardsScreen(
-              dashboards = dashboards,
-              onDashboardPicked = {
-                openedDashboard = it.urlPath
-                screen = WearScreen.Dashboard
-              },
-              onBack = { screen = WearScreen.TopLevel },
-              modifier = Modifier.fillMaxSize(),
-            )
-          WearScreen.Dashboard -> {
-            val urlPath = openedDashboard
-            val board = dashboards.firstOrNull { it.urlPath == urlPath }
-            if (board != null) {
-              WearDashboardScreen(
-                dashboard = board,
                 onInputSend =
                   if (
                     settings.inputEditingEnabled &&
@@ -392,30 +306,122 @@ private fun WearApp(
                   )
                     repo::sendInputs
                   else null,
-                values = values,
-                onBack = { screen = WearScreen.Dashboards },
                 modifier = Modifier.fillMaxSize(),
-                onNavigate = ::openDashboard,
               )
-            } else {
-              // Dashboard removed mid-flight; bounce back.
-              screen = WearScreen.Dashboards
+            WearScreen.Section -> {
+              val key = openedSectionKey
+              val resolved = sections.sections.firstOrNull { it.sectionKey == key }
+              if (resolved == null && key != null) {
+                // Section was unpinned mid-flight; bounce back so the
+                // user lands somewhere meaningful instead of an empty
+                // detail screen.
+                screen = WearScreen.TopLevel
+              } else {
+                WearSectionScreen(
+                  section = resolved,
+                  onInputSend =
+                    if (
+                      settings.inputEditingEnabled &&
+                        !settings.demoMode &&
+                        settings.baseUrl.isNotEmpty()
+                    )
+                      repo::sendInputs
+                    else null,
+                  values = values,
+                  modifier = Modifier.fillMaxSize(),
+                  onOpenCard = { card -> openCard(resolved?.sectionKey, card) },
+                  onNavigate = ::openDashboard,
+                )
+              }
             }
+            WearScreen.Card -> {
+              val deck = fullScreenDeck(cardDeck, pinned, sections)
+              val page = deck.indexOfFirst { fullScreenCardKey(it) == openedCard }
+              if (page < 0) {
+                // The card left its deck mid-flight (unpinned, or its config changed): back to the
+                // list it was opened from.
+                screen = if (cardDeck != null) WearScreen.Section else WearScreen.TopLevel
+              } else {
+                WearCardScreen(
+                  cards = deck,
+                  initialPage = page,
+                  values = values,
+                  modifier = Modifier.fillMaxSize(),
+                  onOpenDetails = { card ->
+                    // Back from the details returns to this card's page.
+                    openedCard = fullScreenCardKey(card)
+                    screen = WearScreen.CardDetails
+                  },
+                  onNavigate = ::openDashboard,
+                )
+              }
+            }
+            WearScreen.CardDetails -> {
+              val card =
+                fullScreenDeck(cardDeck, pinned, sections).firstOrNull {
+                  fullScreenCardKey(it) == openedCard
+                }
+              if (card == null) {
+                screen = WearScreen.Card
+              } else {
+                WearCardDetailsScreen(
+                  summary = card,
+                  values = values,
+                  loadHistory = repo::history,
+                  loadStates = repo::liveStates,
+                  modifier = Modifier.fillMaxSize(),
+                )
+              }
+            }
+            WearScreen.Dashboards ->
+              WearDashboardsScreen(
+                dashboards = dashboards,
+                onDashboardPicked = {
+                  openedDashboard = it.urlPath
+                  screen = WearScreen.Dashboard
+                },
+                onBack = { screen = WearScreen.TopLevel },
+                modifier = Modifier.fillMaxSize(),
+              )
+            WearScreen.Dashboard -> {
+              val urlPath = openedDashboard
+              val board = dashboards.firstOrNull { it.urlPath == urlPath }
+              if (board != null) {
+                WearDashboardScreen(
+                  dashboard = board,
+                  onInputSend =
+                    if (
+                      settings.inputEditingEnabled &&
+                        !settings.demoMode &&
+                        settings.baseUrl.isNotEmpty()
+                    )
+                      repo::sendInputs
+                    else null,
+                  values = values,
+                  onBack = { screen = WearScreen.Dashboards },
+                  modifier = Modifier.fillMaxSize(),
+                  onNavigate = ::openDashboard,
+                )
+              } else {
+                // Dashboard removed mid-flight; bounce back.
+                screen = WearScreen.Dashboards
+              }
+            }
+            WearScreen.Settings ->
+              WearSettingsScreen(
+                settings = settings,
+                modifier = Modifier.fillMaxSize(),
+                onOpenOnPhone = openOnPhone,
+              )
+            WearScreen.Widgets ->
+              WearWidgetsScreen(
+                pinned = pinned,
+                sections = sections,
+                widgetCardsRevision = widgetCardsRevision,
+                modifier = Modifier.fillMaxSize(),
+                onOpenOnPhone = openOnPhone,
+              )
           }
-          WearScreen.Settings ->
-            WearSettingsScreen(
-              settings = settings,
-              modifier = Modifier.fillMaxSize(),
-              onOpenOnPhone = openOnPhone,
-            )
-          WearScreen.Widgets ->
-            WearWidgetsScreen(
-              pinned = pinned,
-              sections = sections,
-              widgetCardsRevision = widgetCardsRevision,
-              modifier = Modifier.fillMaxSize(),
-              onOpenOnPhone = openOnPhone,
-            )
         }
       }
       val openOnPhoneText = OpenOnPhoneDialogDefaults.text
