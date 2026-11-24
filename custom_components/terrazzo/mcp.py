@@ -5,6 +5,7 @@ tests drive it with a fake one. Only stateless request/response JSON is spoken: 
 server-sent events, no batching, which every current MCP client accepts.
 """
 import base64
+import hashlib
 import json
 import re
 
@@ -116,7 +117,7 @@ TOOLS = [
         "title": "Get dashboard",
         "description": (
             "Reads a Lovelace dashboard's configuration: its views and cards, and the entities "
-            "they show."
+            "they show, with its revision for a submit_draft without a session_id."
         ),
         "inputSchema": {
             "type": "object",
@@ -239,8 +240,9 @@ EDIT_TOOLS = [
             "of the change. A person previews it with live cards and applies it; it isn't saved by "
             "this call. Every entity it names must exist in this home. A session whose scope is "
             "a section (get_edit_session's scope) takes changes to that section only. Without a "
-            "session_id it first opens one, as start_edit_session would (url_path, or "
-            "new_dashboard_title, and request), and returns its session_id: one call instead of two."
+            "session_id it first opens one, as start_edit_session would (url_path with the "
+            "revision get_dashboard gave, or new_dashboard_title, and request), and returns its "
+            "session_id: one call instead of two."
         ),
         "inputSchema": {
             "type": "object",
@@ -253,6 +255,11 @@ EDIT_TOOLS = [
                     "type": "string",
                     "description": "Without a session_id: the dashboard's url_path from "
                     "list_dashboards. Omit for the default Overview dashboard.",
+                },
+                "revision": {
+                    "type": "string",
+                    "description": "Without a session_id, for an existing dashboard: the revision "
+                    "get_dashboard returned with the config this draft changes.",
                 },
                 "new_dashboard_title": {
                     "type": "string",
@@ -639,6 +646,13 @@ def _entity(home, arguments):
     return entity
 
 
+def dashboard_revision(config):
+    """A short fingerprint of a dashboard [config]: a one-call submit_draft names the read it
+    changed, so a dashboard edited since then is refused rather than overwritten."""
+    canonical = json.dumps(config, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(canonical.encode()).hexdigest()[:16]
+
+
 async def _start(home, arguments):
     """Opens the edit session [arguments] ask for: a new dashboard (new_dashboard_title) or one."""
     title = _optional_text(arguments, "new_dashboard_title").strip()
@@ -733,7 +747,22 @@ async def call_tool(home, name, arguments):
         if arguments.get("session_id") is not None:
             return await home.submit_draft(_session_id(arguments), config, summary_text)
         request = _optional_text(arguments, "request").strip() or summary_text
-        session_id = (await _start(home, {**arguments, "request": request}))["session_id"]
+        new_dashboard = bool(_optional_text(arguments, "new_dashboard_title").strip())
+        revision = _optional_text(arguments, "revision")
+        if not new_dashboard and not revision:
+            raise ToolError(
+                "Without a session_id, pass the revision get_dashboard returned with the config "
+                "you changed, or start_edit_session first"
+            )
+        started = await _start(home, {**arguments, "request": request})
+        session_id = started["session_id"]
+        if not new_dashboard and revision != dashboard_revision(started.get("dashboard")):
+            # The dashboard changed since that read: a draft from it would undo those changes.
+            raise ToolError(
+                f"The dashboard changed since get_dashboard. Edit session {session_id} is open with "
+                "it as it is now: get_edit_session, redo the change on that, and submit_draft with "
+                "that session_id"
+            )
         try:
             result = await home.submit_draft(session_id, config, summary_text)
         except ToolError as failure:
@@ -743,7 +772,8 @@ async def call_tool(home, name, arguments):
         url_path = arguments.get("url_path")
         if url_path is not None and not isinstance(url_path, str):
             raise ToolError("url_path must be a string")
-        return {"url_path": url_path or None, "config": await home.dashboard(url_path or None)}
+        config = await home.dashboard(url_path or None)
+        return {"url_path": url_path or None, "config": config, "revision": dashboard_revision(config)}
     raise ToolError(f"Unknown tool {name}")
 
 

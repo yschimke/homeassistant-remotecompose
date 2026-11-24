@@ -219,7 +219,10 @@ Assistant's storage:
      saves. `start_edit_session` returns the dashboard it starts from (`dashboard`), and
      `submit_draft` without a `session_id` opens the session itself (`url_path` or
      `new_dashboard_title`, and `request`) and returns its `session_id`, so an edit takes two
-     calls, not four. A session an agent opens with a tool is marked answered as it is created
+     calls, not four. For an existing dashboard it needs the `revision` `get_dashboard` returned
+     with the config it changed, and is refused (leaving the session open) when the dashboard has
+     changed since: the session's baseline is taken as it opens, so an older read would otherwise
+     apply over the edits made in between. A session an agent opens with a tool is marked answered as it is created
      (`edits.async_start(answered=True)`), so the dashboard agent doesn't run a competing first
      turn on it; a note the person leaves later still gets one. In the dashboard agent's own
      turn, a `submit_draft` naming no session or dashboard goes to that turn's session

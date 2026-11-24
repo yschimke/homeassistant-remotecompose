@@ -54,7 +54,7 @@ API_PROMPT = "\n".join(
         "- To change a dashboard, start_edit_session (it returns the dashboard's config; or "
         "get_edit_session for one already open), then submit_draft the complete new config with a "
         "one-line summary. When you already have the config (get_dashboard), submit_draft without "
-        "a session_id opens the session and drafts in one call. Nothing is "
+        "a session_id, with that read's revision, opens the session and drafts in one call. Nothing is "
         "saved: the person reviews each draft in the Terrazzo panel or app, drawn with their own "
         "cards and live states, and applies it themselves. Tell them where (the session's "
         "terrazzo_url) and what you changed.",
