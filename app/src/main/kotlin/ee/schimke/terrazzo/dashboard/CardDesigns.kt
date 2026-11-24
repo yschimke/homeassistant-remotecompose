@@ -317,13 +317,16 @@ fun cardTemplateFor(
       )
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   if (recordUsage) {
-    CardUsage.record(
-      card,
-      cardType = key.cardType,
-      variant = usedKey.variant,
-      style = key.cardStyle,
-      source = if (server != null) UsageSource.Remote else UsageSource.Local,
-    )
+    (context.applicationContext as? ee.schimke.terrazzo.TerrazzoGraphProvider)
+      ?.graph
+      ?.cardUsage
+      ?.record(
+        card,
+        cardType = key.cardType,
+        variant = usedKey.variant,
+        style = key.cardStyle,
+        source = if (server != null) UsageSource.Remote else UsageSource.Local,
+      )
   }
   // Designs come only from the server. A key its cached designs lack is fetched by key, and the
   // card draws through its converter until it lands (or with no server, or none for the key).

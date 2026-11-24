@@ -33,8 +33,6 @@ import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
 import ee.schimke.terrazzo.core.session.DemoData
-import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
-import ee.schimke.terrazzo.dashboard.CardUsage
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.toThemeStyle
 import ee.schimke.terrazzo.ui.toUberTheme
@@ -195,14 +193,17 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           if (DemoData.isDemo(entry.baseUrl)) null
           else
             { source, style, cardType ->
-              CardUsage.record(
-                entry.card,
-                cardType = cardType,
-                variant = DesignKey.DEFAULT_VARIANT,
-                style = style,
-                source = source,
-                surface = UsageSurfaces.WIDGET,
-              )
+              context
+                .terrazzoGraph()
+                .cardUsage
+                .record(
+                  entry.card,
+                  cardType = cardType,
+                  variant = DesignKey.DEFAULT_VARIANT,
+                  style = style,
+                  source = source,
+                  surface = UsageSurfaces.WIDGET,
+                )
             },
       ) ?: return
     appWidgetManager.updateAppWidget(widgetId, remoteViews)
@@ -232,8 +233,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
    */
   private fun launcherLook(context: Context, card: ee.schimke.ha.model.CardConfig): LauncherLook =
     runBlocking {
-      val prefs = context.terrazzoGraph().preferencesStore
-      val override = CardDesignOverrideStore.of(context).overrides.value.forCard(card)?.cardStyle
+      val graph = context.terrazzoGraph()
+      val prefs = graph.preferencesStore
+      val override = graph.cardDesignOverrideStore.overrides.value.forCard(card)?.cardStyle
       LauncherLook(
         cardStyle = override?.let(HaUberTheme::byId) ?: prefs.cardStyle.first().toUberTheme(),
         appPalette =

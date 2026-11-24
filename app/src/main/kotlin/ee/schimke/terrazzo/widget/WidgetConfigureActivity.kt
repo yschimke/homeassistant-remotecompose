@@ -52,7 +52,6 @@ import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemeChoice
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.widget.WidgetStore
-import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import kotlinx.coroutines.launch
@@ -130,7 +129,7 @@ class WidgetConfigureActivity : ComponentActivity() {
   private fun save(widgetId: Int, entry: WidgetStore.Entry, card: CardConfig, live: Boolean) {
     lifecycleScope.launch {
       // The renamed card keeps the style the user picked for it.
-      val overrides = CardDesignOverrideStore.of(applicationContext)
+      val overrides = terrazzoGraph().cardDesignOverrideStore
       overrides.overrides.value.at(CardDesignScope.Card, entry.card)?.let {
         overrides.set(CardDesignScope.Card, card, it)
       }

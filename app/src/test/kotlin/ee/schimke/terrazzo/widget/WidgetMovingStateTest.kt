@@ -24,7 +24,6 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.terrazzo.TerrazzoGraphProvider
-import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistration
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
@@ -34,7 +33,6 @@ import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.core.session.TerrazzoSession
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.di.AppGraph
-import ee.schimke.terrazzo.monitor.createMonitor
 import ee.schimke.terrazzo.terrazzoGraph
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
@@ -114,11 +112,24 @@ import org.robolectric.shadows.ShadowNetworkCapabilities
 @Config(sdk = [35], application = WidgetMovingStateTest.TestApp::class)
 class WidgetMovingStateTest {
 
+  @dev.zacsweers.metro.DependencyGraph(
+    scope = ee.schimke.terrazzo.core.di.AppScope::class,
+    excludes = [ee.schimke.terrazzo.wearsync.MobileWearSyncManager::class],
+  )
+  interface TestAppGraph : AppGraph {
+    @dev.zacsweers.metro.DependencyGraph.Factory
+    fun interface Factory {
+      fun create(
+        @dev.zacsweers.metro.Provides context: Context,
+        @dev.zacsweers.metro.Provides wearSyncManager: WearSyncManager,
+      ): TestAppGraph
+    }
+  }
+
   class TestApp : Application(), TerrazzoGraphProvider {
     val wearSync = RecordingWearSyncManager()
-    override val graph: TerrazzoGraph by lazy {
-      createGraphFactory<AppGraph.Factory>()
-        .create(applicationContext, createMonitor(applicationContext), wearSync)
+    override val graph: AppGraph by lazy {
+      createGraphFactory<TestAppGraph.Factory>().create(applicationContext, wearSync)
     }
   }
 

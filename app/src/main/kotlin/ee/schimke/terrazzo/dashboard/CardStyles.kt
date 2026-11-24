@@ -1,8 +1,12 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.client.design.RefreshResult
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.terrazzo.core.di.AppScope
+import ee.schimke.terrazzo.terrazzoGraph
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +66,7 @@ object CardStyles {
         }
       }
     if (!complete) return Installed.Failed
-    CardStyleStore.of(context).add(styleId)
+    context.terrazzoGraph().cardStyleStore.add(styleId)
     CardDesignSync.stored()
     return Installed.Yes
   }
@@ -74,7 +78,7 @@ object CardStyles {
    */
   suspend fun uninstall(context: Context, styleId: String) {
     if (styleId in BUILT_IN) return
-    CardStyleStore.of(context).remove(styleId)
+    context.terrazzoGraph().cardStyleStore.remove(styleId)
     CardDesignSync.stored()
   }
 
@@ -90,7 +94,13 @@ object CardStyles {
  * An install from before card styles were installable has no file yet; [seed] then records the
  * styles it already uses as installed, so updating the app takes no style away.
  */
+@SingleIn(AppScope::class)
 class CardStyleStore internal constructor(private val file: File) {
+  @Inject
+  constructor(
+    context: Context,
+  ) : this(File(context.applicationContext.filesDir, "terrazzo/designs/card-styles.json"))
+
   private val _installed = MutableStateFlow(read().orEmpty())
 
   /** One update and its write at a time, so the file always ends up with the newest set. */
@@ -155,18 +165,5 @@ class CardStyleStore internal constructor(private val file: File) {
 
   companion object {
     private val json = Json { ignoreUnknownKeys = true }
-
-    @Volatile private var instance: CardStyleStore? = null
-
-    /** The app's one store. */
-    fun of(context: Context): CardStyleStore =
-      instance
-        ?: synchronized(this) {
-          instance
-            ?: CardStyleStore(
-                File(context.applicationContext.filesDir, "terrazzo/designs/card-styles.json"),
-              )
-              .also { instance = it }
-        }
   }
 }

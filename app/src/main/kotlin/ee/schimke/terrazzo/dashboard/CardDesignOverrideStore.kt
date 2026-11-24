@@ -1,10 +1,13 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.design.CardDesignOverride
 import ee.schimke.ha.design.CardDesignOverrides
 import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.terrazzo.core.di.AppScope
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +22,13 @@ import kotlinx.coroutines.withContext
  * Designs hold no Home Assistant data, but a card fingerprint is a digest of a card's config, so
  * sign-out leaves the file alone as it does the design cache. Writes replace the file atomically.
  */
+@SingleIn(AppScope::class)
 class CardDesignOverrideStore internal constructor(private val file: File) {
+  @Inject
+  constructor(
+    context: Context,
+  ) : this(File(context.applicationContext.filesDir, "terrazzo/designs/overrides.json"))
+
   private var local = read()
   private var sharedOwner: Any? = null
   private val _shared = MutableStateFlow<Map<String, String>>(emptyMap())
@@ -117,20 +126,5 @@ class CardDesignOverrideStore internal constructor(private val file: File) {
     } finally {
       tmp.delete()
     }
-  }
-
-  companion object {
-    @Volatile private var instance: CardDesignOverrideStore? = null
-
-    /** The app's one store. */
-    fun of(context: Context): CardDesignOverrideStore =
-      instance
-        ?: synchronized(this) {
-          instance
-            ?: CardDesignOverrideStore(
-                File(context.applicationContext.filesDir, "terrazzo/designs/overrides.json"),
-              )
-              .also { instance = it }
-        }
   }
 }

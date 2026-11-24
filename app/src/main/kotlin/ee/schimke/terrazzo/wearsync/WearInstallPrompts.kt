@@ -6,12 +6,9 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.terrazzo.LocalTerrazzoGraph
-import ee.schimke.terrazzo.TerrazzoApplication
 import kotlinx.coroutines.launch
 
 /** A one-time dashboard prompt toward the watch, keyed so each is offered once. */
@@ -40,12 +37,10 @@ private sealed interface WearPrompt {
  */
 @Composable
 fun wearInstallPrompts(snackbars: SnackbarHostState): (() -> Unit)? {
-  val context = LocalContext.current
-  val app = remember(context) { context.applicationContext as TerrazzoApplication }
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
   val watches by
-    app.wearAppInstallHelper.watches.collectAsStateWithLifecycle(initialValue = emptyList())
+    graph.wearAppInstallHelper.watches.collectAsStateWithLifecycle(initialValue = emptyList())
   val shown by
     graph.preferencesStore.wearPromptsShown.collectAsStateWithLifecycle(initialValue = null)
   // A watch that reports Terrazzo widgets is running the watch app, whatever its capability says
@@ -57,7 +52,7 @@ fun wearInstallPrompts(snackbars: SnackbarHostState): (() -> Unit)? {
 
   val install: (PairedWatch) -> Unit = { watch ->
     scope.launch {
-      val sent = app.wearAppInstallHelper.installOnWatch(watch.nodeId)
+      val sent = graph.wearAppInstallHelper.installOnWatch(watch.nodeId)
       snackbars.showSnackbar(
         if (sent) "Continue on ${watch.displayName} to install"
         else "Couldn't reach ${watch.displayName}",

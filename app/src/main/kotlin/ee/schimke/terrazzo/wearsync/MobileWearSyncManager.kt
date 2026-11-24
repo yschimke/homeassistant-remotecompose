@@ -109,22 +109,38 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  * Diagnostics: every write / send updates [MobileSyncStatsStore].
  */
-class MobileWearSyncManager(
+@dev.zacsweers.metro.SingleIn(ee.schimke.terrazzo.core.di.AppScope::class)
+@dev.zacsweers.metro.ContributesBinding(ee.schimke.terrazzo.core.di.AppScope::class)
+class MobileWearSyncManager
+internal constructor(
   private val context: Context,
   private val statsStore: MobileSyncStatsStore,
+  private val overrideStore: CardDesignOverrideStore,
   /** [url] on `baseUrl` as a Wear widget picture: PNG small enough for one DataItem. */
-  private val fetchPicture: suspend (baseUrl: String, url: String) -> ByteArray? = { baseUrl, url ->
-    // Fresh: a camera's picture changes behind a URL that may not.
-    WidgetImages.png(
-      context,
-      baseUrl,
-      url,
-      WEAR_PICTURE_MAX_PX,
-      WEAR_PICTURE_MAX_BYTES,
-      fresh = true,
-    )
-  },
+  private val fetchPicture: suspend (baseUrl: String, url: String) -> ByteArray?,
 ) : WearSyncManager {
+
+  @dev.zacsweers.metro.Inject
+  constructor(
+    context: Context,
+    statsStore: MobileSyncStatsStore,
+    overrideStore: CardDesignOverrideStore,
+  ) : this(
+    context = context,
+    statsStore = statsStore,
+    overrideStore = overrideStore,
+    fetchPicture = { baseUrl, url ->
+      // Fresh: a camera's picture changes behind a URL that may not.
+      WidgetImages.png(
+        context,
+        baseUrl,
+        url,
+        WEAR_PICTURE_MAX_PX,
+        WEAR_PICTURE_MAX_BYTES,
+        fresh = true,
+      )
+    },
+  )
 
   private val dataClient: DataClient by lazy { Wearable.getDataClient(context) }
   private val messageClient: MessageClient by lazy { Wearable.getMessageClient(context) }
@@ -591,7 +607,7 @@ class MobileWearSyncManager(
     // Each card resolved against the registry first: the watch has none to resolve a Bambu card's
     // configured printer with.
     scope.launch {
-      combine(pinStore.cards, CardDesignOverrideStore.of(context).overrides, registrySnapshot) {
+      combine(pinStore.cards, overrideStore.overrides, registrySnapshot) {
           cards,
           overrides,
           snapshot ->
@@ -671,7 +687,7 @@ class MobileWearSyncManager(
 
     // Pinned sections → /wear/sections.
     scope.launch {
-      combine(pinStore.sections, registrySnapshot, CardDesignOverrideStore.of(context).overrides) {
+      combine(pinStore.sections, registrySnapshot, overrideStore.overrides) {
           sections,
           snapshot,
           overrides ->
@@ -753,7 +769,7 @@ class MobileWearSyncManager(
     scope.launch {
       combine(
           sessionState,
-          CardDesignOverrideStore.of(context).overrides,
+          overrideStore.overrides,
           wearableAvailableState,
         ) { session, overrides, available ->
           Triple(session, overrides, available)

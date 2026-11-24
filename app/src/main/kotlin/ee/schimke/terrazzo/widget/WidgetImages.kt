@@ -25,8 +25,7 @@ object WidgetImages {
     maxBytes: Int = Int.MAX_VALUE,
     fresh: Boolean = false,
   ): ByteArray? {
-    val stack = (context.terrazzoGraph() as? ee.schimke.terrazzo.di.AppGraph)?.haImageStack
-    stack ?: return null
+    val stack = context.terrazzoGraph().haImageStack
     stack.ensureBaseUrl(baseUrl)
     val target = target(baseUrl, url)
     // A fresh fetch fails once the widget's process has no live session (no token, an expired

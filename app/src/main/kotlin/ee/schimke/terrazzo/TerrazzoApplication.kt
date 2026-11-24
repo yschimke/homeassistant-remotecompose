@@ -14,21 +14,13 @@ import ee.schimke.ha.rc.FileLocalDesignStore
 import ee.schimke.ha.rc.components.LauncherIcons
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
-import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
-import ee.schimke.terrazzo.crash.CrashReporter
 import ee.schimke.terrazzo.crash.CrashedDocuments
-import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignPreload
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardFonts
-import ee.schimke.terrazzo.dashboard.CardStyleStore
-import ee.schimke.terrazzo.dashboard.CardUsage
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.image.HaImageStack
-import ee.schimke.terrazzo.monitor.createMonitor
-import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
-import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -38,36 +30,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 
 /**
- * Holds the singleton [TerrazzoGraph] so every Android entry point — MainActivity, the widget
- * provider, the pin-confirmation receiver — gets the same bindings without having to re-create the
- * graph.
+ * Holds the singleton [AppGraph] so every Android entry point — MainActivity, the widget provider,
+ * the pin-confirmation receiver — gets the same bindings without having to re-create the graph.
  */
 interface TerrazzoGraphProvider {
-  val graph: TerrazzoGraph
+  val graph: AppGraph
 }
 
 class TerrazzoApplication : Application(), TerrazzoGraphProvider {
 
-  /**
-   * Phone-only wear sync deps held outside the graph because the wear-data layer stack
-   * (play-services-wearable + Horologist) only lives in this module. [syncStats] feeds [wearSync]
-   * (the graph's [WearSyncManager] binding), and is also consumed directly by the sync-diagnostics
-   * screen.
-   */
-  val syncStats: MobileSyncStatsStore by lazy { MobileSyncStatsStore(applicationContext) }
-  val wearSync: MobileWearSyncManager by lazy {
-    MobileWearSyncManager(applicationContext, syncStats)
-  }
-  val wearAppInstallHelper: ee.schimke.terrazzo.wearsync.WearAppInstallHelper by lazy {
-    ee.schimke.terrazzo.wearsync.WearAppInstallHelper(
-      applicationContext,
-      ProcessLifecycleOwner.get().lifecycleScope,
-    )
-  }
-
-  override val graph: TerrazzoGraph by lazy {
-    val cardMonitor = createMonitor(applicationContext)
-    createGraphFactory<AppGraph.Factory>().create(applicationContext, cardMonitor, wearSync)
+  override val graph: AppGraph by lazy {
+    createGraphFactory<ee.schimke.terrazzo.di.RealAppGraph.Factory>().create(applicationContext)
   }
 
   override fun onCreate() {
@@ -91,7 +64,7 @@ class TerrazzoApplication : Application(), TerrazzoGraphProvider {
     // Hand the card caches back when the system trims memory; Coil trims its own. Each document
     // cache trim goes to analytics, to show whether the documents kept while hidden are enough.
     CardMemory.onDocumentTrim = { level, previousLevel, trim ->
-      crashReporter.logEvent(
+      graph.crashReporter.logEvent(
         "card_cache_trim",
         mapOf(
           "level" to level.toLong(),
@@ -149,14 +122,13 @@ class TerrazzoApplication : Application(), TerrazzoGraphProvider {
     // Card styles beyond the built-in two are installed one by one (CardStyles). An install from
     // before that keeps the styles it already draws with: the dashboard's and the cards' own.
     (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch {
-      val overrides = CardDesignOverrideStore.of(applicationContext).overrides.value
-      CardStyleStore.of(applicationContext)
-        .seed(overrides.cardStyles + graph.preferencesStore.cardStyle.first().id)
+      val overrides = graph.cardDesignOverrideStore.overrides.value
+      graph.cardStyleStore.seed(
+        overrides.cardStyles + graph.preferencesStore.cardStyle.first().id,
+      )
     }
     // Anonymous card usage: counts nothing unless the user turned sharing on.
-    CardUsage.start(
-      applicationContext,
-      graph.preferencesStore,
+    graph.cardUsage.start(
       ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler,
     )
     // Read the cached server designs now, so the first dashboard frame already plays them.
@@ -228,7 +200,7 @@ class TerrazzoApplication : Application(), TerrazzoGraphProvider {
           override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
             val foregroundSeconds = (android.os.SystemClock.elapsedRealtime() - startedAtMs) / 1000
             CardRebuilds.drain().take(MAX_REBUILD_EVENTS).forEach { count ->
-              crashReporter.logEvent(
+              graph.crashReporter.logEvent(
                 "card_rebuild",
                 mapOf(
                   "card_type" to count.cardType,
@@ -258,7 +230,7 @@ class TerrazzoApplication : Application(), TerrazzoGraphProvider {
     // Crashlytics report the fatal crash natively. We deliberately
     // don't also call crashReporter.recordCrash here: that path is
     // for non-fatal reports and would double-count an uncaught crash.
-    crashReporter.install(applicationContext)
+    graph.crashReporter.install(applicationContext)
     val previous = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
       CrashedDocuments.recordCrash(applicationContext)
@@ -269,21 +241,11 @@ class TerrazzoApplication : Application(), TerrazzoGraphProvider {
     // through the LogStore's CoroutineExceptionHandler) to the backend
     // as non-fatals. Fatal crashes aren't routed here — they're already
     // reported by the backend's own uncaught handler via the chain above.
-    // This is the first `graph` access, which triggers graph init; we do
-    // it *after* installing the handler so a failure during init is still
-    // captured rather than escaping uncovered.
-    graph.logStore.nonFatalSink = crashReporter::recordCrash
+    graph.logStore.nonFatalSink = graph.crashReporter::recordCrash
     // A document a player gave up on is reported as a non-fatal; one that crashed the last run is
     // disabled from the start.
-    CrashedDocuments.install(applicationContext, crashReporter::recordCrash)
+    CrashedDocuments.install(applicationContext, graph.crashReporter::recordCrash)
   }
-
-  /**
-   * Optional external crash sink: the backend selected at build time (`harc.crashReporter`, see
-   * [CrashReporter.create]). With none selected it's a no-op and the app runs crash-reporting-free
-   * off the [LogStore] sink alone.
-   */
-  private val crashReporter: CrashReporter by lazy { CrashReporter.create() }
 
   private companion object {
     /** `card_rebuild` events per trip to the background: the most frequent buckets only. */
@@ -310,15 +272,15 @@ class TerrazzoApplication : Application(), TerrazzoGraphProvider {
  * Convenience accessor for non-Compose entry points (BroadcastReceiver, AppWidgetProvider) where we
  * only have a [Context].
  */
-fun Context.terrazzoGraph(): TerrazzoGraph = (applicationContext as TerrazzoGraphProvider).graph
+fun Context.terrazzoGraph(): AppGraph = (applicationContext as TerrazzoGraphProvider).graph
 
 /**
  * CompositionLocal surfaced so Compose screens can pull bindings without walking the Application
  * cast. Wired up in [MainActivity].
  */
 val LocalTerrazzoGraph =
-  staticCompositionLocalOf<TerrazzoGraph> {
-    error("TerrazzoGraph not provided; wrap your content in LocalTerrazzoGraph.provides(...)")
+  staticCompositionLocalOf<AppGraph> {
+    error("AppGraph not provided; wrap your content in LocalTerrazzoGraph.provides(...)")
   }
 
 /**

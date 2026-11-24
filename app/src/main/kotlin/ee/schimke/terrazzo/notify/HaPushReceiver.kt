@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.model.EntityState
-import ee.schimke.terrazzo.TerrazzoApplication
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
@@ -43,13 +42,12 @@ object HaPushReceiver {
   }
 
   /** Runs for [session]'s lifetime; returns at once for the demo or an unregistered server. */
-  suspend fun run(context: Context, graph: TerrazzoGraph, session: HaSession) {
+  suspend fun run(context: Context, graph: ee.schimke.terrazzo.di.AppGraph, session: HaSession) {
     if (DemoData.isDemo(session.baseUrl)) return
     val webhookId = webhookId(graph, session) ?: return
-    val app = context.applicationContext as TerrazzoApplication
     coroutineScope {
       val watchHasApp =
-        app.wearAppInstallHelper.watches
+        graph.wearAppInstallHelper.watches
           .map { watches -> watches.any { it.appInstalled } }
           .stateIn(this, SharingStarted.Eagerly, false)
       launch {

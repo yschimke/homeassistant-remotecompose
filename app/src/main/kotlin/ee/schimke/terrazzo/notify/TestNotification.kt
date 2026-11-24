@@ -2,7 +2,6 @@ package ee.schimke.terrazzo.notify
 
 import android.content.Context
 import ee.schimke.ha.client.HaPushNotification
-import ee.schimke.terrazzo.TerrazzoApplication
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
 import kotlinx.coroutines.flow.first
@@ -54,9 +53,10 @@ object TestNotification {
   }
 
   internal suspend fun watchHasApp(context: Context): Boolean {
-    val app = context.applicationContext as? TerrazzoApplication ?: return false
+    val provider =
+      context.applicationContext as? ee.schimke.terrazzo.TerrazzoGraphProvider ?: return false
     return withTimeoutOrNull(2_000) {
-      app.wearAppInstallHelper.watches.first().any { it.appInstalled }
+      provider.graph.wearAppInstallHelper.watches.first().any { it.appInstalled }
     } ?: false
   }
 }

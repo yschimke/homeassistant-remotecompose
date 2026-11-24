@@ -91,12 +91,10 @@ import ee.schimke.terrazzo.core.prefs.WidgetCardFontsPref
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.terrazzo
-import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardStyleInstallWorker
 import ee.schimke.terrazzo.dashboard.CardStyleSample
-import ee.schimke.terrazzo.dashboard.CardStyleStore
 import ee.schimke.terrazzo.dashboard.CardStyles
 import ee.schimke.terrazzo.notify.HaNotifications
 import ee.schimke.terrazzo.notify.TestNotification
@@ -248,9 +246,8 @@ internal fun SettingsScreen(
       }
 
       SettingsGroup("Theme") {
-        val installedStyles by CardStyleStore.of(context).installed.collectAsStateWithLifecycle()
-        val styleOverrides by
-          CardDesignOverrideStore.of(context).overrides.collectAsStateWithLifecycle()
+        val installedStyles by graph.cardStyleStore.installed.collectAsStateWithLifecycle()
+        val styleOverrides by graph.cardDesignOverrideStore.overrides.collectAsStateWithLifecycle()
         // WorkManager owns installs, including when Settings is closed or the process restarts.
         // No WorkManager in a preview (Robolectric doesn't initialise it): nothing is installing.
         val inPreview = LocalInspectionMode.current

@@ -1,6 +1,8 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.client.design.TemplateUsage
 import ee.schimke.ha.client.design.UsageKey
 import ee.schimke.ha.client.design.UsageLedger
@@ -12,6 +14,7 @@ import ee.schimke.ha.client.design.uploadWithDefaultClient
 import ee.schimke.ha.design.Sha256
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.terrazzo.BuildConfig
+import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import java.io.File
 import java.time.LocalDate
@@ -31,20 +34,23 @@ import kotlinx.serialization.json.Json
  * the nightly design sync. Off by default: until the user turns "Share anonymous card usage" on,
  * nothing is counted or sent, and turning it off deletes what was pending.
  */
-object CardUsage {
-  /** What every request to the design server says about this app: its release, nothing else. */
-  val userAgent: UsageUserAgent =
-    UsageUserAgent(version = BuildConfig.VERSION_NAME, platform = "android", surface = "phone")
-
-  @Volatile private var usage: TemplateUsage? = null
+@SingleIn(AppScope::class)
+@Inject
+class CardUsage(context: Context, private val prefs: PreferencesStore) {
+  private val usage: TemplateUsage =
+    TemplateUsage(
+      store =
+        FileUsageStore(File(context.applicationContext.filesDir, "terrazzo/usage/ledger.json")),
+      sharing = { prefs.usageSharing.first().effective() },
+      today = { LocalDate.now(ZoneOffset.UTC).toString() },
+    )
   @Volatile private var scope: CoroutineScope? = null
 
   /**
    * Starts counting under [prefs]' setting, from the application's start. Whenever the effective
    * setting is off, pending counts are deleted.
    */
-  fun start(context: Context, prefs: PreferencesStore, scope: CoroutineScope) {
-    val usage = of(context, prefs)
+  fun start(scope: CoroutineScope) {
     this.scope = scope
     scope.launch {
       prefs.usageSharing
@@ -53,18 +59,6 @@ object CardUsage {
         .collect { on -> if (!on) usage.clear() }
     }
   }
-
-  private fun of(context: Context, prefs: PreferencesStore): TemplateUsage =
-    usage
-      ?: synchronized(this) {
-        usage
-          ?: TemplateUsage(
-              store = FileUsageStore(File(context.filesDir, "terrazzo/usage/ledger.json")),
-              sharing = { prefs.usageSharing.first().effective() },
-              today = { LocalDate.now(ZoneOffset.UTC).toString() },
-            )
-            .also { usage = it }
-      }
 
   /**
    * Notes that [card] rendered from [source] with the design for [cardType], [variant] and [style]
@@ -80,16 +74,21 @@ object CardUsage {
     source: UsageSource,
     surface: String = UsageSurfaces.PHONE,
   ) {
-    val usage = usage ?: return
     val scope = scope ?: return
     val fingerprint = Sha256.hex(card.raw.toString().encodeToByteArray())
     scope.launch { usage.record(UsageKey(cardType, variant, style, source, surface), fingerprint) }
   }
 
   /** Uploads finished days to [serverUrl]; called by the nightly sync. */
-  suspend fun upload(context: Context, prefs: PreferencesStore, serverUrl: String): Int {
+  suspend fun upload(serverUrl: String): Int {
     if (serverUrl.isBlank()) return 0
-    return of(context, prefs).uploadWithDefaultClient(serverUrl, userAgent)
+    return usage.uploadWithDefaultClient(serverUrl, userAgent)
+  }
+
+  companion object {
+    /** What every request to the design server says about this app: its release, nothing else. */
+    val userAgent: UsageUserAgent =
+      UsageUserAgent(version = BuildConfig.VERSION_NAME, platform = "android", surface = "phone")
   }
 }
 

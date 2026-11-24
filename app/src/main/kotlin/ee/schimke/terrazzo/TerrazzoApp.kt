@@ -41,7 +41,6 @@ import ee.schimke.terrazzo.core.session.ReconnectBackoff
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.core.session.terrazzo
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
-import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.CardStyleSheet
@@ -342,7 +341,6 @@ private fun AuthenticatedShell(
   onSignOut: () -> Unit,
 ) {
   val context = LocalContext.current
-  val app = remember(context) { context.applicationContext as TerrazzoApplication }
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
 
@@ -426,7 +424,7 @@ private fun AuthenticatedShell(
       AppScreen.SyncDiagnostics -> {
         val streaming by graph.wearSyncManager.streamActive.collectAsStateWithLifecycle()
         ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
-          statsStore = app.syncStats,
+          statsStore = graph.syncStatsStore,
           streamActive = streaming,
           onBack = navigateBack,
         )
@@ -709,7 +707,7 @@ private fun DashboardsRoot(
   }
   val sharedSelectionOwner = remember(session) { Any() }
   LaunchedEffect(session) {
-    val selections = CardDesignOverrideStore.of(context)
+    val selections = graph.cardDesignOverrideStore
     val owner = sharedSelectionOwner
     try {
       selections.beginShared(owner)
@@ -871,7 +869,7 @@ private fun DashboardsRoot(
               "The design was downloaded but Home Assistant couldn't select it. Try again.",
             )
           }
-          val overrides = CardDesignOverrideStore.of(context)
+          val overrides = graph.cardDesignOverrideStore
           overrides.setPublishedShared(sharedSelectionOwner, cardFingerprint(card), designId)
           WidgetRefreshScheduler(context).refreshAllNow()
         }

@@ -68,19 +68,21 @@ object CardDesignSync {
           author,
         )
       }
-      .combine(CardDesignOverrideStore.of(context).overrides) { choice, overrides ->
+      .combine(context.terrazzoGraph().cardDesignOverrideStore.overrides) { choice, overrides ->
         choice.copy(overrides = overrides)
       }
       .combine(prefs.designToken) { choice, token -> choice.copy(token = token) }
       .combine(prefs.privateDesignServer) { choice, ha -> choice.withPrivateServer(ha) }
-      .combine(SkinStore.of(context).installed) { choice, skins -> choice.copy(skins = skins) }
-      .combine(CardDesignOverrideStore.of(context).shared) { choice, shared ->
+      .combine(context.terrazzoGraph().skinStore.installed) { choice, skins ->
+        choice.copy(skins = skins)
+      }
+      .combine(context.terrazzoGraph().cardDesignOverrideStore.shared) { choice, shared ->
         // A Home Assistant selection names a private design on that home's add-on, never an id
         // to look up on a separately configured public server.
         if (choice.homeAssistant.isNotBlank()) choice.copy(skins = choice.skins + shared.values)
         else choice
       }
-      .combine(CardStyleStore.of(context).installed) { choice, styles ->
+      .combine(context.terrazzoGraph().cardStyleStore.installed) { choice, styles ->
         choice.copy(cardStyles = styles)
       }
 
@@ -204,13 +206,7 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
     val sent =
       if (choice.homeAssistant.isNotBlank()) 0
       else
-        runCatching {
-            CardUsage.upload(
-              applicationContext,
-              applicationContext.terrazzoGraph().preferencesStore,
-              choice.serverUrl,
-            )
-          }
+        runCatching { applicationContext.terrazzoGraph().cardUsage.upload(choice.serverUrl) }
           .getOrDefault(0)
     Log.d(TAG, "card design sync: $result, usage days sent: $sent")
     return Result.success()

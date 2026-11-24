@@ -1,7 +1,10 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.client.dashboard.PlaceholderCard
+import ee.schimke.terrazzo.core.di.AppScope
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -15,7 +18,13 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 /** Private local briefs, isolated by HA server and dashboard; never merged into Lovelace config. */
-internal class PlaceholderCardStore(private val root: File) {
+@SingleIn(AppScope::class)
+class PlaceholderCardStore internal constructor(private val root: File) {
+  @Inject
+  constructor(
+    context: Context,
+  ) : this(File(context.applicationContext.filesDir, "terrazzo/card-briefs"))
+
   private val writes = Mutex()
   private val codec = ListSerializer(PlaceholderCard.serializer())
 
@@ -45,20 +54,6 @@ internal class PlaceholderCardStore(private val root: File) {
         }
       }
     }
-  }
-
-  companion object {
-    @Volatile private var instance: PlaceholderCardStore? = null
-
-    fun of(context: Context): PlaceholderCardStore =
-      instance
-        ?: synchronized(this) {
-          instance
-            ?: PlaceholderCardStore(
-                File(context.applicationContext.filesDir, "terrazzo/card-briefs"),
-              )
-              .also { instance = it }
-        }
   }
 
   private fun file(server: String, dashboard: String?): File {

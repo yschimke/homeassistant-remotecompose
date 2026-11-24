@@ -3,11 +3,16 @@ package ee.schimke.terrazzo.wearsync
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.data.AppHelperResultCode
 import com.google.android.horologist.data.WearDataLayerRegistry
 import com.google.android.horologist.datalayer.phone.PhoneDataLayerAppHelper
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import ee.schimke.terrazzo.core.di.AppScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -34,13 +39,20 @@ data class PairedWatch(val nodeId: String, val displayName: String, val appInsta
  * (and only on Wear widget capable watches), so that counts as installed too: a user on an older
  * watch build isn't asked to install what they already have.
  */
+@SingleIn(AppScope::class)
 @OptIn(ExperimentalHorologistApi::class)
-class WearAppInstallHelper(private val context: Context, scope: CoroutineScope) {
+class WearAppInstallHelper(
+  private val context: Context,
+  private val scopeProvider: () -> CoroutineScope,
+) {
+
+  @Inject
+  constructor(context: Context) : this(context, { ProcessLifecycleOwner.get().lifecycleScope })
 
   private val registry: WearDataLayerRegistry by lazy {
     WearDataLayerRegistry.fromContext(
       application = context.applicationContext as Application,
-      coroutineScope = scope,
+      coroutineScope = scopeProvider(),
     )
   }
 

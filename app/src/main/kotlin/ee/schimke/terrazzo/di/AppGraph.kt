@@ -5,11 +5,16 @@ import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
-import ee.schimke.terrazzo.core.monitor.CardMonitor
-import ee.schimke.terrazzo.core.wearsync.WearSyncManager
+import ee.schimke.terrazzo.crash.CrashReporter
+import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
+import ee.schimke.terrazzo.dashboard.CardStyleStore
+import ee.schimke.terrazzo.dashboard.CardUsage
+import ee.schimke.terrazzo.dashboard.PlaceholderCardStore
+import ee.schimke.terrazzo.dashboard.SkinStore
 import ee.schimke.terrazzo.image.HaImageStack
+import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
+import ee.schimke.terrazzo.wearsync.WearAppInstallHelper
 
-@DependencyGraph(scope = AppScope::class)
 interface AppGraph : TerrazzoGraph {
   /**
    * Process-singleton Coil [coil3.ImageLoader] + [coil3.disk.DiskCache] for HA-aware image fetches.
@@ -19,12 +24,20 @@ interface AppGraph : TerrazzoGraph {
    */
   val haImageStack: HaImageStack
 
+  val crashReporter: CrashReporter
+  val syncStatsStore: MobileSyncStatsStore
+  val wearAppInstallHelper: WearAppInstallHelper
+  val skinStore: SkinStore
+  val placeholderCardStore: PlaceholderCardStore
+  val cardStyleStore: CardStyleStore
+  val cardDesignOverrideStore: CardDesignOverrideStore
+  val cardUsage: CardUsage
+}
+
+@DependencyGraph(scope = AppScope::class)
+interface RealAppGraph : AppGraph {
   @DependencyGraph.Factory
   fun interface Factory {
-    fun create(
-      @Provides context: Context,
-      @Provides cardMonitor: CardMonitor,
-      @Provides wearSyncManager: WearSyncManager,
-    ): AppGraph
+    fun create(@Provides context: Context): RealAppGraph
   }
 }
