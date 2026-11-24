@@ -3,11 +3,20 @@ package ee.schimke.terrazzo
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.binding
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import ee.schimke.terrazzo.core.di.AppScope
+import ee.schimke.terrazzo.core.logs.LogStore
 import ee.schimke.terrazzo.core.session.HaSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 
 /**
  * Owns the active [HaSession] above the composition, in the Activity's `ViewModelStore`, so a
@@ -19,7 +28,15 @@ import kotlinx.coroutines.launch
  * [closeScope] outlives the holder — [viewModelScope] is already cancelled by the time [onCleared]
  * runs, and [HaSession.close] suspends.
  */
+@ContributesIntoMap(AppScope::class, binding<ViewModel>())
+@ViewModelKey(SessionHolder::class)
 class SessionHolder(private val closeScope: CoroutineScope) : ViewModel() {
+
+  @Inject
+  constructor(
+    logStore: LogStore,
+  ) : this(ProcessLifecycleOwner.get().lifecycleScope + logStore.coroutineExceptionHandler)
+
   var session: HaSession? by mutableStateOf(null)
 
   /**

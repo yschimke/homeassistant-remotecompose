@@ -147,7 +147,10 @@ class WidgetMovingStateTest {
     InMemoryAndroidKeyStore.install()
     WorkManagerTestInitHelper.initializeTestWorkManager(
       context,
-      Configuration.Builder().setExecutor(SynchronousExecutor()).build(),
+      Configuration.Builder()
+        .setExecutor(SynchronousExecutor())
+        .setWorkerFactory(app.graph.workerFactory)
+        .build(),
     )
     WidgetStateWorker.resetForTest()
     LiveWidgetUpdates.resetTimingForTest()
@@ -226,6 +229,7 @@ class WidgetMovingStateTest {
 
       val workerJob = async {
         TestListenableWorkerBuilder<WidgetStateWorker>(context)
+          .setWorkerFactory(app.graph.workerFactory)
           .setInputData(workDataOf(WidgetStateWorker.KEY_BASE_URL to BASE_URL))
           .build()
           .doWork()
@@ -324,6 +328,7 @@ class WidgetMovingStateTest {
 
       val workerJob = async {
         TestListenableWorkerBuilder<WidgetStateWorker>(context)
+          .setWorkerFactory(app.graph.workerFactory)
           .setInputData(workDataOf(WidgetStateWorker.KEY_BASE_URL to BASE_URL))
           .build()
           .doWork()
@@ -405,6 +410,7 @@ class WidgetMovingStateTest {
 
         workerJob = async {
           TestListenableWorkerBuilder<WidgetStateWorker>(context)
+            .setWorkerFactory(app.graph.workerFactory)
             .setInputData(workDataOf(WidgetStateWorker.KEY_BASE_URL to liveUrl))
             .build()
             .doWork()
@@ -585,6 +591,7 @@ class WidgetMovingStateTest {
       }
       val offlineResult =
         TestListenableWorkerBuilder<WidgetStateWorker>(context)
+          .setWorkerFactory(app.graph.workerFactory)
           .setInputData(workDataOf(WidgetStateWorker.KEY_BASE_URL to BASE_URL))
           .setRunAttemptCount(0)
           .build()
@@ -608,6 +615,7 @@ class WidgetMovingStateTest {
 
       val attempt1Job = async {
         TestListenableWorkerBuilder<WidgetStateWorker>(context)
+          .setWorkerFactory(app.graph.workerFactory)
           .setInputData(workDataOf(WidgetStateWorker.KEY_BASE_URL to BASE_URL))
           .setRunAttemptCount(1)
           .build()
@@ -629,6 +637,7 @@ class WidgetMovingStateTest {
       // success and starts the cooldown so passive widget renders don't spin forever.
       val exhaustedJob = async {
         TestListenableWorkerBuilder<WidgetStateWorker>(context)
+          .setWorkerFactory(app.graph.workerFactory)
           .setInputData(workDataOf(WidgetStateWorker.KEY_BASE_URL to BASE_URL))
           .setRunAttemptCount(WidgetStateWorker.MAX_ATTEMPTS)
           .build()
@@ -722,7 +731,10 @@ class WidgetMovingStateTest {
       }
 
       val refreshResult =
-        TestListenableWorkerBuilder<WidgetRoutineRefreshWorker>(context).build().doWork()
+        TestListenableWorkerBuilder<WidgetRoutineRefreshWorker>(context)
+          .setWorkerFactory(app.graph.workerFactory)
+          .build()
+          .doWork()
       assertEquals(ListenableWorker.Result.success(), refreshResult)
       assertEquals(
         "opening",

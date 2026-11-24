@@ -51,6 +51,12 @@ import kotlinx.serialization.json.JsonObject
  * Invariant: the window is bounded. The service self-stops after [EXTRA_DURATION_MINUTES]; nothing
  * here can run forever.
  */
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<Service>(),
+)
+@dev.zacsweers.metrox.android.ServiceKey(MonitoringService::class)
+@dev.zacsweers.metro.Inject
 class MonitoringService : Service() {
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)

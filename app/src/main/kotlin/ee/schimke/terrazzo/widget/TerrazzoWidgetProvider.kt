@@ -68,7 +68,27 @@ import kotlinx.coroutines.sync.withLock
  * `RemoteViews.DrawInstructions`. The app also runs on API 35; providers are disabled there because
  * the original player lacks layouts. The `@RequiresApi` is here to keep lint quiet.
  */
-open class TerrazzoWidgetProvider : AppWidgetProvider() {
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<android.content.BroadcastReceiver>(),
+)
+@dev.zacsweers.metrox.android.BroadcastReceiverKey(TerrazzoWidgetProvider::class)
+open class TerrazzoWidgetProvider() : AppWidgetProvider() {
+  private var injectedWidgetStore: ee.schimke.terrazzo.core.widget.WidgetStore? = null
+  private var injectedOfflineCache: ee.schimke.terrazzo.core.cache.OfflineCache? = null
+  private var injectedCardUsage: ee.schimke.terrazzo.dashboard.CardUsage? = null
+
+  @dev.zacsweers.metro.Inject
+  constructor(
+    widgetStore: ee.schimke.terrazzo.core.widget.WidgetStore,
+    offlineCache: ee.schimke.terrazzo.core.cache.OfflineCache,
+    cardUsage: ee.schimke.terrazzo.dashboard.CardUsage,
+  ) : this() {
+    this.injectedWidgetStore = widgetStore
+    this.injectedOfflineCache = offlineCache
+    this.injectedCardUsage = cardUsage
+  }
+
   override fun onReceive(context: Context, intent: Intent) {
     if (
       Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API || intent.action !in asyncWidgetActions

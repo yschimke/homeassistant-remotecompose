@@ -14,6 +14,12 @@ import kotlinx.coroutines.runBlocking
  * takes what was held. A `type: state` wake says an entity a widget reads changed
  * ([WidgetStateWorker]).
  */
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<android.app.Service>(),
+)
+@dev.zacsweers.metrox.android.ServiceKey(TerrazzoMessagingService::class)
+@dev.zacsweers.metro.Inject
 class TerrazzoMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
     // An entity a widget reads visibly changed: redraw them, following it while it moves.

@@ -52,7 +52,6 @@ import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemeChoice
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.widget.WidgetStore
-import ee.schimke.terrazzo.terrazzoGraph
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
@@ -72,7 +71,18 @@ import kotlinx.serialization.json.contentOrNull
  * already chosen. Exported because the launcher starts it; a widget id that isn't one of this app's
  * placed widgets closes it.
  */
-class WidgetConfigureActivity : ComponentActivity() {
+@dev.zacsweers.metro.ContributesIntoMap(
+  ee.schimke.terrazzo.core.di.AppScope::class,
+  dev.zacsweers.metro.binding<Activity>(),
+)
+@dev.zacsweers.metrox.android.ActivityKey(WidgetConfigureActivity::class)
+@dev.zacsweers.metro.Inject
+class WidgetConfigureActivity(
+  private val widgetStore: WidgetStore,
+  private val offlineCache: ee.schimke.terrazzo.core.cache.OfflineCache,
+  private val preferencesStore: ee.schimke.terrazzo.core.prefs.PreferencesStore,
+  private val cardDesignOverrideStore: ee.schimke.terrazzo.dashboard.CardDesignOverrideStore,
+) : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val widgetId =
@@ -87,22 +97,21 @@ class WidgetConfigureActivity : ComponentActivity() {
       return
     }
     enableEdgeToEdge()
-    val graph = terrazzoGraph()
     lifecycleScope.launch {
-      val entry = graph.widgetStore.get(widgetId)
+      val entry = widgetStore.get(widgetId)
       val snapshot =
         entry?.let {
           if (DemoData.isDemo(it.baseUrl)) DemoData.snapshot()
-          else graph.offlineCache.latestSnapshot(it.baseUrl)
+          else offlineCache.latestSnapshot(it.baseUrl)
         } ?: HaSnapshot()
       val size = WidgetSizing.forWidgetCapture(manager, widgetId)
       setContent {
         val themeChoice by
-          graph.preferencesStore.themeChoice.collectAsStateWithLifecycle(
+          preferencesStore.themeChoice.collectAsStateWithLifecycle(
             initialValue = ThemeChoice.Default,
           )
         val darkPref by
-          graph.preferencesStore.darkMode.collectAsStateWithLifecycle(
+          preferencesStore.darkMode.collectAsStateWithLifecycle(
             initialValue = DarkModePref.Follow,
           )
         TerrazzoTheme(themeChoice, darkPref) {
@@ -129,11 +138,10 @@ class WidgetConfigureActivity : ComponentActivity() {
   private fun save(widgetId: Int, entry: WidgetStore.Entry, card: CardConfig, live: Boolean) {
     lifecycleScope.launch {
       // The renamed card keeps the style the user picked for it.
-      val overrides = terrazzoGraph().cardDesignOverrideStore
-      overrides.overrides.value.at(CardDesignScope.Card, entry.card)?.let {
-        overrides.set(CardDesignScope.Card, card, it)
+      cardDesignOverrideStore.overrides.value.at(CardDesignScope.Card, entry.card)?.let {
+        cardDesignOverrideStore.set(CardDesignScope.Card, card, it)
       }
-      terrazzoGraph().widgetStore.put(widgetId, entry.baseUrl, card, live, entry.origin)
+      widgetStore.put(widgetId, entry.baseUrl, card, live, entry.origin)
       refresh(applicationContext, widgetId)
       setResult(Activity.RESULT_OK, resultIntent(widgetId))
       finish()

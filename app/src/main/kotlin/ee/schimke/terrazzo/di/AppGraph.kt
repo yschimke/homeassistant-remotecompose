@@ -3,6 +3,8 @@ package ee.schimke.terrazzo.di
 import android.content.Context
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
+import dev.zacsweers.metrox.android.MetroAppComponentProviders
+import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.crash.CrashReporter
@@ -15,7 +17,7 @@ import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
 import ee.schimke.terrazzo.wearsync.WearAppInstallHelper
 
-interface AppGraph : TerrazzoGraph {
+interface AppGraph : TerrazzoGraph, MetroAppComponentProviders, ViewModelGraph {
   /**
    * Process-singleton Coil [coil3.ImageLoader] + [coil3.disk.DiskCache] for HA-aware image fetches.
    * Coil documents that exactly one `DiskCache` instance per directory is safe — without a shared
@@ -32,6 +34,7 @@ interface AppGraph : TerrazzoGraph {
   val cardStyleStore: CardStyleStore
   val cardDesignOverrideStore: CardDesignOverrideStore
   val cardUsage: CardUsage
+  val workerFactory: MetroWorkerFactory
 }
 
 @DependencyGraph(scope = AppScope::class)

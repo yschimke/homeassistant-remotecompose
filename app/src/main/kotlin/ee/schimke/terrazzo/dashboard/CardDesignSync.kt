@@ -178,13 +178,17 @@ object CardDesignSync {
 }
 
 /** Refreshes the card design cache for the configured server, if one is configured. */
-class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
-  CoroutineWorker(context, params) {
+class CardDesignSyncWorker
+@dev.zacsweers.metro.AssistedInject
+constructor(
+  @dev.zacsweers.metro.Assisted context: Context,
+  @dev.zacsweers.metro.Assisted params: WorkerParameters,
+  private val preferencesStore: PreferencesStore,
+  private val cardUsage: CardUsage,
+) : CoroutineWorker(context, params) {
 
   override suspend fun doWork(): Result {
-    val choice =
-      CardDesignSync.choice(applicationContext, applicationContext.terrazzoGraph().preferencesStore)
-        .first()
+    val choice = CardDesignSync.choice(applicationContext, preferencesStore).first()
     if (!choice.enabled) return Result.success()
     // `refresh` already respects the manifest TTL — within it, it only fetches designs the choice
     // needs and the cache lacks — and never throws for network trouble; a failed run just waits for
@@ -205,11 +209,19 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
     // to the public library's server: a Home Assistant's own design add-on doesn't count usage.
     val sent =
       if (choice.homeAssistant.isNotBlank()) 0
-      else
-        runCatching { applicationContext.terrazzoGraph().cardUsage.upload(choice.serverUrl) }
-          .getOrDefault(0)
+      else runCatching { cardUsage.upload(choice.serverUrl) }.getOrDefault(0)
     Log.d(TAG, "card design sync: $result, usage days sent: $sent")
     return Result.success()
+  }
+
+  @dev.zacsweers.metro.AssistedFactory
+  @dev.zacsweers.metro.ContributesIntoMap(
+    ee.schimke.terrazzo.core.di.AppScope::class,
+    dev.zacsweers.metro.binding<ee.schimke.terrazzo.di.AssistedWorkerFactory>(),
+  )
+  @ee.schimke.terrazzo.di.WorkerKey(CardDesignSyncWorker::class)
+  fun interface Factory : ee.schimke.terrazzo.di.AssistedWorkerFactory {
+    override fun create(context: Context, params: WorkerParameters): CardDesignSyncWorker
   }
 
   private companion object {
