@@ -32,7 +32,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +43,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.wearsync.WatchWidget
 import ee.schimke.terrazzo.core.widget.WidgetStore
@@ -65,9 +65,10 @@ import ee.schimke.terrazzo.dashboard.reorderedKeys
 fun WidgetsScreen(onBack: () -> Unit) {
   val context = LocalContext.current
   val graph = LocalTerrazzoGraph.current
-  val installed by graph.widgetStore.installed.collectAsState(initial = emptyList())
-  val watchWidgets by graph.wearSyncManager.watchWidgets.collectAsState()
-  val wearable by graph.wearSyncManager.wearableAvailable.collectAsState()
+  val installed by
+    graph.widgetStore.installed.collectAsStateWithLifecycle(initialValue = emptyList())
+  val watchWidgets by graph.wearSyncManager.watchWidgets.collectAsStateWithLifecycle()
+  val wearable by graph.wearSyncManager.wearableAvailable.collectAsStateWithLifecycle()
   // Drop rows for widgets the user has since removed from the launcher before listing them.
   LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
   val pins = rememberPinRows()

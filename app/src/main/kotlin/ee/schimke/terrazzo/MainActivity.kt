@@ -9,10 +9,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -134,12 +134,17 @@ class MainActivity : ComponentActivity() {
         LocalHaImageStack provides imageStack,
       ) {
         val themeChoice by
-          graph.preferencesStore.themeChoice.collectAsState(initial = ThemeChoice.Default)
+          graph.preferencesStore.themeChoice.collectAsStateWithLifecycle(
+            initialValue = ThemeChoice.Default,
+          )
         val darkPref by
-          graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
+          graph.preferencesStore.darkMode.collectAsStateWithLifecycle(
+            initialValue = DarkModePref.Follow,
+          )
         // Developer mode (Settings → tap the version seven times) shows shared screens' power-user
         // parts, such as a card's settings as JSON.
-        val developerMode by graph.preferencesStore.developerMode.collectAsState(initial = false)
+        val developerMode by
+          graph.preferencesStore.developerMode.collectAsStateWithLifecycle(initialValue = false)
         TerrazzoTheme(themeChoice, darkPref) {
           val darkTheme = LocalIsDarkTheme.current
           SideEffect { updateSystemBars(darkTheme) }

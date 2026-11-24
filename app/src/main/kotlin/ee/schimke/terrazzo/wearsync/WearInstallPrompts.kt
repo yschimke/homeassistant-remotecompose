@@ -5,11 +5,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.TerrazzoApplication
 import kotlinx.coroutines.launch
@@ -44,11 +44,13 @@ fun wearInstallPrompts(snackbars: SnackbarHostState): (() -> Unit)? {
   val app = remember(context) { context.applicationContext as TerrazzoApplication }
   val graph = LocalTerrazzoGraph.current
   val scope = rememberCoroutineScope()
-  val watches by app.wearAppInstallHelper.watches.collectAsState(initial = emptyList())
-  val shown by graph.preferencesStore.wearPromptsShown.collectAsState(initial = null)
+  val watches by
+    app.wearAppInstallHelper.watches.collectAsStateWithLifecycle(initialValue = emptyList())
+  val shown by
+    graph.preferencesStore.wearPromptsShown.collectAsStateWithLifecycle(initialValue = null)
   // A watch that reports Terrazzo widgets is running the watch app, whatever its capability says
   // (a sideloaded or differently signed watch build doesn't match the phone's capability lookup).
-  val watchWidgets by graph.wearSyncManager.watchWidgets.collectAsState()
+  val watchWidgets by graph.wearSyncManager.watchWidgets.collectAsStateWithLifecycle()
   val missing = watches.firstOrNull { watch ->
     !watch.appInstalled && watchWidgets.none { it.nodeId == watch.nodeId }
   }

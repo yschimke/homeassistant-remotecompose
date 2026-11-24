@@ -48,7 +48,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -69,6 +68,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import ee.schimke.ha.client.TerrazzoIntegration
@@ -133,34 +133,55 @@ internal fun SettingsScreen(
   val context = LocalContext.current
   val widgetRefresh = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
   val themeChoice by
-    graph.preferencesStore.themeChoice.collectAsState(initial = ThemeChoice.Default)
-  val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
-  val launcherColours by
-    graph.preferencesStore.launcherColours.collectAsState(initial = LauncherColoursPref.System)
-  val widgetCardFonts by
-    graph.preferencesStore.widgetCardFonts.collectAsState(initial = WidgetCardFontsPref.Server)
-  val gridLayoutEnabled by
-    graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
-  val collapsedModeEnabled by graph.preferencesStore.collapsedMode.collectAsState(initial = true)
-  val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
-  val flashOnDataChange by graph.preferencesStore.flashOnDataChange.collectAsState(initial = false)
-  val dataGridOverlay by graph.preferencesStore.dataGridOverlay.collectAsState(initial = false)
-  val hapticsEnabled by graph.preferencesStore.haptics.collectAsState(initial = true)
-  val soundsEnabled by graph.preferencesStore.interfaceSounds.collectAsState(initial = false)
-  val designServerUrl by graph.preferencesStore.designServerUrl.collectAsState(initial = "")
-  val designVariant by
-    graph.preferencesStore.designVariant.collectAsState(
-      initial = PreferencesStore.DEFAULT_DESIGN_VARIANT,
+    graph.preferencesStore.themeChoice.collectAsStateWithLifecycle(
+      initialValue = ThemeChoice.Default,
     )
-  val designAuthor by graph.preferencesStore.designAuthor.collectAsState(initial = "")
-  val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
-  val privateDesignServer by graph.preferencesStore.privateDesignServer.collectAsState(initial = "")
+  val darkPref by
+    graph.preferencesStore.darkMode.collectAsStateWithLifecycle(initialValue = DarkModePref.Follow)
+  val launcherColours by
+    graph.preferencesStore.launcherColours.collectAsStateWithLifecycle(
+      initialValue = LauncherColoursPref.System,
+    )
+  val widgetCardFonts by
+    graph.preferencesStore.widgetCardFonts.collectAsStateWithLifecycle(
+      initialValue = WidgetCardFontsPref.Server,
+    )
+  val gridLayoutEnabled by
+    graph.preferencesStore.experimentalGridLayout.collectAsStateWithLifecycle(initialValue = false)
+  val collapsedModeEnabled by
+    graph.preferencesStore.collapsedMode.collectAsStateWithLifecycle(initialValue = true)
+  val logsViewEnabled by
+    graph.preferencesStore.logsViewEnabled.collectAsStateWithLifecycle(initialValue = false)
+  val flashOnDataChange by
+    graph.preferencesStore.flashOnDataChange.collectAsStateWithLifecycle(initialValue = false)
+  val dataGridOverlay by
+    graph.preferencesStore.dataGridOverlay.collectAsStateWithLifecycle(initialValue = false)
+  val hapticsEnabled by
+    graph.preferencesStore.haptics.collectAsStateWithLifecycle(initialValue = true)
+  val soundsEnabled by
+    graph.preferencesStore.interfaceSounds.collectAsStateWithLifecycle(initialValue = false)
+  val designServerUrl by
+    graph.preferencesStore.designServerUrl.collectAsStateWithLifecycle(initialValue = "")
+  val designVariant by
+    graph.preferencesStore.designVariant.collectAsStateWithLifecycle(
+      initialValue = PreferencesStore.DEFAULT_DESIGN_VARIANT,
+    )
+  val designAuthor by
+    graph.preferencesStore.designAuthor.collectAsStateWithLifecycle(initialValue = "")
+  val designToken by
+    graph.preferencesStore.designToken.collectAsStateWithLifecycle(initialValue = "")
+  val privateDesignServer by
+    graph.preferencesStore.privateDesignServer.collectAsStateWithLifecycle(initialValue = "")
   val usageSharing by
-    graph.preferencesStore.usageSharing.collectAsState(initial = UsageSharing.Default)
+    graph.preferencesStore.usageSharing.collectAsStateWithLifecycle(
+      initialValue = UsageSharing.Default,
+    )
   val permanentWriteEnabled by
-    graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
-  val developerModePref by graph.preferencesStore.developerMode.collectAsState(initial = false)
-  val cardStudioEntry by graph.preferencesStore.cardStudioEntry.collectAsState(initial = false)
+    graph.preferencesStore.permanentWriteMode.collectAsStateWithLifecycle(initialValue = false)
+  val developerModePref by
+    graph.preferencesStore.developerMode.collectAsStateWithLifecycle(initialValue = false)
+  val cardStudioEntry by
+    graph.preferencesStore.cardStudioEntry.collectAsStateWithLifecycle(initialValue = false)
   // One developer-mode state, shared with MainActivity's LocalDeveloperMode. Testers who opted in
   // to early updates stay opted in; they see the switch again once they unlock developer mode.
   val developerMode = developerModePref
@@ -198,7 +219,9 @@ internal fun SettingsScreen(
         }
         if (!isDemo) {
           val externalUrl by
-            graph.remoteUrlStore.externalUrl(session.baseUrl).collectAsState(initial = null)
+            graph.remoteUrlStore
+              .externalUrl(session.baseUrl)
+              .collectAsStateWithLifecycle(initialValue = null)
           externalUrl?.let { url ->
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
               Text("Public URL (away from home)", style = MaterialTheme.typography.labelMedium)
@@ -225,8 +248,9 @@ internal fun SettingsScreen(
       }
 
       SettingsGroup("Theme") {
-        val installedStyles by CardStyleStore.of(context).installed.collectAsState()
-        val styleOverrides by CardDesignOverrideStore.of(context).overrides.collectAsState()
+        val installedStyles by CardStyleStore.of(context).installed.collectAsStateWithLifecycle()
+        val styleOverrides by
+          CardDesignOverrideStore.of(context).overrides.collectAsStateWithLifecycle()
         // WorkManager owns installs, including when Settings is closed or the process restarts.
         // No WorkManager in a preview (Robolectric doesn't initialise it): nothing is installing.
         val inPreview = LocalInspectionMode.current
@@ -236,7 +260,7 @@ internal fun SettingsScreen(
               else
                 WorkManager.getInstance(context).getWorkInfosByTagFlow(CardStyleInstallWorker.TAG)
             }
-            .collectAsState(initial = emptyList())
+            .collectAsStateWithLifecycle(initialValue = emptyList())
         val stylesInUse = CardStyles.inUse(themeChoice.cardStyle.id, styleOverrides.cardStyles)
         DesignSection(
           selected = themeChoice,
@@ -1214,7 +1238,7 @@ private fun DesignServerSetting(
 ) {
   val context = LocalContext.current
   var draft by remember(url) { mutableStateOf(url) }
-  val revision by CardDesignSync.revision.collectAsState()
+  val revision by CardDesignSync.revision.collectAsStateWithLifecycle()
   val home = homeAssistant.takeIf { it.isNotBlank() && url.isNotBlank() }
   // What the dashboard draws from: this Home Assistant's own server when it has one.
   val served = home?.let { "${privateDesignServerUrl(it)}/designs/v1" } ?: url
@@ -1404,7 +1428,8 @@ private fun DesignSourcesSummary() {
   val prefs = LocalTerrazzoGraph.current.preferencesStore
   val context = LocalContext.current
   val choice by
-    remember(prefs) { CardDesignSync.choice(context, prefs) }.collectAsState(initial = null)
+    remember(prefs) { CardDesignSync.choice(context, prefs) }
+      .collectAsStateWithLifecycle(initialValue = null)
   val summary = remember(choice) { CardDesignSources.summary(choice) }
   if (summary.server == 0 && summary.local.isEmpty()) return
   Text(

@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.logs.LogConnectionStatus
 import ee.schimke.terrazzo.core.logs.LogEntry
@@ -63,7 +63,7 @@ import java.util.Locale
 @Composable
 fun LogsScreen(onBack: () -> Unit) {
   val store = LocalTerrazzoGraph.current.logStore
-  val entries by store.flow.collectAsState()
+  val entries by store.flow.collectAsStateWithLifecycle()
 
   val crashes = entries.filterIsInstance<LogEntry.Crash>().sortedByDescending { it.timestamp }
   val dataUpdates =

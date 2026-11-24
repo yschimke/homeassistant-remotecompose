@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package ee.schimke.terrazzo.shared
 
 import androidx.compose.material3.ColorScheme
@@ -201,9 +203,10 @@ internal fun AppChromeTheme(
         outlineVariant = outline,
       )
     }
-  MaterialTheme(
+  androidx.compose.material3.MaterialExpressiveTheme(
     colorScheme = scheme,
     typography = cardStyleTypography(style, MaterialTheme.typography),
+    motionScheme = androidx.compose.material3.MotionScheme.expressive(),
   ) {
     CompositionLocalProvider(LocalClassicCardScheme provides classicCards, content = content)
   }

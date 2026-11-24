@@ -1,7 +1,11 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(
+  androidx.compose.material3.ExperimentalMaterial3Api::class,
+  androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class,
+)
 
 package ee.schimke.terrazzo.shared
 
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -710,10 +714,36 @@ private fun DashboardShell(
       )
     }
     key(homeVisit) {
+      val motionScheme = MaterialTheme.motionScheme
       NavDisplay(
         modifier = Modifier.weight(1f).fillMaxHeight(),
         backStack = stack,
         onBack = { if (stack.size > 1) stack.removeLastOrNull() },
+        transitionSpec = {
+          androidx.compose.animation.slideInHorizontally(motionScheme.defaultSpatialSpec()) {
+            it / 6
+          } + androidx.compose.animation.fadeIn(motionScheme.defaultEffectsSpec()) togetherWith
+            androidx.compose.animation.slideOutHorizontally(motionScheme.defaultSpatialSpec()) {
+              -it / 12
+            } + androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
+        },
+        popTransitionSpec = {
+          androidx.compose.animation.slideInHorizontally(motionScheme.defaultSpatialSpec()) {
+            -it / 12
+          } + androidx.compose.animation.fadeIn(motionScheme.defaultEffectsSpec()) togetherWith
+            androidx.compose.animation.slideOutHorizontally(motionScheme.defaultSpatialSpec()) {
+              it / 6
+            } + androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
+        },
+        predictivePopTransitionSpec = {
+          androidx.compose.animation.slideInHorizontally(motionScheme.defaultSpatialSpec()) {
+            -it / 12
+          } + androidx.compose.animation.fadeIn(motionScheme.defaultEffectsSpec()) togetherWith
+            androidx.compose.animation.scaleOut(
+              motionScheme.defaultSpatialSpec(),
+              targetScale = 0.92f,
+            ) + androidx.compose.animation.fadeOut(motionScheme.fastEffectsSpec())
+        },
         entryProvider =
           entryProvider {
             entry<DashboardsDestination> {

@@ -31,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ee.schimke.ha.design.CardDesignOverrides
 import ee.schimke.ha.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
@@ -99,15 +99,17 @@ fun CardActionsSheet(
     remember(baseUrl, dashboardUrlPath, cardData.rawJson) {
       PinStore.cardKey(baseUrl, dashboardUrlPath, cardData.rawJson)
     }
-  val onWatch by pinStore.isCardPinned(pinKey).collectAsState(initial = false)
-  val installed by graph.widgetStore.installed.collectAsState(initial = emptyList())
+  val onWatch by pinStore.isCardPinned(pinKey).collectAsStateWithLifecycle(initialValue = false)
+  val installed by
+    graph.widgetStore.installed.collectAsStateWithLifecycle(initialValue = emptyList())
   // Drop rows for widgets removed from the launcher before the count can disable "Add".
   LaunchedEffect(Unit) { WidgetSync.reconcile(context.applicationContext) }
   val overrides by
-    remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
+    remember(context) { CardDesignOverrideStore.of(context).overrides }
+      .collectAsStateWithLifecycle()
   val entityIds = remember(card) { card.historyEntityIds() }
   val cameras = remember(card) { cameraEntities(card) }
-  val liveCameras by LiveCameras.live.collectAsState()
+  val liveCameras by LiveCameras.live.collectAsStateWithLifecycle()
   val state =
     CardActionsState(
       title = card.historyTitle(),

@@ -46,7 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
@@ -69,6 +68,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import ee.schimke.composeai.rccreation.compose.modifier.RemoteModifier
@@ -306,7 +306,7 @@ fun DashboardViewScreen(
   // toggle flip) instead of waiting up to a full poll interval.
   val demoEpoch: Long =
     if (session is DemoHaSession) {
-      val epoch by session.actionRouter.epoch.collectAsState()
+      val epoch by session.actionRouter.epoch.collectAsStateWithLifecycle()
       LaunchedEffect(session, urlPath, epoch) {
         // Skip the seed value (epoch == 0). Subsequent bumps are
         // user-driven taps and warrant an immediate re-fetch.
@@ -354,7 +354,7 @@ fun DashboardViewScreen(
     openInBrowser(context, resolveAgainstBase(session.baseUrl, path))
   }
   // A launcher widget's tap, opened as the card's own tap would be, over the widget's card.
-  val widgetOpen by WidgetOpenRequests.requests.collectAsState()
+  val widgetOpen by WidgetOpenRequests.requests.collectAsStateWithLifecycle()
   LaunchedEffect(widgetOpen) {
     val target = widgetOpen ?: return@LaunchedEffect
     val card = target.card
@@ -560,12 +560,16 @@ private fun DashboardList(
   val listState = rememberLazyListState()
   LaunchedEffect(planningCard) { if (planningCard) listState.animateScrollToItem(0) }
   val preferencesStore = LocalTerrazzoGraph.current.preferencesStore
-  val useGridLayout by preferencesStore.experimentalGridLayout.collectAsState(initial = false)
-  val collapsedMode by preferencesStore.collapsedMode.collectAsState(initial = true)
+  val useGridLayout by
+    preferencesStore.experimentalGridLayout.collectAsStateWithLifecycle(initialValue = false)
+  val collapsedMode by
+    preferencesStore.collapsedMode.collectAsStateWithLifecycle(initialValue = true)
   // Debug data-visualisation toggles (Settings). Both default off so
   // production renders are untouched; reads are cheap StateFlows.
-  val flashOnDataChange by preferencesStore.flashOnDataChange.collectAsState(initial = false)
-  val dataGridOverlay by preferencesStore.dataGridOverlay.collectAsState(initial = false)
+  val flashOnDataChange by
+    preferencesStore.flashOnDataChange.collectAsStateWithLifecycle(initialValue = false)
+  val dataGridOverlay by
+    preferencesStore.dataGridOverlay.collectAsStateWithLifecycle(initialValue = false)
   // The card designs the user's settings choose from the design server (off when its URL is empty),
   // preloaded at app start so the first frame plays them; null only while that first read runs.
   val preloadedDesigns = rememberPreloadedCardDesigns()
@@ -656,7 +660,8 @@ private fun DashboardList(
     // The cards compose from here on: the launch is fully drawn (`timeToFullDisplayMs`).
     ReportDrawn()
     val cardDesignOverrides by
-      remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
+      remember(context) { CardDesignOverrideStore.of(context).overrides }
+        .collectAsStateWithLifecycle()
     // Every card's template resolved in the background, top to bottom, so a card scrolling on
     // screen for the first time finds it ready rather than capturing, folding and decoding it on
     // that frame. Snapshot changes don't restart it: they move values, which arrive as bindings.
@@ -1308,7 +1313,7 @@ private fun sectionHeadingFont(): androidx.compose.ui.text.font.FontFamily? {
   val name = LocalCardStyle.current.headingFont ?: return null
   val context = androidx.compose.ui.platform.LocalContext.current
   // The font cache's faces: a heading font that arrives with the design sync draws in.
-  val faces by ee.schimke.ha.rc.HaFontLibrary.faces.collectAsState()
+  val faces by ee.schimke.ha.rc.HaFontLibrary.faces.collectAsStateWithLifecycle()
   return remember(name, faces) {
     ee.schimke.ha.rc.HaFonts.typeface(context, name)?.let {
       androidx.compose.ui.text.font.FontFamily(it)
@@ -1358,7 +1363,8 @@ private fun PinnableSectionHeading(
         sectionIndex = sectionIndex,
       )
     }
-  val isPinned by pinContext.pinStore.isSectionPinned(key).collectAsState(initial = false)
+  val isPinned by
+    pinContext.pinStore.isSectionPinned(key).collectAsStateWithLifecycle(initialValue = false)
   // A long press offers what a section can start: an agent session about it, or a planned card.
   var menu by remember { mutableStateOf(false) }
   val askAgent = pinContext.onAskAgent
@@ -1667,7 +1673,8 @@ internal fun StudioCardPreview(session: HaSession, card: CardConfig, snapshot: H
 internal fun DashboardCardPreview(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
   val context = androidx.compose.ui.platform.LocalContext.current
   val overrides by
-    remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
+    remember(context) { CardDesignOverrideStore.of(context).overrides }
+      .collectAsStateWithLifecycle()
   val designs = rememberPreloadedCardDesigns() ?: CardDesigns()
   CompositionLocalProvider(
     LocalCardDesigns provides designs,
@@ -1850,7 +1857,7 @@ private fun CardSlot(
     }
     val cameras = remember(card) { cameraEntities(card) }
     if (cameras.isNotEmpty()) {
-      val live by LiveCameras.live.collectAsState()
+      val live by LiveCameras.live.collectAsStateWithLifecycle()
       if (cameras.any { it in live }) LiveCameraDot(Modifier.align(Alignment.TopEnd))
     }
   }
