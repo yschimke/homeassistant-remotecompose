@@ -136,6 +136,18 @@ class TerrazzoMcpMetadataView(HomeAssistantView):
         )
 
 
+def _started(session):
+    """A session just opened, with the dashboard it starts from: an agent drafts from this without
+    calling get_dashboard or get_edit_session first."""
+    result = edits.edit_sessions.summary(session)
+    result["dashboard"] = session["baseline"]
+    result["next"] = (
+        "Draft from dashboard (its current config) and submit_draft the whole new config with "
+        "this session_id; no need to read it again."
+    )
+    return result
+
+
 class HassHome:
     """What the MCP tools may see and do: this instance, through one user's permissions."""
 
@@ -246,19 +258,20 @@ class HassHome:
 
     async def start_edit_session(self, url_path, request):
         try:
-            session = await edits.async_start(self._hass, self._user, url_path, request)
+            session = await edits.async_start(self._hass, self._user, url_path, request, answered=True)
         except edits.SessionError as failure:
             raise mcp.ToolError(str(failure)) from failure
-        return edits.edit_sessions.summary(session)
+        return _started(session)
 
     async def start_new_dashboard(self, title, request):
         try:
             session = await edits.async_start(
-                self._hass, self._user, None, request, {"kind": edits.edit_sessions.NEW_DASHBOARD, "title": title}
+                self._hass, self._user, None, request, {"kind": edits.edit_sessions.NEW_DASHBOARD, "title": title},
+                answered=True,
             )
         except edits.SessionError as failure:
             raise mcp.ToolError(str(failure)) from failure
-        return edits.edit_sessions.summary(session)
+        return _started(session)
 
     async def edit_session(self, session_id):
         try:

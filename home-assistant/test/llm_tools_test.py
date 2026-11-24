@@ -80,6 +80,15 @@ class LlmToolsTest(unittest.TestCase):
         self.assertEqual(llm_tools.API_ID, 'terrazzo_dashboards')
 
 
+    def test_a_draft_in_the_agents_turn_goes_to_that_turns_session(self):
+        config = {'views': []}
+        self.assertEqual(llm_tools.for_turn('submit_draft', {'config': config}, 's9'),
+                         {'config': config, 'session_id': 's9'})
+        for arguments in ({'config': config, 'session_id': 's1'}, {'config': config, 'url_path': 'garden'},
+                          {'config': config, 'new_dashboard_title': 'Garden'}):
+            self.assertEqual(llm_tools.for_turn('submit_draft', arguments, 's9'), arguments)
+        self.assertEqual(llm_tools.for_turn('find_entities', {}, 's9'), {})
+
     def test_a_read_only_mcp_server_keeps_the_reading_tools(self):
         # Home Assistant's MCP Server, set to read only, serves only tools marked read only.
         read_only = {spec['name'] for spec in llm_tools.tool_specs() if llm_tools.annotations(spec)['read_only']}

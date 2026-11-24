@@ -9,6 +9,7 @@ and each dashboard tool it calls is a step in the chat (`llm_api.TURN`). Like an
 drafts: a person applies. Clients learn whether an agent answers, and its name, from
 `terrazzo/agent/info`; the provider and its key stay in that agent's own integration.
 """
+import asyncio
 import copy
 import logging
 
@@ -241,29 +242,52 @@ class DashboardAgent:
             return
         turn = Turn(hass, user, session_id)
         turn._status("Thinking")
-        token = llm_api.TURN.set(turn)
-        try:
-            result = await conversation.async_converse(
-                hass,
-                agent_turn.turn_text(session),
-                None,  # A new conversation each turn: the recap is its memory (agent_turn.py).
-                Context(user_id=user.id),
-                language=hass.config.language,
-                agent_id=chosen,
-                extra_system_prompt=agent_turn.extra_system_prompt(session, hass.config.location_name),
-            )
-        except (HomeAssistantError, ValueError) as failure:
-            _LOGGER.warning("Terrazzo's dashboard agent %s couldn't answer: %s", chosen, failure)
-            self._failed(session_id, str(failure) or "The agent couldn't answer")
-            self._post(user, session_id, f"Sorry, I couldn't answer: {failure}")
-            return
-        finally:
-            llm_api.TURN.reset(token)
-        response = result.response
-        speech = ((response.speech or {}).get("plain") or {}).get("speech") or ""
+        retries = iter(agent_turn.RETRY_DELAYS)
+        while True:
+            token = llm_api.TURN.set(turn)
+            try:
+                result = await conversation.async_converse(
+                    hass,
+                    agent_turn.turn_text(session),
+                    None,  # A new conversation each turn: the recap is its memory (agent_turn.py).
+                    Context(user_id=user.id),
+                    language=hass.config.language,
+                    agent_id=chosen,
+                    extra_system_prompt=agent_turn.extra_system_prompt(session, hass.config.location_name),
+                )
+            except (HomeAssistantError, ValueError) as failure:
+                if await self._retry(turn, chosen, failure, retries):
+                    continue
+                _LOGGER.warning("Terrazzo's dashboard agent %s couldn't answer: %s", chosen, failure)
+                self._failed(session_id, str(failure) or "The agent couldn't answer")
+                self._post(user, session_id, f"Sorry, I couldn't answer: {failure}")
+                return
+            finally:
+                llm_api.TURN.reset(token)
+            response = result.response
+            speech = ((response.speech or {}).get("plain") or {}).get("speech") or ""
+            if response.response_type == intent.IntentResponseType.ERROR and await self._retry(
+                turn, chosen, speech, retries
+            ):
+                continue
+            break
         if response.response_type == intent.IntentResponseType.ERROR:
             self._failed(session_id, speech or "The agent couldn't answer")
         self._post(user, session_id, agent_turn.reply_text(speech, turn.drafted))
+
+    async def _retry(self, turn, chosen, failure, retries):
+        """Waits out a passing provider failure (503, 429, RESOURCE_EXHAUSTED) and says to run the
+        turn again: at most `agent_turn.RETRY_DELAYS` times, and never once it drafted, so a retry
+        can't submit a second draft."""
+        if turn.drafted or not agent_turn.transient(failure):
+            return False
+        delay = next(retries, None)
+        if delay is None:
+            return False
+        _LOGGER.info("Terrazzo's dashboard agent %s is busy (%s); trying again in %s s", chosen, failure, delay)
+        turn._status("The assistant is busy; trying again")
+        await asyncio.sleep(delay)
+        return True
 
     def _post(self, user, session_id, reply):
         try:

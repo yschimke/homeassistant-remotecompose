@@ -51,14 +51,26 @@ HOME_OVERVIEW = {
 API_PROMPT = "\n".join(
     [
         "You can edit this home's Lovelace dashboards with Terrazzo's dashboard tools.",
-        "- To change a dashboard, start_edit_session (or get_edit_session for one already open), "
-        "read it, then submit_draft the complete new config with a one-line summary. Nothing is "
+        "- To change a dashboard, start_edit_session (it returns the dashboard's config; or "
+        "get_edit_session for one already open), then submit_draft the complete new config with a "
+        "one-line summary. When you already have the config (get_dashboard), submit_draft without "
+        "a session_id opens the session and drafts in one call. Nothing is "
         "saved: the person reviews each draft in the Terrazzo panel or app, drawn with their own "
         "cards and live states, and applies it themselves. Tell them where (the session's "
         "terrazzo_url) and what you changed.",
         "- Read get_card_guide before drafting: the card types Terrazzo draws, how to size them, and "
         "how to use a card design made for a device (find_designs), including collapsing a device's "
         "entities into one custom:remote-compose-card with optional bindings, actions, and device_id.",
+        "- find_designs takes entity_id, query (words like dishwasher or bosch), or both: a "
+        "helper or bridged entity often has no device a design names, so search by its kind or "
+        "brand once instead of trying entity after entity. Use only design ids it returns.",
+        "- A draft is the whole config with a views list, e.g. "
+        '{"views": [{"title": "Home", "path": "home", "type": "sections", "sections": '
+        '[{"type": "grid", "cards": [<cards>]}]}]}. A design card is '
+        '{"type": "custom:remote-compose-card", "card": {"type": "tile", "entity": "<entity id>"}, '
+        '"design_id": "<from find_designs>"}, with optional bindings and actions (never entities).',
+        "- Tool calls are limited per turn: call independent reads together, skip get_card_guide "
+        "when these rules are enough, and submit_draft once you have what you need.",
         "- Use only entity ids from find_entities or home_overview. These tools see every entity "
         "the person may read, not only those exposed to Assist.",
         "- These tools only edit dashboards: they never control devices or change automations.",
@@ -103,6 +115,16 @@ async def call(home, name, arguments):
         return await mcp.call_tool(home, name, arguments if isinstance(arguments, dict) else {})
     except mcp.ToolError as failure:
         return {"error": str(failure)}
+
+
+def for_turn(name, arguments, session_id):
+    """[arguments] for a call in the dashboard agent's turn on [session_id]: a draft with no session
+    and no other dashboard named goes to that session, never a new one opened beside it."""
+    if name != "submit_draft" or arguments.get("session_id") is not None:
+        return arguments
+    if any(arguments.get(key) for key in ("url_path", "new_dashboard_title")):
+        return arguments
+    return {**arguments, "session_id": session_id}
 
 
 def schema_fields(input_schema):

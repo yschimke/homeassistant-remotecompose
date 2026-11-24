@@ -151,9 +151,11 @@ EDIT_TOOLS = [
         "title": "Start a dashboard edit",
         "description": (
             "Opens an edit session on a dashboard for a change the user asked for, or on a new "
-            "dashboard (new_dashboard_title) that applying its draft creates. Drafts you "
+            "dashboard (new_dashboard_title) that applying its draft creates, and returns the "
+            "dashboard's current config (dashboard) so you can draft straight away. Drafts you "
             "submit to it are previewed and applied by a person; nothing you do saves the "
-            "dashboard. Skip this when the user gave you a session id."
+            "dashboard. Skip this when the user gave you a session id, or when you already have "
+            "the config: submit_draft without a session_id opens the session itself."
         ),
         "inputSchema": {
             "type": "object",
@@ -198,10 +200,25 @@ EDIT_TOOLS = [
             "first, each with the card config that draws it: a custom:remote-compose-card wrapping "
             "a Home Assistant card, with the design's design_id. Multi-entity packs also list their "
             "contract `inputs` (and optional `actions`) so you can bind helper/virtual entities with "
-            "`bindings:` (and `actions:` / `device_id:`). An empty list means Home Assistant's own "
-            "cards are the right choice for that entity."
+            "`bindings:` (and `actions:` / `device_id:`). Give entity_id, query, or both: query "
+            "searches designs by words in their title, id and device (e.g. dishwasher, bosch), for "
+            "helper or bridged entities whose device isn't the one a design names. An empty list "
+            "means Home Assistant's own cards are the right choice."
         ),
-        "inputSchema": _entity_id_schema("The entity to find designs for, e.g. cover.garage_door."),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "entity_id": {
+                    "type": "string",
+                    "description": "The entity to find designs for, e.g. cover.garage_door.",
+                },
+                "query": {
+                    "type": "string",
+                    "description": "Words to search designs for, e.g. dishwasher or bosch.",
+                },
+            },
+            "additionalProperties": False,
+        },
         "annotations": {"readOnlyHint": True, "openWorldHint": True},
     },
     {
@@ -221,12 +238,30 @@ EDIT_TOOLS = [
             "Submits the complete new dashboard config to an edit session, with a one-line summary "
             "of the change. A person previews it with live cards and applies it; it isn't saved by "
             "this call. Every entity it names must exist in this home. A session whose scope is "
-            "a section (get_edit_session's scope) takes changes to that section only."
+            "a section (get_edit_session's scope) takes changes to that section only. Without a "
+            "session_id it first opens one, as start_edit_session would (url_path, or "
+            "new_dashboard_title, and request), and returns its session_id: one call instead of two."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "session_id": _SESSION_ID,
+                "session_id": {
+                    "type": "string",
+                    "description": "The edit session's id. Omit it to open one for this draft.",
+                },
+                "url_path": {
+                    "type": "string",
+                    "description": "Without a session_id: the dashboard's url_path from "
+                    "list_dashboards. Omit for the default Overview dashboard.",
+                },
+                "new_dashboard_title": {
+                    "type": "string",
+                    "description": "Without a session_id: a new dashboard with this title instead.",
+                },
+                "request": {
+                    "type": "string",
+                    "description": "Without a session_id: what the user asked for.",
+                },
                 "config": {
                     "type": "object",
                     "description": "The whole dashboard config: an object with a views list, "
@@ -234,7 +269,7 @@ EDIT_TOOLS = [
                 },
                 "summary": {"type": "string", "description": "One line: what changed."},
             },
-            "required": ["session_id", "config"],
+            "required": ["config"],
             "additionalProperties": False,
         },
         "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": False},
@@ -392,11 +427,24 @@ def _set_fields(match):
     return [f for f in _MATCH_FIELDS if isinstance((match or {}).get(f), str) and match[f].strip()]
 
 
+def _waived_integration(match, device):
+    """Whether [match]'s integration may differ from [device]'s: it also names the manufacturer and
+    model, so a device bridged another way (MQTT, Matter, Zigbee2MQTT, a simulator) still fits."""
+    fields = _set_fields(match)
+    if "integration" not in fields or "manufacturer" not in fields or "model" not in fields:
+        return False
+    actual = (device or {}).get("integration")
+    return not isinstance(actual, str) or actual.lower() != match["integration"].strip().lower()
+
+
 def design_matches(match, device):
-    """`DeviceMatch.matches` (ha-model): every field [match] sets, without case; `*` in a model."""
+    """`DeviceMatch.matches` (ha-model): every field [match] sets, without case; `*` in a model.
+    The integration is waived when the manufacturer and model match (`_waived_integration`)."""
     fields = _set_fields(match)
     if not device or not fields:
         return False
+    if _waived_integration(match, device):
+        fields = [f for f in fields if f != "integration"]
     for field in fields:
         wanted = match[field].strip().lower()
         actual = device.get(field)
@@ -411,9 +459,12 @@ def design_matches(match, device):
     return True
 
 
-def design_rank(match):
-    """`DeviceMatch.rank` (ha-model): model over brand over role over class, then field count."""
+def design_rank(match, device=None):
+    """`DeviceMatch.rank` (ha-model): model over brand over role over class, then field count. A
+    waived integration (`_waived_integration`) doesn't count, so the device's own integration wins."""
     fields = _set_fields(match)
+    if device is not None and _waived_integration(match, device):
+        fields = [f for f in fields if f != "integration"]
     if "model" in fields:
         scope = 4
     elif "integration" in fields or "manufacturer" in fields:
@@ -437,38 +488,58 @@ def _string_list(design, *keys):
     return None
 
 
-def find_designs(index, entity, device, limit=DESIGN_LIMIT):
+def design_text_matches(design, query):
+    """Whether every word of [query] is in [design]'s title, id, domain or device fields."""
+    words = (query or "").casefold().split()
+    if not words:
+        return False
+    device = design.get("device") if isinstance(design.get("device"), dict) else {}
+    parts = [design.get("title"), design.get("designId"), design.get("domain"), *device.values()]
+    text = " ".join(part for part in parts if isinstance(part, str)).casefold()
+    return all(word in text for word in words)
+
+
+def find_designs(index, entity=None, device=None, limit=DESIGN_LIMIT, query=None):
     """The designs in the library's suggestion [index] made for [entity]'s [device] or kind, best
-    fit first: what the card picker suggests (remote-compose-card.js), each with its card config
-    and any contract `inputs` / `actions` the pack declares."""
-    entity_id = entity["entity_id"]
-    domain = domain_of(entity_id)
+    fit first (what the card picker suggests, remote-compose-card.js), then those whose words match
+    [query]; each with its card config and any contract `inputs` / `actions` the pack declares.
+    A word match for another domain than [entity]'s (a helper standing in for a device), or with no
+    entity, leaves the card's entity out: the design's `domain` says which kind it shows, and the
+    helper binds through `bindings`."""
+    entity_id = entity["entity_id"] if entity else None
+    domain = domain_of(entity_id) if entity_id else None
     facts = dict(device or {})
-    facts["deviceClass"] = (entity.get("attributes") or {}).get("device_class")
-    found = {}
+    if entity:
+        facts["deviceClass"] = (entity.get("attributes") or {}).get("device_class")
+    by_device, by_words = {}, {}
     for design in (index or {}).get("designs") or []:
         if not isinstance(design, dict):
             continue
         design_id, card_type = design.get("designId"), design.get("cardType")
         if not isinstance(design_id, str) or card_type not in DESIGN_CARD_TYPES:
             continue
-        if design.get("domain") not in (None, domain) or not design_matches(design.get("device"), facts):
-            continue
-        found.setdefault((design_id, card_type), design)
-    ranked = sorted(found.values(), key=lambda d: -design_rank(d.get("device")))[:limit]
+        key = (design_id, card_type)
+        if entity and design.get("domain") in (None, domain) and design_matches(design.get("device"), facts):
+            by_device.setdefault(key, design)
+        elif design_text_matches(design, query):
+            by_words.setdefault(key, design)
+    ranked = sorted(by_device.values(), key=lambda d: -design_rank(d.get("device"), facts))
+    ranked += [d for key, d in by_words.items() if key not in by_device]
     out = []
-    for d in ranked:
+    for d in ranked[:limit]:
+        card = {"type": d["cardType"]}
+        fits = entity_id is not None and d.get("domain") in (None, domain)
+        if fits:
+            card["entity"] = entity_id
         item = {
             "design_id": d["designId"],
             "title": d.get("title") or f"Made for this device ({d['cardType']})",
             "card_type": d["cardType"],
             "made_for": {k: v for k, v in (d.get("device") or {}).items() if v},
-            "config": {
-                "type": "custom:remote-compose-card",
-                "card": {"type": d["cardType"], "entity": entity_id},
-                "design_id": d["designId"],
-            },
+            "config": {"type": "custom:remote-compose-card", "card": card, "design_id": d["designId"]},
         }
+        if not fits and isinstance(d.get("domain"), str):
+            item["domain"] = d["domain"]
         inputs = _string_list(d, "inputs", "contractInputs", "contract_inputs")
         if inputs:
             item["inputs"] = inputs
@@ -568,6 +639,15 @@ def _entity(home, arguments):
     return entity
 
 
+async def _start(home, arguments):
+    """Opens the edit session [arguments] ask for: a new dashboard (new_dashboard_title) or one."""
+    title = _optional_text(arguments, "new_dashboard_title").strip()
+    if title:
+        return await home.start_new_dashboard(title, _optional_text(arguments, "request"))
+    url_path = _optional_text(arguments, "url_path")
+    return await home.start_edit_session(url_path or None, _optional_text(arguments, "request"))
+
+
 async def call_tool(home, name, arguments):
     """Runs tool [name]; returns its structured result or raises ToolError."""
     if name == "find_entities":
@@ -587,28 +667,40 @@ async def call_tool(home, name, arguments):
     if name == "list_edit_sessions":
         return {"sessions": home.edit_sessions()}
     if name == "start_edit_session":
-        title = _optional_text(arguments, "new_dashboard_title").strip()
-        if title:
-            return await home.start_new_dashboard(title, _optional_text(arguments, "request"))
-        url_path = _optional_text(arguments, "url_path")
-        return await home.start_edit_session(url_path or None, _optional_text(arguments, "request"))
+        return await _start(home, arguments)
     if name == "get_edit_session":
         return await home.edit_session(_session_id(arguments))
     if name == "get_card_guide":
         return CARD_GUIDE
     if name == "find_designs":
-        entity = _entity(home, arguments)
+        query = _optional_text(arguments, "query").strip()
+        if arguments.get("entity_id") is None and not query:
+            raise ToolError("Give entity_id, query (words like dishwasher or bosch), or both")
+        entity = _entity(home, arguments) if arguments.get("entity_id") is not None else None
         index = await home.design_index()
         if index is None:
             raise ToolError("The card design library can't be reached right now; use Home Assistant's own cards")
-        designs = find_designs(index, entity, home.device_info(entity["entity_id"]))
+        device = home.device_info(entity["entity_id"]) if entity else None
+        designs = find_designs(index, entity, device, query=query)
+        if designs and all("entity" in d["config"]["card"] for d in designs):
+            next_step = "Use a design's config as a card in the draft."
+        elif designs:
+            next_step = (
+                "A design whose config card has no entity yet needs one of its domain there; map its "
+                "inputs to this home's entities (helpers too) with bindings, then use it in the draft."
+            )
+        elif entity and not query:
+            next_step = (
+                "Nothing is made for this entity's device. Try once with query (the device's kind or "
+                "brand, e.g. dishwasher); otherwise use Home Assistant's own cards."
+            )
+        else:
+            next_step = "No design matches: use Home Assistant's own cards. Don't invent a design_id."
         return {
-            "entity_id": entity["entity_id"],
+            "entity_id": entity["entity_id"] if entity else None,
+            "query": query or None,
             "designs": designs,
-            "next": (
-                "Use a design's config as a card in the draft." if designs
-                else "Nothing is made for this entity: use Home Assistant's own cards."
-            ),
+            "next": next_step,
         }
     if name == "await_request":
         since = arguments.get("since", 0)
@@ -637,9 +729,16 @@ async def call_tool(home, name, arguments):
         config = arguments.get("config")
         if not isinstance(config, dict):
             raise ToolError("config must be the dashboard config object")
-        return await home.submit_draft(
-            _session_id(arguments), config, _optional_text(arguments, "summary")
-        )
+        summary_text = _optional_text(arguments, "summary")
+        if arguments.get("session_id") is not None:
+            return await home.submit_draft(_session_id(arguments), config, summary_text)
+        request = _optional_text(arguments, "request").strip() or summary_text
+        session_id = (await _start(home, {**arguments, "request": request}))["session_id"]
+        try:
+            result = await home.submit_draft(session_id, config, summary_text)
+        except ToolError as failure:
+            raise ToolError(f"{failure} (edit session {session_id} is open: pass it as session_id next time)") from failure
+        return {**result, "session_id": session_id}
     if name == "get_dashboard":
         url_path = arguments.get("url_path")
         if url_path is not None and not isinstance(url_path, str):
