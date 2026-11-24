@@ -202,12 +202,8 @@ fun Application.designServer(
     librarySourceRoutes(librarySources, uiBuilder, github)
     dashboardStudioRoutes(uiBuilder, github)
     demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
-    val agentRelay =
-      AgentRelay(
-        AgentDesignSessions(),
-        DashboardAgentSessions(),
-        guide = AgentGuide(holder, uiBuilder?.compiler ?: previewCompiler, generator),
-      )
+    val guide = AgentGuide(holder, uiBuilder?.compiler ?: previewCompiler, generator)
+    val agentRelay = AgentRelay(AgentDesignSessions(), DashboardAgentSessions(), guide = guide)
     agentSessionsDir()?.let { dir ->
       val saved = AgentSessionFile(File(dir, "sessions.json"), agentRelay)
       saved.load()
@@ -219,6 +215,8 @@ fun Application.designServer(
     }
     cardStudioRoutes(holder, uiBuilder, github, made = userDesigns, relay = agentRelay)
     dashboardAgentRoutes(agentRelay)
+    // A draft drawn with sample states, for Home Assistant when no app has drawn it yet.
+    dashboardRenderRoutes(guide)
     agentRelayRoutes(agentRelay)
     if (userDesigns != null && github != null) {
       userDesignRoutes(holder, userDesigns, uiBuilder, github)

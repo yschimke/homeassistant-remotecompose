@@ -326,6 +326,15 @@ def draft_render(hass, user, session_id):
     return edits.renders.get(session_id)
 
 
+def latest_draft(hass, user, session_id):
+    """[session_id]'s newest draft as (draft id, config), or None before the first."""
+    _, session = _visible_session(hass, user, session_id)
+    if not session["drafts"]:
+        return None
+    draft = session["drafts"][-1]
+    return draft["id"], draft["config"]
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "terrazzo/edit/render",

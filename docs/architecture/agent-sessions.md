@@ -184,6 +184,11 @@ A moment after a dashboard draft appears on the person's screen, the app capture
 the relay for a cloud agent (`get_render`), with the integration for an agent signed in to Home
 Assistant (`terrazzo/edit/render`, `get_draft_render`). Both return MCP image content. Renders are
 kept in memory only, the newest per session; the app shares again whenever it draws a draft.
+Until the app has drawn the newest draft (nobody has opened it, or an agent is working alone),
+`get_draft_render` has the design server draw it instead with made-up sample states
+(`POST /api/studio/render-dashboard`, the session-free form of `render_dashboard`), and says so
+(`drawn_by: sample`); only the draft config is sent, never the home's states. It is drawn once per
+draft, so polling for the person's own render doesn't ask again.
 A card draft is drawn by the app from the template the design server builds for it (the same
 build **Use it** publishes), so the person decides on what they will get.
 

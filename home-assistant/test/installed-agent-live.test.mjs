@@ -146,10 +146,12 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
         data:{jsonrpc:'2.0', id:1, method:'tools/call', params:{name:'get_draft_render', arguments:{session_id:session.session_id}}},
       });
       render = (await response.json()).result;
-      if (render.content?.[0]?.type === 'image') break;
+      // Until the panel shares its own, the draft may come back drawn with sample states.
+      if (render.content?.[0]?.type === 'image' && render.structuredContent?.drawn_by === 'app') break;
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    assert.equal(render.content[0].type, 'image', 'the panel shared its render');
+    assert.equal(render.structuredContent.drawn_by, 'app', 'the panel shared its render');
+    assert.equal(render.content[0].type, 'image');
     assert.equal(render.content[0].mimeType, 'image/png');
     writeFileSync(`${evidence}/agent-live-2-agent-view.png`, Buffer.from(render.content[0].data, 'base64'));
 

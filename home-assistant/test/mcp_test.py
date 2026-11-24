@@ -83,8 +83,11 @@ class FakeHome:
         self.submitted = (session_id, config, summary)
         return {'draft_id': 'd1', 'status': 'submitted'}
 
-    def draft_render(self, session_id):
-        return ('d1', b'\x89PNG\r\n\x1a\nfake') if session_id == 's1' else None
+    async def draft_render(self, session_id):
+        renders = getattr(self, 'renders', {
+            's1': {'draft_id': 'd1', 'drawn_by': mcp.DRAWN_BY_APP, 'pngs': [b'\x89PNG\r\n\x1a\nfake']},
+        })
+        return renders.get(session_id)
 
     async def await_request(self, since):
         self.listened = since
@@ -412,9 +415,41 @@ class LiveFeedbackToolsTest(unittest.TestCase):
         image = result['content'][0]
         self.assertEqual((image['type'], image['mimeType']), ('image', 'image/png'))
         self.assertEqual(base64.b64decode(image['data']), b'\x89PNG\r\n\x1a\nfake')
-        self.assertEqual(result['structuredContent'], {'draft_id': 'd1'})
+        self.assertEqual(result['structuredContent']['draft_id'], 'd1')
+        self.assertEqual(result['structuredContent']['drawn_by'], 'app')
+        self.assertIn('live states', result['structuredContent']['note'])
         none = call(FakeHome(), 'get_draft_render', {'session_id': 's2'})['structuredContent']
         self.assertEqual(none['status'], 'none')
+        self.assertIn('submit_draft', none['next'])
+
+    def test_a_draft_nobody_opened_is_drawn_with_sample_states(self):
+        body = {
+            'data': 'sample',
+            'images': [{'index': 0, 'caption': 'Sample data: Home (view 0)', 'png': base64.b64encode(b'p0').decode()},
+                       {'index': 1, 'caption': 'Sample data: Home (view 0), section 2', 'png': base64.b64encode(b'p1').decode()},
+                       {'index': 2, 'png': 'not base64!'}],
+            'undrawable': [{'path': 'views[0].cards[1]', 'reason': 'custom:nope', 'type': 'x'}],
+        }
+        sample = mcp.sample_render(body)
+        self.assertEqual(sample['pngs'], [b'p0', b'p1'])
+        self.assertEqual(sample['undrawable'], [{'path': 'views[0].cards[1]', 'reason': 'custom:nope'}])
+        home = FakeHome()
+        home.renders = {'s1': {'draft_id': 'd2', **sample}}
+        result = call(home, 'get_draft_render', {'session_id': 's1'})
+        images = [c for c in result['content'] if c['type'] == 'image']
+        self.assertEqual([base64.b64decode(i['data']) for i in images], [b'p0', b'p1'])
+        structured = result['structuredContent']
+        self.assertEqual((structured['draft_id'], structured['drawn_by']), ('d2', 'sample'))
+        self.assertIn('made-up sample states', structured['note'])
+        self.assertEqual(structured['undrawable'][0]['reason'], 'custom:nope')
+        self.assertEqual(len(structured['captions']), 2)
+        # Unreachable or undrawable: no picture, and why.
+        home.renders = {'s1': {'draft_id': 'd2', 'drawn_by': None, 'pngs': [],
+                               'reason': "The design server couldn't draw it: timeout"}}
+        failed = call(home, 'get_draft_render', {'session_id': 's1'})['structuredContent']
+        self.assertEqual(failed['status'], 'none')
+        self.assertIn('timeout', failed['next'])
+        self.assertEqual(mcp.sample_render(None)['pngs'], [])
 
     def test_messages_and_status_reach_the_person(self):
         home = FakeHome()

@@ -294,11 +294,44 @@ class HassHome:
             "await_feedback to hear what they think.",
         }
 
-    def draft_render(self, session_id):
+    async def draft_render(self, session_id):
+        """The newest draft drawn: by the person's app when it has drawn that draft (their cards
+        and states), else by the design server with made-up sample states, so an agent working
+        alone still sees it. None before the first draft. See `mcp.draft_render_result`."""
         try:
-            return edits.draft_render(self._hass, self._user, session_id)
+            latest = edits.latest_draft(self._hass, self._user, session_id)
+            shared = edits.draft_render(self._hass, self._user, session_id)
         except edits.SessionError as failure:
             raise mcp.ToolError(str(failure)) from failure
+        if latest is None:
+            return None
+        draft_id, config = latest
+        if shared is not None and shared[0] == draft_id:
+            return {"draft_id": draft_id, "drawn_by": mcp.DRAWN_BY_APP, "pngs": [shared[1]]}
+        # Drawn once per draft, whether it worked or not: an agent polling for the person's own
+        # render doesn't ask the design server again each time.
+        cache = self._hass.data.setdefault(DOMAIN, {}).setdefault(_SAMPLE_RENDERS, {})
+        key = (session_id, draft_id)
+        if key not in cache:
+            cache[key] = await self._sample_render(config)
+            while len(cache) > SAMPLE_RENDERS_KEPT:
+                cache.pop(next(iter(cache)))
+        return {"draft_id": draft_id, **cache[key]}
+
+    async def _sample_render(self, config):
+        """[config] drawn by the design server with sample states. Only the config is sent; the
+        states are invented there. Unreachable or undrawable: no pictures, and why."""
+        try:
+            async with async_get_clientsession(self._hass).post(
+                DRAFT_RENDER_URL, json={"dashboard": config}, timeout=ClientTimeout(total=30)
+            ) as response:
+                if response.status == 422:
+                    return {"drawn_by": mcp.DRAWN_BY_SAMPLE, "pngs": [], "reason": (await response.text())[:500]}
+                response.raise_for_status()
+                body = await response.json(content_type=None)
+        except (ClientError, TimeoutError, ValueError) as failure:
+            return {"drawn_by": None, "pngs": [], "reason": f"The design server couldn't draw it: {failure}"}
+        return mcp.sample_render(body)
 
     async def await_request(self, since):
         try:
@@ -329,7 +362,12 @@ class HassHome:
 
 # The public card design library's suggestion index (what remote-compose-card.js reads), and
 # how long a fetched copy is used.
-DESIGN_INDEX_URL = "https://ha.coo.ee/designs/v1/suggestions.json"
+DESIGN_SERVER_URL = "https://ha.coo.ee"
+DESIGN_INDEX_URL = DESIGN_SERVER_URL + "/designs/v1/suggestions.json"
+# Draws a draft's cards with sample states when no app has drawn it (`HassHome.draft_render`).
+DRAFT_RENDER_URL = DESIGN_SERVER_URL + "/api/studio/render-dashboard"
+_SAMPLE_RENDERS = "sample_renders"
+SAMPLE_RENDERS_KEPT = 20
 DESIGN_INDEX_FOR = 600
 _DESIGN_INDEX = "design_index"
 
