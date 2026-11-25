@@ -78,6 +78,8 @@ dependencies {
   api(libs.composeai.ui.builder.protocol)
 }
 val fixture = rootProject.file("docs/data.json")
+// A test reading a directory beside the module (rc-converter reads ../terrazzo-core/…/dashboards).
+val shared = layout.projectDirectory.dir("../../shared-fixtures")
 // Mentions project(":internal") in prose only: not an input (compose-preview-daemon#197).
 /* val packed = project(":internal").layout.buildDirectory */
 EOF
@@ -90,6 +92,7 @@ dependencies { constraints { api(project(":alpha")) } }
 EOF
 echo 'plugins { kotlin("jvm") }' > internal/build.gradle.kts
 echo '{}' > docs/data.json
+mkdir -p shared-fixtures && echo '{}' > shared-fixtures/dashboards.json
 cat > build-logic/src/main/kotlin/Conventions.kt <<'EOF'
 package conventions
 
@@ -267,6 +270,11 @@ check unpublished_dependency "alpha beta"
 # A file a script reads through rootProject.file(...) belongs to that module.
 change_root_file_input() { echo '{"a":1}' > docs/data.json; }
 check root_file_input "gamma"
+
+# A literal "../" path watches only the directory it names, not the whole repository: a change
+# there publishes the module, a change elsewhere does not (the unrelated_file case below).
+change_relative_path_input() { echo '{"a":1}' > shared-fixtures/dashboards.json; }
+check relative_path_input "gamma"
 
 # A change nobody's artifact contains publishes nothing.
 change_unrelated_file() { echo hi > README.md; }

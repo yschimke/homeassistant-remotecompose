@@ -139,7 +139,18 @@ for aid, d in modules.items():
         text = script_text(cur)
         for f in re.findall(r'rootProject\.file\("([^"]+)"\)', text):
             extra.add(f)
-        if re.search(r'\brootDir\b|"\.\./|file\("\.\./', text):
+        if re.search(r'\brootDir\b', text):
+            extra.add(WHOLE_REPO)
+        # A literal `"../…"` path names a directory beside the module: watch exactly that one
+        # (`rc-converter`'s tests read `../terrazzo-core/…/dashboards`). One that leaves the
+        # repository, or a `"../` this cannot read as a whole literal, watches everything.
+        for literal in re.findall(r'"(\.\./[^"]*)"', text):
+            resolved = os.path.normpath(os.path.join(cur, literal))
+            if "$" in literal or resolved == ".." or resolved.startswith("../") or os.path.isabs(resolved):
+                extra.add(WHOLE_REPO)
+            else:
+                extra.add(resolved)
+        if re.search(r'"\.\./', re.sub(r'"\.\./[^"]*"', '""', text)):
             extra.add(WHOLE_REPO)
         for dep in re.findall(r'project\("(:[^"]+)"\)', text):
             if artifact_id(dep) in modules or dep in seen:
