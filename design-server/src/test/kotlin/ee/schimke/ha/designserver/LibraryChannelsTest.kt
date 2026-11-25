@@ -463,6 +463,39 @@ class LibraryChannelsTest {
   }
 
   @Test
+  fun onlyTheMostRecentlyUsedPullRequestChannelsStayLoaded() {
+    val channels = LibraryChannels(store(), library(), maxLoadedChannels = 2)
+    for (n in 1..3) {
+      channels.install(
+        "pr-$n",
+        channels.stagingDir().also { library(withDark = n != 2).copyRecursively(it, true) },
+        "ci",
+      )
+    }
+    assertEquals(listOf("pr-2", "pr-3"), channels.loadedChannels())
+
+    // Listing reads each manifest, and loads nothing.
+    val listed = channels.list()
+    assertEquals(listOf("main", "pr-1", "pr-2", "pr-3"), listed.map { it.channel })
+    assertEquals(listOf(2, 2, 1, 2), listed.map { it.designs })
+    assertEquals("/designs/v1/channels/pr-1", listed[1].api)
+    assertEquals(listOf("pr-2", "pr-3"), channels.loadedChannels())
+    assertNotNull(channels.index("pr-1"))
+    assertNotNull(channels.libraryFile("pr-1", DesignLibrary.MANIFEST))
+    assertEquals(listOf("pr-2", "pr-3"), channels.loadedChannels())
+
+    // A channel let go of loads again when asked for, and the least recently used goes.
+    assertEquals(2, channels.holder("pr-1")!!.current().designs.size)
+    assertEquals(listOf("pr-3", "pr-1"), channels.loadedChannels())
+    assertEquals(1, channels.holder("pr-2")!!.current().designs.size)
+    assertEquals(listOf("pr-1", "pr-2"), channels.loadedChannels())
+
+    assertTrue(channels.delete("pr-2"))
+    assertEquals(listOf("pr-1"), channels.loadedChannels())
+    assertEquals(listOf("main", "pr-1", "pr-3"), channels.list().map { it.channel })
+  }
+
+  @Test
   fun aLibraryDerivedFromAnOlderMainIsNotInstalled() {
     val channels = LibraryChannels(store(), library())
     val served = channels.main.current().manifest.serial

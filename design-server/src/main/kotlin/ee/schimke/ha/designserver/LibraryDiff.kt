@@ -1,7 +1,6 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.Sha256
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * How a channel's library (a pull request's preview) differs from the published one it would
@@ -53,20 +52,16 @@ class LibraryDiff(val library: DesignLibrary, val base: DesignLibrary) {
   companion object {
     /**
      * The diff of [library] against [base], computed once per pair of library versions: it reads
-     * every preview image, so a page view mustn't. Keeps the few most recent pairs.
+     * every preview image, so a page view mustn't. Kept on [library] itself, so it goes when the
+     * library does: a cache of its own would keep every library it diffed in memory.
      */
     fun of(library: DesignLibrary, base: DesignLibrary): LibraryDiff {
-      val key = library.manifestEtag + base.manifestEtag
-      cache[key]?.let {
-        return it
-      }
-      val diff = LibraryDiff(library, base)
-      if (cache.size >= CACHED_PAIRS) cache.keys.firstOrNull()?.let(cache::remove)
-      cache[key] = diff
-      return diff
+      library.diff
+        ?.takeIf { it.base === base }
+        ?.let {
+          return it
+        }
+      return LibraryDiff(library, base).also { library.diff = it }
     }
-
-    private const val CACHED_PAIRS = 8
-    private val cache = ConcurrentHashMap<String, LibraryDiff>()
   }
 }

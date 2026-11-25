@@ -80,6 +80,7 @@ DESIGN_SERVER_URL=http://localhost:8080 LIBRARY_PUBLISH_TOKEN=… \
 | `LIBRARY_STORE` | A writable directory for the published libraries (the image: `/data/library`). Without it, `DESIGN_LIBRARY` is served read-only |
 | `LIBRARY_PUBLISH_TOKEN` | The bearer token CI publishes and deletes channels with; without it nobody can |
 | `LIBRARY_TTL_SECONDS` | How long an app keeps a manifest before asking again (default 3600, revalidated by ETag) |
+| `LIBRARY_LOADED_CHANNELS` | How many pull request channels stay loaded in memory at once, least recently used let go first (default 4) |
 | `LIBRARY_EDIT_POLL_SECONDS` | How often library edits in UI Builder are checked and published to `main` (default 60; 0 off) |
 | `LIBRARY_UPSTREAM` | Another design server (`https://ha.coo.ee`) whose published `main` this one follows: when it was built later than the local one it is installed, downloading only the files missing here (`LibraryMirror`). Needs `LIBRARY_STORE` |
 | `LIBRARY_UPSTREAM_POLL_SECONDS` | How often `LIBRARY_UPSTREAM` is checked (default 3600) |

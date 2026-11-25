@@ -43,6 +43,8 @@ import java.io.File
  *   `usage` under `UI_BUILDER_STATE_DIR`. Without either, counts last until a restart.
  * - `AGENT_SESSIONS_DIR`: where live agent sessions are kept across a restart ([AgentSessionFile]);
  *   defaults to `agent-sessions` under `UI_BUILDER_STATE_DIR`. Without either, a restart ends them.
+ * - `LIBRARY_LOADED_CHANNELS`: how many pull request channels stay loaded in memory at once, the
+ *   least recently used let go first (default 4); a channel let go of loads again when next asked.
  * - `LIBRARY_EDITORS`: comma-separated GitHub logins that may edit the library's card designs in UI
  *   Builder (`/library/<cardType>/edit`); with GitHub sign-in and none named, nobody may.
  * - `STATS_USERS`: comma-separated GitHub logins that may read `/stats/templates`; empty (the
@@ -59,6 +61,9 @@ fun main(args: Array<String>) {
       dir,
       ttlSeconds =
         System.getenv("LIBRARY_TTL_SECONDS")?.toLongOrNull() ?: LibraryChannels.DEFAULT_TTL_SECONDS,
+      maxLoadedChannels =
+        System.getenv("LIBRARY_LOADED_CHANNELS")?.toIntOrNull()?.coerceAtLeast(0)
+          ?: LibraryChannels.DEFAULT_MAX_LOADED_CHANNELS,
     )
   val holder = channels.main
   val library = holder.current()

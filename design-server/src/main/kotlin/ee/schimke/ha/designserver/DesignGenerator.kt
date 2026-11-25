@@ -12,7 +12,9 @@ import ee.schimke.ha.designs.LibraryCaptureProfile
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CommonCaptureHost
 import ee.schimke.ha.rc.cards.defaultRegistry
-import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 
@@ -36,7 +38,11 @@ class DesignGenerator(
   /**
    * One capture at a time: each is a composition, and a burst of them shouldn't starve requests.
    */
-  private val captures = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+  private val captures =
+    // Its thread ends when idle: a pull request's channel that is let go of leaves none behind.
+    ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, LinkedBlockingQueue())
+      .apply { allowCoreThreadTimeOut(true) }
+      .asCoroutineDispatcher()
 
   init {
     // Card code may draw an ImageBitmap in a capture, before any Compose scene has started.
