@@ -1,5 +1,12 @@
 # Live agent sessions
 
+> **Dashboards no longer use this relay.** The apps edit dashboards only with Home Assistant's own
+> conversation agent ([dashboard-chat.md](dashboard-chat.md), [dashboard-editing.md](dashboard-editing.md)).
+> They no longer offer **Connect an agent** or **Copy prompt** for a dashboard. What follows still
+> describes Card Studio's card sessions, which move to Home Assistant next
+> ([dashboard-chat.md](dashboard-chat.md#card-studio-next)), and the design server's relay, which
+> stays until then.
+
 How a person and an AI agent edit a card or a dashboard together. The person connects their agent
 once; after that every request goes straight to it, with nothing to copy. The person sees what the
 agent is doing, each draft appears by itself drawn with their own cards and live states, and they
@@ -172,10 +179,10 @@ over the edit session's subscription, and `await_feedback(session_id, since)` wa
 for the person's notes, which can name a card (`target`), or for the session to be applied or
 discarded. Notes and messages share one sequence (`seq`), so `since` says which notes the agent
 has read; presence ages by Home Assistant's clock (`server_time` in every reply). The screen shows
-the same live panel from the start; **Copy prompt** hands the session to an agent that isn't
-listening.
-`installed-agent-live.test.mjs` runs this end to end in a real Home Assistant with the real
-panel: ask from the menu, draft, a comment pinned to a card, apply.
+the same live panel from the start. The apps no longer offer **Copy prompt**: the agent signs in
+to Home Assistant itself. `mcp_test.py` and `installed-mcp.test.mjs` cover these tools; the panel's
+end-to-end test (`installed-agent-live.test.mjs`) now covers the dashboard chat instead
+([dashboard-chat.md](dashboard-chat.md)).
 
 ## The agent sees what the person sees
 

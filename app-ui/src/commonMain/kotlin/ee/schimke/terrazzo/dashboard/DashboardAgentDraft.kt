@@ -59,6 +59,13 @@ fun DashboardAgentDraft(
   modifier: Modifier = Modifier,
   writeBlockedReason: String? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
+  /**
+   * A session to show now, such as the one the dashboard chat just drafted into, rather than
+   * waiting for the next look for open sessions. It is Home Assistant's ([sources]' last).
+   */
+  focusSessionId: String? = null,
+  /** The session drawn in place now, or null while the dashboard shows as it is. */
+  onSessionShown: ((String?) -> Unit)? = null,
   current: @Composable (Modifier) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -68,6 +75,27 @@ fun DashboardAgentDraft(
   var session by remember(sources, urlPath) { mutableStateOf<AgentEditSession?>(null) }
   var problem by remember(sources, urlPath) { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
+
+  LaunchedEffect(sources, focusSessionId) {
+    val id = focusSessionId ?: return@LaunchedEffect
+    if (id == watchedId) return@LaunchedEffect
+    val source = sources.last()
+    val found =
+      try {
+        source.get(id)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Throwable) {
+        null
+      }
+    if (found != null && found.isOpen) {
+      edits = source
+      session = found
+      watchedId = found.id
+    }
+  }
+  val currentOnSessionShown = androidx.compose.runtime.rememberUpdatedState(onSessionShown)
+  LaunchedEffect(watchedId) { currentOnSessionShown.value?.invoke(watchedId) }
 
   // Look for an open session while there is none: one started elsewhere shows up within a minute.
   LaunchedEffect(sources, urlPath, watchedId) {

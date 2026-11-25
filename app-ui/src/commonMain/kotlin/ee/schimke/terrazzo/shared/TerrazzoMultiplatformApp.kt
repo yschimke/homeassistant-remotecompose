@@ -45,7 +45,6 @@ import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.TerrazzoIntegration
 import ee.schimke.ha.client.UnsupportedDashboardException
 import ee.schimke.ha.client.cache.OfflineCacheStore
-import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardAgent
 import ee.schimke.ha.client.dashboard.DashboardEditSession
 import ee.schimke.ha.client.dashboard.toCardConfig
@@ -508,21 +507,6 @@ private fun DashboardShell(
     }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
-  // Keep the owner capability while navigating away from an edit, and in the browser across a
-  // reload, so a running agent session can be resumed and revoked. It never leaves this device.
-  val cloudDashboardEdits =
-    remember(connection, designServer) {
-      runCatching {
-        CloudDashboardAgentEdits(
-          connection.client,
-          designServer,
-          grants = dashboardAgentGrants(),
-          agentLink = { AgentLinkStore.get(designServer) },
-        )
-      }
-        .getOrNull()
-    }
-  DisposableEffect(cloudDashboardEdits) { onDispose { cloudDashboardEdits?.close() } }
   // Opt-in template usage: once a launch (and when the server setting settles on a new value),
   // send the finished days. The delay restarts on every keystroke in the server field.
   LaunchedEffect(designServer) {
@@ -864,12 +848,13 @@ private fun DashboardShell(
                           // Editing by hand stays here beside the chat with the dashboard agent,
                           // which Edit opens while one answers.
                           onEdit = { stack.add(DashboardEditDestination(route.path)) },
-                          // The Home Assistant integration's own agent (its MCP user) answers this.
+                          // Home Assistant's own conversation agent answers this; without one,
+                          // an administrator is pointed at setting it up instead.
                           onAskAgent =
-                            if (editSessions) ({ stack.add(AgentEditDestination(route.path)) })
+                            if (editSessions && dashboardAgent.enabled)
+                              ({ stack.add(AgentEditDestination(route.path)) })
                             else null,
-                          askAgentLabel =
-                            if (dashboardAgent.enabled) CHAT_WITH_AGENT else "Ask your agent",
+                          askAgentLabel = CHAT_WITH_AGENT,
                           onNewDashboard =
                             if (dashboardAgent.enabled) ({ newDashboard = true }) else null,
                           agentFirst = dashboardAgent.enabled,
@@ -887,6 +872,26 @@ private fun DashboardShell(
                 ) { padding ->
                   val dashboardModifier =
                     Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
+                  // The dashboard chat: Home Assistant's agent, told which view is on screen.
+                  var shownView by remember(route.path) { mutableStateOf<View?>(null) }
+                  val chat =
+                    rememberDashboardChat(connection.client, route.path) {
+                      text,
+                      urlPath,
+                      view,
+                      entityIds,
+                      conversationId,
+                      sessionId ->
+                      connection.client.terrazzoAssist(
+                        text,
+                        urlPath,
+                        view,
+                        entityIds,
+                        conversationId,
+                        sessionId,
+                      )
+                    }
+                  var chatDraft by remember(route.path) { mutableStateOf<String?>(null) }
                   val showDashboard: @Composable (Modifier) -> Unit = { shown ->
                     LiveDashboard(
                       connection,
@@ -904,23 +909,35 @@ private fun DashboardShell(
                         if (route.path == initialDashboardPath) initialViewPath else null,
                       onViewPathChanged =
                         if (route.path == initialDashboardPath) onViewPathChanged else null,
+                      onViewShown = { shownView = it },
                     )
                   }
-                  if (editSessions && !customizing)
-                    DashboardDraftEntry(
-                      connection,
-                      route.path,
-                      snapshot,
-                      designServer,
-                      cardStyle,
-                      dark,
-                      cloudDashboardEdits.takeUnless { dashboardAgent.enabled },
-                      dashboardModifier,
-                      onOpenSession = { id -> stack.add(AgentEditDestination(route.path, id)) },
-                      onApplied = { dashboardRefreshGeneration++ },
-                      current = showDashboard,
-                    )
-                  else showDashboard(dashboardModifier)
+                  Box(dashboardModifier) {
+                    if (editSessions && !customizing)
+                      DashboardDraftEntry(
+                        connection,
+                        route.path,
+                        snapshot,
+                        designServer,
+                        cardStyle,
+                        dark,
+                        Modifier.fillMaxSize(),
+                        onOpenSession = { id -> stack.add(AgentEditDestination(route.path, id)) },
+                        onApplied = { dashboardRefreshGeneration++ },
+                        focusSessionId = chatDraft,
+                        onSessionShown = { chat.sessionId = it },
+                        current = showDashboard,
+                      )
+                    else showDashboard(Modifier.fillMaxSize())
+                    if (dashboardAgent.chatAvailable && !customizing)
+                      DashboardChat(
+                        dashboardAgent,
+                        chat,
+                        screen = { ChatScreen.of(shownView, snapshot) },
+                        onDraft = { chatDraft = it },
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                      )
+                  }
                 }
               }
             }
@@ -953,8 +970,6 @@ private fun DashboardShell(
                 designServer = designServer,
                 cardStyle = cardStyle,
                 dark = dark,
-                // The dashboard agent works in Home Assistant's sessions: no design server relay.
-                cloudEdits = cloudDashboardEdits.takeUnless { dashboardAgent.enabled },
                 dashboardAgent = dashboardAgent,
                 sessionId = route.sessionId,
                 onApplied = {
@@ -997,26 +1012,20 @@ private fun AgentEditEntry(
   designServer: String,
   cardStyle: String,
   dark: Boolean,
-  cloudEdits: CloudDashboardAgentEdits?,
   dashboardAgent: DashboardAgent,
   sessionId: String?,
   onApplied: () -> Unit,
   onBack: () -> Unit,
 ) {
-  @Suppress("DEPRECATION") val clipboard = LocalClipboardManager.current
   val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
-  // One flow: sessions through the design server, which Home Assistant also holds, so an agent
-  // signed in to Home Assistant directly sees and joins the same sessions.
-  val cloud = cloudEdits != null
+  // Home Assistant's own sessions, answered by its conversation agent.
   AgentEditScreen(
-    edits = cloudEdits ?: connection.client.agentEdits,
+    edits = connection.client.agentEdits,
     urlPath = path,
     title = title,
     snapshot = snapshot,
     onBack = onBack,
-    onSharePrompt = { clipboard.setText(AnnotatedString(it)) },
     onApplied = onApplied,
-    cloudServer = if (cloud) designServer else null,
     initialSessionId = sessionId,
     // The dashboard below shows the session's drafts as they come (DashboardDraftEntry).
     onDashboard = onBack,
@@ -1038,15 +1047,15 @@ private fun DashboardDraftEntry(
   designServer: String,
   cardStyle: String,
   dark: Boolean,
-  cloudEdits: CloudDashboardAgentEdits?,
   modifier: Modifier,
   onOpenSession: (String) -> Unit,
   onApplied: () -> Unit,
+  focusSessionId: String? = null,
+  onSessionShown: ((String?) -> Unit)? = null,
   current: @Composable (Modifier) -> Unit,
 ) {
   val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
-  val sources =
-    remember(cloudEdits, connection) { listOfNotNull(cloudEdits, connection.client.agentEdits) }
+  val sources = remember(connection) { listOf(connection.client.agentEdits) }
   DashboardAgentDraft(
     sources = sources,
     urlPath = path,
@@ -1055,6 +1064,8 @@ private fun DashboardDraftEntry(
     onApplied = onApplied,
     modifier = modifier,
     renderCard = { _, card -> preview(card, snapshot) },
+    focusSessionId = focusSessionId,
+    onSessionShown = onSessionShown,
     current = current,
   )
 }
@@ -1327,6 +1338,7 @@ private fun LiveDashboard(
   privateDesignServer: Boolean,
   initialViewPath: String? = null,
   onViewPathChanged: ((String) -> Unit)? = null,
+  onViewShown: ((View) -> Unit)? = null,
 ) {
   val uriHandler = LocalUriHandler.current
   var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
@@ -1551,6 +1563,7 @@ private fun LiveDashboard(
           Modifier.weight(1f),
           initialViewPath = initialViewPath,
           onViewPathChanged = onViewPathChanged,
+          onViewShown = onViewShown,
         ) { _, card ->
           Column {
             AuthenticatedCard(
@@ -1653,6 +1666,8 @@ fun DashboardContent(
   modifier: Modifier = Modifier,
   initialViewPath: String? = null,
   onViewPathChanged: ((String) -> Unit)? = null,
+  /** The view on screen, each time it changes: what the dashboard chat tells the agent. */
+  onViewShown: ((View) -> Unit)? = null,
   renderCard: @Composable (CardKey, CardConfig) -> Unit,
 ) {
   var selectedView by
@@ -1664,6 +1679,8 @@ fun DashboardContent(
   }
   val index = selectedView.coerceIn(0, (dashboard.views.size - 1).coerceAtLeast(0))
   val view = dashboard.views.getOrNull(index)
+  val currentOnViewShown by rememberUpdatedState(onViewShown)
+  LaunchedEffect(view) { view?.let { currentOnViewShown?.invoke(it) } }
   Column(modifier) {
     if (dashboard.views.size > 1) {
       Row(

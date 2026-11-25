@@ -536,7 +536,7 @@ as **optional modules**, apart from the client core.
 | `livery-sessions-client` | KMP, Ktor | The person's side: link, long-poll, comment, decision, sharing a render; resumes after a reload | `AgentRelayClient`, `AgentLiveControls` (~460) |
 | `livery-sessions-compose` | Compose Multiplatform, Material 3 | `LiveryAgentPanel`: presence line, the transcript (the agent by name, its steps grouped into turns), composer with a pinned target and `@` mentions, the fixed action row (**Use it** / **Create it**, **Adjust**, **Stop**, **Undo**) and draft chips. Also a `SessionReview` scaffold with a preview slot the app fills, the session list, and "Connect an agent" | `AgentLivePanel`, `AgentTranscript`, the generic body of `AgentEditScreen`, `DashboardAgentUi` (~1,500) |
 | `livery-sessions-agent-render` | Android, JVM, optional | A `TurnRenderer` on agent-render (Markdown replies, expandable tool calls) | `AgentTurnView.agentRender.kt` and the `agentRenderMain` source set |
-| `livery-agent` | KMP | The built-in agent: a tool-calling loop over the same session tools, on any OpenAI-compatible chat-completions endpoint (Gemini, OpenRouter, a custom URL). Keys stay in the caller's memory | `AgentCardDesigner` (~300) |
+| `livery-agent` | KMP | The built-in agent: a tool-calling loop over the same session tools, on any OpenAI-compatible chat-completions endpoint (Gemini, OpenRouter, a custom URL). Keys stay in the caller's memory | Dropped: `AgentCardDesigner` is removed; Terrazzo uses Home Assistant's own agent ([dashboard-chat.md](dashboard-chat.md)) |
 | `livery-uibuilder` (extended) | KMP + JVM | Run or reach UI Builder (`UiBuilderConfig`, its process, tokens, the admin listing), bounded app-to-browser **handoffs** (one-time tokens, 10 min), seeding a design from a contract (already there), the **`edits` channel publisher**, and `livery ui-builder import` plus a reusable workflow that opens the pull request back to the repo | `UiBuilder`, the handoff half of `CardStudio`, `LibraryEditPublisher`, `import-card-designs.py`/`.yml` (~1,500) |
 
 The tests move with their code: `AgentRelayTest`, `AgentSessionFileTest`, `AgentLivePanelTest`,
@@ -650,7 +650,7 @@ None of this depends on the card migration, so it can start now.
   - **Stays:** the stores' rules for Lovelace and card drafts, and Home Assistant's own direct
     path in Python.
 - **A3. Client and UI.** harc's app-ui and Android app move to `livery-sessions-client` and
-  `-compose`, with HA's target labeler and preview. `livery-agent` replaces `AgentCardDesigner`.
+  `-compose`, with HA's target labeler and preview. `AgentCardDesigner` is gone, so there is nothing for `livery-agent` to replace in Terrazzo.
 - **A4. UI Builder.** Handoffs, the UI Builder process and the import move to `livery-uibuilder`.
   The `edits` channel replaces `LibraryEditPublisher`'s writes to `main`, and needs step 3's
   signing.

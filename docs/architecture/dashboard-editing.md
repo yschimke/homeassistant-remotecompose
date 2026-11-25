@@ -134,6 +134,11 @@ while it still holds the applied draft.
 
 ### Cloud agent from the Wasm host
 
+> **Removed from the apps.** Dashboards are edited only with Home Assistant's own agent now; the
+> apps no longer create cloud requests (`CloudDashboardAgentEdits`). The integration still relays
+> drafts for cloud requests that already exist (`cloud_relay.py`) until they expire. See
+> [dashboard-chat.md](dashboard-chat.md). The rest of this section describes the earlier flow.
+
 > The agent now joins with a short code and the screen long-polls the design server's relay for
 > drafts, presence and messages; comments can be pinned to a card on the draft. See
 > [agent-sessions.md](agent-sessions.md). The owner capability is kept in the browser's local

@@ -3,6 +3,7 @@ package ee.schimke.ha.client
 import ee.schimke.ha.client.dashboard.AgentEditSession
 import ee.schimke.ha.client.dashboard.AgentEdits
 import ee.schimke.ha.client.dashboard.DashboardAgent
+import ee.schimke.ha.client.dashboard.DashboardChatReply
 import ee.schimke.ha.client.dashboard.DashboardConflictException
 import ee.schimke.ha.client.dashboard.EditScope
 import ee.schimke.ha.client.dashboard.StartedAgentEdit
@@ -737,6 +738,39 @@ class HaClient(
       if (e.code == "unknown_command") DashboardAgent.Off else throw e
     }
 
+  /**
+   * One turn of the dashboard chat (`terrazzo/assist`): [text] to Home Assistant's conversation
+   * agent, from the dashboard [urlPath] the person has open on [view], whose cards show
+   * [entityIds]. The agent controls devices with Assist's tools when it has them, and drafts
+   * dashboard changes into [sessionId] (or the edit session its draft opens on [urlPath]), which
+   * [DashboardChatReply.sessionId] names. Pass [DashboardChatReply.conversationId] back as
+   * [conversationId] to carry the conversation on. A turn can take a minute: the model may call
+   * several tools, and Home Assistant retries a busy provider.
+   */
+  suspend fun terrazzoAssist(
+    text: String,
+    urlPath: String?,
+    view: String? = null,
+    entityIds: List<String> = emptyList(),
+    conversationId: String? = null,
+    sessionId: String? = null,
+  ): DashboardChatReply {
+    val result =
+      runCommand("terrazzo/assist", timeoutMillis = ASSIST_TIMEOUT_MILLIS) {
+        put("text", text)
+        put("url_path", urlPath)
+        view?.let { put("view", it) }
+        if (entityIds.isNotEmpty())
+          put(
+            "entities",
+            JsonArray(entityIds.take(DashboardChatReply.MAX_ENTITIES).map(::JsonPrimitive)),
+          )
+        conversationId?.let { put("conversation_id", it) }
+        sessionId?.let { put("session_id", it) }
+      }
+    return json.decodeFromJsonElement(DashboardChatReply.serializer(), result)
+  }
+
   /** Put an externally prepared draft into an HA edit session as this signed-in user. */
   suspend fun relayAgentDraft(
     sessionId: String,
@@ -774,7 +808,7 @@ class HaClient(
         extra: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
       ): JsonObject =
         try {
-          runCommand(type, extra)
+          runCommand(type, extra = extra)
         } catch (e: HaCommandException) {
           if (e.code == "conflict") throw DashboardConflictException(e.reason)
           throw e
@@ -1074,9 +1108,10 @@ class HaClient(
 
   private suspend fun runCommand(
     type: String,
+    timeoutMillis: Long = COMMAND_TIMEOUT_MILLIS,
     extra: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit = {},
   ): JsonObject {
-    val response = awaitCommand(type, extra)
+    val response = awaitCommand(type, timeoutMillis, extra)
     return response["result"]?.jsonObject ?: JsonObject(emptyMap())
   }
 
@@ -1084,12 +1119,13 @@ class HaClient(
     type: String,
     extra: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit = {},
   ): JsonArray {
-    val response = awaitCommand(type, extra)
+    val response = awaitCommand(type, extra = extra)
     return response["result"]?.jsonArray ?: JsonArray(emptyList())
   }
 
   private suspend fun awaitCommand(
     type: String,
+    timeoutMillis: Long = COMMAND_TIMEOUT_MILLIS,
     extra: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
   ): JsonObject {
     val s = session ?: throw CommandNotSentException("Not connected — call connect() first")
@@ -1117,7 +1153,7 @@ class HaClient(
         if (live !== s) throw CommandNotSentException("Connection replaced before send (cmd=$type)")
         live.send(json.encodeToString(JsonObject.serializer(), msg))
       }
-      return withTimeout(30_000) {
+      return withTimeout(timeoutMillis) {
         val resp = deferred.await()
         val success = resp["success"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
         if (!success) {
@@ -1232,6 +1268,12 @@ internal fun camelizeState(obj: JsonObject): JsonObject = buildJsonObject {
 
 /** The `type` Home Assistant gives a long-lived access token's refresh token. */
 private const val LONG_LIVED_TOKEN_TYPE = "long_lived_access_token"
+
+/** How long a command waits for its result. */
+private const val COMMAND_TIMEOUT_MILLIS = 30_000L
+
+/** How long a dashboard chat turn may take: several tool calls, and a busy provider retried. */
+private const val ASSIST_TIMEOUT_MILLIS = 180_000L
 
 private fun String.intOrNullSafe(): Int? = this.toIntOrNull()
 

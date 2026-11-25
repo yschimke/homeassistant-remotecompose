@@ -111,12 +111,11 @@ jobs:
           node --test home-assistant/test/installed-mcp.test.mjs
           node --test home-assistant/test/installed-llm-api.test.mjs
           node --test home-assistant/test/installed-edits.test.mjs
+          # The dashboard chat in the real panel, with Home Assistant's Ollama agent against a
+          # fake Ollama server the test serves.
           node --test home-assistant/test/installed-agent-live.test.mjs
           # Home Assistant's Ollama agent, against a fake Ollama server this test serves.
           node --test home-assistant/test/installed-agent-ha.test.mjs
-          # A real design server relays a cloud agent's session, through a restart of its own.
-          DESIGN_SERVER_BIN="$PWD/design-server/build/install/design-server/bin/design-server" \
-            node --test home-assistant/test/installed-agent-cloud.test.mjs
           node --test home-assistant/test/installed-push.test.mjs
           node --test home-assistant/test/installed-designs.test.mjs
           node --test home-assistant/test/installed-wall.test.mjs

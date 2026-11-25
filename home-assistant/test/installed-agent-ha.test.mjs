@@ -127,7 +127,23 @@ function fakeOllama() {
       const lastUser = messages.map((m) => m.role).lastIndexOf('user');
       const step = messages.slice(lastUser).filter((m) => m.role === 'tool').length;
       let message;
-      if (step === 0) {
+      const chatPath = (system.match(/Its url_path is ([a-z0-9-]+)\./) || [])[1];
+      if (system.includes('chatting with you from Terrazzo') && chatPath && !sessionId) {
+        // The dashboard chat, from an open dashboard: read it, draft on it, say so.
+        if (step === 0) {
+          message = {role:'assistant', content:'', tool_calls:[{function:{name:tool('get_dashboard'), arguments:{url_path:chatPath}}}]};
+        } else if (step === 1) {
+          // Home Assistant hands the model a tool's result as {data, error}.
+          const result = JSON.parse(messages.at(-1).content || '{}');
+          const read = result.data ?? result;
+          const config = {...read.config, views:[...read.config.views, {title:'Lights', type:'sections', sections:[{type:'grid', cards:[
+            {type:'tile', entity:'light.wall_light'}]}]}]};
+          message = {role:'assistant', content:'', tool_calls:[{function:{name:tool('submit_draft'),
+            arguments:{config, revision:read.revision, summary:'A Lights view'}}}]};
+        } else {
+          message = {role:'assistant', content:'I added a Lights view with the wall light.'};
+        }
+      } else if (step === 0) {
         message = {role:'assistant', content:'', tool_calls:[{function:{name:tool('get_edit_session'), arguments:{session_id:sessionId}}}]};
       } else if (step === 1) {
         message = {role:'assistant', content:'', tool_calls:[{function:{name:tool('find_entities'), arguments:{query:'wall light'}}}]};
@@ -244,7 +260,8 @@ test("Home Assistant's own conversation agent builds a new dashboard; applying c
       ws = await connect(tokens.access_token);
       const info = await ws.call({type:'terrazzo/agent/info'});
       if (info.enabled) {
-        assert.deepEqual(info, {enabled:true, agent_id:agentId, name:'Garden agent', setup:null, setup_path:null});
+        assert.deepEqual(info, {enabled:true, agent_id:agentId, name:'Garden agent', setup:null, setup_path:null,
+          chat:true, assist:false});
         break;
       }
       ws.close();
@@ -302,6 +319,31 @@ test("Home Assistant's own conversation agent builds a new dashboard; applying c
     assert.equal(greeted.session.url_path, 'garden-test');
     await ws.call({type:'terrazzo/edit/discard', session_id:reopened.session.session_id});
 
+    // The dashboard chat, from the open dashboard: the agent is told what is on screen, its draft
+    // opens a session on that dashboard, and the exchange is kept on it, already answered.
+    const chatsBeforeChat = ollama.chats.length;
+    const chat = await ws.call({type:'terrazzo/assist', text:'Add a view for the lights', url_path:'garden-test',
+      view:'Garden', entities:['light.wall_light', 'not-an-entity']});
+    assert.ok(!chat.error, JSON.stringify(chat.error));
+    assert.equal(chat.speech, 'I added a Lights view with the wall light.');
+    assert.equal(chat.drafted, true);
+    assert.ok(chat.session_id, 'the draft is in a session');
+    assert.ok(chat.conversation_id, 'a conversation to carry on');
+    assert.deepEqual(chat.steps.map((s) => s.tool), ['get_dashboard', 'submit_draft']);
+    const chatSystem = ollama.chats[chatsBeforeChat].messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n');
+    assert.match(chatSystem, /looking at the dashboard 'Garden test', on its 'Garden' view/);
+    assert.match(chatSystem, /- light\.wall_light \(/);
+    assert.ok(!chatSystem.includes('not-an-entity'));
+    const chatSession = (await ws.call({type:'terrazzo/edit/get', session_id:chat.session_id})).session;
+    assert.equal(chatSession.url_path, 'garden-test');
+    assert.equal(chatSession.drafts.at(-1).summary, 'A Lights view');
+    assert.equal(chatSession.notes.at(-1).text, 'Add a view for the lights');
+    assert.equal(chatSession.messages.at(-1).text, 'I added a Lights view with the wall light.');
+    // Nothing else answered it: the chat's own turn was the only one.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    assert.equal(ollama.chats.length, chatsBeforeChat + 3);
+    await ws.call({type:'terrazzo/edit/discard', session_id:chat.session_id});
+
     // Undo deletes the dashboard it created.
     const undone = await ws.call({type:'terrazzo/edit/undo', session_id:session.session_id});
     assert.ok(!undone.error, JSON.stringify(undone.error));
@@ -322,7 +364,7 @@ test("Home Assistant's own conversation agent builds a new dashboard; applying c
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
     assert.deepEqual(plainInfo, {enabled:true, agent_id:plainId, name:'Plain agent', setup:'tools',
-      setup_path:'/config/integrations/integration/ollama'});
+      setup_path:'/config/integrations/integration/ollama', chat:true, assist:false});
     const {issues} = await ws.call({type:'repairs/list_issues'});
     const noTools = issues.find((issue) => issue.domain === 'terrazzo' && issue.issue_id === 'agent_no_tools');
     assert.ok(noTools, JSON.stringify(issues));

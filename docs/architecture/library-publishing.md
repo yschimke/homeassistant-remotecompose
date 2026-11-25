@@ -202,7 +202,7 @@ Changed in this PR:
   for a self-signed Home Assistant, client certificates, interceptors); on Apple, `Darwin` with
   `handleChallenge`; on the JVM, CIO or Java; on Wasm, Js. Every client takes an optional
   `httpClients` parameter next to its existing `engine` parameter: `HaClient`, `HaEntityStates`,
-  `AddonClient`, `AgentRelayClient` and `AgentCardDesigner`. So do the design helpers:
+  `AddonClient` and `AgentRelayClient` (`AgentCardDesigner` had it too until it was removed). So do the design helpers:
   `createDesignRepository`, `DesignFonts.refresh`, `DesignFilters.bitmapFonts` and
   `uploadWithDefaultClient`.
 - **Fixed: Android clients built without an engine skipped the shared client.** `HaClient` and

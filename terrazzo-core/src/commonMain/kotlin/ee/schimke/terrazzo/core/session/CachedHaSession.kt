@@ -2,7 +2,6 @@ package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaInstanceConfig
-import ee.schimke.ha.client.agent.AgentGrantStore
 import ee.schimke.ha.client.cache.OfflineCacheStore
 import ee.schimke.ha.client.dashboard.AgentEdits
 import ee.schimke.ha.client.dashboard.DashboardAgent
@@ -237,11 +236,16 @@ class CachedHaSession(
 
   override suspend fun dashboardAgent() = terrazzo?.dashboardAgent() ?: DashboardAgent.Off
 
-  override fun cloudAgentEdits(
-    server: String,
-    grants: AgentGrantStore,
-    agentLink: () -> String?,
-  ) = terrazzo?.cloudAgentEdits(server, grants, agentLink)
+  override suspend fun dashboardChat(
+    text: String,
+    urlPath: String?,
+    view: String?,
+    entityIds: List<String>,
+    conversationId: String?,
+    sessionId: String?,
+  ) =
+    terrazzo?.dashboardChat(text, urlPath, view, entityIds, conversationId, sessionId)
+      ?: throw UnsupportedOperationException("The dashboard chat needs the Terrazzo integration")
 
   override suspend fun registerSilentPush(webhookId: String, fcmToken: String, relayUrl: String) =
     terrazzo?.registerSilentPush(webhookId, fcmToken, relayUrl)

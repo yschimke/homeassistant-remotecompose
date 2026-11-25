@@ -181,7 +181,6 @@ class AndroidImeScrollingTest {
             title = "Garden",
             snapshot = HaSnapshot(),
             onBack = { backedOut = true },
-            onSharePrompt = {},
             onApplied = {},
             // A dashboard's own "Ask your agent": straight into its session.
             startScope = EditScope(),

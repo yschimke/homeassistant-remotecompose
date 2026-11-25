@@ -205,6 +205,8 @@ fun DashboardViewScreen(
   canPlanCards: Boolean = false,
   unlockSnackbars: SnackbarHostState? = null,
   onUnlock: () -> Unit = {},
+  /** The dashboard and its states each time they change: what the dashboard chat names. */
+  onShown: ((Dashboard, HaSnapshot) -> Unit)? = null,
 ) {
   val cache = LocalTerrazzoGraph.current.offlineCache
   // Seed from the session (demo mode's boards need no round trip) or
@@ -425,7 +427,9 @@ fun DashboardViewScreen(
           Text("Failed: ${s.message}", style = MaterialTheme.typography.bodyMedium)
           ReportDrawn()
         }
-      is DashboardState.Ready ->
+      is DashboardState.Ready -> {
+        val currentOnShown by androidx.compose.runtime.rememberUpdatedState(onShown)
+        androidx.compose.runtime.SideEffect { currentOnShown?.invoke(s.dashboard, s.snapshot) }
         DashboardList(
           dashboard = s.dashboard,
           placeholderSession = session,
@@ -454,6 +458,7 @@ fun DashboardViewScreen(
           pendingCard = pendingCard,
           onCardShown = { pendingCard = null },
         )
+      }
     }
   }
 

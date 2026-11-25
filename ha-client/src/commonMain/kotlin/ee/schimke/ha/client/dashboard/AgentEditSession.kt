@@ -208,7 +208,18 @@ data class DashboardAgent(
   val setup: String? = null,
   /** Where on Home Assistant an administrator does [setup], a path such as `/config/…`. */
   @SerialName("setup_path") val setupPath: String? = null,
+  /** Whether the integration has the dashboard chat (`terrazzo/assist`, agent capability 3). */
+  val chat: Boolean = false,
+  /**
+   * Whether the agent has Assist's tools on too, so the dashboard chat can switch devices; null
+   * when Home Assistant can't tell.
+   */
+  val assist: Boolean? = null,
 ) {
+  /** Whether the apps offer the dashboard chat on an open dashboard. */
+  val chatAvailable: Boolean
+    get() = enabled && chat
+
   /** The menu entry that opens [setupPath], or null while there's nothing to set up. */
   val setupLabel: String?
     get() =

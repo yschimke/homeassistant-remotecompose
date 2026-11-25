@@ -154,19 +154,13 @@ a design-server login; opening it in the hosted editor uses the existing browser
 The Wasm dashboard does not yet install private custom card designs, and the studio says so. The
 browser still needs its normal connection to Home Assistant for the selected card's data.
 
-### Provider draft generation
+### Draft gate
 
-Provider keys are entered for this studio session, masked in the UI, and kept only in
-memory. They are sent directly to the selected provider, never to Home Assistant or
-the design server. Claude uses Messages with `x-api-key` and `anthropic-version`;
-OpenAI and OpenRouter use their chat-completions APIs. A connected agent uses an
-explicit HTTPS OpenAI-compatible chat-completions URL and its own bearer key.
-
-The request includes the seeded document, its bindings and example values, and the
-user's instruction. It asks for a complete JSON document. Requests have a 90-second
-timeout and can be cancelled. Truncated replies and requests for tool execution are
-rejected; malformed JSON diagnostics do not echo private preview text. This is a single-turn draft generator, not a resumable
-coding-agent session or a general tool execution environment.
+There is no provider draft generation in the apps any more: the bring-your-own-key client
+(`AgentCardDesigner`, OpenRouter / Claude / OpenAI with a key typed into the studio) is removed.
+Drafts come from an agent, and moving that agent to Home Assistant's own is the plan in
+[dashboard-chat.md](dashboard-chat.md#card-studio-next). The gate below stays
+(`CardDraftValidation.kt`).
 
 The local and server draft gates preserve the schema, catalog pin, id, state variables,
 roots and existing live display bindings. They reject unknown bindings, unsupported

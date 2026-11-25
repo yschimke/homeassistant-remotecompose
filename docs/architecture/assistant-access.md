@@ -73,7 +73,9 @@ User-facing setup is in [`docs/HOME_ASSISTANT.md`](../HOME_ASSISTANT.md#mcp-serv
   `find_designs` lists the card designs made for an entity's device or kind, from the public
   design library's suggestion index, each as a card config a draft can use.
   An agent only submits drafts; a person applies one over the WebSocket with their own
-  (administrator) session.
+  (administrator) session. The apps themselves don't hand sessions to an outside agent any more:
+  they chat with Home Assistant's own agent ([dashboard-chat.md](dashboard-chat.md)). This server
+  is for agents someone signs in to Home Assistant themselves.
 - OAuth discovery hands clients to Home Assistant itself, which publishes RFC 8414 metadata with
   PKCE and client ID metadata documents. The installed test uses login-flow and long-lived
   tokens; a third-party client's OAuth flow is not exercised in CI.

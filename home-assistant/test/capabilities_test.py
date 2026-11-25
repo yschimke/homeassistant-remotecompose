@@ -27,7 +27,7 @@ class ReplyTest(unittest.TestCase):
         self.assertEqual(answer['capabilities'], {
             'edit': 1, 'push': 1, 'design_selections': 1,
             'design_server': {'available': False, 'version': None},
-            'web_origin': 1, 'agent': 2, 'wall': 'v1',
+            'web_origin': 1, 'agent': 3, 'wall': 'v1',
         })
 
     def test_an_administrators_commands_are_left_out_for_everyone_else(self):
