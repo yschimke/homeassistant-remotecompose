@@ -518,7 +518,10 @@ jobs:
           path: _release/
 
   # The reusable libraries (`HarcPublishing.LIBRARIES` in build-logic, plus `ha-bom`) go to Maven
-  # Central as `ee.schimke.ha:<module>:<tag without v>`, after yschimke/livery's release job. Off
+  # Central as `ee.schimke.ha:<module>:<tag without v>`, after yschimke/livery's release job. Only
+  # the libraries that changed upload: `.github/scripts/maven-publish-plan.sh` diffs each one (and
+  # what it depends on) against the tag it was last published at, and `ha-bom` pins every library
+  # at its own last-published version (docs/architecture/library-publishing.md). Off
   # until the repository variable MAVEN_CENTRAL_PUBLISH is 'true', so a release never fails on a
   # namespace or key that isn't set up yet; docs/architecture/library-publishing.md lists the setup.
   # Secrets (as livery and rc-players use): MAVEN_CENTRAL_USERNAME / MAVEN_CENTRAL_PASSWORD (a
@@ -541,6 +544,8 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+          # The publish plan diffs each library against the tag IT last published at.
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-java@v6.3.0
         with:
@@ -549,6 +554,27 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6.4.1
         with:
           cache-read-only: true
+      # Which libraries this release uploads, against the versions Maven Central reports: a library
+      # publishes when it, a project it depends on, or a shared build input changed since the tag it
+      # last published at. It also writes `publishing-manifest.json`, the version every SKIPPED
+      # library stays at, which the POMs and `ha-bom` read. Every uncertainty resolves to "publish".
+      #
+      # A manual run (`workflow_dispatch`, a recovery) skips the plan and publishes everything:
+      # its baseline is the very state that went wrong.
+      - name: Plan Maven Central publication
+        id: plan
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            echo "recovery run: publishing every library" >&2
+            echo "planned=false" >> "$GITHUB_OUTPUT"
+            echo "publish_set=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          publish_set="$(.github/scripts/maven-publish-plan.sh --head HEAD --write-manifest publishing-manifest.json | paste -sd, -)"
+          echo "planned=true" >> "$GITHUB_OUTPUT"
+          echo "publish_set=${publish_set}" >> "$GITHUB_OUTPUT"
+          echo "publish set: ${publish_set:-<empty>}"
       - name: Publish to Maven Central
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -556,17 +582,46 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          PLANNED: ${{ steps.plan.outputs.planned }}
+          PUBLISH_SET: ${{ steps.plan.outputs.publish_set }}
         run: |
           set -euo pipefail
+          version="${TAG_NAME#v}"
+          # ABSENT and EMPTY are different properties and must not be collapsed: absent means "no
+          # plan ran, publish everything" (a recovery); empty means "the plan ran and found
+          # nothing", which uploads nothing, not even the BOM.
+          PLAN_ARGS=()
+          if [ "${PLANNED}" = "true" ]; then
+            PLAN_ARGS+=("-Pharc.publishSet=${PUBLISH_SET}")
+            if [ -z "${PUBLISH_SET}" ]; then
+              echo "no library changed since the version it is published at; nothing to upload"
+              {
+                echo "### Maven Central"
+                echo "Nothing to publish: no library changed since its last published version."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          else
+            # A recovery for a release whose upload already went through would be refused: Central
+            # never takes a version twice. The BOM is the marker.
+            bom="https://repo.maven.apache.org/maven2/ee/schimke/ha/ha-bom/${version}/ha-bom-${version}.pom"
+            if curl -fsSL -o /dev/null --retry 3 "${bom}"; then
+              echo "::notice::${version} is already on Maven Central; recovery skips the upload"
+              exit 0
+            fi
+          fi
           for name in ORG_GRADLE_PROJECT_mavenCentralUsername ORG_GRADLE_PROJECT_mavenCentralPassword ORG_GRADLE_PROJECT_signingInMemoryKey; do
             [ -n "${!name}" ] || { echo "::error::MAVEN_CENTRAL_PUBLISH is on but $name is empty"; exit 1; }
           done
-          version="${TAG_NAME#v}"
-          ./gradlew publishHarcLibraries -Pharc.libraryVersion="$version" \
+          projects="$(./gradlew -q printHarcPublishedProjects -Pharc.libraryVersion="$version" "${PLAN_ARGS[@]}" \
+            --no-configuration-cache | grep '^:' | paste -sd' ' -)"
+          echo "publishing: ${projects}"
+          ./gradlew publishHarcLibraries -Pharc.libraryVersion="$version" "${PLAN_ARGS[@]}" \
             --no-configuration-cache --stacktrace
           {
             echo "### Maven Central"
-            echo "Published \`ee.schimke.ha:*:$version\`; import \`ee.schimke.ha:ha-bom:$version\`."
+            echo "Published \`${projects}\` at $version (skipped libraries stay at their last version);"
+            echo "import \`ee.schimke.ha:ha-bom:$version\`."
           } >> "$GITHUB_STEP_SUMMARY"
 
   # The release goes public only when the Home Assistant packages, the desktop installers and the

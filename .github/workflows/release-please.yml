@@ -29,6 +29,7 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      pr: ${{ steps.release.outputs.pr }}
     steps:
       - uses: googleapis/release-please-action@v5.0.0
         id: release
@@ -90,3 +91,27 @@ jobs:
           branch="$(jq -r .headRefName <<<"$pr")"
           gh workflow run pr-title.yml --ref "$branch" -f pr="$number"
           gh workflow run no-ai-coauthors.yml --ref "$branch" -f pr="$number"
+
+  # Which Maven coordinates merging the release PR would publish, as one comment on that PR. The
+  # publish plan otherwise runs only inside the release, so the answer was visible only after the
+  # upload. Same script, same Maven Central baseline, run against the release PR's head; see
+  # `.github/scripts/release-pr-publish-plan.sh` (shared with compose-ui-builder, compose-ai-tools
+  # and rc-players). Skipped on the run that cuts a release. Informational: it never fails.
+  release-pr-publish-plan:
+    needs: release-please
+    if: ${{ !cancelled() && needs.release-please.result == 'success' && needs.release-please.outputs.release_created != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # create/edit the comment on the release PR
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Comment the publish plan on the release PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RP_PR: ${{ needs.release-please.outputs.pr }}
+        run: ./.github/scripts/release-pr-publish-plan.sh

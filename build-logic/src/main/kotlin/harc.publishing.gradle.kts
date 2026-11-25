@@ -17,7 +17,9 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 // on other modules in the set: a POM naming an unpublished project is a resolution failure in the
 // consumer's build, not in ours.
 //
-// Version: `-Pharc.libraryVersion=<x.y.z>` (the release job passes the tag without its `v`).
+// Version: `-Pharc.libraryVersion=<x.y.z>` (the release job passes the tag without its `v`). On a
+// planned release (`-Pharc.publishSet=…`) a library the plan skipped keeps the version it was last
+// published at, read from `publishing-manifest.json` (see `releasedVersion` below).
 // Without it, the next patch after `.github/.release-please-manifest.json` as a `-SNAPSHOT`, so a
 // local `publishToMavenLocal` never claims a released version.
 
@@ -66,7 +68,7 @@ fun harcLibraryVersion(): String {
     ?.removePrefix("v")
     ?.takeIf { it.isNotEmpty() }
     ?.let {
-      return it
+      return releasedVersion(it)
     }
   val manifest = rootDir.resolve(".github/.release-please-manifest.json")
   // Builds from a partial checkout have no manifest: the add-on image copies only the modules it
@@ -77,4 +79,22 @@ fun harcLibraryVersion(): String {
       ?: error("No root version in $manifest")
   val (major, minor, patch) = current.destructured
   return "$major.$minor.${patch.toInt() + 1}-SNAPSHOT"
+}
+
+/**
+ * This module's version on the release tagged [tag]. On a planned release
+ * (`-Pharc.publishSet`, from `.github/scripts/maven-publish-plan.sh`) a library the plan skipped
+ * keeps the version it was last published at ([HarcPublishing.resolveVersion]); the BOM always
+ * takes the tag.
+ */
+fun releasedVersion(tag: String): String {
+  if (path == HarcPublishing.BOM) return tag
+  val publishSet =
+    HarcPublishing.parsePublishSet(
+      providers.gradleProperty(HarcPublishing.PUBLISH_SET_PROPERTY).orNull
+    )
+  val manifest =
+    if (publishSet == null || project.name in publishSet) null
+    else rootDir.resolve(HarcPublishing.PUBLISH_MANIFEST).takeIf { it.isFile }?.readText()
+  return HarcPublishing.resolveVersion(project.name, tag, publishSet, manifest)
 }

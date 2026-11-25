@@ -36,3 +36,6 @@ embed/node_modules/
 
 # Immutable PR-only composite dependency checkout.
 .ci-dependencies/
+
+# Written by the release from Maven Central (maven-publish-plan.sh --write-manifest); never committed.
+/publishing-manifest.json
