@@ -91,6 +91,10 @@ class ReplyTest(unittest.TestCase):
         self.assertEqual('s1', chat.drafted_session('submit_draft', {'session_id': 's1'}))
         self.assertIsNone(chat.drafted_session('submit_draft', {'error': 'no', 'session_id': 's1'}))
         self.assertIsNone(chat.drafted_session('get_dashboard', {'session_id': 's1'}))
+        # A draft to a session already open returns no id: its arguments name it.
+        self.assertEqual('s2', chat.drafted_session('submit_draft', {'status': 'ok'}, {'session_id': 's2'}))
+        self.assertEqual('s3', chat.drafted_session('submit_draft', {'session_id': 's3'}, {'session_id': 's2'}))
+        self.assertIsNone(chat.drafted_session('start_edit_session', {}, {'session_id': 's2'}))
 
     def test_a_draft_without_words_still_says_something(self):
         answer = chat.reply('', 'answer', 'c1', 's1', True, [])

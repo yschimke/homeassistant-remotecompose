@@ -66,6 +66,8 @@ fun DashboardAgentDraft(
   focusSessionId: String? = null,
   /** The session drawn in place now, or null while the dashboard shows as it is. */
   onSessionShown: ((String?) -> Unit)? = null,
+  /** The draft's view on screen, each time it changes, while the draft is drawn in place. */
+  onViewShown: ((ee.schimke.ha.model.View) -> Unit)? = null,
   current: @Composable (Modifier) -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -223,6 +225,7 @@ fun DashboardAgentDraft(
         "agent-draft-${shown.id}-${draft.id}",
         snapshot,
         Modifier.weight(1f),
+        onViewShown = onViewShown,
       ) { key, card ->
         Box {
           renderCard(key, card)

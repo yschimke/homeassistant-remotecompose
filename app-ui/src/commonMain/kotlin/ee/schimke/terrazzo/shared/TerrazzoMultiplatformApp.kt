@@ -926,6 +926,8 @@ private fun DashboardShell(
                         onApplied = { dashboardRefreshGeneration++ },
                         focusSessionId = chatDraft,
                         onSessionShown = { chat.sessionId = it },
+                        // The chat names what is on screen: the draft's view while it is drawn.
+                        onViewShown = { shownView = it },
                         current = showDashboard,
                       )
                     else showDashboard(Modifier.fillMaxSize())
@@ -1052,6 +1054,7 @@ private fun DashboardDraftEntry(
   onApplied: () -> Unit,
   focusSessionId: String? = null,
   onSessionShown: ((String?) -> Unit)? = null,
+  onViewShown: ((View) -> Unit)? = null,
   current: @Composable (Modifier) -> Unit,
 ) {
   val preview = rememberDraftPreview(connection, designServer, cardStyle, dark)
@@ -1066,6 +1069,7 @@ private fun DashboardDraftEntry(
     renderCard = { _, card -> preview(card, snapshot) },
     focusSessionId = focusSessionId,
     onSessionShown = onSessionShown,
+    onViewShown = onViewShown,
     current = current,
   )
 }

@@ -127,13 +127,17 @@ def for_chat(name, arguments, url_path, session_id):
     return arguments
 
 
-def drafted_session(name, result):
-    """The edit session a dashboard tool's [result] drafted into or opened, else None."""
+def drafted_session(name, result, arguments=None):
+    """The edit session a dashboard tool's [result] drafted into or opened, else None. A draft names
+    its session in [result] when `submit_draft` opened one, else in its [arguments] (a draft to a
+    session already open returns no id)."""
     if name not in ("submit_draft", "start_edit_session") or not isinstance(result, dict):
         return None
     if "error" in result:
         return None
     session_id = result.get("session_id")
+    if not session_id and name == "submit_draft" and isinstance(arguments, dict):
+        session_id = arguments.get("session_id")
     return session_id if isinstance(session_id, str) and session_id else None
 
 

@@ -242,8 +242,10 @@ class ChatTurn(Turn):
             super().progress(**change)
 
     def called(self, tool, arguments, result):
-        opened = assist_chat.drafted_session(tool, result)
-        if opened and self.session_id is None:
+        opened = assist_chat.drafted_session(tool, result, arguments)
+        # A draft moves the chat to the session it landed in (another dashboard the person named,
+        # a new one); a session merely opened is taken only while the chat has none.
+        if opened and (tool == "submit_draft" or self.session_id is None):
             self.session_id = opened
         asked, output, ok = agent_turn.describe_step(tool, arguments, result)
         self.steps.append({"tool": tool, "input": asked, "output": output, "ok": ok})
