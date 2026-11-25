@@ -21,8 +21,6 @@ import io.ktor.server.routing.options
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.utils.io.jvm.javaio.toInputStream
-import java.util.Collections
-import java.util.IdentityHashMap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
@@ -31,19 +29,12 @@ import kotlinx.serialization.json.Json
 
 /**
  * One [DesignGenerator] per library holder: a key captured on request is kept beside the library of
- * the channel it was asked of, so a pull request's preview never answers with `main`'s capture.
+ * the channel it was asked of, so a pull request's preview never answers with `main`'s capture. The
+ * generator lives on its holder ([LibraryHolder.generator]), so a channel [LibraryChannels] lets go
+ * of takes its captures with it.
  */
 class DesignGenerators {
-  private val byHolder =
-    Collections.synchronizedMap(IdentityHashMap<LibraryHolder, DesignGenerator>())
-
-  fun of(holder: LibraryHolder): DesignGenerator =
-    byHolder.getOrPut(holder) { DesignGenerator(holder) }
-
-  /** Forgets the generator of a channel that was deleted. */
-  fun forget(holder: LibraryHolder) {
-    byHolder.remove(holder)
-  }
+  fun of(holder: LibraryHolder): DesignGenerator = holder.generator
 }
 
 /**
@@ -321,9 +312,7 @@ internal fun Route.libraryChannelRoutes(
     if (channel == LibraryPaths.MAIN) {
       return@delete call.respondText("main can't be deleted", status = HttpStatusCode.BadRequest)
     }
-    val holder = channels.holder(channel)
     if (!channels.delete(channel)) return@delete call.notFound()
-    holder?.let(generators::forget)
     call.respondText("", status = HttpStatusCode.NoContent)
   }
 }

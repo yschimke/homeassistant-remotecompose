@@ -55,6 +55,9 @@ class LibraryHolder(
   @Volatile private var loadedModified = manifestModified()
   @Volatile private var checkedAt = clock()
 
+  /** Designs captured on request beside this library ([DesignGenerators]). */
+  val generator: DesignGenerator by lazy { DesignGenerator(this) }
+
   fun current(): DesignLibrary {
     val now = clock()
     if (now - checkedAt >= checkIntervalMs) {

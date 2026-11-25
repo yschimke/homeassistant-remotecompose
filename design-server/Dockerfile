@@ -54,4 +54,9 @@ USER designs
 WORKDIR /data
 VOLUME /data
 EXPOSE 8080 8724
-ENTRYPOINT ["java", "-cp", "/app/lib/*", "ee.schimke.ha.designserver.MainKt"]
+# The heap is bounded by the container's memory, not by the host's: without a flag the JVM takes a
+# quarter of the machine. 70% leaves the rest for metaspace, threads and the capture's native
+# memory. An OutOfMemoryError exits, so the container restarts instead of serving half-dead. String
+# deduplication shares the catalogs' repeated strings (about a fifth of a loaded library). On the
+# command line, not in JAVA_TOOL_OPTIONS, so the bundled UI Builder's JVM doesn't inherit it.
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=70", "-XX:+ExitOnOutOfMemoryError", "-XX:+UseStringDeduplication", "-cp", "/app/lib/*", "ee.schimke.ha.designserver.MainKt"]

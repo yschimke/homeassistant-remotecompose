@@ -99,6 +99,35 @@ class DesignGeneratorTest {
   }
 
   @Test
+  fun aCapturedBlobIsServedAfterItsChannelIsLetGoOf() = testApplication {
+    // With no pull request channel kept loaded, the blob request after /generate loads the channel
+    // afresh, with a generator that never captured it.
+    val channels =
+      LibraryChannels(
+        Files.createTempDirectory("store").toFile(),
+        libraryDir(),
+        maxLoadedChannels = 0,
+      )
+    channels.install(
+      "pr-7",
+      channels.stagingDir().also { libraryDir().copyRecursively(it, true) },
+      "ci",
+    )
+    application { designServer(channels.main, channels = channels) }
+    val response =
+      client.post("$API_BASE/channels/pr-7/generate") {
+        setBody(json.encodeToString(DesignKey.serializer(), kitchenKey))
+      }
+    assertEquals(HttpStatusCode.OK, response.status, response.bodyAsText())
+    val design = json.decodeFromString(GeneratedDesign.serializer(), response.bodyAsText())
+    assertTrue(design.generated)
+    assertEquals(emptyList(), channels.loadedChannels())
+    val blob = client.get(design.blob)
+    assertEquals(HttpStatusCode.OK, blob.status)
+    assertEquals(design.sha256, Sha256.hex(blob.bodyAsBytes()))
+  }
+
+  @Test
   fun aBlobTwoKeysShareOutlivesEvictingOne(): Unit = runBlocking {
     // Keys that differ only in a variant the template doesn't draw capture the same bytes; with
     // room for one key, evicting the first must leave the blob the second still serves.

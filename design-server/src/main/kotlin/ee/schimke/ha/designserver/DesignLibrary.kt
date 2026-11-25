@@ -59,6 +59,9 @@ private constructor(
   private val blobs: Map<String, DesignEntry> = manifest.designs.associateBy { it.sha256 }
   private val decoded = ConcurrentHashMap<String, DecodedTemplate>()
 
+  /** How this library differs from the published one, once computed ([LibraryDiff.of]). */
+  @Volatile internal var diff: LibraryDiff? = null
+
   /** The manifest's ETag: its own SHA-256, so it changes exactly when the bytes do. */
   val manifestEtag: String = "\"${Sha256.hex(manifestBytes)}\""
 

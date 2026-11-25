@@ -74,11 +74,25 @@ class LibraryChannels(
   private val checkIntervalMs: Long = 5_000,
   /** Without a [root], the holder already serving [seed], if there is one. */
   readOnlyMain: LibraryHolder? = null,
+  /**
+   * How many pull request channels stay loaded at once, the least recently used let go first. A
+   * loaded library holds every blob and its whole catalog (a few hundred MB for the full library),
+   * and a server can have dozens of open pull requests' channels that nobody is looking at.
+   */
+  private val maxLoadedChannels: Int = DEFAULT_MAX_LOADED_CHANNELS,
 ) {
   lateinit var main: LibraryHolder
     private set
 
-  private val channels = ConcurrentHashMap<String, LibraryHolder>()
+  /** The loaded pull request channels, least recently used first ([maxLoadedChannels]). */
+  private val channels =
+    object : LinkedHashMap<String, LibraryHolder>(16, 0.75f, true) {
+      override fun removeEldestEntry(eldest: Map.Entry<String, LibraryHolder>): Boolean =
+        size > maxLoadedChannels
+    }
+
+  /** What [list] says of each channel, by the version of its library on disk ([summary]). */
+  private val summaries = ConcurrentHashMap<String, Pair<Long, Summary>>()
 
   /** Every installed library file, once, by content hash ([missing], [unpack]). */
   private val objects: File? = root?.let { File(it, OBJECTS) }
@@ -103,18 +117,35 @@ class LibraryChannels(
   val publishable: Boolean
     get() = root != null
 
-  /** The library served on [channel], or null when nothing was published there. */
+  /**
+   * The library served on [channel], or null when nothing was published there. A pull request's
+   * channel is loaded on first use and kept while it is among the [maxLoadedChannels] most recently
+   * used; one loads at a time, so a burst of requests for a channel loads it once.
+   */
   fun holder(channel: String): LibraryHolder? {
     if (channel == LibraryPaths.MAIN) return main
-    if (root == null || !LibraryPaths.CHANNEL.matches(channel)) return null
-    channels[channel]?.let {
-      return it
+    val dir = channelDir(channel) ?: return null
+    synchronized(channels) {
+      channels[channel]?.let {
+        return it
+      }
+      return runCatching { LibraryHolder(dir, checkIntervalMs, clock, LibraryPaths(channel)) }
+        .getOrNull()
+        ?.also { channels[channel] = it }
     }
-    val dir = dir(channel)
-    if (!File(dir, DesignLibrary.MANIFEST).isFile) return null
-    return runCatching { LibraryHolder(dir, checkIntervalMs, clock, LibraryPaths(channel)) }
-      .getOrNull()
-      ?.let { channels.putIfAbsent(channel, it) ?: it }
+  }
+
+  /** The pull request channels loaded now ([holder]), least recently used first. */
+  fun loadedChannels(): List<String> = synchronized(channels) { channels.keys.toList() }
+
+  /**
+   * The directory [channel]'s library is installed in, or null when nothing was published there:
+   * what serving a file or an index needs, without loading the library.
+   */
+  private fun channelDir(channel: String): File? {
+    if (channel == LibraryPaths.MAIN) return main.dir
+    if (root == null || !LibraryPaths.CHANNEL.matches(channel)) return null
+    return dir(channel).takeIf { File(it, DesignLibrary.MANIFEST).isFile }
   }
 
   /** Every channel with a library, `main` first. */
@@ -128,16 +159,38 @@ class LibraryChannels(
           .filter { it != LibraryPaths.MAIN }
           .sorted()
     return names.mapNotNull { name ->
-      val library = holder(name)?.current() ?: return@mapNotNull null
+      val dir = channelDir(name) ?: return@mapNotNull null
+      val summary = summary(name, dir) ?: return@mapNotNull null
       ChannelInfo(
         channel = name,
-        serial = library.manifest.serial,
-        designs = library.designs.size,
-        api = library.paths.api,
-        published = readPublished(library.dir),
+        serial = summary.serial,
+        designs = summary.designs,
+        api = LibraryPaths(name).api,
+        published = readPublished(dir),
       )
     }
   }
+
+  /**
+   * [channel]'s serial and design count, read from its manifest once per library installed there
+   * rather than by loading it: listing the channels mustn't hold every one of them in memory. Null
+   * when its manifest can't be read.
+   */
+  private fun summary(channel: String, dir: File): Summary? {
+    val manifestFile = File(dir, DesignLibrary.MANIFEST)
+    val stamp = manifestFile.lastModified()
+    summaries[channel]
+      ?.takeIf { it.first == stamp }
+      ?.let {
+        return it.second
+      }
+    val manifest =
+      runCatching { json.decodeFromString(DesignManifest.serializer(), manifestFile.readText()) }
+        .getOrNull() ?: return null
+    return Summary(manifest.serial, manifest.designs.size).also { summaries[channel] = stamp to it }
+  }
+
+  private data class Summary(val serial: Long, val designs: Int)
 
   /**
    * Publishes the library in [staging] (as `:card-designs:generateCardDesigns` writes it) to
@@ -224,7 +277,9 @@ class LibraryChannels(
     require(channel != LibraryPaths.MAIN) { "main can't be deleted" }
     val root = root ?: return false
     if (!LibraryPaths.CHANNEL.matches(channel)) return false
-    channels.remove(channel)
+    synchronized(channels) { channels.remove(channel) }
+    summaries.remove(channel)
+    indexes.remove(channel)
     val dir = dir(channel)
     if (!dir.exists()) return false
     return dir.deleteRecursively().also { collectGarbage() }
@@ -335,7 +390,7 @@ class LibraryChannels(
    * library. Null for a channel nothing was published to.
    */
   fun index(channel: String): LibraryIndex? {
-    val dir = holder(channel)?.dir ?: return null
+    val dir = channelDir(channel) ?: return null
     val stamp = File(dir, DesignLibrary.MANIFEST).lastModified()
     indexes[channel]
       ?.takeIf { it.first == stamp }
@@ -356,11 +411,11 @@ class LibraryChannels(
   /** One file of [channel]'s library by its [path] in the library, or null. */
   fun libraryFile(channel: String, path: String): File? {
     if (!LIBRARY_FILE.matches(path)) return null
-    return holder(channel)?.dir?.let { File(it, path) }?.takeIf { it.isFile }
+    return channelDir(channel)?.let { File(it, path) }?.takeIf { it.isFile }
   }
 
   /** When the library [channel] was last published from was built, or null without one. */
-  fun builtAt(channel: String): Long? = holder(channel)?.dir?.let(::builtAt)
+  fun builtAt(channel: String): Long? = channelDir(channel)?.let(::builtAt)
 
   private fun builtAt(dir: File): Long? =
     readPublished(dir)?.sourceGeneratedAtEpochMs
@@ -497,6 +552,9 @@ class LibraryChannels(
   class StaleLibrary(message: String) : Exception(message)
 
   companion object {
+    /** How many pull request channels stay loaded by default ([holder]). */
+    const val DEFAULT_MAX_LOADED_CHANNELS: Int = 4
+
     /** How long an app keeps a manifest before asking again: an hour, revalidated by ETag. */
     const val DEFAULT_TTL_SECONDS: Long = 60 * 60
 
