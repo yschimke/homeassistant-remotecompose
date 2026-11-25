@@ -1,13 +1,15 @@
 # Library publishing
 
-Status: set up, off until the Central namespace and keys are configured (see [Enabling](#enabling)).
+Status: on since 0.1.99 (`MAVEN_CENTRAL_PUBLISH=true`); each release uploads only the libraries that
+changed (see [Versions](#versions)).
 Follows [library-adoption-review.md](library-adoption-review.md), which explains why each module is,
 or is not yet, fit to publish.
 
 ## What publishes
 
-`ee.schimke.ha:<module>:<version>`, with every module at the release's version. Import the BOM and
-name modules without versions:
+`ee.schimke.ha:<module>:<version>`, each module at the release that last changed it, and `ha-bom` at
+every release that published anything. Import the BOM and name modules without versions: it pins
+each one at its own latest version.
 
 ```kotlin
 dependencies {
@@ -46,12 +48,31 @@ Not published, and why:
 
 ## Versions
 
-- A release publishes at the tag: the `maven-central` job in `release-build.yml` runs
-  `./gradlew publishHarcLibraries -Pharc.libraryVersion=<tag without v>`.
+- A release publishes only what changed, at the tag. Before uploading, the `maven-central` job in
+  `release-build.yml` runs `.github/scripts/maven-publish-plan.sh` (shared with compose-ui-builder,
+  compose-ai-tools and rc-players). A library publishes when, since the tag **it** last published
+  at (read from Maven Central): a file under it or under an unpublished project it packs changed
+  (test sources aside), a library it depends on publishes, a shared build input changed
+  (`build-logic/`, `gradle/`, the root and settings scripts, except comment-only edits and
+  build-logic tests), or a version-catalog entry its own build script uses changed. Unlike
+  compose-ui-builder, `ee.schimke.composeai` bumps (rc-players, Livery) count like any other
+  library. Every uncertainty resolves to "publish": Central never takes a version twice, so a
+  wrongly skipped library could never be uploaded at that version.
+- The job then runs `./gradlew publishHarcLibraries -Pharc.libraryVersion=<tag without v>
+  -Pharc.publishSet=<the plan>`. A library outside the set keeps the version it was last published
+  at, read from `publishing-manifest.json` (written by the plan, not committed), so its own POM, the
+  POMs naming it and `ha-bom` never name a version that wasn't uploaded. `ha-bom` publishes when
+  anything does; an empty plan uploads nothing at all.
+- A manual run of `release-build.yml` (`workflow_dispatch`, a recovery) skips the plan and
+  publishes everything, unless `ha-bom` is already on Central at that version.
+- The release PR carries a comment with the plan for its head (`release-pr-publish-plan.sh`), so
+  what a merge will upload is visible before it happens. `.github/scripts/test-maven-publish-plan.sh`
+  pins the plan's rules; CI runs it on every PR.
 - Anything else is the next patch after `.github/.release-please-manifest.json` as `-SNAPSHOT`, so
   `./gradlew publishHarcLibrariesToMavenLocal` never claims a released version.
-- Libraries share the app's version line, which release-please bumps by a patch on every release.
-  Versions therefore say nothing about API compatibility. That is acceptable at `0.x`; see
+- Libraries share the app's version line, which release-please bumps by a patch on every release;
+  a library skips the versions of releases that didn't change it. Versions therefore say nothing
+  about API compatibility. That is acceptable at `0.x`; see
   [What else](#what-else) for when it stops being.
 
 ## Enabling

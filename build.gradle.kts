@@ -257,11 +257,46 @@ subprojects {
 
 // Every library the release uploads, and the BOM that pins them: `HarcPublishing.LIBRARIES` in
 // build-logic is the one list. The release job (`maven-central` in release-build.yml) runs this
-// with `-Pharc.libraryVersion=<tag without v>`.
+// with `-Pharc.libraryVersion=<tag without v>` and `-Pharc.publishSet=<the plan>`: only the
+// libraries `.github/scripts/maven-publish-plan.sh` found changed upload, plus the BOM when any
+// does. Without `harc.publishSet` (a manual recovery) everything uploads; with it empty, nothing.
+val harcPublishSet =
+  HarcPublishing.parsePublishSet(
+    providers.gradleProperty(HarcPublishing.PUBLISH_SET_PROPERTY).orNull,
+  )
+
+harcPublishSet?.let { planned ->
+  val known = HarcPublishing.LIBRARIES.map { it.removePrefix(":") }.toSet()
+  val unknown = planned - known
+  require(unknown.isEmpty()) {
+    "harc.publishSet names ${unknown.sorted()}, which HarcPublishing.LIBRARIES does not publish"
+  }
+}
+
+/** The projects this release uploads, in [HarcPublishing.LIBRARIES] order, the BOM last. */
+fun harcPublishedProjects(): List<String> {
+  val libraries =
+    HarcPublishing.LIBRARIES.filter {
+      harcPublishSet == null || it.removePrefix(":") in harcPublishSet
+    }
+  val bom =
+    if (harcPublishSet == null || harcPublishSet.isNotEmpty()) listOf(HarcPublishing.BOM)
+    else emptyList()
+  return libraries + bom
+}
+
 tasks.register("publishHarcLibraries") {
   group = "publishing"
-  description = "Publishes the reusable libraries and :ha-bom to Maven Central."
-  (HarcPublishing.LIBRARIES + ":ha-bom").forEach { dependsOn("$it:publishToMavenCentral") }
+  description = "Publishes the planned libraries and :ha-bom to Maven Central."
+  harcPublishedProjects().forEach { dependsOn("$it:publishToMavenCentral") }
+}
+
+// What `publishHarcLibraries` would upload, for the release log: one project path per line.
+tasks.register("printHarcPublishedProjects") {
+  group = "publishing"
+  description = "Prints the projects publishHarcLibraries uploads, honouring harc.publishSet."
+  val projects = harcPublishedProjects()
+  doLast { projects.forEach { println(it) } }
 }
 
 tasks.register("publishHarcLibrariesToMavenLocal") {

@@ -210,6 +210,20 @@ jobs:
             **/build/test-results/**
             **/build/compose-previews/renders/**
 
+  # The Maven Central publish plan (`.github/scripts/maven-publish-plan.sh`) only runs inside a
+  # release, and both its failure directions are quiet: too broad uploads unchanged libraries, too
+  # narrow leaves a changed one off Central for good. Its self-test pins the set for each kind of
+  # change against throwaway repositories; no Gradle, a few seconds.
+  publish-plan:
+    name: Maven publish plan self-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - run: .github/scripts/test-maven-publish-plan.sh
+
   lint:
     name: Android lint
     # Release-please guard: see the ios job.
