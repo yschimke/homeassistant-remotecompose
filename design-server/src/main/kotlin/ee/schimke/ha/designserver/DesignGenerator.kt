@@ -98,7 +98,8 @@ class DesignGenerator(
   }
 
   /** A captured design's bytes, or null when [sha256] isn't one this server captured. */
-  fun blob(sha256: String): ByteArray? = synchronized(this) { blobs[sha256] }
+  fun blob(sha256: String): ByteArray? =
+    synchronized(this) { blobs[sha256] } ?: Retained.get(holder.paths.channel, sha256)
 
   /** [design]'s bytes, wherever they are held. */
   fun bytes(design: GeneratedDesign): ByteArray? =
@@ -132,6 +133,7 @@ class DesignGenerator(
         val sha = Sha256.hex(built.bytes)
         blobs[sha] = built.bytes
         blobKeys.merge(sha, 1, Int::plus)
+        Retained.put(holder.paths.channel, sha, built.bytes)
         while (generated.size > maxGenerated) {
           val oldest = generated.keys.first()
           val evicted = Sha256.hex(generated.remove(oldest)!!.bytes)
@@ -154,4 +156,27 @@ class DesignGenerator(
 
   /** A key this server can't capture a design for. */
   class UnsupportedKey(message: String) : Exception(message)
+
+  /**
+   * The most recently captured blobs of every channel, by channel and hash, kept apart from the
+   * generators: a client asks `/generate` and then fetches the blob it named, and a pull request's
+   * channel let go of in between ([LibraryChannels.holder]) comes back with a fresh generator that
+   * never captured it.
+   */
+  internal object Retained {
+    private const val MAX_BLOBS = 1024
+
+    private val blobs =
+      object : LinkedHashMap<String, ByteArray>(64, 0.75f, true) {
+        override fun removeEldestEntry(eldest: Map.Entry<String, ByteArray>): Boolean =
+          size > MAX_BLOBS
+      }
+
+    fun put(channel: String, sha256: String, bytes: ByteArray) {
+      synchronized(blobs) { blobs["$channel/$sha256"] = bytes }
+    }
+
+    fun get(channel: String, sha256: String): ByteArray? =
+      synchronized(blobs) { blobs["$channel/$sha256"] }
+  }
 }
