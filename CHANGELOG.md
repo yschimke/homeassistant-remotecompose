@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.106](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.105...v0.1.106) (2026-11-25)
+
+
+### Features
+
+* draw a draft with sample states when no app has drawn it yet ([#1799](https://github.com/yschimke/homeassistant-remotecompose/issues/1799)) ([a07bb54](https://github.com/yschimke/homeassistant-remotecompose/commit/a07bb549387f9399e3be93448b84e700eb6e9842))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#1800](https://github.com/yschimke/homeassistant-remotecompose/issues/1800)) ([7071d50](https://github.com/yschimke/homeassistant-remotecompose/commit/7071d50c5b9a7a67cf4823870b18912026fde2df))
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.158.0 ([#1772](https://github.com/yschimke/homeassistant-remotecompose/issues/1772)) ([47dc1a8](https://github.com/yschimke/homeassistant-remotecompose/commit/47dc1a832799095223823e156d8ef2b8b5ef6925))
+
 ## [0.1.105](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.104...v0.1.105) (2026-11-24)
 
 
