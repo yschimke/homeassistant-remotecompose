@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.107](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.106...v0.1.107) (2026-11-25)
+
+
+### Features
+
+* dashboard chat with Home Assistant's own agent; drop other model paths ([#1809](https://github.com/yschimke/homeassistant-remotecompose/issues/1809)) ([35992fc](https://github.com/yschimke/homeassistant-remotecompose/commit/35992fc4450e7e0a317ac02a033b27b50582e5b2))
+
+
+### Bug Fixes
+
+* **deps:** update dependency ee.schimke.composeai:compose-preview-ui-builder-bom to v3.160.0 ([#1804](https://github.com/yschimke/homeassistant-remotecompose/issues/1804)) ([c42888e](https://github.com/yschimke/homeassistant-remotecompose/commit/c42888e3a3b0e35e3e76143d72c731b0328c22b6))
+* **design-server:** keep only recently used PR channels in memory ([#1806](https://github.com/yschimke/homeassistant-remotecompose/issues/1806)) ([e60ed6b](https://github.com/yschimke/homeassistant-remotecompose/commit/e60ed6b4c39b3edd22c814c834da8c7b6bff4df0))
+
 ## [0.1.106](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.105...v0.1.106) (2026-11-25)
 
 
