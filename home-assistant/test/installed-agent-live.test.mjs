@@ -131,7 +131,7 @@ test('Dashboard chat: the person asks from the dashboard, sees the draft in plac
     assert.ok(ollama.chats[0].tools.some((t) => t.function.name.endsWith('submit_draft')));
 
     // Its draft is drawn in place, with the dashboard's own cards; Use it applies it.
-    await panel.getByText('Switch beside the light', {exact:true}).first().waitFor({timeout:30_000});
+    await panel.getByText('Agent draft: Switch beside the light', {exact:true}).waitFor({timeout:30_000});
     await panel.getByText('Use it', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/agent-live-2-draft.png`});
     const {sessions} = await ws({type:'terrazzo/edit/list', url_path:'live-fixture'});
