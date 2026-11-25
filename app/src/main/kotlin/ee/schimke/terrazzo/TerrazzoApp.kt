@@ -783,6 +783,20 @@ private fun DashboardsRoot(
           }
     }
   val phoneAgentEdits = ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session)
+  // The dashboard chat: Home Assistant's agent, told what this dashboard shows. Kept above the
+  // session screen a draft opens, so coming back carries the same conversation and session on.
+  val shown = remember(openedValue) { ShownDashboard() }
+  val chat =
+    ee.schimke.terrazzo.shared.rememberDashboardChat(session, openedValue) {
+      text,
+      urlPath,
+      view,
+      entityIds,
+      conversationId,
+      sessionId ->
+      session.terrazzo?.dashboardChat(text, urlPath, view, entityIds, conversationId, sessionId)
+        ?: throw IllegalStateException("The dashboard chat needs the Terrazzo integration")
+    }
   var newDashboardOpen by remember { mutableStateOf(false) }
   if (newDashboardOpen && phoneAgentEdits != null)
     // Also where a dashboard still being built is picked back up: the switcher lists only
@@ -976,19 +990,6 @@ private fun DashboardsRoot(
       // keeps showing the previous dashboard's view until a
       // collapse/expand forces recreation. Re-seeding from the
       // offline cache makes the new dashboard paint immediately.
-      // The dashboard chat: Home Assistant's agent, told what this dashboard shows.
-      val shown = remember(openedValue) { ShownDashboard() }
-      val chat =
-        ee.schimke.terrazzo.shared.rememberDashboardChat(session, openedValue) {
-          text,
-          urlPath,
-          view,
-          entityIds,
-          conversationId,
-          sessionId ->
-          session.terrazzo?.dashboardChat(text, urlPath, view, entityIds, conversationId, sessionId)
-            ?: throw IllegalStateException("The dashboard chat needs the Terrazzo integration")
-        }
       Box(Modifier.fillMaxSize()) {
         key(openedValue, dashboardSaves) {
           DashboardViewScreen(
