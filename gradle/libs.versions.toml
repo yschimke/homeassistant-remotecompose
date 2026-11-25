@@ -40,7 +40,7 @@ android-compileSdk = "37"
 android-targetSdk = "37"
 
 # Libraries
-ktor = "3.6.1"
+ktor = "3.6.2"
 fontbox = "3.0.8"
 kotlinx-serialization = "1.13.0"
 kotlinx-coroutines = "1.11.0"
