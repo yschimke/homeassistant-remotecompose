@@ -55,8 +55,14 @@ function script({messages, system, tool, step}) {
     return {role:'assistant', content:'', tool_calls:[{function:{name:tool('submit_draft'),
       arguments:{config:DRAFT, revision:read.revision, summary:'Switch beside the light'}}}]};
   }
+  // A tool's result arrives as {data, error}: a success carries "error": false.
   const last = messages.at(-1).content || '';
-  return {role:'assistant', content:last.includes('"error"') ? `Refused: ${last}` : REPLY};
+  let refused;
+  try {
+    const result = JSON.parse(last);
+    refused = result.error === true || (result.data && 'error' in result.data);
+  } catch { refused = true; }
+  return {role:'assistant', content:refused ? `Refused: ${last}` : REPLY};
 }
 
 test('Dashboard chat: the person asks from the dashboard, sees the draft in place and applies it', {timeout:300_000}, async () => {
