@@ -2,7 +2,9 @@ package ee.schimke.terrazzo
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,8 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -777,8 +782,21 @@ private fun DashboardsRoot(
             value
           }
     }
-  val phoneAgentEdits =
-    ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session, dashboardAgent.enabled)
+  val phoneAgentEdits = ee.schimke.terrazzo.dashboard.rememberPhoneAgentEdits(session)
+  // The dashboard chat: Home Assistant's agent, told what this dashboard shows. Kept above the
+  // session screen a draft opens, so coming back carries the same conversation and session on.
+  val shown = remember(openedValue) { ShownDashboard() }
+  val chat =
+    ee.schimke.terrazzo.shared.rememberDashboardChat(session, openedValue) {
+      text,
+      urlPath,
+      view,
+      entityIds,
+      conversationId,
+      sessionId ->
+      session.terrazzo?.dashboardChat(text, urlPath, view, entityIds, conversationId, sessionId)
+        ?: throw IllegalStateException("The dashboard chat needs the Terrazzo integration")
+    }
   var newDashboardOpen by remember { mutableStateOf(false) }
   if (newDashboardOpen && phoneAgentEdits != null)
     // Also where a dashboard still being built is picked back up: the switcher lists only
@@ -828,6 +846,7 @@ private fun DashboardsRoot(
         },
       onBack = { editorOpen = false },
       onSaved = { dashboardSaves++ },
+      dashboardAgent = dashboardAgent.enabled,
     )
   } else if (studioOverlay != null && studioDefaults != null) {
     val (card, snapshot) = studioOverlay
@@ -971,48 +990,65 @@ private fun DashboardsRoot(
       // keeps showing the previous dashboard's view until a
       // collapse/expand forces recreation. Re-seeding from the
       // offline cache makes the new dashboard paint immediately.
-      key(openedValue, dashboardSaves) {
-        DashboardViewScreen(
-          session = session,
-          urlPath = openedValue,
-          readOnly = readOnly,
-          connectionPending = connectionStatus == ConnectionStatus.Connecting,
-          // A tap dropped by the lock says so where it was made, with Unlock right there.
-          unlockSnackbars = snackbars,
-          onUnlock = { graph.sessionWriteMode.set(true) },
-          // Long-press opens the card's actions, handed the live
-          // snapshot the card was pressed against so a fork or the
-          // history preview matches the dashboard frame.
-          onCardLongPress = { card, snapshot, section ->
-            actionsTarget = card to snapshot
-            actionsSection = section
-          },
-          contentPadding = padding,
-          initialViewPath = openedView,
-          // A card's navigation to another dashboard the user can open switches to it.
-          onOpenDashboard = { urlPath, viewPath ->
-            val known = readyDashboards.any { it.urlPath == urlPath }
-            if (known) {
-              opened = urlPath
-              openedView = viewPath
-              scope.launch { graph.preferencesStore.setLastViewedDashboard(urlPath) }
-            }
-            known
-          },
-          // Once shown, the view isn't asked for again when the screen is recreated.
-          onInitialViewShown = { openedView = null },
-          canPlanCards = agentConnected,
-          onAskAgentAboutSection =
-            // Home Assistant's own agent (the integration's MCP user) answers this one.
-            if (phoneAgentEdits != null)
-              ({ view, section, title ->
-                agentSessions =
-                  AgentSessionsTarget(
-                    ee.schimke.ha.client.dashboard.EditScope.section(view, section, title),
-                  )
-              })
-            else null,
-        )
+      Box(Modifier.fillMaxSize()) {
+        key(openedValue, dashboardSaves) {
+          DashboardViewScreen(
+            session = session,
+            urlPath = openedValue,
+            readOnly = readOnly,
+            connectionPending = connectionStatus == ConnectionStatus.Connecting,
+            // A tap dropped by the lock says so where it was made, with Unlock right there.
+            unlockSnackbars = snackbars,
+            onUnlock = { graph.sessionWriteMode.set(true) },
+            // Long-press opens the card's actions, handed the live
+            // snapshot the card was pressed against so a fork or the
+            // history preview matches the dashboard frame.
+            onCardLongPress = { card, snapshot, section ->
+              actionsTarget = card to snapshot
+              actionsSection = section
+            },
+            contentPadding = padding,
+            initialViewPath = openedView,
+            // A card's navigation to another dashboard the user can open switches to it.
+            onOpenDashboard = { urlPath, viewPath ->
+              val known = readyDashboards.any { it.urlPath == urlPath }
+              if (known) {
+                opened = urlPath
+                openedView = viewPath
+                scope.launch { graph.preferencesStore.setLastViewedDashboard(urlPath) }
+              }
+              known
+            },
+            // Once shown, the view isn't asked for again when the screen is recreated.
+            onInitialViewShown = { openedView = null },
+            canPlanCards = agentConnected,
+            onAskAgentAboutSection =
+              // Home Assistant's own conversation agent answers this one.
+              if (phoneAgentEdits != null && dashboardAgent.enabled)
+                ({ view, section, title ->
+                  agentSessions =
+                    AgentSessionsTarget(
+                      ee.schimke.ha.client.dashboard.EditScope.section(view, section, title),
+                    )
+                })
+              else null,
+            onShown = { dashboard, snapshot ->
+              shown.dashboard = dashboard
+              shown.snapshot = snapshot
+            },
+          )
+        }
+        if (dashboardAgent.chatAvailable && session.terrazzo != null && session !is DemoHaSession)
+          ee.schimke.terrazzo.shared.DashboardChat(
+            dashboardAgent,
+            chat,
+            screen = { shown.screen() },
+            // The phone shows a draft in its session, with the dashboard's own cards.
+            onDraft = { id ->
+              agentSessions = AgentSessionsTarget(null, urlPath = openedValue, sessionId = id)
+            },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(padding).padding(16.dp),
+          )
       }
     }
   }
@@ -1085,6 +1121,25 @@ private fun SessionConnectionStatus.toLogStatus():
   }
 
 /** What the agent sessions screen opens on: a section's session, or the list ([scope] null). */
+/** The dashboard on screen, as the dashboard chat names it; not state: read only when sending. */
+private class ShownDashboard {
+  var dashboard: ee.schimke.ha.model.Dashboard? = null
+  var snapshot: HaSnapshot? = null
+
+  fun screen(): ee.schimke.terrazzo.shared.ChatScreen {
+    val dashboard = dashboard ?: return ee.schimke.terrazzo.shared.ChatScreen()
+    val states = snapshot?.states.orEmpty()
+    return ee.schimke.terrazzo.shared.ChatScreen(
+      viewTitle = dashboard.views.singleOrNull()?.title,
+      entityIds =
+        ee.schimke.terrazzo.core.logs
+          .referencedEntities(dashboard)
+          .filter { it in states }
+          .take(ee.schimke.ha.client.dashboard.DashboardChatReply.MAX_ENTITIES),
+    )
+  }
+}
+
 private data class AgentSessionsTarget(
   val scope: ee.schimke.ha.client.dashboard.EditScope?,
   /** With [sessionId], the dashboard that session is about (a new one's path). */

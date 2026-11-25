@@ -58,7 +58,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardKey
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.terrazzo.shared.AgentConnection
 import ee.schimke.terrazzo.shared.AgentLivePanel
 import ee.schimke.terrazzo.shared.ChatMention
 import ee.schimke.terrazzo.shared.DashboardContent
@@ -75,15 +74,14 @@ import kotlinx.serialization.json.JsonObject
  * a scope, the whole dashboard or one section ([startScope]), and opens straight into its preview:
  * there is nothing to fill in first. The person talks to the agent in the conversation and pins
  * comments to cards on the preview; the agent's drafts replace the preview as they arrive, drawn
- * with the home's real cards and live states ([renderCard]). **Copy prompt** hands the session to
- * one or more agents; a connected agent gets it by itself. **Use it** applies a draft (Home
- * Assistant allows administrators only, and only while the dashboard still holds the config the
- * session started from); **Stop** ends it. One undo is kept.
+ * with the home's real cards and live states ([renderCard]). Home Assistant's own conversation
+ * agent, chosen in the Terrazzo integration, answers every session. **Use it** applies a draft
+ * (Home Assistant allows administrators only, and only while the dashboard still holds the config
+ * the session started from); **Stop** ends it. One undo is kept.
  *
  * Without [startScope] the screen opens on the dashboard's sessions, open and recent, newest first.
- * The phone and the Terrazzo panel both show this; [onSharePrompt] is the platform's share sheet or
- * clipboard. [writeBlockedReason] (the phone's read-only mode, say) withholds Use it and Undo: a
- * session can still be started, drafted and reviewed.
+ * The phone and the Terrazzo panel both show this. [writeBlockedReason] (the phone's read-only
+ * mode, say) withholds Use it and Undo: a session can still be started, drafted and reviewed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,10 +91,8 @@ fun AgentEditScreen(
   title: String?,
   snapshot: HaSnapshot,
   onBack: () -> Unit,
-  onSharePrompt: (String) -> Unit,
   onApplied: () -> Unit,
   writeBlockedReason: String? = null,
-  cloudServer: String? = null,
   /** Open straight into a session about this (an open one if there is, else a new one). */
   startScope: EditScope? = null,
   /** A session to open at once: picked up from the dashboard's draft bar. */
@@ -209,9 +205,7 @@ fun AgentEditScreen(
       } catch (e: Throwable) {
         // Throwable, not Exception: on Wasm a failed fetch is an Error, and this loop must outlive
         // a network blip or a design server deploy.
-        problem =
-          if (cloudServer != null) e.message ?: "Reconnecting to the design server…"
-          else "Reconnecting to Home Assistant…"
+        problem = "Reconnecting to Home Assistant…"
       }
       delay(3_000)
     }
@@ -236,21 +230,6 @@ fun AgentEditScreen(
       Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
     }
   }
-  val copyPrompt: @Composable () -> Unit = {
-    // The dashboard agent answers by itself: nothing to hand another agent.
-    if (current?.isOpen == true && !dashboardAgent.enabled)
-      TextButton(
-        enabled = !busy,
-        onClick = {
-          run {
-            onSharePrompt(edits.prompt(current.id))
-            tell("Prompt copied. Give it to one or more agents.")
-          }
-        },
-      ) {
-        Text("Copy prompt")
-      }
-  }
   BoxWithConstraints(Modifier.fillMaxSize()) {
     // A landscape keyboard can leave less height than a toolbar and the conversation: the toolbar
     // then scrolls with the content, keeping Back and the field reachable.
@@ -268,7 +247,6 @@ fun AgentEditScreen(
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,
             )
-            copyPrompt()
           }
         }
       }
@@ -278,7 +256,6 @@ fun AgentEditScreen(
           TopAppBar(
             title = { Text(barTitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             navigationIcon = backButton,
-            actions = { copyPrompt() },
           )
       },
       snackbarHost = { SnackbarHost(snackbars) },
@@ -292,8 +269,6 @@ fun AgentEditScreen(
               urlPath = urlPath,
               title = title,
               busy = busy,
-              cloudServer = cloudServer,
-              onCopy = onSharePrompt,
               onNew = { run { open(null) } },
               onOpen = { picked ->
                 session = picked
@@ -399,8 +374,6 @@ private fun SessionList(
   urlPath: String?,
   title: String?,
   busy: Boolean,
-  cloudServer: String?,
-  onCopy: (String) -> Unit,
   onNew: () -> Unit,
   onOpen: (AgentEditSession) -> Unit,
 ) {
@@ -414,8 +387,6 @@ private fun SessionList(
   ) {
     compactBar?.invoke()
     Button(enabled = !busy, onClick = onNew) { Text("New session") }
-    // Connect once; after that a new session goes straight to the agent.
-    if (cloudServer != null) AgentConnection(cloudServer, onCopy)
     val listed = sessions
     when {
       listed == null ->

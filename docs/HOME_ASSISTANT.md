@@ -471,14 +471,20 @@ covers it and `home-assistant/test/installed-mcp.test.mjs` runs it inside a real
 
 ## Dashboard agent
 
-Instead of connecting an agent of your own, you can let one of Home Assistant's own conversation
-agents edit dashboards: any AI integration's agent (OpenAI, Google Gemini, Anthropic, Ollama,
+Terrazzo uses one of Home Assistant's own conversation agents to chat about and edit dashboards;
+the apps have no AI provider or key of their own. Any AI integration's agent works: any AI integration's agent (OpenAI, Google Gemini, Anthropic, Ollama,
 OpenRouter, …), with its own provider and key. While one is chosen, the Terrazzo apps and the panel
 open a chat with it when you edit a dashboard: **Chat with your agent** leads the dashboard's menu,
 **Edit by hand** stays beside it, and **New dashboard** asks it to build one from your entities.
 
+- **Chat from the dashboard.** With an agent chosen, every dashboard has **Ask {agent}** in its
+  corner. Its chat knows which dashboard and view you are looking at and what their cards show.
+  With **Assist** also on for the agent, "turn these off" switches the lights you can see. Asking
+  for a change to the dashboard draws a draft in place, which you apply with **Use it**. See
+  [dashboard-chat.md](architecture/dashboard-chat.md).
 - **Turn it on.** In the AI integration, open its conversation agent's options and turn on
-  **Terrazzo dashboards** among the APIs it may control (beside **Assist**, or instead of it). Then
+  **Terrazzo dashboards** among the APIs it may control. Turn on **Assist** too if the chat should
+  also switch devices. Then
   open Terrazzo, choose **Configure**, and pick that agent as **Dashboard agent**. Empty turns it
   off. Pick a model that supports tool calling.
 - **Help setting it up.** While no agent is chosen, an administrator's dashboard menu offers **Set

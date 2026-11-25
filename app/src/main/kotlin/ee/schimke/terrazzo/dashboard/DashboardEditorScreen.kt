@@ -89,6 +89,8 @@ fun DashboardEditorScreen(
   saveBlockedReason: String?,
   onBack: () -> Unit,
   onSaved: () -> Unit,
+  /** Whether Home Assistant's conversation agent answers edit sessions: Ask your agent needs it. */
+  dashboardAgent: Boolean = false,
 ) {
   val scope = rememberCoroutineScope()
   val snackbars = remember { SnackbarHostState() }
@@ -145,7 +147,7 @@ fun DashboardEditorScreen(
     session.liveDashboardSnapshots(loaded).collect { snapshot = it }
   }
 
-  val agentEdits = rememberPhoneAgentEdits(session)
+  val agentEdits = rememberPhoneAgentEdits(session)?.takeIf { dashboardAgent }
   if (askingAgent && agentEdits != null) {
     AgentSessionsScreen(
       session = session,
@@ -418,17 +420,6 @@ internal fun homeAssistantEditUrl(baseUrl: String?, urlPath: String?): String? =
     ?.trimEnd('/')
     ?.takeIf { it.startsWith("http") }
     ?.let { "$it/${urlPath ?: "lovelace"}/0?edit=1" }
-
-/** The share sheet for an edit session's prompt: it names the session, never a token. */
-internal fun sharePrompt(context: Context, prompt: String) {
-  val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, prompt)
-  runCatching {
-    context.startActivity(
-      Intent.createChooser(send, "Share prompt").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-    )
-  }
-    .onFailure { Log.w(TAG, "Nothing shares the prompt", it) }
-}
 
 private fun openUrl(context: Context, url: String) {
   runCatching {

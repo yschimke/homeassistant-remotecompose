@@ -557,19 +557,14 @@ class LiveHaSession(
         ee.schimke.ha.client.dashboard.DashboardAgent.Off
       }
 
-  override fun cloudAgentEdits(
-    server: String,
-    grants: ee.schimke.ha.client.agent.AgentGrantStore,
-    agentLink: () -> String?,
-  ) = runCatching {
-    ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits(
-      client,
-      server,
-      grants = grants,
-      agentLink = agentLink,
-    )
-  }
-    .getOrNull()
+  override suspend fun dashboardChat(
+    text: String,
+    urlPath: String?,
+    view: String?,
+    entityIds: List<String>,
+    conversationId: String?,
+    sessionId: String?,
+  ) = client.terrazzoAssist(text, urlPath, view, entityIds, conversationId, sessionId)
 
   override suspend fun createLongLivedToken(clientName: String, lifespanDays: Int): String =
     client.createLongLivedAccessToken(clientName, lifespanDays)

@@ -2,10 +2,9 @@ package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.HaPushNotification
 import ee.schimke.ha.client.TerrazzoIntegration
-import ee.schimke.ha.client.agent.AgentGrantStore
 import ee.schimke.ha.client.dashboard.AgentEdits
-import ee.schimke.ha.client.dashboard.CloudDashboardAgentEdits
 import ee.schimke.ha.client.dashboard.DashboardAgent
+import ee.schimke.ha.client.dashboard.DashboardChatReply
 
 /**
  * The Terrazzo integration's commands, for a session with a Home Assistant behind it that may have
@@ -44,14 +43,19 @@ interface TerrazzoSession {
   suspend fun dashboardAgent(): DashboardAgent = DashboardAgent.Off
 
   /**
-   * Edit sessions whose agent works through the design [server]'s relay (agent-sessions.md): the
-   * one "Ask your agent" flow. Null when the session can't reach Home Assistant's edit sessions.
+   * One turn of the dashboard chat (`terrazzo/assist`,
+   * [ee.schimke.ha.client.HaClient.terrazzoAssist]): Home Assistant's conversation agent, asked
+   * from the dashboard [urlPath] the person has open. Throws where the session can't reach it.
    */
-  fun cloudAgentEdits(
-    server: String,
-    grants: AgentGrantStore,
-    agentLink: () -> String?,
-  ): CloudDashboardAgentEdits? = null
+  suspend fun dashboardChat(
+    text: String,
+    urlPath: String?,
+    view: String?,
+    entityIds: List<String>,
+    conversationId: String?,
+    sessionId: String?,
+  ): DashboardChatReply =
+    throw UnsupportedOperationException("The dashboard chat needs the Terrazzo integration")
 
   /**
    * Registers this device's FCM token with the integration's silent push for [webhookId]: the

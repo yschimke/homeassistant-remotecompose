@@ -118,7 +118,6 @@ class AgentEditScreenTest {
     edits: FakeEdits,
     shared: MutableList<String>,
     writeBlockedReason: String? = null,
-    cloudServer: String? = null,
     startScope: EditScope? = null,
   ) = setContent {
     AgentEditScreen(
@@ -127,10 +126,8 @@ class AgentEditScreenTest {
       title = "Garden",
       snapshot = HaSnapshot(),
       onBack = {},
-      onSharePrompt = { shared += it },
       onApplied = {},
       writeBlockedReason = writeBlockedReason,
-      cloudServer = cloudServer,
       startScope = startScope,
     ) { _, card ->
       Text("card:${card.type}:${card.raw["entity"]}")
@@ -157,10 +154,8 @@ class AgentEditScreenTest {
     onNodeWithText("Send").performClick()
     waitUntil { edits.calls.any { it.startsWith("note:") } }
     assertEquals("note:Bigger@switch.pump (view 1, section 1, card 1)", edits.calls.last())
-    // One prompt, for one or more agents.
-    onNodeWithText("Copy prompt").performClick()
-    waitUntil { shared.isNotEmpty() }
-    assertEquals(listOf("Connect to /api/terrazzo/mcp, session s1"), shared)
+    // Home Assistant's agent answers: there is no prompt to hand another one.
+    onNodeWithText("Copy prompt").assertDoesNotExist()
   }
 
   @Test
@@ -196,7 +191,9 @@ class AgentEditScreenTest {
     onNodeWithText("Open · 1 draft").assertExists()
     onNodeWithText("In use · no draft yet").assertExists()
     onNodeWithText("Garage").performClick()
-    waitUntil { onAllNodesWithText("Copy prompt").fetchSemanticsNodes().isNotEmpty() }
+    waitUntil {
+      onAllNodesWithText("Tell the agent what to change").fetchSemanticsNodes().isNotEmpty()
+    }
   }
 
   @Test
@@ -312,7 +309,6 @@ class AgentEditScreenTest {
           title = "Garden",
           snapshot = HaSnapshot(),
           onBack = {},
-          onSharePrompt = {},
           onApplied = {},
           startScope = EditScope(),
         ) { _, card ->
@@ -326,7 +322,6 @@ class AgentEditScreenTest {
     for (node in
       listOf(
         onNodeWithContentDescription("Back"),
-        onNodeWithText("Copy prompt"),
         onNodeWithText("Tell the agent what to change"),
         onNodeWithText("Send"),
       )) {
@@ -415,7 +410,6 @@ class AgentEditScreenTest {
           title = "Garden",
           snapshot = HaSnapshot(),
           onBack = {},
-          onSharePrompt = {},
           onApplied = {},
           initialSessionId = "s1",
         ) { _, card ->
@@ -454,7 +448,6 @@ class AgentEditScreenTest {
           title = "Garden",
           snapshot = HaSnapshot(),
           onBack = {},
-          onSharePrompt = {},
           onApplied = {},
           initialSessionId = "s1",
           dashboardAgent = DashboardAgent(true, "conversation.ollama", "Ollama"),

@@ -1,12 +1,13 @@
-// CI-only, after installed-edits.test.mjs: a live dashboard edit, end to end in a real HA container
-// with the real panel. An agent signed in to Home Assistant (the MCP server's non-admin user) is
-// listening; the person asks from the panel's menu and the request reaches it with nothing to
-// copy. It drafts, says what it's doing and waits for feedback; the person sees the draft drawn
-// with their cards, comments on one card, and applies it.
+// CI-only, after installed-edits.test.mjs: the dashboard chat, end to end in a real HA container
+// with the real panel. Home Assistant's own conversation agent (its Ollama integration, against a
+// fake Ollama server this test serves, with Assist and "Terrazzo dashboards" on) is Terrazzo's
+// dashboard agent. The person opens a dashboard, asks the agent from its corner, sees the draft
+// drawn in place with their cards, and applies it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { addOllamaAgent, fakeOllama, restApi, setDashboardAgent } from './ollama-fixture.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const { chromium, request } = await import(`${root}embed/node_modules/playwright/index.mjs`);
 const base = 'http://127.0.0.1:8123';
@@ -31,14 +32,6 @@ async function signIn(api, username, password, name) {
   return (await api.post('/auth/token', {form:{client_id, code:login.result, grant_type:'authorization_code'}})).json();
 }
 
-async function setMcpUser(api, headers, userId) {
-  const [entry] = await (await api.get('/api/config/config_entries/entry?domain=terrazzo', {headers})).json();
-  const form = await (await api.post('/api/config/config_entries/options/flow', {headers, data:{handler:entry.entry_id}})).json();
-  const saved = await api.post(`/api/config/config_entries/options/flow/${form.flow_id}`,
-    {headers, data:{title:'Terrazzo', dashboard:'wall-panel', mcp_user:userId}});
-  assert.equal((await saved.json()).type, 'create_entry');
-}
-
 const BASELINE = {title:'Live fixture', views:[{title:'Home', type:'sections', sections:[
   {type:'grid', cards:[{type:'heading', heading:'Lights'}, {type:'tile', entity:'light.wall_light'}]}]}]};
 const DRAFT = {title:'Live fixture', views:[{title:'Home', type:'sections', sections:[
@@ -46,16 +39,46 @@ const DRAFT = {title:'Live fixture', views:[{title:'Home', type:'sections', sect
     {type:'heading', heading:'Lights'},
     {type:'tile', entity:'light.wall_light', grid_options:{columns:6}},
     {type:'tile', entity:'input_boolean.wall_light', grid_options:{columns:6}}]}]}]};
+const REPLY = 'I put the switch beside the light.';
 
-test('Live agent edit: the person watches, comments on a card and applies', {timeout:300_000}, async () => {
+/** The model: from the dashboard chat, read the open dashboard, draft on it, say so. */
+function script({messages, system, tool, step}) {
+  const chatPath = (system.match(/Its url_path is ([a-z0-9-]+)\./) || [])[1];
+  if (!system.includes('chatting with you from Terrazzo') || !chatPath)
+    return {role:'assistant', content:'Noted.'};
+  if (step === 0)
+    return {role:'assistant', content:'', tool_calls:[{function:{name:tool('get_dashboard'), arguments:{url_path:chatPath}}}]};
+  if (step === 1) {
+    // Home Assistant hands the model a tool's result as {data, error}.
+    const result = JSON.parse(messages.at(-1).content || '{}');
+    const read = result.data ?? result;
+    return {role:'assistant', content:'', tool_calls:[{function:{name:tool('submit_draft'),
+      arguments:{config:DRAFT, revision:read.revision, summary:'Switch beside the light'}}}]};
+  }
+  // A tool's result arrives as {data, error}: a success carries "error": false.
+  const last = messages.at(-1).content || '';
+  let refused;
+  try {
+    const result = JSON.parse(last);
+    refused = result.error === true || (result.data && 'error' in result.data);
+  } catch { refused = true; }
+  return {role:'assistant', content:refused ? `Refused: ${last}` : REPLY};
+}
+
+test('Dashboard chat: the person asks from the dashboard, sees the draft in place and applies it', {timeout:300_000}, async () => {
+  const ollama = await fakeOllama(script);
   const api = await request.newContext({baseURL:base});
   const browser = await chromium.launch();
   const page = await browser.newPage({viewport:{width:1200, height:900}, deviceScaleFactor:1});
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  let call;
+  let headers;
+  let ollamaEntry;
   try {
     const ownerTokens = await signIn(api, 'panel', 'fixture-only-password', 'Test panel user');
-    const headers = {Authorization:`Bearer ${ownerTokens.access_token}`};
+    headers = {Authorization:`Bearer ${ownerTokens.access_token}`};
+    call = restApi(base, headers);
     await page.addInitScript(({tokens, base}) => localStorage.setItem('hassTokens', JSON.stringify({
       ...tokens, hassUrl:base, clientId:`${base}/`, expires:Date.now() + tokens.expires_in * 1000,
     })), {tokens:ownerTokens, base});
@@ -69,119 +92,73 @@ test('Live agent edit: the person watches, comments on a card and applies', {tim
     assert.ok(!(await ws({type:'lovelace/dashboards/create', url_path:'live-fixture', title:'Live fixture',
       mode:'storage', require_admin:false, show_in_sidebar:false}))?.error);
     assert.ok(!(await ws({type:'lovelace/config/save', url_path:'live-fixture', config:BASELINE}))?.error);
-    const agentUser = await ws({type:'config/auth/create', name:'Live agent', group_ids:['system-users']});
-    await ws({type:'config/auth_provider/homeassistant/create', user_id:agentUser.user.id,
-      username:'live-agent', password:'fixture-live-agent-password'});
-    const agentTokens = await signIn(api, 'live-agent', 'fixture-live-agent-password', 'Live agent');
-    await setMcpUser(api, headers, agentUser.user.id);
-    const mcp = async (name, args = {}) => {
-      const response = await api.post('/api/terrazzo/mcp', {
-        headers:{Authorization:`Bearer ${agentTokens.access_token}`, Accept:'application/json, text/event-stream'},
-        data:{jsonrpc:'2.0', id:1, method:'tools/call', params:{name, arguments:args}},
-        timeout:60_000,
-      });
-      assert.equal(response.status(), 200, `${name} answers`);
-      const result = (await response.json()).result;
-      assert.notEqual(result.isError, true, `${name}: ${result.content?.[0]?.text}`);
-      return result.structuredContent;
-    };
 
-    // The person opens the dashboard and asks an agent from its menu.
+    // Home Assistant's agent, with Assist and Terrazzo's tools, chosen as Terrazzo's.
+    const added = await addOllamaAgent(call, ollama.port, 'Live agent', ['assist', 'terrazzo_dashboards'],
+      async () => (await ws({type:'conversation/agent/list'})).agents);
+    ollamaEntry = added.entryId;
+    await setDashboardAgent(call, added.agentId);
+    for (let i = 0; ; i++) {
+      const info = await ws({type:'terrazzo/agent/info'});
+      if (info.enabled && info.agent_id === added.agentId) {
+        assert.equal(info.chat, true);
+        assert.equal(info.assist, true);
+        break;
+      }
+      assert.ok(i < 40, `the reloaded entry chooses the agent: ${JSON.stringify(info)}`);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    // The person opens the dashboard; the chat sits in its corner.
     await page.goto(`${base}/terrazzo?dashboard=live-fixture`);
     const panel = page.frameLocator('terrazzo-panel iframe');
     await panel.getByText('Lights', {exact:true}).first().waitFor({timeout:90_000});
-    await panel.getByRole('button', {name:'More options'}).click({force:true});
-    await panel.getByText('Ask your agent', {exact:true}).click({force:true});
+    await panel.getByText('Ask Live agent', {exact:true}).click({force:true, timeout:60_000});
+    await panel.getByText('Ask Live agent to switch what you see here, or to change this dashboard.', {exact:true}).waitFor();
     // Compose draws on a canvas: focus the field through its accessibility node, then type keys.
-    const typeInto = async (label, text) => {
-      await panel.getByRole('textbox', {name:label}).click({force:true});
-      // Compose moves focus on the next frame; a key sent at once is dropped.
-      await page.waitForTimeout(400);
-      await page.keyboard.type(text, {delay:20});
-    };
-    // The agent is already signed in to Home Assistant and listening. A session needs nothing
-    // typed first: it opens on the dashboard as it is, and the request is the first message. No
-    // design server is reachable here, so the session is Home Assistant's alone.
-    const waitingForRequest = mcp('await_request', {since:0});
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    await panel.getByText('New session', {exact:true}).click({force:true});
-    await panel.getByText('Sent to Agent. It picks this up when it next listens.', {exact:true}).waitFor();
-    // Before the agent reads anything: a comment on a card, so it has work when it starts.
-    await panel.getByText('Comment', {exact:true}).first().click({force:true});
-    // A card is named as Home Assistant names its entity, not by its entity id.
-    await panel.getByText(/^About Wall light \(/).waitFor();
-    await typeInto('Tell the agent what to change', 'Add the switch next to the light');
-    await panel.getByText('Send', {exact:true}).click({force:true});
-    await panel.getByText('Add the switch next to the light', {exact:true}).waitFor();
-    // The first listen also returns requests already open (from earlier tests): find this one.
-    const ours = (r) => r.url_path === 'live-fixture';
-    let heard = await waitingForRequest;
-    while (!heard.requests.some(ours)) heard = await mcp('await_request', {since:heard.cursor});
-    const session = heard.requests.find(ours);
-    assert.match(session.request, /^Work on the Live fixture dashboard with me/);
-    // The comment waits for the agent, and it's told to start there.
-    const request = await mcp('get_edit_session', {session_id:session.session_id});
-    assert.equal(request.notes[0].text, 'Add the switch next to the light');
-    assert.match(request.notes[0].target, /^Wall light \(/);
-    assert.match(request.next, /already left notes/);
-    request.cursor = request.seq;
-    await page.screenshot({path:`${evidence}/agent-live-1-listening.png`});
+    await panel.getByRole('textbox', {name:'Message'}).click({force:true});
+    // Compose moves focus on the next frame; a key sent at once is dropped.
+    await page.waitForTimeout(400);
+    await page.keyboard.type('Add the switch next to the light', {delay:20});
+    await panel.getByRole('button', {name:'Send'}).click({force:true});
+    await panel.getByText(REPLY, {exact:true}).waitFor({timeout:60_000});
+    await page.screenshot({path:`${evidence}/agent-live-1-chat.png`});
 
-    // The agent works; the person sees what it's doing, its draft and its question.
-    const read = await mcp('get_edit_session', {session_id:session.session_id});
-    assert.deepEqual(read.dashboard, BASELINE);
-    await mcp('set_status', {session_id:session.session_id, status:'Drafting the switch tile'});
-    await panel.getByText('Agent · Drafting the switch tile', {exact:true}).waitFor();
-    await mcp('submit_draft', {session_id:session.session_id, config:DRAFT, summary:'Switch beside the light'});
-    await mcp('send_message', {session_id:session.session_id, text:'Should the switch sit beside the light?'});
-    await panel.getByText('Should the switch sit beside the light?', {exact:true}).waitFor();
-    await panel.getByText('Switch beside the light', {exact:true}).first().waitFor();
+    // The agent was told what is on screen, as the person.
+    const system = ollama.chats[0].messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n');
+    assert.match(system, /looking at the dashboard 'Live fixture', on its 'Home' view/);
+    assert.match(system, /- light\.wall_light \(/);
+    assert.ok(ollama.chats[0].tools.some((t) => t.function.name.endsWith('submit_draft')));
+
+    // Its draft is drawn in place, with the dashboard's own cards; Use it applies it.
+    await panel.getByText('Agent draft: Switch beside the light', {exact:true}).waitFor({timeout:30_000});
     await panel.getByText('Use it', {exact:true}).waitFor();
     await page.screenshot({path:`${evidence}/agent-live-2-draft.png`});
-    // The agent sees the draft exactly as the person's panel drew it.
-    let render;
-    for (let i = 0; i < 30; i++) {
-      const response = await api.post('/api/terrazzo/mcp', {
-        headers:{Authorization:`Bearer ${agentTokens.access_token}`, Accept:'application/json, text/event-stream'},
-        data:{jsonrpc:'2.0', id:1, method:'tools/call', params:{name:'get_draft_render', arguments:{session_id:session.session_id}}},
-      });
-      render = (await response.json()).result;
-      // Until the panel shares its own, the draft may come back drawn with sample states.
-      if (render.content?.[0]?.type === 'image' && render.structuredContent?.drawn_by === 'app') break;
+    const {sessions} = await ws({type:'terrazzo/edit/list', url_path:'live-fixture'});
+    const session = sessions.find((s) => s.status === 'open');
+    assert.ok(session, 'the chat opened an edit session on this dashboard');
+    await panel.getByText('Use it', {exact:true}).click({force:true});
+    for (let i = 0; ; i++) {
+      const saved = await ws({type:'lovelace/config', url_path:'live-fixture'});
+      if (JSON.stringify(saved) === JSON.stringify(DRAFT)) break;
+      assert.ok(i < 40, `the draft is applied: ${JSON.stringify(saved)}`);
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    assert.equal(render.structuredContent.drawn_by, 'app', 'the panel shared its render');
-    assert.equal(render.content[0].type, 'image');
-    assert.equal(render.content[0].mimeType, 'image/png');
-    writeFileSync(`${evidence}/agent-live-2-agent-view.png`, Buffer.from(render.content[0].data, 'base64'));
-
-    // The agent listens; the person pins a comment to a card on the draft.
-    const listening = mcp('await_feedback', {session_id:session.session_id, since:request.cursor});
-    await panel.getByText('Agent · Waiting for feedback', {exact:true}).waitFor();
-    await panel.getByText('Comment', {exact:true}).first().click({force:true});
-    // Section headings are drawn by the dashboard itself: the first card with Comment is the light.
-    await panel.getByText(/^About Wall light \(.*card 2\)/).waitFor();
-    await typeInto('Tell the agent what to change', 'Yes, side by side');
-    await panel.getByText('Send', {exact:true}).click({force:true});
-    const feedback = await listening;
-    assert.equal(feedback.feedback[0].text, 'Yes, side by side');
-    assert.match(feedback.feedback[0].target, /^Wall light \(.*card 2\)$/,
-      'the comment names the card it was left on');
-    await panel.getByText('Yes, side by side', {exact:true}).waitFor();
-    await page.screenshot({path:`${evidence}/agent-live-3-comment.png`});
-
-    // The person applies; the waiting agent hears that it's done.
-    const done = mcp('await_feedback', {session_id:session.session_id, since:feedback.cursor});
-    await panel.getByText('Use it', {exact:true}).click({force:true});
-    assert.equal((await done).status, 'applied');
-    assert.deepEqual(await ws({type:'lovelace/config', url_path:'live-fixture'}), DRAFT);
-    await page.screenshot({path:`${evidence}/agent-live-4-applied.png`});
+    await page.screenshot({path:`${evidence}/agent-live-3-applied.png`});
+    // The chat's turn was the only one: the session's own agent didn't answer it again.
+    assert.equal(ollama.chats.length, 3);
     assert.deepEqual(errors, [], 'no page errors');
-    await setMcpUser(api, headers, 'off');
   } catch (error) {
     await page.screenshot({path:`${evidence}/agent-live-failure.png`}).catch(() => {});
     const text = await page.frameLocator('terrazzo-panel iframe').locator('body').innerText({timeout:2000}).catch(() => '<unavailable>');
-    console.error('Live agent diagnostics:', JSON.stringify({errors, text}));
+    console.error('Dashboard chat diagnostics:', JSON.stringify({errors, text}));
     throw error;
-  } finally { await browser.close(); await api.dispose(); }
+  } finally {
+    if (call) await setDashboardAgent(call).catch(() => {});
+    if (ollamaEntry) await fetch(`${base}/api/config/config_entries/entry/${ollamaEntry}`,
+      {method:'DELETE', headers}).catch(() => {});
+    ollama.server.close();
+    await browser.close();
+    await api.dispose();
+  }
 });

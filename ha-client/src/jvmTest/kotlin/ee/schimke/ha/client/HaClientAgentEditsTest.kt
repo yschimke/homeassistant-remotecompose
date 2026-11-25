@@ -19,6 +19,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -115,6 +116,52 @@ class HaClientAgentEditsTest {
     ) { client ->
       assertEquals(DashboardAgent.Off, client.terrazzoDashboardAgent())
     }
+  }
+
+  @Test
+  fun theDashboardChatSendsWhatIsOnScreenAndReadsTheDraftsSession() {
+    val commands = mutableListOf<JsonObject>()
+    fakeHa(
+      commands,
+      { _, id ->
+        listOf(
+          result(
+            id,
+            """{"speech":"I turned the lights off.","error":false,"conversation_id":"c1",
+              "session_id":"s1","drafted":true,
+              "steps":[{"tool":"submit_draft","input":"Lights","output":"Draft submitted","ok":true}]}""",
+          ),
+        )
+      },
+    ) { client ->
+      val reply =
+        client.terrazzoAssist(
+          "Turn these off",
+          urlPath = "garden",
+          view = "Lights",
+          entityIds = List(100) { "light.l$it" },
+          conversationId = "c0",
+        )
+      assertEquals("I turned the lights off.", reply.speech)
+      assertEquals("c1", reply.conversationId)
+      assertEquals("s1", reply.sessionId)
+      assertTrue(reply.drafted)
+      assertEquals("submit_draft", reply.steps.single().tool)
+    }
+    val command = commands.single()
+    assertEquals("terrazzo/assist", command.type)
+    assertEquals("garden", command.getValue("url_path").jsonPrimitive.content)
+    assertEquals("Lights", command.getValue("view").jsonPrimitive.content)
+    assertEquals("c0", command.getValue("conversation_id").jsonPrimitive.content)
+    assertEquals(60, command.getValue("entities").jsonArray.size)
+    assertTrue("session_id" !in command)
+  }
+
+  @Test
+  fun theChatIsOfferedOnlyWhenTheIntegrationHasIt() {
+    assertTrue(DashboardAgent(enabled = true, chat = true).chatAvailable)
+    assertTrue(!DashboardAgent(enabled = true).chatAvailable)
+    assertTrue(!DashboardAgent(enabled = false, chat = true).chatAvailable)
   }
 
   @Test
