@@ -105,7 +105,7 @@ jobs:
       # `refs/design-artifacts/source/homeassistant-remotecompose` here, which
       # has to stay in this repository (it points at a source commit).
       contents: write
-    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@9b9b1689dfce53ce18137ed20b30a9a30c096a11 # main
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@19eac4b1aaae8f4de621819976ed98c70706c1ae # main
     with:
       system: homeassistant-remotecompose
       ui-builder-catalog-task: ':ui-builder-catalog:exportTypedCatalog'
