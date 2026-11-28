@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.108](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.107...v0.1.108) (2026-11-28)
+
+
+### Bug Fixes
+
+* **deps:** update ktor to v3.6.2 ([#1812](https://github.com/yschimke/homeassistant-remotecompose/issues/1812)) ([7cc72b8](https://github.com/yschimke/homeassistant-remotecompose/commit/7cc72b8cc0067feda6e7cbce4fcf855c67bd406c))
+
 ## [0.1.107](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.106...v0.1.107) (2026-11-25)
 
 
